@@ -1,0 +1,58 @@
+#pragma once
+
+#include <Eigen/Core>
+
+#include "list3d.h"
+#include "voxel/Voxel.h"
+
+
+/**
+ * Regular volumetric representation of an input triangle mesh.
+ *
+ * This class owns the voxel states, the shared corner positions, the grid
+ * dimensions, and the physical voxel size. It deliberately does not contain
+ * any carving policy.
+ */
+class VoxelGrid
+{
+public:
+    VoxelGrid();
+
+    VoxelGrid(
+        const Eigen::MatrixXd& V,
+        const Eigen::MatrixXi& F
+    );
+
+    /** Build or rebuild the voxel representation from a triangle mesh. */
+    void build(
+        const Eigen::MatrixXd& V,
+        const Eigen::MatrixXi& F
+    );
+
+    Voxel& operator()(
+        int x,
+        int y,
+        int z
+    );
+
+    const Voxel& operator()(
+        int x,
+        int y,
+        int z
+    ) const;
+
+    const Eigen::MatrixXd& corners() const;
+
+    const Eigen::Vector3i& dimensions() const;
+
+    const Eigen::Vector3d& voxelSize() const;
+
+private:
+    List3d<Voxel> voxels_;
+
+    Eigen::MatrixXd corners_;
+
+    Eigen::Vector3i dimensions_;
+
+    Eigen::Vector3d voxelSize_;
+};

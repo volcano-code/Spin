@@ -31,7 +31,11 @@
 *.swo
 *.swp
 
-build/*
+/build/
+/build-*/
+/cmake-build-*/
+/out/
+/Testing/
+/compile_commands.json
+/CMakeUserPresets.json
 .vs/
-out/build/
-build-release/

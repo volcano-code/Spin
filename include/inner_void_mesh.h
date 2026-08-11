@@ -1,52 +1,51 @@
+#pragma once
+
 #include <Eigen/Core>
-#include <Eigen/Geometry>
 
-#include <set>
+#include "carving/CarvingSolver.h"
+#include "voxel/VoxelGrid.h"
 
-#include "list3d.h"
 
-class Voxel {
+/**
+ * Compatibility facade used by the existing viewer.
+ *
+ * VoxelGrid owns the volumetric data, CarvingSolver owns optimization state,
+ * and VoidMeshExtractor (called in the implementation file) creates the
+ * cavity triangle mesh. Keeping this facade means main.cpp does not need to
+ * change during Phase 1.
+ */
+class InnerVoidMesh
+{
+private:
+    // Declaration order is important: CarvingSolver stores a reference to it.
+    VoxelGrid voxelGrid;
+
+    CarvingSolver carvingSolver;
+
 public:
-	Eigen::Vector3d center;
-	double distanceToMesh; // distance to closest face on mesh
+    InnerVoidMesh(
+        const Eigen::MatrixXd& V,
+        const Eigen::MatrixXi& F,
+        const Eigen::MatrixXd& planeV,
+        const Eigen::MatrixXi& planeF,
+        const Eigen::Vector3d& gravity,
+        const Eigen::Vector3d& balancePoint
+    );
 
-	int xIdx, yIdx, zIdx; // location of voxel within the grid
+    void convertToMesh(
+        Eigen::MatrixXd& V,
+        Eigen::MatrixXi& F
+    );
 
-	std::set<int> cornerIndices; // index to corner vertices of voxel
+    void carveInnerMeshStep(
+        Eigen::MatrixXd& carvePlaneV,
+        Eigen::MatrixXi& carvePlaneF,
+        Eigen::Vector3d& com
+    );
 
-	bool isFilled; // for carving algorithm
-	bool isInner; // is voxel inside the given mesh
+    double getCoMDistance();
 
-	Voxel() : center(Eigen::Vector3d::Zero()), distanceToMesh(0), 
-		xIdx(-1), yIdx(-1), zIdx(-1), isFilled(true), isInner(false) {}
-};
+    bool isOptimized();
 
-class InnerVoidMesh {
-	List3d<Voxel> innerMesh;
-	Eigen::MatrixXd planeV; // plane
-	Eigen::MatrixXi planeF;
-	Eigen::Vector3d gravity;
-	Eigen::Vector3d balancePoint;
-
-	Eigen::Vector3i dimensions; // in voxels
-	Eigen::Vector3d voxelSize;
-	Eigen::MatrixXd corners; // corners of all voxels
-	int voxelsDisplaying;
-
-	Eigen::Vector3d targetCOM; // optimal center of mass for object to balance
-	Eigen::Vector3d currCOM; // center of mass after carving the object
-	double mass;
-
-	int iterations;
-public:
-	InnerVoidMesh(
-		const Eigen::MatrixXd &V, const Eigen::MatrixXi &F, 
-		const Eigen::MatrixXd &planeV, const Eigen::MatrixXi &planeF, 
-		const Eigen::Vector3d &gravity, 
-		const Eigen::Vector3d &balancePoint);
-	void convertToMesh(Eigen::MatrixXd &V, Eigen::MatrixXi &F);
-	void carveInnerMeshStep(Eigen::MatrixXd &carvePlaneV, Eigen::MatrixXi &carvePlaneF, Eigen::Vector3d& com);
-	double getCoMDistance();
-	bool isOptimized();
-	void carveInnerMesh();
+    void carveInnerMesh();
 };

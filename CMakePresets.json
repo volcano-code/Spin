@@ -1,0 +1,53 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 3
+  },
+  "configurePresets": [
+    {
+      "name": "headless",
+      "displayName": "Headless regression build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/headless",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "MAKE_IT_STAND_BUILD_VIEWER": false,
+        "BUILD_TESTING": true
+      }
+    },
+    {
+      "name": "viewer",
+      "displayName": "Interactive viewer build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/viewer",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "MAKE_IT_STAND_BUILD_VIEWER": true,
+        "BUILD_TESTING": false
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "headless",
+      "configurePreset": "headless"
+    },
+    {
+      "name": "viewer",
+      "configurePreset": "viewer"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "headless",
+      "configurePreset": "headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
