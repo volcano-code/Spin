@@ -1,126 +1,160 @@
-# Make It Balance
+# Make It Stand — Auditable Reproduction
 
-In this program, we implemented a methodology to modify 3D objects in order to balance them
-on defined balance points. The methodology is described in detail in the paper:
-_Make it stand: balancing shapes for 3D fabrication_ [[1]](#1).
+This repository is an independent, staged reproduction of the method in
+Prévost et al., *Make It Stand: Balancing Shapes for 3D Fabrication*
+(ACM TOG / SIGGRAPH 2013). It starts from the simplified
+[`helloxinw/make-it-balance`](https://github.com/helloxinw/make-it-balance)
+carving prototype. It is not yet a complete reproduction of the paper.
 
-This project was built from scratch, forked from the [libigl example project](https://github.com/libigl/libigl-example-project).
+## Source hierarchy
 
-## Program
+Implementation decisions follow this order:
 
-A 3D object printed out, in reality, may not balance as we want it. Our program helps a user create a balanced 3D object given a specified point-of-balance and object orientation. Our program selects regions within the object that it decides will be empty when printed. As a result, this adjusts the center of mass for the object and balances it. We assume that the objects we are working with solid objects (not hollow).
+1. the [published paper](https://igl.ethz.ch/projects/make-it-stand/make-it-stand-siggraph-2013-prevost-et-al.pdf)
+   is the normative algorithm specification;
+2. the authors' beta source is a read-only behavioral oracle for details that
+   the paper does not fully specify;
+3. this repository is an independent implementation and the only code that is
+   built or distributed here.
 
-Once the program is running, we can begin choosing our balancing options using the
-**Make It Stand** menu on the left. First, we configure
-the point of balance by clicking on object. The selected balance point
-will appear as a yellow dot.
+Paper/beta discrepancies and every local implementation claim are tracked in
+[`docs/conformance_matrix.md`](docs/conformance_matrix.md). Provenance and the
+license boundary are recorded in [`docs/provenance.md`](docs/provenance.md).
 
-<img src="images/select-point.png" alt="drawing" width="600">
-<br/>
-<br/>
+## Current status
 
+The current code modularizes and instruments the original carving prototype:
 
-Next, we adjust the rotation of the object. Rotation is defined in terms of yaw, pitch, 
-and roll. Note that the plane shown on the screen represents the ground.
+- `VoxelGrid` owns voxelization and volumetric state;
+- `VoxelSurface` triangulates exposed voxel faces;
+- `VoidMeshExtractor` extracts the carved cavity boundary;
+- `CarvingSolver` owns the current single-target carving state;
+- `CarvingDiagnostics` records per-step metrics and CSV traces;
+- `InnerVoidMesh` remains a compatibility facade for the existing viewer;
+- `carving-regression` is a deterministic headless smoke test.
 
-<img src="images/rotate.png" alt="drawing" width="600">
-<br/>
-<br/>
+The smoke test verifies execution, finite diagnostics, count consistency and
+CSV output. It does **not** verify paper-equivalent optimization. In particular,
+the current solver still has known non-conformances:
 
+- the legacy projected center-of-mass expression contains a repeated square;
+- mass and first moment are not updated as a consistent pair;
+- carving removes a fixed-size batch instead of selecting the best energy
+  prefix over the ordered candidates;
+- the old stopping ratio is based on the entire regular grid;
+- candidate exhaustion does not yet terminate the full loop immediately;
+- the target is a single point rather than a support polygon/safe region;
+- suspension, multiple bases, BBW/LBS deformation, Laplacian preservation,
+  analytic gradients and deformation/carving alternation are not implemented;
+- `make_it_stand()` remains a placeholder API.
 
-Now that we defined how our object will look statically. We can begin the carving process
-to make a balanced object. At first, nothing is carved, meaning that the inside of the
-object is full/solid.
+These limitations are intentional baseline facts, not accepted final behavior.
 
-<img src="images/begin-carving.png" alt="drawing" width="600">
-<br/>
-<br/>
+## Reproducible environment
 
+The R0 reference environment is:
 
-Click the **Carve** button run one iteration of carving. Click the  **Finish Carving** button
-to complete the carving of the image.
+- Ubuntu 24.04.3 LTS, x86-64;
+- `/usr/bin/cmake` 3.28.3;
+- GCC/G++ 13.3.0;
+- Ninja 1.13.0;
+- C++17, `RelWithDebInfo`;
+- libigl `f06fb13014aadff7eb1d7423ac018620441a3657` from the
+  repository submodule.
 
-<img src="images/finish-carving.png" alt="drawing" width="600">
+CMake 4.x is deliberately rejected because the pinned 2020 libigl download
+machinery uses compatibility behavior removed in CMake 4. Exact dependency
+commits and the first-config network behavior are documented in
+[`docs/reproduction_environment.md`](docs/reproduction_environment.md).
 
+## Clone, build and test
 
-## Implementation of Balancing
-The first step to balancing an object is to discretize the object into voxels — commonly known as
-voxelization. Converting the object into voxels simplies the problem so that we can carve 
-an object by removing a voxel. An important constraint to follow is that voxels within a certain
-distance from the border of the mesh should not be removed. This maintains the object's 
-integrity when printed.
+Clone with the pinned submodule:
 
-Next, we want to carve the object to adjust its center of mass. Having a center of mass
-directly above the point-of-balance would mean the object is balanced. To carve the object, we 
-draw a plane on the point-of-balance. This plane is parallel to the direction of gravity,
-and perpendicular to the point-of-balance to center-of-mass vector. An illustration is shown in the paper.
+```bash
+git clone --recursive <repository-url>
+cd make-it-balance
+git submodule update --init --recursive
+```
 
-One side of this plane contains the object's current center of mass. This is the side we want to
-remove voxels from because removing a voxel will potentially bring the center of mass closer to the plane 
-and balance point, and make the object more balanced. Removing a voxel from the other 
-side of the plane will always make the shape more unbalanced.
+Configure, build and test the headless target:
 
-## Code Summary
-`main.cpp`
-* Displays mesh objects and balancing options
-* Controls the workflow of balance properties selection
+```bash
+/usr/bin/cmake --preset headless
+/usr/bin/cmake --build --preset headless --parallel
+/usr/bin/ctest --preset headless
+```
 
-`inner_void_mesh.h` and `inner_void_mesh.cpp`
-* `InnerVoidMesh` class holds the current state of carving; e.g. holds a list of voxels, whether they
-are removed, etc.
-* `Voxel` holds the definition for a voxel
-* Voxalizes the mesh
-* Decides which voxel to carve
+The first configuration may download the dependency revisions selected by the
+pinned libigl commit. Subsequent builds use those cached source trees.
 
-`list3d.h` and `list3d.cpp`
-* 3D vector wrapper. Used to hold the 3D list of voxels
+Build the interactive viewer separately:
 
-`center_of_mass.h` and `center_of_mass.cpp`
-* Computes the center of mass of an object
+```bash
+/usr/bin/cmake --preset viewer
+/usr/bin/cmake --build --preset viewer --parallel
+./build/viewer/make-it-stand data/bunny.off
+```
 
-`grid_util.h` and `grid_util.cpp`
-* Helper functions to help transform (translate, scale, rotate) and voxelize objects
+The viewer build is a compile/regression checkpoint for the inherited GUI, not
+evidence that the full paper method has been reproduced.
 
-## Next Step
-This implementation of 3D balancing could be improved by introducing deformation 
-to balance the object, allowing the use of points of balance, and using polygons
-as bases of balance. These were features described in the paper and were left out
-in consideration of time.
+For a longer diagnostic trace after building the headless target:
 
-## Dependencies
+```bash
+./build/headless/carving-regression \
+  data/bunny.off \
+  build/headless/carving_full.csv \
+  1000
+```
 
-The only dependencies are stl, eigen, [libigl](http://libigl.github.io/libigl/) and
-the dependencies of the `igl::opengl::glfw::Viewer`.
+The third argument is the maximum number of carving steps. A value above the
+solver's internal iteration cap, such as `1000`, lets the current solver reach
+its own stopping condition. The resulting trace is useful for detecting
+regressions but currently exposes known center-of-mass drift.
 
-The cmake build system will attempt to find libigl according to environment variables (e.g., `LIBIGL`) and searching in common desitinations (e.g., `/usr/local/libigl/`). If you haven't installed libigl before, we recommend you to clone a copy of libigl right here:
+## Repository structure
 
-    cd libigl-example-project/
-    git clone https://github.com/libigl/libigl.git
+```text
+include/, src/
+  carving/       single-target solver and diagnostics
+  extraction/    carved-cavity surface extraction
+  voxel/         voxel data, grid construction and exposed faces
+  center_of_mass legacy signed-surface mass helper
+  grid_util      alignment, transforms and regular-grid construction
+  inner_void_mesh compatibility facade used by the viewer
+  make_it_stand  placeholder public API
+tests/
+  carving_regression.cpp
+data/
+  inherited sample meshes; Bunny is used by the smoke test
+docs/
+  conformance, environment, provenance and baseline records
+```
 
-Make sure to use the `--recursive` flag if you're cloning this project. This will clone the submodules for this project — specifically, `LIBIGL`.
+`list3d.h` is header-only; there is no `list3d.cpp`.
 
-## Compile
+## Verification policy
 
-Compile this project using the standard cmake routine:
+The project uses the following status levels:
 
-    mkdir build
-    cd build
-    cmake ..
-    make
+`NOT_STARTED`, `PARTIAL`, `IMPLEMENTED_UNVERIFIED`, `VERIFIED_UNIT`,
+`VERIFIED_REGRESSION`, `VERIFIED_PAPER`, and `NONCONFORMANT`.
 
-This should find and build the dependencies.
+No feature is described as paper-reproduced until its governing equation,
+implementation symbol, fixture, metric and tolerance are all present in the
+conformance matrix. A passing smoke test is never promoted to a correctness or
+paper-equivalence claim.
 
-## Run
+## License
 
-From within the `build` directory just issue:
+This repository retains the upstream Mozilla Public License 2.0. The official
+2013 beta source has a separate research-only, non-commercial license and is
+not included, linked or redistributed here. Sample-mesh provenance must be
+rechecked before redistributing a derived release.
 
-    ./make-it-stand
+## Reference
 
-A glfw app should launch displaying the default bunny mesh with menu options to select the balancing options.
-
-## References
-<a id="1">[1]</a> 
-Romain Prévost, Emily Whiting, Sylvain Lefebvre, and Olga Sorkine-Hornung. 2013. 
-Make it stand: balancing shapes for 3D fabrication. 
-ACM Trans. Graph. 32, 4, Article 81 (July 2013), 10 pages. 
-DOI: https://doi.org/10.1145/2461912.2461957
+Romain Prévost, Emily Whiting, Sylvain Lefebvre, and Olga Sorkine-Hornung.
+2013. *Make It Stand: Balancing Shapes for 3D Fabrication*. ACM Transactions on
+Graphics 32(4), Article 81. https://doi.org/10.1145/2461912.2461957
