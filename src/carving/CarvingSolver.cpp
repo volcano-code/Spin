@@ -133,6 +133,8 @@ CarvingSolver::CarvingSolver(
     mass_(0.0),
     carvedVoxelCount_(0),
     iterations_(0),
+    candidateSearchPerformed_(false),
+    lastCandidateVoxelCount_(0),
     diagnosticsEnabled_(false),
     diagnosticsInitialized_(false),
     initialInsideVoxelCount_(0),
@@ -287,6 +289,14 @@ CarvingStopReason CarvingSolver::stopReason() const
     if (getCoMDistance() < voxelSize.maxCoeff())
     {
         return CarvingStopReason::TargetToleranceReached;
+    }
+
+    if (
+        candidateSearchPerformed_ &&
+        lastCandidateVoxelCount_ == 0
+    )
+    {
+        return CarvingStopReason::NoCandidatesAvailable;
     }
 
     if (carvedGridRatio() > MAX_EMPTY)
@@ -626,6 +636,9 @@ void CarvingSolver::carveStep(
 
     const int candidateCount =
         static_cast<int>(candidateVoxels.size());
+
+    candidateSearchPerformed_ = true;
+    lastCandidateVoxelCount_ = candidateCount;
 
     diagnostics.candidateVoxelCount =
         candidateCount;

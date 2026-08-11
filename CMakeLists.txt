@@ -115,14 +115,40 @@ if(BUILD_TESTING)
     set_target_properties(carving-regression PROPERTIES CXX_EXTENSIONS OFF)
     target_link_libraries(carving-regression PRIVATE make_it_stand::core)
 
-    # This is intentionally a short diagnostic smoke test. It verifies that a
-    # deterministic step runs and produces finite diagnostics; it is not yet a
-    # paper-conformance test.
-    add_test(
-        NAME carving-regression
-        COMMAND "$<TARGET_FILE:carving-regression>"
-            "${CMAKE_CURRENT_SOURCE_DIR}/data/bunny.off"
-            "${CMAKE_CURRENT_BINARY_DIR}/carving_regression.csv"
-            "1"
+    function(add_carving_regression_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:carving-regression>"
+                "${scenario}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/data/bunny.off"
+                "${CMAKE_CURRENT_BINARY_DIR}/${test_name}.csv"
+        )
+
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r1;carving"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    # These are diagnostic and control-flow regressions, not paper-equivalence
+    # tests. In particular, the full test deliberately characterizes the
+    # currently divergent R0 CoM behavior so R2 cannot change it silently.
+    add_carving_regression_test(
+        carving-initial-state
+        initial
+    )
+    add_carving_regression_test(
+        carving-one-step
+        one-step
+    )
+    add_carving_regression_test(
+        carving-full-known-baseline
+        full-known-baseline
+    )
+    add_carving_regression_test(
+        carving-no-candidates
+        no-candidates
     )
 endif()

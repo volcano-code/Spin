@@ -45,6 +45,9 @@ const char* carvingStopReasonName(
         case CarvingStopReason::MaximumEmptyRatioReached:
             return "maximum_empty_ratio";
 
+        case CarvingStopReason::NoCandidatesAvailable:
+            return "no_candidates";
+
         case CarvingStopReason::MaximumIterationsReached:
             return "maximum_iterations";
     }

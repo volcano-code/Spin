@@ -35,14 +35,19 @@ public:
     CarvingSolver(const CarvingSolver&) = delete;
     CarvingSolver& operator=(const CarvingSolver&) = delete;
 
-    /** Perform one carving iteration. */
+    /**
+     * Perform one carving iteration.
+     *
+     * Callers must check !isOptimized() first. The viewer and carveAll()
+     * enforce this precondition; direct low-level callers own it.
+     */
     void carveStep(
         Eigen::MatrixXd& carvePlaneV,
         Eigen::MatrixXi& carvePlaneF,
         Eigen::Vector3d& centerOfMass
     );
 
-    /** Continue carving until an original stopping condition is reached. */
+    /** Continue carving until an active stopping condition is reached. */
     void carveAll();
 
     /**
@@ -56,10 +61,10 @@ public:
     /** Direct tangential distance between current and target COM on ground. */
     double getGeometricProjectedDistance() const;
 
-    /** Return the currently active original stopping condition. */
+    /** Return the currently active stopping condition. */
     CarvingStopReason stopReason() const;
 
-    /** Return true when any original stopping condition is satisfied. */
+    /** Return true when any active stopping condition is satisfied. */
     bool isOptimized() const;
 
     const Eigen::Vector3d& currentCenterOfMass() const;
@@ -122,6 +127,9 @@ private:
 
     int carvedVoxelCount_;
     int iterations_;
+
+    bool candidateSearchPerformed_;
+    int lastCandidateVoxelCount_;
 
     bool diagnosticsEnabled_;
     bool diagnosticsInitialized_;

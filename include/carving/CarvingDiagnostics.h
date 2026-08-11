@@ -6,16 +6,18 @@
 
 
 /**
- * The stopping conditions currently used by the original carving method.
+ * Stopping conditions exposed by the carving solver.
  *
- * Phase 1.6 reports these conditions without changing their thresholds or
- * numerical behavior.
+ * R1 adds an explicit no-candidate terminal state so a completed candidate
+ * search cannot leave the production loop spinning through no-op iterations.
+ * The legacy target, empty-ratio and iteration thresholds remain unchanged.
  */
 enum class CarvingStopReason
 {
     None,
     TargetToleranceReached,
     MaximumEmptyRatioReached,
+    NoCandidatesAvailable,
     MaximumIterationsReached
 };
 
