@@ -31,18 +31,19 @@ The current code modularizes and instruments the original carving prototype:
 - `CarvingSolver` owns the current single-target carving state;
 - `CarvingDiagnostics` records per-step metrics and CSV traces;
 - `InnerVoidMesh` remains a compatibility facade for the existing viewer;
-- `carving-regression` is a deterministic headless smoke test.
+- `carving-regression` provides deterministic initial, one-step, full-run and
+  empty-candidate headless scenarios.
 
-The smoke test verifies execution, finite diagnostics, count consistency and
-CSV output. It does **not** verify paper-equivalent optimization. In particular,
-the current solver still has known non-conformances:
+The R1 regression suite verifies execution, finite diagnostics, count/state
+consistency and CSV round-tripping. It does **not** verify paper-equivalent
+optimization. In particular, the current solver still has known
+non-conformances:
 
 - the legacy projected center-of-mass expression contains a repeated square;
 - mass and first moment are not updated as a consistent pair;
 - carving removes a fixed-size batch instead of selecting the best energy
   prefix over the ordered candidates;
 - the old stopping ratio is based on the entire regular grid;
-- candidate exhaustion does not yet terminate the full loop immediately;
 - the target is a single point rather than a support polygon/safe region;
 - suspension, multiple bases, BBW/LBS deformation, Laplacian preservation,
   analytic gradients and deformation/carving alternation are not implemented;
@@ -99,19 +100,34 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-For a longer diagnostic trace after building the headless target:
+R1 registers four CTest cases:
+
+```text
+carving-initial-state
+carving-one-step
+carving-full-known-baseline
+carving-no-candidates
+```
+
+They verify state/count continuity, finite diagnostics, the exact 26-column
+CSV schema and safe termination when a completed candidate search is empty.
+The full scenario deliberately characterizes the known divergent R0 numerical
+state; it does not assert that the balancing objective improves.
+
+To generate the full diagnostic trace manually after building the headless
+target:
 
 ```bash
 ./build/headless/carving-regression \
+  full-known-baseline \
   data/bunny.off \
-  build/headless/carving_full.csv \
-  1000
+  build/headless/carving_full.csv
 ```
 
-The third argument is the maximum number of carving steps. A value above the
-solver's internal iteration cap, such as `1000`, lets the current solver reach
-its own stopping condition. The resulting trace is useful for detecting
-regressions but currently exposes known center-of-mass drift.
+The resulting R1 trace terminates at the first empty candidate set. The
+pre-R1 21-step trace is retained in
+`tests/baselines/bunny_r0_known_failure.csv` as historical evidence and still
+exposes the center-of-mass drift that R2 must replace with correctness tests.
 
 ## Repository structure
 
@@ -126,10 +142,11 @@ include/, src/
   make_it_stand  placeholder public API
 tests/
   carving_regression.cpp
+  baselines/       frozen known-failure traces; never target outputs
 data/
-  inherited sample meshes; Bunny is used by the smoke test
+  inherited sample meshes; Bunny is used by the R1 regressions
 docs/
-  conformance, environment, provenance and baseline records
+  conformance, environment, provenance and R0/R1 acceptance records
 ```
 
 `list3d.h` is header-only; there is no `list3d.cpp`.
@@ -143,8 +160,8 @@ The project uses the following status levels:
 
 No feature is described as paper-reproduced until its governing equation,
 implementation symbol, fixture, metric and tolerance are all present in the
-conformance matrix. A passing smoke test is never promoted to a correctness or
-paper-equivalence claim.
+conformance matrix. A passing diagnostic regression is never promoted to a
+correctness or paper-equivalence claim.
 
 ## License
 

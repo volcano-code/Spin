@@ -1,4 +1,4 @@
-# R0 change manifest
+# Reproduction change manifest
 
 This manifest describes the reproduction work relative to upstream commit
 `71e08361ca255a1cf6b89de6e4c92ef33024f432` on branch `reproduction-v1`.
@@ -52,3 +52,19 @@ changes belong to the following numerical and algorithm-conformance phases.
 The repository gitlink remains pinned to libigl
 `f06fb13014aadff7eb1d7423ac018620441a3657`. No local libigl patch is part of
 R0; compatibility includes live in this project's own translation units.
+
+## R1 diagnostic and termination changes
+
+| File | R1 change | Evidence |
+|---|---|---|
+| `include/carving/CarvingDiagnostics.h`, `src/carving/CarvingDiagnostics.cpp` | Adds the explicit `NoCandidatesAvailable` / `no_candidates` terminal state. | CSV and solver stop tokens agree in regression tests. |
+| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp` | Persists whether candidate search ran and stops immediately when the resulting set is empty. | Full Bunny run records the terminal zero-candidate probe at iteration 17 and eliminates no-op iterations 18–21. |
+| `tests/carving_regression.cpp` | Adds initial, one-step, full-known-baseline and synthetic no-candidate scenarios; validates state continuity, finite values and CSV schema. | Four CTest cases pass and survive ten repeated runs. |
+| `CMakeLists.txt` | Registers four independently named R1 tests with separate CSV outputs and timeouts. | `ctest --preset headless` reports `4/4 Passed`. |
+| `tests/baselines/bunny_r0_known_failure.csv` | Preserves the exact pre-R1 21-step divergent trace. | SHA-256 `3f9108649fc329a136a5371597335a99275021b6ddd9a3984198ce2b8e8c1856`. |
+| `tests/baselines/README.md` | Defines the snapshot as historical failure evidence, not a target result. | Documentation audit. |
+| `docs/r1_acceptance.md` | Records R1 scope, commands, outcomes and remaining non-conformances. | R1 acceptance record. |
+
+R1 does not modify the legacy projected-energy formula, mass/first-moment
+updates, fixed batch size or best-prefix policy. Passing these control-flow
+tests therefore does not establish paper equivalence.

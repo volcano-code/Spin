@@ -1,6 +1,6 @@
 # Paper conformance matrix
 
-Last audited: 2026-08-11 (Asia/Shanghai)
+Last audited: 2026-08-12 (Asia/Shanghai)
 
 Normative source: Prévost et al., *Make It Stand: Balancing Shapes for
 3D Fabrication*, ACM TOG 32(4), 2013. The official beta archive is used only
@@ -42,7 +42,7 @@ tolerance and reproducible result artifact.
 | CARVE-02 | §4: ignore negative `d_i`, sort positive distances in decreasing order. | `InnerMesh` | `CompareVoxelDistance`, candidate construction | Deterministic ordered-candidate fixture. | `IMPLEMENTED_UNVERIFIED` / R4; pointer-address sort was corrected. |
 | CARVE-03 | §4: simulate every ordered deletion, record true energy, select the globally best prefix; do not stop at transient increase. | `InnerMesh`, `Optimizer` | Fixed batch of up to 1000 voxels | Hand-computable prefix and temporary-increase fixtures; selected energy ≤ initial. | `NONCONFORMANT` / R4 |
 | CARVE-04 | §3.2/§4: reset/recompute binary fills during alternating iterations; carved voxels need not stay empty. | `Optimizer` | None | Two-alternation reset fixture. | `NOT_STARTED` / R4–R7 |
-| CARVE-05 | §4: repeat with recomputed CoM/cutting plane; stop when too few voxels are removed. | `InnerMesh`, `Optimizer` | Fixed maximum iteration/grid-ratio logic | No-candidate, too-few and converged-energy tests. | `NONCONFORMANT` / R4 |
+| CARVE-05 | §4: repeat with recomputed CoM/cutting plane; stop when too few voxels are removed. | `InnerMesh`, `Optimizer` | `CarvingSolver::stopReason`, `carveAll` | No-candidate, too-few and converged-energy tests. | `PARTIAL` / R1 verifies immediate no-candidate termination; too-few/best-prefix behavior remains R4. |
 | CARVE-06 | §4: for multiple bases sort by the sum of positive per-target distances. | beta behavior differs for its two-target path | None | 2/3-target ordering fixtures governed by paper formula. | `NOT_STARTED` / R4 |
 | CARVE-07 | §4: ordered plane carving avoids floating components. | `InnerMesh` | No explicit connectivity assertion | Connected-material/cavity topology test after each accepted prefix. | `IMPLEMENTED_UNVERIFIED` / R4 |
 
@@ -62,8 +62,10 @@ tolerance and reproducible result artifact.
 
 | ID | Requirement | Local symbol | Required verification | Status / next phase |
 |---|---|---|---|---|
-| DIAG-01 | Per-step auditable CoM, energy, counts, mass proxy and stop reason. | `CarvingDiagnostics`, CSV writer | Clean headless CTest plus schema/finite checks. | `VERIFIED_REGRESSION` at R0; diagnostic scope only. |
-| TEST-01 | Deterministic Bunny smoke test. | `tests/carving_regression.cpp` | Clean configure/build/CTest without compiler workaround. | `VERIFIED_REGRESSION` at R0; it is not a correctness test. |
+| DIAG-01 | Per-step auditable CoM, legacy/geometric projected-error metrics, counts, mass proxy and stop reason. | `CarvingDiagnostics`, CSV writer | Clean headless CTest, exact 26-column schema, row count, per-column round-trip, finite fields and stop-token checks. | `VERIFIED_REGRESSION` at R1; diagnostic scope only. |
+| TEST-01 | Zero/one-step state and diagnostic contracts. | `carving-initial-state`, `carving-one-step` | Clean configure/build/CTest; zero-step header only and one-step continuity/count checks. | `VERIFIED_REGRESSION` at R1. |
+| TEST-02 | Deterministic full-run characterization. | `carving-full-known-baseline` | Stops at first empty candidate set; frozen integer outcomes and `1e-6` numerical snapshot; repeat ten times. | `VERIFIED_REGRESSION` at R1; explicitly preserves a known-divergent baseline, not correctness. |
+| TEST-03 | Initial empty-candidate safety contract. | `carving-no-candidates` | One search, zero removals, unchanged CoM/errors and `no_candidates` terminal reason. | `VERIFIED_REGRESSION` at R1. |
 | OUTPUT-01 | §3.1/§4: emit coherent `M_O` and `M_I`; printing preparation remains a separate engineering layer. | Input `M_O`, `VoidMeshExtractor` | Signed-volume, watertightness, orientation, wall checks and slicer validation. | `PARTIAL` / R8 |
 | EXP-01 | §6/Table 1: reproduce optimization performance/convergence cases on modern hardware. | None | Recorded configurations, hardware, seeds, metrics and discrepancy report. | `NOT_STARTED` / R9 |
 | EXP-02 | §6/Fig. 14: carving/deformation/Laplacian ablations. | None | Same inputs and comparable outcome trends. | `NOT_STARTED` / R9 |
