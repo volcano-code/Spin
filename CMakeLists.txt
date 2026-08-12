@@ -55,9 +55,12 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/carving/CarvingSolver.cpp
     src/center_of_mass.cpp
     src/deformation/BoundedBiharmonicWeights.cpp
+    src/deformation/DeformationObjective.cpp
+    src/deformation/DeformationOptimizer.cpp
     src/deformation/DeformationSystem.cpp
     src/deformation/GridDeformationDomain.cpp
     src/deformation/HandleSet.cpp
+    src/deformation/LaplacianEditingEnergy.cpp
     src/deformation/LinearBlendSkinning.cpp
     src/extraction/VoidMeshExtractor.cpp
     src/grid_util.cpp
@@ -66,6 +69,7 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/physics/BalanceEnergy.cpp
     src/physics/BalanceObjective.cpp
     src/physics/MassProperties.cpp
+    src/physics/SurfaceMassDifferential.cpp
     src/stability/SupportRegion.cpp
     src/voxel/Voxel.cpp
     src/voxel/VoxelGrid.cpp
@@ -79,9 +83,12 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/carving/CarvingSolver.h
     include/center_of_mass.h
     include/deformation/BoundedBiharmonicWeights.h
+    include/deformation/DeformationObjective.h
+    include/deformation/DeformationOptimizer.h
     include/deformation/DeformationSystem.h
     include/deformation/GridDeformationDomain.h
     include/deformation/HandleSet.h
+    include/deformation/LaplacianEditingEnergy.h
     include/deformation/LinearBlendSkinning.h
     include/extraction/VoidMeshExtractor.h
     include/grid_util.h
@@ -91,6 +98,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/physics/BalanceEnergy.h
     include/physics/BalanceObjective.h
     include/physics/MassProperties.h
+    include/physics/SurfaceMassDifferential.h
     include/stability/SupportRegion.h
     include/voxel/Voxel.h
     include/voxel/VoxelGrid.h
@@ -335,6 +343,58 @@ if(BUILD_TESTING)
     add_deformation_regression_test(grid-weight-trilinear domain-trilinear)
     add_deformation_regression_test(deformation-geometry-sync geometry-sync)
     add_deformation_regression_test(deformation-invalid-inputs invalid)
+
+    add_executable(
+        deformation-optimization-regression
+        tests/deformation_optimization_regression.cpp
+    )
+    target_compile_features(
+        deformation-optimization-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        deformation-optimization-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        deformation-optimization-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_deformation_optimization_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:deformation-optimization-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r6;deformation;physics;optimization"
+                TIMEOUT 60
+        )
+    endfunction()
+
+    add_deformation_optimization_test(
+        laplacian-editing-analytic
+        laplacian
+    )
+    add_deformation_optimization_test(
+        surface-mass-gradient-analytic
+        mass-gradient
+    )
+    add_deformation_optimization_test(
+        deformation-objective-gradient-analytic
+        objective-gradient
+    )
+    add_deformation_optimization_test(
+        paper-line-search-state-machine
+        line-search
+    )
+    add_deformation_optimization_test(
+        deformation-optimizer-end-to-end
+        optimizer-e2e
+    )
 
     add_executable(
         voxel-constraints-regression

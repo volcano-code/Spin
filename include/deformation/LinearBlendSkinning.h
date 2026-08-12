@@ -103,4 +103,42 @@ private:
 };
 
 
+/**
+ * Affine LBS map from only the unlocked-user parameters q to positions.
+ *
+ * The fixed rotations and all locked-handle poses are frozen when this model
+ * is built. Positions therefore satisfy x(q) = offset + jacobian * q, with
+ * q ordered exactly as HandleSet::optimizationParameters().
+ */
+class FreeParameterLbsModel
+{
+public:
+    FreeParameterLbsModel(
+        const Eigen::MatrixXd& restPositions,
+        const Eigen::MatrixXd& weights,
+        const HandleSet& basisHandles,
+        double weightTolerance = 1e-10
+    );
+
+    const Eigen::MatrixXd& jacobian() const noexcept;
+    const Eigen::VectorXd& offset() const noexcept;
+    const HandleSet& basisHandles() const noexcept;
+    Eigen::VectorXd initialParameters() const;
+
+    Eigen::MatrixXd evaluate(
+        const Eigen::VectorXd& freeParameters
+    ) const;
+
+    Eigen::MatrixXd evaluate(
+        const HandleSet& currentHandles
+    ) const;
+
+private:
+    HandleSet basisHandles_;
+    StackedParameterReduction reduction_;
+    Eigen::MatrixXd jacobian_;
+    Eigen::VectorXd offset_;
+};
+
+
 } // namespace deformation

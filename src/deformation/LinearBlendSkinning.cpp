@@ -425,4 +425,121 @@ Eigen::MatrixXd ReducedLbsModel::evaluate(
 }
 
 
+FreeParameterLbsModel::FreeParameterLbsModel(
+    const Eigen::MatrixXd& restPositions,
+    const Eigen::MatrixXd& weights,
+    const HandleSet& basisHandles,
+    double weightTolerance
+)
+    :
+    basisHandles_(basisHandles),
+    reduction_(buildStackedParameterReduction(basisHandles)),
+    jacobian_(),
+    offset_()
+{
+    const Eigen::MatrixXd fullMatrix = buildReducedLbsMatrix(
+        restPositions,
+        weights,
+        basisHandles,
+        weightTolerance
+    );
+    jacobian_ = fullMatrix * reduction_.linear;
+    offset_ = fullMatrix * reduction_.offset;
+
+    if (!jacobian_.allFinite() || !offset_.allFinite())
+    {
+        throw std::domain_error(
+            "free-parameter LBS reduction produced non-finite values"
+        );
+    }
+}
+
+
+const Eigen::MatrixXd&
+FreeParameterLbsModel::jacobian() const noexcept
+{
+    return jacobian_;
+}
+
+
+const Eigen::VectorXd&
+FreeParameterLbsModel::offset() const noexcept
+{
+    return offset_;
+}
+
+
+const HandleSet&
+FreeParameterLbsModel::basisHandles() const noexcept
+{
+    return basisHandles_;
+}
+
+
+Eigen::VectorXd FreeParameterLbsModel::initialParameters() const
+{
+    return basisHandles_.optimizationParameters();
+}
+
+
+Eigen::MatrixXd FreeParameterLbsModel::evaluate(
+    const Eigen::VectorXd& freeParameters
+) const
+{
+    HandleSet validated = basisHandles_;
+    validated.setOptimizationParameters(freeParameters);
+
+    const Eigen::VectorXd stackedPositions =
+        offset_ + jacobian_ * freeParameters;
+
+    Eigen::MatrixXd positions(stackedPositions.size() / 3, 3);
+    for (Eigen::Index vertex = 0;
+         vertex < positions.rows();
+         ++vertex)
+    {
+        positions.row(vertex) =
+            stackedPositions.segment<3>(3 * vertex).transpose();
+    }
+
+    if (!positions.allFinite())
+    {
+        throw std::domain_error(
+            "free-parameter LBS evaluation produced non-finite positions"
+        );
+    }
+
+    return positions;
+}
+
+
+Eigen::MatrixXd FreeParameterLbsModel::evaluate(
+    const HandleSet& currentHandles
+) const
+{
+    if (!basisHandles_.sameLinearBasisAs(currentHandles))
+    {
+        throw std::invalid_argument(
+            "current handles do not match the free-parameter LBS basis"
+        );
+    }
+
+    const Eigen::VectorXd freeParameters =
+        currentHandles.optimizationParameters();
+    const Eigen::VectorXd expectedFull =
+        reduction_.offset + reduction_.linear * freeParameters;
+
+    if (!expectedFull.isApprox(
+        stackedHandleParameters(currentHandles),
+        1.0e-12
+    ))
+    {
+        throw std::invalid_argument(
+            "a locked handle pose differs from the frozen LBS reduction"
+        );
+    }
+
+    return evaluate(freeParameters);
+}
+
+
 } // namespace deformation

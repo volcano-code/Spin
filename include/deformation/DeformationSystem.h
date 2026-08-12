@@ -63,7 +63,15 @@ public:
     const Eigen::MatrixXd& nodeWeights() const;
     const Eigen::MatrixXd& fullCornerWeights() const;
     const Eigen::MatrixXd& outerWeights() const;
+    const Eigen::MatrixXd& outerRestVertices() const;
+    const Eigen::MatrixXi& outerFaces() const;
     const WeightSolveDiagnostics& weightDiagnostics() const;
+
+    /**
+     * Validate that a fill snapshot still belongs to the immutable rest grid.
+     * This is the allocation-free contract check used by fixed-alpha setup.
+     */
+    void validateVoxelFill(const VoxelGrid& currentVoxelFill) const;
 
     /**
      * Evaluate M_O, M_I and the voxel lattice from the same immutable rest

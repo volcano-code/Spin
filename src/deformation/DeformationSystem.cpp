@@ -353,10 +353,31 @@ const Eigen::MatrixXd& DeformationSystem::outerWeights() const
 }
 
 
+const Eigen::MatrixXd&
+DeformationSystem::outerRestVertices() const
+{
+    return outerRestVertices_;
+}
+
+
+const Eigen::MatrixXi& DeformationSystem::outerFaces() const
+{
+    return outerFaces_;
+}
+
+
 const WeightSolveDiagnostics&
 DeformationSystem::weightDiagnostics() const
 {
     return weightDiagnostics_;
+}
+
+
+void DeformationSystem::validateVoxelFill(
+    const VoxelGrid& currentVoxelFill
+) const
+{
+    validateSameGrid(restVoxelGrid_, currentVoxelFill);
 }
 
 
@@ -377,7 +398,7 @@ DeformedGeometry DeformationSystem::evaluate(
         currentHandles
     );
 
-    validateSameGrid(restVoxelGrid_, currentVoxelFill);
+    validateVoxelFill(currentVoxelFill);
 
     DeformedGeometry geometry;
     geometry.outerFaces = outerFaces_;
