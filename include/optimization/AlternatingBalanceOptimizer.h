@@ -95,6 +95,7 @@ struct AlternatingCarvingRecord
     std::uint64_t alphaHashBeforeReset = 0;
     std::uint64_t alphaHashAfterReset = 0;
     std::uint64_t alphaHash = 0;
+    std::uint64_t geometryHash = 0;
     MassProperties massProperties;
     Eigen::Vector3d centerOfMass = Eigen::Vector3d::Zero();
 };
@@ -135,6 +136,10 @@ struct AlternatingDeformationRecord
     Eigen::VectorXd parametersBefore;
     Eigen::VectorXd parametersAfter;
 
+    /** Content hashes bind this trace record to its geometry snapshots. */
+    std::uint64_t geometryHashBefore = 0;
+    std::uint64_t geometryHashAfter = 0;
+
     MassProperties massPropertiesAfter;
     Eigen::Vector3d centerOfMassAfter = Eigen::Vector3d::Zero();
 };
@@ -151,6 +156,10 @@ struct AlternatingBalanceOptimizationResult
     deformation::DeformedGeometry geometry;
     MassProperties massProperties;
     Eigen::Vector3d centerOfMass = Eigen::Vector3d::Zero();
+    /** Content hash of the returned outer/inner/lattice geometry snapshot. */
+    std::uint64_t geometryHash = 0;
+    /** True when a standing target used a positive, unapplied flatten band. */
+    bool usesHypotheticalFlatteningSupport = false;
     stability::BalanceTargetSnapshot targets{
         0,
         false,

@@ -72,9 +72,13 @@ int main()
         writeFile(directory / "right-geometry.json", "right geometry\n");
         writeFile(directory / "left-slicer.json", "left slicer\n");
         writeFile(directory / "right-slicer.json", "right slicer\n");
+        writeFile(directory / "source.obj", "source boundary\n");
 
         manufacturing::ExternalPartitionManifest manifest;
-        manifest.sourceBoundarySha256 = std::string(64, 'a');
+        manifest.sourceBoundaryFilename = "source.obj";
+        manifest.sourceBoundarySha256 = manufacturing::computeFileSha256(
+            (directory / manifest.sourceBoundaryFilename).string()
+        );
         manifest.modelUnitsToMillimeters = 25.4;
         manifest.externalGenerator = "manual-test-partition";
         manifest.externalGeneratorVersion = "1";
@@ -107,6 +111,14 @@ int main()
                 hash, directory.string()).passed)
         {
             throw std::runtime_error("wrong part hash was accepted");
+        }
+
+        manufacturing::ExternalPartitionManifest sourceHash = manifest;
+        sourceHash.sourceBoundarySha256 = std::string(64, '0');
+        if (manufacturing::auditExternalPartitionManifest(
+                sourceHash, directory.string()).passed)
+        {
+            throw std::runtime_error("wrong source hash was accepted");
         }
 
         manufacturing::ExternalPartitionManifest reportHash = manifest;

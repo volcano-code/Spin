@@ -167,12 +167,13 @@ std::string computeFileSha256(const std::string& filename);
 
 
 /**
- * Run one hermetic, pinned PrusaSlicer FFF smoke test.
+ * Run one argv-based, pinned-binary/profile PrusaSlicer FFF smoke test.
  *
  * The adapter executes exactly two argv-based commands, never through a shell:
  * `<exe> --version`, followed by an isolated `--load ... --export-gcode` run.
  * It never searches PATH, installs software, uploads a toolpath, or talks to a
- * printer.  `Passed` means only that the exact binary/profile/input produced a
+ * printer. The child still inherits the host process environment and dynamic
+ * library closure. `Passed` means only that the exact binary/profile/input produced a
  * parseable nonempty G-code artifact without a known reported auto-repair.
  */
 SlicerValidationReport validateWithPinnedSlicer(

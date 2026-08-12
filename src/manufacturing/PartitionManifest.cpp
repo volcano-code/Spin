@@ -99,8 +99,19 @@ PartitionManifestAudit auditExternalPartitionManifest(
     PartitionManifestAudit audit;
     audit.completed = true;
     audit.partCount = manifest.parts.size();
+    const std::filesystem::path base(manifestDirectory);
+    const std::filesystem::path sourceRelative(
+        manifest.sourceBoundaryFilename
+    );
+    const bool sourcePathSafe = safeRelativePath(sourceRelative);
+    const std::filesystem::path sourceBoundary = base / sourceRelative;
+    const bool sourceAvailable =
+        sourcePathSafe && regularFile(sourceBoundary);
+    const bool sourceHashValid = hashTokenValid(
+        manifest.sourceBoundarySha256
+    );
     audit.schemaValid =
-        hashTokenValid(manifest.sourceBoundarySha256) &&
+        sourcePathSafe && sourceHashValid &&
         std::isfinite(manifest.modelUnitsToMillimeters) &&
         manifest.modelUnitsToMillimeters > 0.0 &&
         !manifest.externalGenerator.empty() &&
@@ -110,12 +121,14 @@ PartitionManifestAudit auditExternalPartitionManifest(
 
     std::set<std::string> identifiers;
     audit.uniquePartIds = true;
-    audit.allFilesAvailable = true;
-    audit.allHashesMatch = true;
+    audit.allFilesAvailable = sourceAvailable;
+    audit.allHashesMatch =
+        sourceHashValid && sourceAvailable &&
+        computeFileSha256(sourceBoundary.string()) ==
+            lowercase(manifest.sourceBoundarySha256);
     audit.allTransformsFinite = true;
     audit.allTransformsRigid = true;
 
-    const std::filesystem::path base(manifestDirectory);
     for (std::size_t index = 0; index < manifest.parts.size(); ++index)
     {
         const DeclaredManufacturingPart& part = manifest.parts[index];

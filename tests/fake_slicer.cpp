@@ -171,6 +171,14 @@ int runSlice(int argc, char** argv)
             "G1 X10.0 Y10.0 E0.40 F1200\n"
         ) ? EXIT_SUCCESS : 73;
     }
+    if (mode == "garbage-gcode")
+    {
+        return writeToolpath(
+            output,
+            ";LAYER:this is not a numeric layer\n"
+            "G0ARBAGE EVIDENCE\n"
+        ) ? EXIT_SUCCESS : 73;
+    }
 
     if (mode == "repair")
     {

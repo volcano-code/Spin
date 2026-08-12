@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 
+#include <cstdint>
+
 #include "deformation/BoundedBiharmonicWeights.h"
 #include "deformation/GridDeformationDomain.h"
 #include "deformation/HandleSet.h"
@@ -28,6 +30,12 @@ struct DeformedGeometry
     Eigen::MatrixXd innerVertices;
     Eigen::MatrixXi innerFaces;
 };
+
+
+/** Stable in-process content hash of every matrix in a geometry snapshot. */
+std::uint64_t deformedGeometryContentHash(
+    const DeformedGeometry& geometry
+) noexcept;
 
 
 /**

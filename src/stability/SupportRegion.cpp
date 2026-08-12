@@ -659,6 +659,7 @@ SupportRegion::SupportRegion()
     basisV_(Eigen::Vector3d::Zero()),
     planeOrigin_(Eigen::Vector3d::Zero()),
     supportHeight_(0.0),
+    contactThreshold_(0.0),
     contactVertexIndices_(),
     supportPolygon2D_(0, 2),
     maximumInset_(0.0),
@@ -752,6 +753,7 @@ SupportRegion SupportRegion::fromMesh(
     }
 
     result.supportHeight_ = heights.minCoeff();
+    result.contactThreshold_ = contactThreshold;
     const Eigen::RowVector3d minimumVertex =
         vertices.colwise().minCoeff();
     const Eigen::RowVector3d maximumVertex =
@@ -845,6 +847,12 @@ const Eigen::Vector3d& SupportRegion::basisV() const
 double SupportRegion::supportHeight() const
 {
     return supportHeight_;
+}
+
+
+double SupportRegion::contactThreshold() const
+{
+    return contactThreshold_;
 }
 
 

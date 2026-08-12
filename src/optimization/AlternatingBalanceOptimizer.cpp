@@ -328,6 +328,8 @@ CarvingBlockOutcome runCarvingBlock(
         outcome.record.allTargetsReached = true;
         outcome.record.finalTargetEnergy = outcome.record.resetTargetEnergy;
         outcome.record.alphaHash = alphaHash(outcome.state.voxelFill);
+        outcome.record.geometryHash =
+            deformation::deformedGeometryContentHash(outcome.state.geometry);
         outcome.record.massProperties = outcome.state.massProperties;
         outcome.record.centerOfMass = outcome.state.centerOfMass;
         return outcome;
@@ -506,6 +508,8 @@ CarvingBlockOutcome runCarvingBlock(
                 targets.objectives
             );
         outcome.record.alphaHash = alphaHash(outcome.state.voxelFill);
+        outcome.record.geometryHash =
+            deformation::deformedGeometryContentHash(outcome.state.geometry);
         outcome.record.massProperties = outcome.state.massProperties;
         outcome.record.centerOfMass = outcome.state.centerOfMass;
         return outcome;
@@ -526,6 +530,9 @@ void copyStateToResult(
     result.geometry = state.geometry;
     result.massProperties = state.massProperties;
     result.centerOfMass = state.centerOfMass;
+    result.geometryHash = deformation::deformedGeometryContentHash(
+        state.geometry
+    );
 }
 
 
@@ -567,6 +574,19 @@ AlternatingBalanceOptimizer::optimize(
     result.mu = initialMu;
     result.lineSearchState.step = config_.lineSearch.initialStep;
     result.lineSearchState.mu = initialMu;
+    result.usesHypotheticalFlatteningSupport = std::any_of(
+        targetSpecifications_.begin(),
+        targetSpecifications_.end(),
+        [](const stability::BalanceTargetSpecification& specification)
+        {
+            const auto* standing =
+                std::get_if<stability::StandingTargetSpecification>(
+                    &specification
+                );
+            return standing != nullptr &&
+                standing->support.contactThreshold() > 0.0;
+        }
+    );
 
     stability::BalanceTargetSchedule schedule(targetSpecifications_);
     MaterialSnapshot current = evaluateSolidState(
@@ -666,6 +686,8 @@ AlternatingBalanceOptimizer::optimize(
                 result.targets.generation;
             const std::uint64_t alphaBeforeHash =
                 alphaHash(current.voxelFill);
+            const std::uint64_t geometryBeforeHash =
+                deformation::deformedGeometryContentHash(current.geometry);
 
             const deformation::PaperLineSearchResult trial =
                 deformation::paperGradientDescentTrial(
@@ -710,6 +732,7 @@ AlternatingBalanceOptimizer::optimize(
             record.targetGenerationBefore = targetGenerationBefore;
             record.alphaHashBefore = alphaBeforeHash;
             record.parametersBefore = parametersBefore;
+            record.geometryHashBefore = geometryBeforeHash;
 
             if (trial.accepted)
             {
@@ -757,6 +780,8 @@ AlternatingBalanceOptimizer::optimize(
                 current.voxelFill
             );
             record.parametersAfter = result.parameters;
+            record.geometryHashAfter =
+                deformation::deformedGeometryContentHash(current.geometry);
             record.massPropertiesAfter = current.massProperties;
             record.centerOfMassAfter = current.centerOfMass;
 

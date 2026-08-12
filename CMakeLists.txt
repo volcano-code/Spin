@@ -713,11 +713,24 @@ if(BUILD_TESTING)
     add_manufacturing_geometry_test(r8-prepare-containment containment)
     add_manufacturing_geometry_test(r8-prepare-wall-threshold wall-threshold)
     add_manufacturing_geometry_test(r8-source-bound source-bound)
+    add_manufacturing_geometry_test(
+        r8-source-bound-cavity
+        source-bound-cavity
+    )
+    add_manufacturing_geometry_test(
+        r8-source-bound-deformation-terminal
+        source-bound-deformation-terminal
+    )
+    add_manufacturing_geometry_test(
+        r8-source-bound-carving-after-deformation
+        source-bound-carving-after-deformation
+    )
     add_manufacturing_geometry_test(r8-export-roundtrip export-roundtrip)
     add_manufacturing_geometry_test(r8-export-transaction export-transaction)
     add_manufacturing_geometry_test(r8-export-seal export-seal)
     add_manufacturing_geometry_test(r8-source-rejection source-rejection)
     add_manufacturing_geometry_test(r8-raw-substitution raw-substitution)
+    add_manufacturing_geometry_test(r8-bound-substitution bound-substitution)
     add_manufacturing_geometry_test(r8-scale-translation scale-translation)
 
     add_executable(r8-fake-slicer tests/fake_slicer.cpp)
@@ -787,6 +800,7 @@ if(BUILD_TESTING)
     add_slicer_validation_test(r8-slicer-timeout timeout)
     add_slicer_validation_test(r8-slicer-shell-safe shell-safe)
     add_slicer_validation_test(r8-slicer-report-json report-json)
+    add_slicer_validation_test(r8-slicer-paths paths)
 
     add_executable(
         partition-manifest-regression

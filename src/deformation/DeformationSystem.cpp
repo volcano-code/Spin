@@ -5,6 +5,8 @@
 #include "voxel/VoxelGrid.h"
 
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -14,6 +16,39 @@ namespace deformation
 {
 namespace
 {
+
+
+void mixGeometryHash(
+    std::uint64_t& hash,
+    const void* bytes,
+    std::size_t count
+)
+{
+    const auto* values = static_cast<const unsigned char*>(bytes);
+    for (std::size_t index = 0; index < count; ++index)
+    {
+        hash ^= static_cast<std::uint64_t>(values[index]);
+        hash *= UINT64_C(1099511628211);
+    }
+}
+
+
+template <typename Derived>
+void mixGeometryMatrix(
+    std::uint64_t& hash,
+    const Eigen::MatrixBase<Derived>& matrix
+)
+{
+    const std::uint64_t rows = static_cast<std::uint64_t>(matrix.rows());
+    const std::uint64_t columns = static_cast<std::uint64_t>(matrix.cols());
+    mixGeometryHash(hash, &rows, sizeof(rows));
+    mixGeometryHash(hash, &columns, sizeof(columns));
+    for (Eigen::Index index = 0; index < matrix.size(); ++index)
+    {
+        const typename Derived::Scalar value = matrix.derived()(index);
+        mixGeometryHash(hash, &value, sizeof(value));
+    }
+}
 
 
 void validateFaces(
@@ -185,6 +220,21 @@ void validateSupportPoseInvariant(
 
 
 } // namespace
+
+
+std::uint64_t deformedGeometryContentHash(
+    const DeformedGeometry& geometry
+) noexcept
+{
+    std::uint64_t hash = UINT64_C(1469598103934665603);
+    mixGeometryMatrix(hash, geometry.outerVertices);
+    mixGeometryMatrix(hash, geometry.outerFaces);
+    mixGeometryMatrix(hash, geometry.gridCorners);
+    mixGeometryMatrix(hash, geometry.voxelCenters);
+    mixGeometryMatrix(hash, geometry.innerVertices);
+    mixGeometryMatrix(hash, geometry.innerFaces);
+    return hash;
+}
 
 
 DeformationSystem::DeformationSystem(

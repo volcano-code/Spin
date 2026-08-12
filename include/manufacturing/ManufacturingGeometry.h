@@ -165,13 +165,16 @@ struct ManufacturingReadinessReport
     bool sourceBound = false;
     bool targetsAllReached = false;
     bool sourceMassPropertiesConsistent = false;
+    bool sourceGeometryHashConsistent = false;
     bool sourceTraceHashConsistent = false;
     bool sourceParametersFinite = false;
+    bool sourceUsesActualSupportGeometry = false;
     bool sourceEpochTraceConsistent = false;
     bool ready = false;
 
     int geometryEpoch = -1;
     std::uint64_t occupancyHash = 0U;
+    std::uint64_t geometryHash = 0U;
     std::size_t targetGeneration = 0U;
     std::uint64_t parameterHash = 0U;
     int parameterCount = 0;

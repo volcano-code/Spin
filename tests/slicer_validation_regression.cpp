@@ -393,6 +393,12 @@ int runInvalidToolpath(const std::string& fakeExecutable)
         "no-layers"
     );
     const SlicerValidationReport layerReport = noLayers.validate();
+    Fixture garbage(
+        scenario + "-garbage",
+        fakeExecutable,
+        "garbage-gcode"
+    );
+    const SlicerValidationReport garbageReport = garbage.validate();
 
     if (
         emptyReport.status != SlicerValidationStatus::InvalidToolpath ||
@@ -406,7 +412,10 @@ int runInvalidToolpath(const std::string& fakeExecutable)
         layerReport.status != SlicerValidationStatus::InvalidToolpath ||
         layerReport.passed ||
         layerReport.toolpath.hasLayers ||
-        !layerReport.toolpath.hasDeposition
+        !layerReport.toolpath.hasDeposition ||
+        garbageReport.status != SlicerValidationStatus::InvalidToolpath ||
+        garbageReport.passed || garbageReport.toolpath.hasLayers ||
+        garbageReport.toolpath.hasDeposition
     )
     {
         return fail(scenario, "invalid G-code semantic gate failed");
@@ -513,6 +522,82 @@ int runReportJson(const std::string& fakeExecutable)
 }
 
 
+int runRelativePathsAndCollisions(const std::string& fakeExecutable)
+{
+    const std::string scenario = "paths";
+    Fixture fixture(scenario, fakeExecutable);
+    const std::filesystem::path original = std::filesystem::current_path();
+    std::filesystem::current_path(fixture.temporary.path());
+    std::filesystem::create_directory(
+        fixture.temporary.path() / "nested"
+    );
+    SlicerValidationReport relative;
+    try
+    {
+        relative = manufacturing::validateWithPinnedSlicer(
+            "input.stl",
+            "nested/output.gcode",
+            fixture.config
+        );
+    }
+    catch (...)
+    {
+        std::filesystem::current_path(original);
+        throw;
+    }
+    std::filesystem::current_path(original);
+    if (
+        relative.status != SlicerValidationStatus::Passed ||
+        !std::filesystem::is_regular_file(
+            fixture.temporary.path() / "nested/output.gcode"
+        )
+    )
+    {
+        return fail(scenario, "valid relative paths were not canonicalized");
+    }
+
+    const SlicerValidationReport inputCollision =
+        manufacturing::validateWithPinnedSlicer(
+            fixture.input.string(),
+            fixture.input.string(),
+            fixture.config
+        );
+    const SlicerValidationReport profileCollision =
+        manufacturing::validateWithPinnedSlicer(
+            fixture.input.string(),
+            fixture.profile.string(),
+            fixture.config
+        );
+    const SlicerValidationReport executableCollision =
+        manufacturing::validateWithPinnedSlicer(
+            fixture.input.string(),
+            fixture.executable.string(),
+            fixture.config
+        );
+    const std::filesystem::path hardLink =
+        fixture.temporary.path() / "input-hardlink.gcode";
+    std::filesystem::create_hard_link(fixture.input, hardLink);
+    const SlicerValidationReport hardLinkCollision =
+        manufacturing::validateWithPinnedSlicer(
+            fixture.input.string(),
+            hardLink.string(),
+            fixture.config
+        );
+    if (
+        inputCollision.status != SlicerValidationStatus::InvalidConfiguration ||
+        profileCollision.status != SlicerValidationStatus::InvalidConfiguration ||
+        executableCollision.status != SlicerValidationStatus::InvalidConfiguration ||
+        hardLinkCollision.status != SlicerValidationStatus::InvalidConfiguration ||
+        readText(fixture.input).find("solid fixture") == std::string::npos ||
+        readText(fixture.profile).find("mode=success") == std::string::npos
+    )
+    {
+        return fail(scenario, "destructive output collision was accepted");
+    }
+    return pass(scenario);
+}
+
+
 } // namespace
 
 
@@ -552,6 +637,7 @@ int main(int argc, char** argv)
     if (scenario == "timeout") return runTimeout(fakeExecutable);
     if (scenario == "shell-safe") return runSuccess(fakeExecutable, true);
     if (scenario == "report-json") return runReportJson(fakeExecutable);
+    if (scenario == "paths") return runRelativePathsAndCollisions(fakeExecutable);
 
     return fail(scenario, "unknown scenario");
 }

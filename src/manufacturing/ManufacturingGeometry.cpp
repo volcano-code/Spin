@@ -3363,11 +3363,119 @@ ManufacturingGeometry prepareManufacturingGeometry(
     report.sourceBound = true;
     report.geometryEpoch = source.geometryEpoch;
     report.occupancyHash = occupancyHash(source.voxelFill);
+    report.geometryHash = deformation::deformedGeometryContentHash(
+        source.geometry
+    );
     report.targetGeneration = source.targets.generation;
     report.targetsAllReached = source.targets.allReached;
     report.parameterCount = static_cast<int>(source.parameters.size());
     report.parameterHash = parameterHash(source.parameters);
     report.sourceParametersFinite = source.parameters.allFinite();
+    report.sourceUsesActualSupportGeometry =
+        !source.usesHypotheticalFlatteningSupport;
+    report.sourceGeometryHashConsistent =
+        source.geometryHash != 0U && source.geometryHash == report.geometryHash;
+
+    const bool stableStatus =
+        source.status ==
+            optimization::AlternatingOptimizationStatus::StableAfterCarving ||
+        source.status ==
+            optimization::AlternatingOptimizationStatus::StableAfterDeformation;
+    const bool targetSnapshotValid =
+        !source.targets.objectives.empty() &&
+        !source.targets.constraints.empty() &&
+        source.targets.objectives.size() == source.targets.constraints.size() &&
+        std::all_of(
+            source.targets.constraints.begin(),
+            source.targets.constraints.end(),
+            [](const stability::BalanceConstraintSnapshot& constraint)
+            {
+                if (!constraint.reached)
+                {
+                    return false;
+                }
+                if (constraint.type == stability::BalanceConstraintType::Standing)
+                {
+                    return
+                        constraint.standingState.has_value() &&
+                        constraint.requestedMarginAttainable.has_value() &&
+                        *constraint.standingState == stability::StandingState::Stable &&
+                        *constraint.requestedMarginAttainable &&
+                        !constraint.suspensionDeviationRadians.has_value() &&
+                        !constraint.suspensionDownstream.has_value();
+                }
+                return
+                    !constraint.standingState.has_value() &&
+                    !constraint.requestedMarginAttainable.has_value() &&
+                    constraint.suspensionDeviationRadians.has_value() &&
+                    std::isfinite(*constraint.suspensionDeviationRadians) &&
+                    constraint.suspensionDownstream.has_value() &&
+                    *constraint.suspensionDownstream;
+            }
+        );
+    const double sourceTraceScale = std::max({
+        1.0,
+        std::abs(source.massProperties.mass),
+        source.massProperties.firstMoment.norm(),
+        source.centerOfMass.norm()
+    });
+    const double sourceTraceTolerance =
+        4096.0 * std::numeric_limits<double>::epsilon() * sourceTraceScale;
+    const auto traceStateMatches = [&](
+        const MassProperties& massProperties,
+        const Eigen::Vector3d& centerOfMass
+    )
+    {
+        return
+            std::abs(massProperties.mass - source.massProperties.mass) <=
+                sourceTraceTolerance &&
+            (massProperties.firstMoment -
+             source.massProperties.firstMoment).norm() <=
+                sourceTraceTolerance &&
+            (centerOfMass - source.centerOfMass).norm() <=
+                sourceTraceTolerance;
+    };
+    bool terminalTraceConsistent = false;
+    if (
+        source.status ==
+            optimization::AlternatingOptimizationStatus::StableAfterCarving &&
+        !source.carvingBlocks.empty()
+    )
+    {
+        const optimization::AlternatingCarvingRecord& terminal =
+            source.carvingBlocks.back();
+        terminalTraceConsistent =
+            terminal.allTargetsReached &&
+            terminal.geometryEpoch == source.geometryEpoch &&
+            terminal.alphaHash == report.occupancyHash &&
+            terminal.geometryHash == report.geometryHash &&
+            terminal.targetGenerationAfter == source.targets.generation &&
+            traceStateMatches(
+                terminal.massProperties,
+                terminal.centerOfMass
+            );
+    }
+    else if (
+        source.status ==
+            optimization::AlternatingOptimizationStatus::StableAfterDeformation &&
+        !source.deformationIterations.empty()
+    )
+    {
+        const optimization::AlternatingDeformationRecord& terminal =
+            source.deformationIterations.back();
+        terminalTraceConsistent =
+            terminal.accepted && !terminal.rolledBack &&
+            terminal.allTargetsReached &&
+            terminal.geometryEpochAfter == source.geometryEpoch &&
+            terminal.alphaHashAfter == report.occupancyHash &&
+            terminal.geometryHashAfter == report.geometryHash &&
+            terminal.targetGenerationAfter == source.targets.generation &&
+            terminal.parametersAfter.isApprox(source.parameters, 0.0) &&
+            traceStateMatches(
+                terminal.massPropertiesAfter,
+                terminal.centerOfMassAfter
+            );
+    }
 
     std::uint64_t tracedHash = report.occupancyHash;
     bool hasTraceHash = false;
@@ -3380,10 +3488,15 @@ ManufacturingGeometry prepareManufacturingGeometry(
     }
     if (
         !source.deformationIterations.empty() &&
-        source.deformationIterations.back().geometryEpochAfter >= tracedEpoch
+        (
+            !hasTraceHash ||
+            source.deformationIterations.back().geometryEpochAfter > tracedEpoch
+        )
     )
     {
         tracedHash = source.deformationIterations.back().alphaHashAfter;
+        tracedEpoch =
+            source.deformationIterations.back().geometryEpochAfter;
         hasTraceHash = true;
     }
     report.sourceTraceHashConsistent =
@@ -3454,9 +3567,31 @@ ManufacturingGeometry prepareManufacturingGeometry(
     {
         report.failures.push_back("source_parameters_nonfinite");
     }
+    if (!report.sourceUsesActualSupportGeometry)
+    {
+        report.failures.push_back(
+            "source_hypothetical_flattening_not_applied"
+        );
+    }
+    if (!report.sourceGeometryHashConsistent)
+    {
+        report.failures.push_back("source_geometry_hash_mismatch");
+    }
     if (!report.targetsAllReached)
     {
         report.failures.push_back("source_targets_not_all_reached");
+    }
+    if (!stableStatus)
+    {
+        report.failures.push_back("source_status_not_stable");
+    }
+    if (!targetSnapshotValid)
+    {
+        report.failures.push_back("source_target_snapshot_invalid");
+    }
+    if (!terminalTraceConsistent)
+    {
+        report.failures.push_back("source_terminal_trace_inconsistent");
     }
     if (!report.sourceMassPropertiesConsistent)
     {
@@ -3483,6 +3618,7 @@ std::string ManufacturingReadinessReport::toJson() const
     output << "  \"source_bound\": " << jsonBool(sourceBound) << ",\n";
     output << "  \"geometry_epoch\": " << geometryEpoch << ",\n";
     output << "  \"occupancy_hash\": \"" << occupancyHash << "\",\n";
+    output << "  \"geometry_hash\": \"" << geometryHash << "\",\n";
     output << "  \"target_generation\": " << targetGeneration << ",\n";
     output << "  \"targets_all_reached\": "
         << jsonBool(targetsAllReached) << ",\n";
@@ -3492,6 +3628,10 @@ std::string ManufacturingReadinessReport::toJson() const
         << jsonBool(sourceEpochTraceConsistent) << ",\n";
     output << "  \"source_parameters_finite\": "
         << jsonBool(sourceParametersFinite) << ",\n";
+    output << "  \"source_uses_actual_support_geometry\": "
+        << jsonBool(sourceUsesActualSupportGeometry) << ",\n";
+    output << "  \"source_geometry_hash_consistent\": "
+        << jsonBool(sourceGeometryHashConsistent) << ",\n";
     output << "  \"parameter_count\": " << parameterCount << ",\n";
     output << "  \"parameter_hash\": \"" << parameterHash << "\",\n";
     output << "  \"source_mass_properties_consistent\": "

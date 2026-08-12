@@ -814,6 +814,9 @@ optimization::AlternatingBalanceOptimizationResult sourceResultFixture()
     optimization::AlternatingBalanceOptimizationResult result;
     result.voxelFill = grid;
     result.geometry = identityGeometry(outer, grid);
+    result.geometryHash = deformation::deformedGeometryContentHash(
+        result.geometry
+    );
     result.massProperties = computeSurfaceMassProperties(
         outer.vertices,
         outer.faces
@@ -823,12 +826,73 @@ optimization::AlternatingBalanceOptimizationResult sourceResultFixture()
         throw std::runtime_error("source fixture has invalid analytic mass");
     }
     result.geometryEpoch = 3;
+    result.status =
+        optimization::AlternatingOptimizationStatus::StableAfterCarving;
     result.targets.allReached = true;
     result.targets.generation = 7;
+    result.targets.objectives.emplace_back(
+        Eigen::Vector3d(0.5, 0.0, 0.5),
+        Eigen::Vector3d(0.0, -1.0, 0.0)
+    );
+    result.targets.constraints.push_back(
+        stability::BalanceConstraintSnapshot{
+            stability::BalanceConstraintType::Standing,
+            stability::StandingState::Stable,
+            true,
+            std::nullopt,
+            std::nullopt,
+            true
+        }
+    );
     optimization::AlternatingCarvingRecord record;
     record.geometryEpoch = result.geometryEpoch;
     record.alphaHash = testOccupancyHash(result.voxelFill);
+    record.geometryHash = result.geometryHash;
+    record.targetGenerationAfter = result.targets.generation;
+    record.allTargetsReached = true;
+    record.massProperties = result.massProperties;
+    record.centerOfMass = result.centerOfMass;
     result.carvingBlocks.push_back(record);
+    return result;
+}
+
+
+optimization::AlternatingBalanceOptimizationResult cavitySourceResultFixture()
+{
+    optimization::AlternatingBalanceOptimizationResult result =
+        sourceResultFixture();
+    const GridCell carved = nearestEligibleCell(result.voxelFill);
+    if (!carved.valid())
+    {
+        throw std::runtime_error("source cavity fixture has no eligible cell");
+    }
+    result.voxelFill(carved.x, carved.y, carved.z).isFilled = false;
+    const TriangleMesh outer{
+        result.geometry.outerVertices,
+        result.geometry.outerFaces
+    };
+    result.geometry = identityGeometry(outer, result.voxelFill);
+    result.geometryHash = deformation::deformedGeometryContentHash(
+        result.geometry
+    );
+    result.massProperties =
+        computeSurfaceMassProperties(
+            result.geometry.outerVertices,
+            result.geometry.outerFaces
+        ) +
+        computeSurfaceMassProperties(
+            result.geometry.innerVertices,
+            result.geometry.innerFaces
+        );
+    if (!result.massProperties.tryCenterOfMass(result.centerOfMass, 0.0))
+    {
+        throw std::runtime_error("source cavity fixture has invalid mass");
+    }
+    result.carvingBlocks.back().alphaHash =
+        testOccupancyHash(result.voxelFill);
+    result.carvingBlocks.back().geometryHash = result.geometryHash;
+    result.carvingBlocks.back().massProperties = result.massProperties;
+    result.carvingBlocks.back().centerOfMass = result.centerOfMass;
     return result;
 }
 
@@ -1014,6 +1078,115 @@ int runSourceBound()
 }
 
 
+int runSourceBoundCavity()
+{
+    const std::string scenario = "source-bound-cavity";
+    optimization::AlternatingBalanceOptimizationResult source =
+        cavitySourceResultFixture();
+    const ManufacturingGeometry prepared =
+        manufacturing::prepareManufacturingGeometry(source);
+    if (
+        !prepared.report.ready ||
+        prepared.boundary.innerFaceCount <= 0 ||
+        !prepared.report.innerBoundary.strictBoundaryValid() ||
+        !prepared.report.wallClearance.meetsRequestedThickness
+    )
+    {
+        return fail(scenario, "source-bound cavity did not pass final gate");
+    }
+
+    const ScopedTemporaryDirectory temporary(scenario);
+    const std::filesystem::path output = temporary.path() / "cavity.obj";
+    manufacturing::exportReadyManufacturingMesh(
+        prepared,
+        output.string(),
+        manufacturing::ManufacturingMeshFormat::Obj
+    );
+    if (!std::filesystem::is_regular_file(output) ||
+        std::filesystem::file_size(output) == 0U)
+    {
+        return fail(scenario, "source-bound cavity export is unavailable");
+    }
+    return pass(scenario);
+}
+
+
+int runSourceBoundDeformationTerminal()
+{
+    const std::string scenario = "source-bound-deformation-terminal";
+    optimization::AlternatingBalanceOptimizationResult source =
+        cavitySourceResultFixture();
+    optimization::AlternatingDeformationRecord record;
+    record.accepted = true;
+    record.rolledBack = false;
+    record.geometryEpochBefore = source.geometryEpoch;
+    record.geometryEpochAfter = source.geometryEpoch + 1;
+    record.alphaHashBefore = testOccupancyHash(source.voxelFill);
+    record.alphaHashAfter = record.alphaHashBefore;
+    record.parametersAfter = source.parameters;
+    record.geometryHashBefore = source.geometryHash;
+    record.geometryHashAfter = source.geometryHash;
+    record.targetGenerationAfter = source.targets.generation;
+    record.allTargetsReached = true;
+    record.massPropertiesAfter = source.massProperties;
+    record.centerOfMassAfter = source.centerOfMass;
+    source.deformationIterations.push_back(record);
+    source.geometryEpoch = record.geometryEpochAfter;
+    source.status =
+        optimization::AlternatingOptimizationStatus::StableAfterDeformation;
+    source.geometryHash = deformation::deformedGeometryContentHash(
+        source.geometry
+    );
+
+    const ManufacturingGeometry prepared =
+        manufacturing::prepareManufacturingGeometry(source);
+    if (
+        !prepared.report.ready ||
+        !prepared.report.sourceEpochTraceConsistent ||
+        !prepared.report.sourceTraceHashConsistent ||
+        prepared.report.geometryEpoch != record.geometryEpochAfter
+    )
+    {
+        return fail(
+            scenario,
+            "accepted deformation terminal did not bind latest epoch"
+        );
+    }
+    return pass(scenario);
+}
+
+
+int runSourceBoundCarvingAfterDeformation()
+{
+    const std::string scenario = "source-bound-carving-after-deformation";
+    optimization::AlternatingBalanceOptimizationResult source =
+        cavitySourceResultFixture();
+    optimization::AlternatingDeformationRecord deformation;
+    deformation.accepted = true;
+    deformation.rolledBack = false;
+    deformation.geometryEpochBefore = source.geometryEpoch - 1;
+    deformation.geometryEpochAfter = source.geometryEpoch;
+    deformation.alphaHashBefore = source.carvingBlocks.back().alphaHash + 1U;
+    deformation.alphaHashAfter = deformation.alphaHashBefore;
+    source.deformationIterations.push_back(deformation);
+    source.status =
+        optimization::AlternatingOptimizationStatus::StableAfterCarving;
+
+    const ManufacturingGeometry prepared =
+        manufacturing::prepareManufacturingGeometry(source);
+    if (!prepared.report.ready ||
+        !prepared.report.sourceEpochTraceConsistent ||
+        !prepared.report.sourceTraceHashConsistent)
+    {
+        return fail(
+            scenario,
+            "final carving trace lost precedence over prior deformation"
+        );
+    }
+    return pass(scenario);
+}
+
+
 int runExportSeal()
 {
     const std::string scenario = "export-seal";
@@ -1133,6 +1306,28 @@ int runSourceRejection()
         sourceResultFixture();
     unsafe.targets.allReached = false;
 
+    optimization::AlternatingBalanceOptimizationResult emptyTargets =
+        sourceResultFixture();
+    emptyTargets.targets.objectives.clear();
+    emptyTargets.targets.constraints.clear();
+
+    optimization::AlternatingBalanceOptimizationResult nonstable =
+        sourceResultFixture();
+    nonstable.status =
+        optimization::AlternatingOptimizationStatus::MaximumCarvingBlocks;
+
+    optimization::AlternatingBalanceOptimizationResult wrongGeometryHash =
+        sourceResultFixture();
+    ++wrongGeometryHash.geometryHash;
+
+    optimization::AlternatingBalanceOptimizationResult unreachedConstraint =
+        sourceResultFixture();
+    unreachedConstraint.targets.constraints.front().reached = false;
+
+    optimization::AlternatingBalanceOptimizationResult hypotheticalSupport =
+        sourceResultFixture();
+    hypotheticalSupport.usesHypotheticalFlatteningSupport = true;
+
     optimization::AlternatingBalanceOptimizationResult wrongMass =
         sourceResultFixture();
     wrongMass.massProperties.mass += 0.125;
@@ -1151,6 +1346,14 @@ int runSourceRejection()
         !expect(wrongTraceEpoch, "source_geometry_epoch_trace_mismatch") ||
         !expect(nonfinite, "source_parameters_nonfinite") ||
         !expect(unsafe, "source_targets_not_all_reached") ||
+        !expect(emptyTargets, "source_target_snapshot_invalid") ||
+        !expect(nonstable, "source_status_not_stable") ||
+        !expect(wrongGeometryHash, "source_geometry_hash_mismatch") ||
+        !expect(unreachedConstraint, "source_target_snapshot_invalid") ||
+        !expect(
+            hypotheticalSupport,
+            "source_hypothetical_flattening_not_applied"
+        ) ||
         !expect(wrongMass, "source_mass_properties_disagree") ||
         !expect(wrongMoment, "source_mass_properties_disagree") ||
         !expect(wrongCenter, "source_mass_properties_disagree")
@@ -1210,6 +1413,40 @@ int runRawSubstitution()
     if (!rejected || readBytes(target) != sentinel)
     {
         return fail(scenario, "raw substituted outer escaped export guard");
+    }
+    return pass(scenario);
+}
+
+
+int runBoundSubstitution()
+{
+    const std::string scenario = "bound-substitution";
+    optimization::AlternatingBalanceOptimizationResult source =
+        sourceResultFixture();
+
+    const TriangleMesh substitute = makeBox(
+        Eigen::Vector3d::Zero(),
+        Eigen::Vector3d(0.9, 1.0, 1.0)
+    );
+    source.geometry.outerVertices = substitute.vertices;
+    source.geometry.outerFaces = substitute.faces;
+    source.massProperties = computeSurfaceMassProperties(
+        substitute.vertices,
+        substitute.faces
+    );
+    if (!source.massProperties.tryCenterOfMass(source.centerOfMass, 0.0))
+    {
+        return fail(scenario, "substitute has invalid analytic mass");
+    }
+
+    const ManufacturingGeometry prepared =
+        manufacturing::prepareManufacturingGeometry(source);
+    if (
+        prepared.report.ready ||
+        !hasFailure(prepared.report, "source_geometry_hash_mismatch")
+    )
+    {
+        return fail(scenario, "mutated bound geometry escaped source hash");
     }
     return pass(scenario);
 }
@@ -1447,8 +1684,10 @@ int main(int argc, char** argv)
             << "self-intersection|prepare-empty|prepare-cavity|stale-inner|"
             << "cell-collapse|cell-swap|material-components|containment|"
             << "wall-threshold|source-bound|export-roundtrip|"
+            << "source-bound-cavity|source-bound-deformation-terminal|"
+            << "source-bound-carving-after-deformation|"
             << "export-transaction|export-seal|source-rejection|"
-            << "raw-substitution|scale-translation>\n";
+            << "raw-substitution|bound-substitution|scale-translation>\n";
         return EXIT_FAILURE;
     }
 
@@ -1469,11 +1708,21 @@ int main(int argc, char** argv)
     if (scenario == "containment") return runContainment();
     if (scenario == "wall-threshold") return runWallThreshold();
     if (scenario == "source-bound") return runSourceBound();
+    if (scenario == "source-bound-cavity") return runSourceBoundCavity();
+    if (scenario == "source-bound-deformation-terminal")
+    {
+        return runSourceBoundDeformationTerminal();
+    }
+    if (scenario == "source-bound-carving-after-deformation")
+    {
+        return runSourceBoundCarvingAfterDeformation();
+    }
     if (scenario == "export-roundtrip") return runExportRoundTrip();
     if (scenario == "export-transaction") return runExportTransaction();
     if (scenario == "export-seal") return runExportSeal();
     if (scenario == "source-rejection") return runSourceRejection();
     if (scenario == "raw-substitution") return runRawSubstitution();
+    if (scenario == "bound-substitution") return runBoundSubstitution();
     if (scenario == "scale-translation") return runScaleTranslation();
 
     return fail(scenario, "unknown scenario");

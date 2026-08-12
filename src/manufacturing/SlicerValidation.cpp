@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cerrno>
 #include <chrono>
+#include <cmath>
 #include <csignal>
 #include <cstring>
 #include <filesystem>
@@ -236,6 +237,44 @@ bool regularFile(const std::string& filename)
 }
 
 
+std::filesystem::path normalizedAbsolutePath(
+    const std::filesystem::path& path
+)
+{
+    std::error_code error;
+    const std::filesystem::path absolute = std::filesystem::absolute(
+        path,
+        error
+    );
+    if (error)
+    {
+        return std::filesystem::path();
+    }
+    return absolute.lexically_normal();
+}
+
+
+bool aliasesExistingArtifact(
+    const std::filesystem::path& output,
+    const std::filesystem::path& artifact
+)
+{
+    if (output == artifact)
+    {
+        return true;
+    }
+    std::error_code outputError;
+    const bool outputExists = std::filesystem::exists(output, outputError);
+    if (outputError || !outputExists)
+    {
+        return false;
+    }
+    std::error_code equivalentError;
+    return std::filesystem::equivalent(output, artifact, equivalentError) &&
+        !equivalentError;
+}
+
+
 std::vector<unsigned char> readBytes(const std::string& filename)
 {
     std::ifstream input(filename, std::ios::binary);
@@ -451,21 +490,51 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
     while (std::getline(input, line))
     {
         ++audit.lineCount;
-        if (
-            line.find(";LAYER_CHANGE") != std::string::npos ||
-            line.find("; layer ") != std::string::npos ||
-            line.find(";LAYER:") != std::string::npos
-        )
+        const std::string stripped = trim(line);
+        bool layerMarker = stripped == ";LAYER_CHANGE";
+        if (stripped.rfind(";LAYER:", 0) == 0)
+        {
+            const std::string value = trim(stripped.substr(7));
+            layerMarker = !value.empty() && std::all_of(
+                value.begin(),
+                value.end(),
+                [](unsigned char character)
+                {
+                    return std::isdigit(character) != 0;
+                }
+            );
+        }
+        if (layerMarker)
         {
             ++audit.layerCount;
         }
 
         const std::size_t comment = line.find(';');
         const std::string command = trim(line.substr(0, comment));
-        if (
-            (command.rfind("G0", 0) == 0 || command.rfind("G1", 0) == 0) &&
-            command.find('E') != std::string::npos
-        )
+        std::istringstream fields(command);
+        fields.imbue(std::locale::classic());
+        std::string opcode;
+        fields >> opcode;
+        bool finitePositiveExtrusion = false;
+        std::string field;
+        while (fields >> field)
+        {
+            if (field.size() <= 1U || field.front() != 'E')
+            {
+                continue;
+            }
+            std::istringstream valueInput(field.substr(1));
+            valueInput.imbue(std::locale::classic());
+            double value = 0.0;
+            char trailing = '\0';
+            if ((valueInput >> value) && !(valueInput >> trailing) &&
+                std::isfinite(value) && value > 0.0)
+            {
+                finitePositiveExtrusion = true;
+            }
+        }
+        if ((opcode == "G0" || opcode == "G00" || opcode == "G1" ||
+             opcode == "G01") && finitePositiveExtrusion)
         {
             ++audit.depositionCommandCount;
         }
@@ -723,15 +792,36 @@ SlicerValidationReport validateWithPinnedSlicer(
         report.failures.push_back("invalid_slicer_configuration");
         return report;
     }
-    if (!regularFile(inputMesh))
+    const std::filesystem::path inputPath = normalizedAbsolutePath(inputMesh);
+    const std::filesystem::path executablePath = normalizedAbsolutePath(
+        config.executableAbsolutePath
+    );
+    const std::filesystem::path profilePath = normalizedAbsolutePath(
+        config.profileAbsolutePath
+    );
+    const std::filesystem::path outputPath = normalizedAbsolutePath(
+        outputToolpath
+    );
+    if (
+        inputPath.empty() || executablePath.empty() || profilePath.empty() ||
+        outputPath.empty() || aliasesExistingArtifact(outputPath, inputPath) ||
+        aliasesExistingArtifact(outputPath, executablePath) ||
+        aliasesExistingArtifact(outputPath, profilePath)
+    )
+    {
+        report.status = SlicerValidationStatus::InvalidConfiguration;
+        report.failures.push_back("slicer_artifact_path_collision");
+        return report;
+    }
+    if (!regularFile(inputPath.string()))
     {
         report.status = SlicerValidationStatus::InputUnavailable;
         report.failures.push_back("input_mesh_unavailable");
         return report;
     }
-    report.inputMeshSha256 = computeFileSha256(inputMesh);
-    if (!regularFile(config.executableAbsolutePath) ||
-        ::access(config.executableAbsolutePath.c_str(), X_OK) != 0)
+    report.inputMeshSha256 = computeFileSha256(inputPath.string());
+    if (!regularFile(executablePath.string()) ||
+        ::access(executablePath.c_str(), X_OK) != 0)
     {
         report.status = SlicerValidationStatus::ExecutableUnavailable;
         report.failures.push_back("slicer_executable_unavailable");
@@ -739,7 +829,7 @@ SlicerValidationReport validateWithPinnedSlicer(
     }
     report.executableAvailable = true;
     report.observedExecutableSha256 = computeFileSha256(
-        config.executableAbsolutePath
+        executablePath.string()
     );
     if (report.observedExecutableSha256 != report.expectedExecutableSha256)
     {
@@ -749,14 +839,14 @@ SlicerValidationReport validateWithPinnedSlicer(
     }
     report.executableHashVerified = true;
 
-    if (!regularFile(config.profileAbsolutePath))
+    if (!regularFile(profilePath.string()))
     {
         report.status = SlicerValidationStatus::ProfileUnavailable;
         report.failures.push_back("slicer_profile_unavailable");
         return report;
     }
     report.profileAvailable = true;
-    report.observedProfileSha256 = computeFileSha256(config.profileAbsolutePath);
+    report.observedProfileSha256 = computeFileSha256(profilePath.string());
     if (report.observedProfileSha256 != report.expectedProfileSha256)
     {
         report.status = SlicerValidationStatus::ProfileHashMismatch;
@@ -765,7 +855,6 @@ SlicerValidationReport validateWithPinnedSlicer(
     }
     report.profileHashVerified = true;
 
-    const std::filesystem::path outputPath(outputToolpath);
     const std::filesystem::path directory = outputPath.has_parent_path()
         ? outputPath.parent_path() : std::filesystem::path(".");
     if (!std::filesystem::is_directory(directory))
@@ -777,7 +866,7 @@ SlicerValidationReport validateWithPinnedSlicer(
 
     report.versionProbeAttempted = true;
     const ProcessCapture version = runProcess(
-        {config.executableAbsolutePath, "--version"},
+        {executablePath.string(), "--version"},
         config.timeoutMilliseconds,
         directory,
         "slicer-version"
@@ -813,11 +902,11 @@ SlicerValidationReport validateWithPinnedSlicer(
         outputPath.filename().string() + ".gcode"
     );
     const std::vector<std::string> arguments{
-        config.executableAbsolutePath,
-        "--load", config.profileAbsolutePath,
+        executablePath.string(),
+        "--load", profilePath.string(),
         "--export-gcode",
         "--output", stagedOutput.string(),
-        inputMesh
+        inputPath.string()
     };
     report.invocationSha256 = invocationFingerprint(arguments);
     report.attempted = true;
@@ -881,7 +970,7 @@ SlicerValidationReport validateWithPinnedSlicer(
                 report.status = SlicerValidationStatus::InvalidToolpath;
                 report.failures.push_back("slicer_toolpath_invalid");
             }
-            else if (computeFileSha256(inputMesh) != report.inputMeshSha256)
+            else if (computeFileSha256(inputPath.string()) != report.inputMeshSha256)
             {
                 report.status = SlicerValidationStatus::InputChanged;
                 report.failures.push_back("input_mesh_changed_during_slicing");

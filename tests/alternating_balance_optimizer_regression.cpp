@@ -336,6 +336,9 @@ bool sameResult(
         first.status != second.status ||
         first.mu != second.mu ||
         first.geometryEpoch != second.geometryEpoch ||
+        first.geometryHash != second.geometryHash ||
+        first.usesHypotheticalFlatteningSupport !=
+            second.usesHypotheticalFlatteningSupport ||
         first.targets.generation != second.targets.generation ||
         first.targets.allReached != second.targets.allReached ||
         first.carvingBlocks.size() != second.carvingBlocks.size() ||
@@ -398,6 +401,7 @@ bool sameResult(
             a.alphaHashBeforeReset != b.alphaHashBeforeReset ||
             a.alphaHashAfterReset != b.alphaHashAfterReset ||
             a.alphaHash != b.alphaHash ||
+            a.geometryHash != b.geometryHash ||
             !sameMassProperties(a.massProperties, b.massProperties, 0.0) ||
             !a.centerOfMass.isApprox(b.centerOfMass, 0.0)
         )
@@ -475,6 +479,8 @@ bool sameResult(
             a.alphaHammingDistance != b.alphaHammingDistance ||
             a.alphaHashBefore != b.alphaHashBefore ||
             a.alphaHashAfter != b.alphaHashAfter ||
+            a.geometryHashBefore != b.geometryHashBefore ||
+            a.geometryHashAfter != b.geometryHashAfter ||
             !a.parametersBefore.isApprox(b.parametersBefore, 0.0) ||
             !a.parametersAfter.isApprox(b.parametersAfter, 0.0) ||
             !sameMassProperties(
@@ -627,6 +633,7 @@ bool validateCarvingTrace(
             expectedEpoch != block.geometryEpoch ||
             expectedGeneration != block.targetGenerationAfter ||
             expectedHash != block.alphaHash ||
+            block.geometryHash == 0U ||
             !close(
                 expectedRefreshedEnergy,
                 block.finalTargetEnergy,

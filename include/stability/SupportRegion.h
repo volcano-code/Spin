@@ -39,6 +39,8 @@ public:
     const Eigen::Vector3d& basisU() const;
     const Eigen::Vector3d& basisV() const;
     double supportHeight() const;
+    /** User-requested hypothetical flattening band; zero uses true contacts. */
+    double contactThreshold() const;
     const std::vector<int>& contactVertexIndices() const;
     const Eigen::MatrixXd& supportPolygon2D() const;
 
@@ -68,6 +70,7 @@ private:
     Eigen::Vector3d basisV_;
     Eigen::Vector3d planeOrigin_;
     double supportHeight_;
+    double contactThreshold_;
     std::vector<int> contactVertexIndices_;
     Eigen::MatrixXd supportPolygon2D_;
     double maximumInset_;

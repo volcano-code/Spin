@@ -33,6 +33,7 @@ struct DeclaredManufacturingPart
  */
 struct ExternalPartitionManifest
 {
+    std::string sourceBoundaryFilename;
     std::string sourceBoundarySha256;
     double modelUnitsToMillimeters = 0.0;
     std::string externalGenerator;
