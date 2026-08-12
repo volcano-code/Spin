@@ -40,6 +40,7 @@ const float DEFAULT_GRAVITY_PITCH = 0.0;
 const float DEFAULT_GRAVITY_ROLL = 180.0;
 const float DEFAULT_CONTACT_THRESHOLD = 0.0f;
 const float DEFAULT_TOPPLING_ANGLE = 5.0f;
+const float DEFAULT_MINIMUM_WALL_THICKNESS = 0.0f;
 
 // Predefined colors
 const Eigen::RowVector3d orange(1.0,0.7,0.2);
@@ -80,6 +81,7 @@ struct State
 	float roll;
 	float contactThreshold;
 	float topplingAngle;
+	float minimumWallThickness;
 	std::string stabilityMessage;
 
 	// user workflow state
@@ -243,6 +245,7 @@ void initState(int argc, char *argv[])
 	state.roll = DEFAULT_GRAVITY_ROLL;
 	state.contactThreshold = DEFAULT_CONTACT_THRESHOLD;
 	state.topplingAngle = DEFAULT_TOPPLING_ANGLE;
+	state.minimumWallThickness = DEFAULT_MINIMUM_WALL_THICKNESS;
 	state.stabilityMessage = "Support target not constructed";
 	updateGravityVector();
 	
@@ -385,6 +388,13 @@ void draw_workflow_control_window()
 		45.0f,
 		"%.1f deg"
 	);
+	ImGui::InputFloat(
+		"Minimum wall thickness",
+		&(state.minimumWallThickness),
+		0.001f,
+		0.01f,
+		"%.4f"
+	);
 	if (ImGui::Checkbox("Begin carving", &(state.isCarving)))
 	{
 		if (state.isCarving) // switching to carving
@@ -437,7 +447,12 @@ void draw_workflow_control_window()
 
 				BalanceObjectives objectives;
 				objectives.push_back(standingTarget.objective());
-				state.innerMesh = new InnerVoidMesh(state.V, state.F, objectives);
+				state.innerMesh = new InnerVoidMesh(
+					state.V,
+					state.F,
+					objectives,
+					static_cast<double>(state.minimumWallThickness)
+				);
 				state.stabilityMessage =
 					state.contactThreshold > 0.0f ?
 					"Target uses a hypothetical flatten band; mesh is not flattened in R3" :

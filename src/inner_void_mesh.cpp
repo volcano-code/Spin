@@ -6,10 +6,11 @@
 InnerVoidMesh::InnerVoidMesh(
     const Eigen::MatrixXd& V,
     const Eigen::MatrixXi& F,
-    const BalanceObjectives& objectives
+    const BalanceObjectives& objectives,
+    double minimumWallThickness
 )
     :
-    voxelGrid(V, F),
+    voxelGrid(V, F, minimumWallThickness),
     carvingSolver(
         voxelGrid,
         V,

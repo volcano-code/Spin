@@ -43,6 +43,7 @@ find_package(LIBIGL REQUIRED QUIET)
 
 set(MAKE_IT_STAND_CORE_SOURCES
     src/carving/CarvingDiagnostics.cpp
+    src/carving/PlaneCarvingPolicy.cpp
     src/carving/CarvingSolver.cpp
     src/center_of_mass.cpp
     src/extraction/VoidMeshExtractor.cpp
@@ -56,10 +57,12 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/voxel/Voxel.cpp
     src/voxel/VoxelGrid.cpp
     src/voxel/VoxelSurface.cpp
+    src/voxel/VoxelTopology.cpp
 )
 
 set(MAKE_IT_STAND_CORE_HEADERS
     include/carving/CarvingDiagnostics.h
+    include/carving/PlaneCarvingPolicy.h
     include/carving/CarvingSolver.h
     include/center_of_mass.h
     include/extraction/VoidMeshExtractor.h
@@ -74,6 +77,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/voxel/Voxel.h
     include/voxel/VoxelGrid.h
     include/voxel/VoxelSurface.h
+    include/voxel/VoxelTopology.h
 )
 
 add_library(
@@ -233,7 +237,81 @@ if(BUILD_TESTING)
     set_tests_properties(
         multi-target-solver-boundary
         PROPERTIES
-            LABELS "r3;integration;carving"
+            LABELS "r3;r4;integration;carving"
+            TIMEOUT 30
+    )
+
+    add_executable(
+        plane-carving-policy-regression
+        tests/plane_carving_policy_regression.cpp
+    )
+    target_compile_features(
+        plane-carving-policy-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        plane-carving-policy-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        plane-carving-policy-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_plane_carving_policy_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:plane-carving-policy-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r4;carving;physics"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_plane_carving_policy_test(cutting-plane-analytic planes)
+    add_plane_carving_policy_test(multi-plane-score-analytic multi-score)
+    add_plane_carving_policy_test(carving-order-deterministic ordering)
+    add_plane_carving_policy_test(global-prefix-transient transient-prefix)
+    add_plane_carving_policy_test(global-prefix-middle middle-prefix)
+    add_plane_carving_policy_test(global-prefix-zero no-improvement)
+    add_plane_carving_policy_test(global-prefix-shortest-tie tie-prefix)
+    add_plane_carving_policy_test(global-prefix-scale-invariant scale-prefix)
+    add_plane_carving_policy_test(global-prefix-over-1000 over-thousand)
+
+    add_executable(
+        voxel-constraints-regression
+        tests/voxel_constraints_regression.cpp
+    )
+    target_compile_features(
+        voxel-constraints-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        voxel-constraints-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        voxel-constraints-regression
+        PRIVATE make_it_stand::core
+    )
+
+    add_test(
+        NAME minimum-wall-thickness-analytic
+        COMMAND "$<TARGET_FILE:voxel-constraints-regression>" wall
+    )
+    add_test(
+        NAME voxel-topology-report
+        COMMAND "$<TARGET_FILE:voxel-constraints-regression>" topology
+    )
+    set_tests_properties(
+        minimum-wall-thickness-analytic
+        voxel-topology-report
+        PROPERTIES
+            LABELS "r4;carving;manufacturing"
             TIMEOUT 30
     )
 
@@ -259,8 +337,8 @@ if(BUILD_TESTING)
         )
     endfunction()
 
-    # These verify diagnostic/control-flow contracts and R2 mass-property
-    # invariants. R4 still owns paper-faithful best-prefix carving.
+    # These retain R1/R2 diagnostic and mass-property invariants while the
+    # one-step/full cases also exercise the integrated R4 best-prefix policy.
     add_carving_regression_test(
         carving-initial-state
         initial
@@ -276,6 +354,12 @@ if(BUILD_TESTING)
     add_carving_regression_test(
         carving-no-candidates
         no-candidates
+    )
+
+    set_tests_properties(
+        carving-one-step
+        carving-full-mass-consistency
+        PROPERTIES LABELS "r1;r2;r4;carving"
     )
 
     # Debug builds intentionally retain expensive libigl assertions and the

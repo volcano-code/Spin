@@ -101,6 +101,29 @@ int main(
         objectives
     );
 
+    if (solver.minimumRemovalsToContinue() != 1)
+    {
+        return fail("the paper's unspecified progress threshold has the wrong default");
+    }
+
+    solver.setMinimumRemovalsToContinue(1);
+
+    bool rejectedMinimum = false;
+
+    try
+    {
+        solver.setMinimumRemovalsToContinue(0);
+    }
+    catch (const std::invalid_argument&)
+    {
+        rejectedMinimum = true;
+    }
+
+    if (!rejectedMinimum)
+    {
+        return fail("the solver accepted a non-positive progress threshold");
+    }
+
     const double expectedDistance =
         aggregateProjectedCenterOfMassDistance(
             solver.currentCenterOfMass(),
@@ -136,95 +159,145 @@ int main(
     const std::size_t historyBefore =
         solver.diagnosticsHistory().size();
 
-    bool rejectedStopQuery = false;
-
-    try
+    if (
+        solver.stopReason() != CarvingStopReason::None ||
+        solver.isOptimized()
+    )
     {
-        static_cast<void>(solver.stopReason());
-    }
-    catch (const std::logic_error&)
-    {
-        rejectedStopQuery = true;
-    }
-    catch (...)
-    {
-        return fail("multi-target stopReason threw the wrong exception type");
-    }
-
-    bool rejectedOptimizedQuery = false;
-
-    try
-    {
-        static_cast<void>(solver.isOptimized());
-    }
-    catch (const std::logic_error&)
-    {
-        rejectedOptimizedQuery = true;
-    }
-    catch (...)
-    {
-        return fail("multi-target isOptimized threw the wrong exception type");
-    }
-
-    if (!rejectedStopQuery || !rejectedOptimizedQuery)
-    {
-        return fail("multi-target solver reported incomplete carving as optimized");
+        return fail("multi-target solver started in a terminal state");
     }
 
     Eigen::MatrixXd planeVertices;
     Eigen::MatrixXi planeFaces;
     Eigen::Vector3d returnedCenterOfMass;
 
-    bool rejectedStep = false;
+    solver.carveStep(
+        planeVertices,
+        planeFaces,
+        returnedCenterOfMass
+    );
+
+    bool rejectedLateMinimum = false;
 
     try
     {
-        solver.carveStep(
-            planeVertices,
-            planeFaces,
-            returnedCenterOfMass
-        );
+        solver.setMinimumRemovalsToContinue(2);
     }
     catch (const std::logic_error&)
     {
-        rejectedStep = true;
+        rejectedLateMinimum = true;
     }
-    catch (...)
+
+    if (!rejectedLateMinimum)
     {
-        return fail("multi-target carveStep threw the wrong exception type");
+        return fail("the solver changed its progress threshold after carving began");
     }
 
-    if (!rejectedStep)
+    const CarvingStepDiagnostics* diagnostics =
+        solver.lastDiagnostics();
+
+    const CarvingStopReason firstStepReason =
+        diagnostics == nullptr ?
+            CarvingStopReason::MaximumIterationsReached :
+            diagnostics->stopReason;
+
+    if (
+        diagnostics == nullptr ||
+        solver.iterationCount() != iterationsBefore + 1 ||
+        solver.carvedVoxelCount() < carvedBefore ||
+        solver.objectMass() > massBefore ||
+        solver.diagnosticsHistory().size() != historyBefore + 1 ||
+        !approximatelyEqual(
+            diagnostics->projectedEnergyAfter,
+            solver.getCoMEnergy()
+        ) ||
+        diagnostics->projectedEnergyAfter >
+            diagnostics->projectedEnergyBefore + 1e-12 ||
+        (returnedCenterOfMass - solver.currentCenterOfMass()).norm() > 1e-12 ||
+        planeVertices.rows() != 12 ||
+        planeFaces.rows() != 6
+    )
     {
-        return fail("multi-target carveStep silently used one target");
+        return fail("multi-target production carving contract failed");
     }
 
-    bool rejectedAll = false;
+    if (diagnostics->carvedVoxelCountThisStep <= 0)
+    {
+        return fail("multi-target fixture did not produce a positive first prefix");
+    }
 
-    try
+    VoxelGrid thresholdGrid;
+    thresholdGrid.build(vertices, faces);
+    CarvingSolver thresholdSolver(
+        thresholdGrid,
+        vertices,
+        faces,
+        objectives
+    );
+    thresholdSolver.setMinimumRemovalsToContinue(
+        diagnostics->carvedVoxelCountThisStep + 1
+    );
+
+    Eigen::MatrixXd thresholdPlaneVertices;
+    Eigen::MatrixXi thresholdPlaneFaces;
+    Eigen::Vector3d thresholdCenterOfMass;
+    thresholdSolver.carveStep(
+        thresholdPlaneVertices,
+        thresholdPlaneFaces,
+        thresholdCenterOfMass
+    );
+
+    if (
+        thresholdSolver.carvedVoxelCount() !=
+            diagnostics->carvedVoxelCountThisStep ||
+        thresholdSolver.stopReason() !=
+            CarvingStopReason::TooFewVoxelsRemoved ||
+        thresholdSolver.lastDiagnostics() == nullptr ||
+        thresholdSolver.lastDiagnostics()->stopReason !=
+            CarvingStopReason::TooFewVoxelsRemoved
+    )
+    {
+        return fail("positive improving prefix was not committed before too-few termination");
+    }
+
+    VoxelGrid boundaryGrid;
+    boundaryGrid.build(vertices, faces);
+    CarvingSolver boundarySolver(
+        boundaryGrid,
+        vertices,
+        faces,
+        objectives
+    );
+    boundarySolver.setMinimumRemovalsToContinue(
+        diagnostics->carvedVoxelCountThisStep
+    );
+    boundarySolver.carveStep(
+        thresholdPlaneVertices,
+        thresholdPlaneFaces,
+        thresholdCenterOfMass
+    );
+
+    if (
+        boundarySolver.carvedVoxelCount() !=
+            diagnostics->carvedVoxelCountThisStep ||
+        boundarySolver.stopReason() ==
+            CarvingStopReason::TooFewVoxelsRemoved
+    )
+    {
+        return fail("too-few boundary used <= instead of the documented strict comparison");
+    }
+
+    if (firstStepReason == CarvingStopReason::None)
     {
         solver.carveAll();
     }
-    catch (const std::logic_error&)
+
+    if (!solver.isOptimized())
     {
-        rejectedAll = true;
-    }
-    catch (...)
-    {
-        return fail("multi-target carveAll threw the wrong exception type");
+        return fail("multi-target carveAll did not terminate");
     }
 
-    if (
-        !rejectedAll ||
-        solver.iterationCount() != iterationsBefore ||
-        solver.carvedVoxelCount() != carvedBefore ||
-        solver.objectMass() != massBefore ||
-        solver.currentMassProperties().firstMoment != firstMomentBefore ||
-        solver.diagnosticsHistory().size() != historyBefore
-    )
-    {
-        return fail("the R4 boundary mutated production carving state");
-    }
+    static_cast<void>(firstMomentBefore);
 
     bool rejectedEmpty = false;
 
@@ -254,7 +327,7 @@ int main(
 
     std::cout
         << "[PASS] scenario=solver-boundary objectives=3 "
-        << "aggregate=consumed carving=deferred-to-R4\n";
+        << "aggregate=consumed carving=paper-r4\n";
 
     return EXIT_SUCCESS;
 }

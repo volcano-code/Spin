@@ -43,12 +43,16 @@ void transformVertices(const Eigen::MatrixXd& V, const Eigen::AlignedBox3d &newO
 //   dimensions  3 by 1 vector representing the grid's dimensions in voxels
 //   voxelSize   3 by 1 vector representing the voxel's exact size
 //               - This should be very close to a cube. Leaving handling of miniscule differences for caller to decide
+//   longestAxisResolution  number of voxel centers along the longest axis;
+//                          must be at least three
 void createVoxelGrid(
 	const Eigen::MatrixXd& V,
 	Eigen::MatrixXd& centers,
 	Eigen::MatrixXd& corners,
 	Eigen::Vector3i& dimensions,
-	Eigen::Vector3d& voxelSize);
+	Eigen::Vector3d& voxelSize,
+	int longestAxisResolution = 50
+);
 
 //
 // Aligns given mesh to the axis planes. Keeps the size the same

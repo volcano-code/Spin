@@ -25,6 +25,8 @@ CarvingStepDiagnostics::CarvingStepDiagnostics()
     recomputedRemainingMassAfter(0.0),
     massDiscrepancyAfter(0.0),
     candidateVoxelCount(0),
+    evaluatedPrefixCount(0),
+    bestPrefixLength(0),
     carvedVoxelCountThisStep(0),
     totalCarvedVoxelCount(0),
     initialInsideVoxelCount(0),
@@ -32,6 +34,9 @@ CarvingStepDiagnostics::CarvingStepDiagnostics()
     remainingInsideVoxelCount(0),
     carvedGridRatio(0.0),
     carvedCarveableRatio(0.0),
+    bestPrefixEnergy(0.0),
+    materialComponentCountAfter(0),
+    carvedVoidComponentCountAfter(0),
     stopReason(CarvingStopReason::None)
 {
 }
@@ -49,14 +54,17 @@ const char* carvingStopReasonName(
         case CarvingStopReason::TargetToleranceReached:
             return "target_tolerance";
 
-        case CarvingStopReason::MaximumEmptyRatioReached:
-            return "maximum_empty_ratio";
-
         case CarvingStopReason::NoCandidatesAvailable:
             return "no_candidates";
 
+        case CarvingStopReason::TooFewVoxelsRemoved:
+            return "too_few_voxels_removed";
+
         case CarvingStopReason::MaximumIterationsReached:
             return "maximum_iterations";
+
+        case CarvingStopReason::MaximumEmptyRatioReached:
+            return "maximum_empty_ratio";
     }
 
     return "unknown";
@@ -72,6 +80,8 @@ void printCarvingStepDiagnostics(
         << std::setprecision(10)
         << "[carving] iteration=" << diagnostics.iteration
         << " candidates=" << diagnostics.candidateVoxelCount
+        << " prefixes=" << diagnostics.evaluatedPrefixCount
+        << " best_prefix=" << diagnostics.bestPrefixLength
         << " carved_step=" << diagnostics.carvedVoxelCountThisStep
         << " carved_total=" << diagnostics.totalCarvedVoxelCount
         << " distance="
@@ -82,6 +92,12 @@ void printCarvingStepDiagnostics(
         << diagnostics.projectedEnergyBefore
         << "->"
         << diagnostics.projectedEnergyAfter
+        << " best_prefix_energy="
+        << diagnostics.bestPrefixEnergy
+        << " material_components="
+        << diagnostics.materialComponentCountAfter
+        << " void_components="
+        << diagnostics.carvedVoidComponentCountAfter
         << " mass="
         << diagnostics.remainingMassBefore
         << "->"
@@ -124,7 +140,11 @@ void writeCarvingDiagnosticsCsvHeader(
         << "com_discrepancy_after,first_moment_discrepancy_after,"
         << "initial_mass,remaining_mass_before,remaining_mass_after,"
         << "recomputed_remaining_mass_after,mass_discrepancy_after,"
-        << "candidate_voxel_count,carved_voxel_count_step,"
+        << "candidate_voxel_count,evaluated_prefix_count,"
+        << "best_prefix_length,best_prefix_energy,"
+        << "material_component_count_after,"
+        << "carved_void_component_count_after,"
+        << "carved_voxel_count_step,"
         << "total_carved_voxel_count,"
         << "initial_inside_voxel_count,initial_carveable_voxel_count,"
         << "remaining_inside_voxel_count,"
@@ -171,6 +191,11 @@ void writeCarvingDiagnosticsCsvRow(
         << diagnostics.recomputedRemainingMassAfter << ','
         << diagnostics.massDiscrepancyAfter << ','
         << diagnostics.candidateVoxelCount << ','
+        << diagnostics.evaluatedPrefixCount << ','
+        << diagnostics.bestPrefixLength << ','
+        << diagnostics.bestPrefixEnergy << ','
+        << diagnostics.materialComponentCountAfter << ','
+        << diagnostics.carvedVoidComponentCountAfter << ','
         << diagnostics.carvedVoxelCountThisStep << ','
         << diagnostics.totalCarvedVoxelCount << ','
         << diagnostics.initialInsideVoxelCount << ','

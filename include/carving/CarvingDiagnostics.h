@@ -8,26 +8,30 @@
 /**
  * Stopping conditions exposed by the carving solver.
  *
- * R1 adds an explicit no-candidate terminal state so a completed candidate
- * search cannot leave the production loop spinning through no-op iterations.
- * The legacy target, empty-ratio and iteration thresholds remain unchanged.
+ * The solver distinguishes an empty queue from a non-improving/too-small
+ * best prefix.
+ * The iteration terminal is an explicit local run guard, not paper convergence.
  */
 enum class CarvingStopReason
 {
     None,
+    /** Retained for source compatibility; the R4 solver no longer emits it. */
     TargetToleranceReached,
-    MaximumEmptyRatioReached,
     NoCandidatesAvailable,
-    MaximumIterationsReached
+    TooFewVoxelsRemoved,
+    MaximumIterationsReached,
+    /** Retained for source compatibility; the R4 solver no longer emits it. */
+    MaximumEmptyRatioReached
 };
 
 
 /**
  * Diagnostic record for one call to CarvingSolver::carveStep().
  *
- * R2 records both the incremental mass-property state and a full recompute
+ * Diagnostics record both the incremental mass-property state and a full recompute
  * from the immutable outer surface minus every carved voxel. Their
- * discrepancies are expected to remain near floating-point roundoff.
+ * discrepancies are expected to remain near floating-point roundoff. They also include
+ * complete-prefix selection and topology-report fields.
  */
 struct CarvingStepDiagnostics
 {
@@ -58,6 +62,8 @@ struct CarvingStepDiagnostics
     double massDiscrepancyAfter;
 
     int candidateVoxelCount;
+    int evaluatedPrefixCount;
+    int bestPrefixLength;
     int carvedVoxelCountThisStep;
     int totalCarvedVoxelCount;
 
@@ -67,6 +73,11 @@ struct CarvingStepDiagnostics
 
     double carvedGridRatio;
     double carvedCarveableRatio;
+
+    double bestPrefixEnergy;
+
+    int materialComponentCountAfter;
+    int carvedVoidComponentCountAfter;
 
     CarvingStopReason stopReason;
 

@@ -104,7 +104,7 @@ printability, or `VERIFIED_PAPER` status.
 |---|---|---|
 | `include/stability/SupportRegion.h`, `src/stability/SupportRegion.cpp` | Extracts the inclusive contact hull in a gravity-orthogonal local frame, constructs `h*tan(gamma)` safe offsets, classifies outside/feasible/safe states, projects to the closed safe set, and explicitly reports unattainable margins. | `support-polygon-analytic`, `safe-region-analytic`, and `standing-target-analytic` pass. |
 | `include/physics/BalanceObjective.h`, `src/physics/BalanceObjective.cpp` | Represents normalized target/gravity pairs, suspension targets and the unweighted arbitrary-`K` projected CoM sum from paper Eq. 5. | Suspension and `K=1..4` analytic fixtures pass. |
-| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp`, `include/inner_void_mesh.h`, `src/inner_void_mesh.cpp` | Makes a non-empty objective vector the single target state while preserving the legacy one-target constructor; aggregate queries consume all objectives. Incomplete multi-target carving is rejected before mutation and remains R4. | `multi-target-solver-boundary` and all four R1/R2 carving regressions pass. |
+| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp`, `include/inner_void_mesh.h`, `src/inner_void_mesh.cpp` | Makes a non-empty objective vector the single target state while preserving the legacy one-target constructor; aggregate queries consume all objectives. At the R3 commit, incomplete multi-target carving was rejected before mutation. | The former boundary test became an R4 production integration test; the R3 historical scope remains documented. |
 | `main.cpp` | Treats the clicked vertex as a lateral posture anchor, places the actual lowest geometry on the ground, exposes contact/toppling inputs and constructs the carving target from the standing support geometry. | Viewer target compiles in the final viewer and clean-clone gates. |
 | `tests/stability_regression.cpp`, `tests/objective_integration_regression.cpp` | Adds five analytic geometry/objective scenarios and one production integration/R4-boundary scenario. | Six R3 CTests pass; active suite is `14/14`. |
 | `docs/r3_acceptance.md`, `docs/conformance_matrix.md`, `README.md`, `CMakeLists.txt` | Records paper/beta differences, status ceilings, test targets and remaining phase boundaries. | Final R3 verification record. |
@@ -116,3 +116,19 @@ paper reproduction. The current exact inset implementation also has a
 documented worst-case `O(H^4)` performance ceiling in the number of support
 hull edges; normal and analytic fixtures are verified, not unbounded hull
 scalability.
+
+## R4 fixed-geometry carving changes
+
+| Files | R4 change | Evidence / status |
+|---|---|---|
+| `include/carving/PlaneCarvingPolicy.h`, `src/carving/PlaneCarvingPolicy.cpp` | Implements printed Eq. 8 cutting planes, arbitrary-`K` positive-distance sums, deterministic ordering and complete true-energy prefix selection including prefix zero. | Nine analytic policy CTests cover multi-target signs, score/key ties, shortest-prefix ties, coordinate scaling, transient increase, middle optimum, no improvement and 1001 candidates. |
+| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp` | Replaces finite-plane SDF and fixed batches with transactional best-prefix commit; supports production multi-target iteration and explicit too-few termination. | Bunny one-step/full and three-target integration pass with independent mass/first-moment recomputation. |
+| `include/voxel/VoxelGrid.h`, `src/voxel/VoxelGrid.cpp`, `include/grid_util.h`, `src/grid_util.cpp` | Adds configurable grid resolution and conservative model-space `t_min` carve eligibility under a fixed outer mesh. | Unit-box test at resolutions 24 and 48 checks every eligible voxel with an independent analytic clearance oracle. |
+| `include/voxel/VoxelTopology.h`, `src/voxel/VoxelTopology.cpp` | Reports six-neighbor material and carved-void component counts without imposing an unsupported single-void condition. | Analytic topology CTest plus every-step diagnostic comparison. |
+| `include/carving/CarvingDiagnostics.h`, `src/carving/CarvingDiagnostics.cpp` | Extends the diagnostic schema from 39 to 44 columns with evaluated/best prefixes, best energy and topology counts. | Per-column round-trip and production-state checks pass. |
+| `tests/plane_carving_policy_regression.cpp`, `tests/voxel_constraints_regression.cpp`, `tests/objective_integration_regression.cpp`, `tests/carving_regression.cpp` | Adds focused policy/manufacturing fixtures and upgrades K=3/Bunny production integration. | Active suite registers 25 tests, fourteen labeled R4. |
+| `docs/r4_acceptance.md`, `docs/conformance_matrix.md`, `README.md`, `CMakeLists.txt` | Records equations, paper/beta discrepancies, local too-few rule, status ceiling and R4 tests. | R4 acceptance record; clean verification is recorded there after the final gate. |
+
+R4 reproduces only paper Section 4 under a fixed outer surface. It does not
+claim deformation, alternation, final printability, physical balance or
+paper-result reproduction.

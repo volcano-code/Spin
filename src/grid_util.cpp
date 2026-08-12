@@ -6,7 +6,8 @@
 #include <igl/signed_distance.h>
 #include <igl/rotation_matrix_from_directions.h>
 
-const static int GRID_LEN = 50; // number of voxels on each side of the grid
+#include <cmath>
+#include <stdexcept>
 
 void createAlignedBox(const Eigen::MatrixXd &V, Eigen::AlignedBox3d &box) {
 	for (int i = 0; i < V.rows(); i++) {
@@ -57,8 +58,15 @@ void createVoxelGrid(
 	Eigen::MatrixXd &centers, 
 	Eigen::MatrixXd &corners, 
 	Eigen::Vector3i &dimensions, 
-	Eigen::Vector3d &voxelSize
+	Eigen::Vector3d &voxelSize,
+	int longestAxisResolution
 ) {
+	if (longestAxisResolution < 3) {
+		throw std::invalid_argument("voxel resolution must be at least three");
+	}
+	if (V.rows() == 0 || V.cols() != 3 || !V.allFinite()) {
+		throw std::invalid_argument("voxel grid vertices must be a nonempty finite 3D array");
+	}
 	// Compute bounding box
 	Eigen::MatrixXd BV, BF;
 	igl::bounding_box(V, BV, BF);
@@ -69,13 +77,19 @@ void createVoxelGrid(
 
 	// Create voxel grid (defined by center vertices of voxels)
 	Eigen::RowVector3i dimOut; // column vector of dimentions
-	igl::voxel_grid(boundBox, GRID_LEN, 0, centers, dimOut);
+	igl::voxel_grid(boundBox, longestAxisResolution, 0, centers, dimOut);
 	dimensions = dimOut.transpose();
+	if ((dimensions.array() < 3).any()) {
+		throw std::invalid_argument("voxel grid requires at least three cells on every axis");
+	}
 	Eigen::AlignedBox3d centersBox;
 	createAlignedBox(centers, centersBox);
 
 	Eigen::Vector3i one(1.0, 1.0, 1.0);
 	voxelSize = centersBox.sizes().cwiseQuotient((dimensions - one).cast<double>());
+	if (!voxelSize.allFinite() || (voxelSize.array() <= 0.0).any()) {
+		throw std::invalid_argument("voxel grid produced invalid cell dimensions");
+	}
 
 	// Compute corner vertices of voxel grid
 	Eigen::MatrixXd defaultGrid;

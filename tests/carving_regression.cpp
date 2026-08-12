@@ -5,6 +5,7 @@
 #include "physics/BalanceEnergy.h"
 #include "physics/MassProperties.h"
 #include "voxel/VoxelGrid.h"
+#include "voxel/VoxelTopology.h"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -22,6 +23,18 @@
 #include <vector>
 
 #include <igl/read_triangle_mesh.h>
+
+
+struct CarvingSolverTestAccess
+{
+    static void setPreCommitHook(
+        CarvingSolver& solver,
+        const std::function<void()>& hook
+    )
+    {
+        solver.setPreCommitHookForTesting(hook);
+    }
+};
 
 
 namespace
@@ -54,13 +67,17 @@ const char* const CSV_HEADER =
     "com_discrepancy_after,first_moment_discrepancy_after,"
     "initial_mass,remaining_mass_before,remaining_mass_after,"
     "recomputed_remaining_mass_after,mass_discrepancy_after,"
-    "candidate_voxel_count,carved_voxel_count_step,"
+    "candidate_voxel_count,evaluated_prefix_count,"
+    "best_prefix_length,best_prefix_energy,"
+    "material_component_count_after,"
+    "carved_void_component_count_after,"
+    "carved_voxel_count_step,"
     "total_carved_voxel_count,"
     "initial_inside_voxel_count,initial_carveable_voxel_count,"
     "remaining_inside_voxel_count,"
     "carved_grid_ratio,carved_carveable_ratio,stop_reason";
 
-constexpr std::size_t CSV_COLUMN_COUNT = 39;
+constexpr std::size_t CSV_COLUMN_COUNT = 44;
 constexpr int MAXIMUM_TEST_STEPS = 100;
 
 constexpr double MASS_MOMENT_ABSOLUTE_TOLERANCE = 1e-12;
@@ -627,6 +644,7 @@ bool validateDiagnosticStep(
     const LongDoubleMassProperties& before,
     const LongDoubleMassProperties& after,
     const MassProperties& initialOuter,
+    const VoxelGrid& voxelGrid,
     int expectedIteration,
     int previousTotalCarved,
     int initialInsideCount,
@@ -642,6 +660,17 @@ bool validateDiagnosticStep(
 
     if (
         diagnostics.candidateVoxelCount < 0 ||
+        diagnostics.evaluatedPrefixCount < 1 ||
+        diagnostics.evaluatedPrefixCount >
+            diagnostics.candidateVoxelCount + 1 ||
+        diagnostics.bestPrefixLength !=
+            diagnostics.carvedVoxelCountThisStep ||
+        !energyEqual(
+            diagnostics.bestPrefixEnergy,
+            static_cast<long double>(
+                diagnostics.projectedEnergyAfter
+            )
+        ) ||
         diagnostics.carvedVoxelCountThisStep < 0 ||
         diagnostics.carvedVoxelCountThisStep >
             diagnostics.candidateVoxelCount ||
@@ -653,6 +682,32 @@ bool validateDiagnosticStep(
     )
     {
         error = "candidate/carved count invariant failed";
+        return false;
+    }
+
+    if (
+        diagnostics.projectedEnergyAfter >
+            diagnostics.projectedEnergyBefore +
+            ENERGY_ABSOLUTE_TOLERANCE +
+            ENERGY_RELATIVE_TOLERANCE *
+                std::abs(diagnostics.projectedEnergyBefore)
+    )
+    {
+        error = "accepted carving prefix increased the true energy";
+        return false;
+    }
+
+    const VoxelTopologyReport topology =
+        analyzeVoxelTopology(voxelGrid);
+
+    if (
+        diagnostics.materialComponentCountAfter !=
+            topology.materialComponentCount ||
+        diagnostics.carvedVoidComponentCountAfter !=
+            topology.carvedVoidComponentCount
+    )
+    {
+        error = "diagnostic topology counts disagree with voxel state";
         return false;
     }
 
@@ -849,6 +904,15 @@ bool validateDiagnosticStep(
             return false;
         }
     }
+    else if (
+        diagnostics.bestPrefixLength == 0 &&
+        diagnostics.stopReason !=
+            CarvingStopReason::TooFewVoxelsRemoved
+    )
+    {
+        error = "nonempty non-improving queue has the wrong terminal reason";
+        return false;
+    }
 
     return true;
 }
@@ -996,7 +1060,7 @@ bool validateCsv(
 
     if (line != CSV_HEADER)
     {
-        error = "diagnostics CSV header does not match the 39-column schema";
+        error = "diagnostics CSV header does not match the 44-column schema";
         return false;
     }
 
@@ -1020,7 +1084,7 @@ bool validateCsv(
 
         if (fields.size() != CSV_COLUMN_COUNT)
         {
-            error = "diagnostics CSV row does not contain 39 columns";
+            error = "diagnostics CSV row does not contain 44 columns";
             return false;
         }
 
@@ -1059,20 +1123,25 @@ bool validateCsv(
             !csvDoubleMatches(fields, 28, diagnostics.recomputedRemainingMassAfter, error) ||
             !csvDoubleMatches(fields, 29, diagnostics.massDiscrepancyAfter, error) ||
             !csvIntegerMatches(fields, 30, diagnostics.candidateVoxelCount, error) ||
-            !csvIntegerMatches(fields, 31, diagnostics.carvedVoxelCountThisStep, error) ||
-            !csvIntegerMatches(fields, 32, diagnostics.totalCarvedVoxelCount, error) ||
-            !csvIntegerMatches(fields, 33, diagnostics.initialInsideVoxelCount, error) ||
-            !csvIntegerMatches(fields, 34, diagnostics.initialCarveableVoxelCount, error) ||
-            !csvIntegerMatches(fields, 35, diagnostics.remainingInsideVoxelCount, error) ||
-            !csvDoubleMatches(fields, 36, diagnostics.carvedGridRatio, error) ||
-            !csvDoubleMatches(fields, 37, diagnostics.carvedCarveableRatio, error)
+            !csvIntegerMatches(fields, 31, diagnostics.evaluatedPrefixCount, error) ||
+            !csvIntegerMatches(fields, 32, diagnostics.bestPrefixLength, error) ||
+            !csvDoubleMatches(fields, 33, diagnostics.bestPrefixEnergy, error) ||
+            !csvIntegerMatches(fields, 34, diagnostics.materialComponentCountAfter, error) ||
+            !csvIntegerMatches(fields, 35, diagnostics.carvedVoidComponentCountAfter, error) ||
+            !csvIntegerMatches(fields, 36, diagnostics.carvedVoxelCountThisStep, error) ||
+            !csvIntegerMatches(fields, 37, diagnostics.totalCarvedVoxelCount, error) ||
+            !csvIntegerMatches(fields, 38, diagnostics.initialInsideVoxelCount, error) ||
+            !csvIntegerMatches(fields, 39, diagnostics.initialCarveableVoxelCount, error) ||
+            !csvIntegerMatches(fields, 40, diagnostics.remainingInsideVoxelCount, error) ||
+            !csvDoubleMatches(fields, 41, diagnostics.carvedGridRatio, error) ||
+            !csvDoubleMatches(fields, 42, diagnostics.carvedCarveableRatio, error)
         )
         {
             return false;
         }
 
         if (
-            fields[38] !=
+            fields[43] !=
             carvingStopReasonName(diagnostics.stopReason)
         )
         {
@@ -1114,9 +1183,8 @@ bool isNormalTerminalReason(
 )
 {
     return
-        reason == CarvingStopReason::TargetToleranceReached ||
-        reason == CarvingStopReason::MaximumEmptyRatioReached ||
         reason == CarvingStopReason::NoCandidatesAvailable ||
+        reason == CarvingStopReason::TooFewVoxelsRemoved ||
         reason == CarvingStopReason::MaximumIterationsReached;
 }
 
@@ -1154,6 +1222,46 @@ bool runToTerminal(
             returnedCenterOfMass
         );
 
+        const Eigen::Vector3d expectedCenterBefore(
+            static_cast<double>(before.firstMoment[0] / before.mass),
+            static_cast<double>(before.firstMoment[1] / before.mass),
+            static_cast<double>(before.firstMoment[2] / before.mass)
+        );
+        const Eigen::Vector3d expectedPlaneNormal =
+            projectPerpendicularToGravity(
+                expectedCenterBefore - solver.targetCenterOfMass(),
+                Eigen::Vector3d(0.0, -1.0, 0.0)
+            );
+
+        if (
+            carvePlaneVertices.rows() != 4 ||
+            carvePlaneFaces.rows() != 2 ||
+            expectedPlaneNormal.norm() <= 0.0
+        )
+        {
+            error = "single-target debug plane has the wrong shape";
+            return false;
+        }
+
+        for (Eigen::Index row = 0; row < carvePlaneVertices.rows(); ++row)
+        {
+            const double planeResidual =
+                (carvePlaneVertices.row(row).transpose() -
+                 solver.targetCenterOfMass()).dot(expectedPlaneNormal);
+            const double scale = std::max(
+                1.0,
+                expectedPlaneNormal.norm() *
+                    (carvePlaneVertices.row(row).transpose() -
+                     solver.targetCenterOfMass()).norm()
+            );
+
+            if (std::abs(planeResidual) > 1e-10 * scale)
+            {
+                error = "debug plane was not replanned from the current CoM";
+                return false;
+            }
+        }
+
         const LongDoubleMassProperties after =
             captureOracle(initialOuter, voxelGrid);
 
@@ -1173,6 +1281,7 @@ bool runToTerminal(
                 before,
                 after,
                 initialOuter,
+                voxelGrid,
                 expectedIteration,
                 previousTotalCarved,
                 initialInsideCount,
@@ -1219,6 +1328,19 @@ bool runToTerminal(
     )
     {
         error = "full run did not reach a normal terminal state";
+        return false;
+    }
+
+    if (
+        initialCarveableCount > 0 &&
+        (
+            solver.diagnosticsHistory().size() < 2 ||
+            solver.diagnosticsHistory()[1].centerOfMassBefore !=
+                solver.diagnosticsHistory()[0].centerOfMassAfter
+        )
+    )
+    {
+        error = "full run did not exercise continuous multi-iteration replanning";
         return false;
     }
 
@@ -1429,6 +1551,7 @@ int main(
             solver.iterationCount() != 0 ||
             solver.carvedVoxelCount() != 0 ||
             !solver.diagnosticsHistory().empty() ||
+            solver.stopReason() != CarvingStopReason::None ||
             solver.lastDiagnostics() != nullptr ||
             solver.isOptimized()
         )
@@ -1442,6 +1565,67 @@ int main(
     {
         const LongDoubleMassProperties before =
             captureOracle(initialOuter, voxelGrid);
+
+        Eigen::MatrixXd sentinelPlaneVertices(1, 3);
+        sentinelPlaneVertices << 7.0, 8.0, 9.0;
+        Eigen::MatrixXi sentinelPlaneFaces(1, 3);
+        sentinelPlaneFaces << 9, 8, 7;
+        Eigen::Vector3d sentinelCenter(4.0, 5.0, 6.0);
+        CarvingSolverTestAccess::setPreCommitHook(
+            solver,
+            []()
+            {
+                throw std::runtime_error("injected pre-commit failure");
+            }
+        );
+
+        bool injectedFailureObserved = false;
+
+        try
+        {
+            solver.carveStep(
+                sentinelPlaneVertices,
+                sentinelPlaneFaces,
+                sentinelCenter
+            );
+        }
+        catch (const std::runtime_error&)
+        {
+            injectedFailureObserved = true;
+        }
+
+        const LongDoubleMassProperties afterFailure =
+            captureOracle(initialOuter, voxelGrid);
+
+        if (
+            !injectedFailureObserved ||
+            solver.iterationCount() != 0 ||
+            solver.carvedVoxelCount() != 0 ||
+            !solver.diagnosticsHistory().empty() ||
+            before.filledFlags != afterFailure.filledFlags ||
+            sentinelPlaneVertices.rows() != 1 ||
+            sentinelPlaneVertices(0, 0) != 7.0 ||
+            sentinelPlaneVertices(0, 1) != 8.0 ||
+            sentinelPlaneVertices(0, 2) != 9.0 ||
+            sentinelPlaneFaces.rows() != 1 ||
+            sentinelPlaneFaces(0, 0) != 9 ||
+            sentinelPlaneFaces(0, 1) != 8 ||
+            sentinelPlaneFaces(0, 2) != 7 ||
+            sentinelCenter != Eigen::Vector3d(4.0, 5.0, 6.0) ||
+            !massMomentEqual(solver.objectMass(), before.mass) ||
+            !vectorMassMomentEqual(
+                solver.currentMassProperties().firstMoment,
+                before.firstMoment
+            )
+        )
+        {
+            return fail("pre-commit exception did not roll back the step");
+        }
+
+        CarvingSolverTestAccess::setPreCommitHook(
+            solver,
+            std::function<void()>()
+        );
 
         Eigen::MatrixXd carvePlaneVertices;
         Eigen::MatrixXi carvePlaneFaces;
@@ -1467,6 +1651,7 @@ int main(
                 before,
                 after,
                 initialOuter,
+                voxelGrid,
                 1,
                 0,
                 initialInsideCount,

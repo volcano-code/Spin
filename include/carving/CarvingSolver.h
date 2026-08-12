@@ -3,15 +3,16 @@
 #include <Eigen/Core>
 
 #include "carving/CarvingDiagnostics.h"
+#include "carving/PlaneCarvingPolicy.h"
 #include "physics/BalanceObjective.h"
 #include "physics/MassProperties.h"
 
+#include <functional>
 #include <string>
 #include <vector>
 
 
 class VoxelGrid;
-class Voxel;
 
 
 /**
@@ -29,8 +30,8 @@ public:
     /**
      * Construct a solver around one or more projected CoM objectives.
      *
-     * Aggregate objective queries support any non-empty collection. Actual
-     * multi-target carving is deliberately deferred to R4.
+     * Every objective contributes one Section 4 cutting plane and one
+     * Equation (5) term.
      */
     CarvingSolver(
         VoxelGrid& voxelGrid,
@@ -77,10 +78,10 @@ public:
     /** Compatibility alias for getCoMDistance(). */
     double getGeometricProjectedDistance() const;
 
-    /** Return the one-target stopping condition; K>1 carving is deferred. */
+    /** Return the active paper-progress or local iteration-guard condition. */
     CarvingStopReason stopReason() const;
 
-    /** Return true for a one-target stop; K>1 carving is deferred. */
+    /** Return true once any active stopping condition has been reached. */
     bool isOptimized() const;
 
     const Eigen::Vector3d& currentCenterOfMass() const;
@@ -117,7 +118,16 @@ public:
     int initialInsideVoxelCount() const;
     int initialCarveableVoxelCount() const;
 
+    /** Local operationalization of the paper's unspecified "too few" rule. */
+    void setMinimumRemovalsToContinue(int count);
+    int minimumRemovalsToContinue() const;
+
 private:
+    friend struct CarvingSolverTestAccess;
+
+    void setPreCommitHookForTesting(
+        const std::function<void()>& hook
+    );
     struct RecomputedCarvingState
     {
         MassProperties massProperties;
@@ -132,11 +142,13 @@ private:
     RecomputedCarvingState
     recomputeCarvingState() const;
 
-    void subtractVoxelMassProperties(
-        const Voxel& voxel
-    );
-
     void refreshCenterOfMass();
+
+    void buildDebugPlaneMesh(
+        const CuttingPlanes& planes,
+        Eigen::MatrixXd& vertices,
+        Eigen::MatrixXi& faces
+    ) const;
 
     double carvedGridRatio() const;
     double carvedCarveableRatio() const;
@@ -152,8 +164,8 @@ private:
     int carvedVoxelCount_;
     int iterations_;
 
-    bool candidateSearchPerformed_;
-    int lastCandidateVoxelCount_;
+    int minimumRemovalsToContinue_;
+    CarvingStopReason terminalReason_;
 
     bool diagnosticsEnabled_;
     bool diagnosticsInitialized_;
@@ -162,4 +174,5 @@ private:
     int initialCarveableVoxelCount_;
 
     std::vector<CarvingStepDiagnostics> diagnosticsHistory_;
+    std::function<void()> preCommitHookForTesting_;
 };

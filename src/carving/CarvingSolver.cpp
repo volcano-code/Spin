@@ -1,29 +1,79 @@
 #include "carving/CarvingSolver.h"
 
+#include "physics/BalanceEnergy.h"
 #include "physics/BalanceObjective.h"
 #include "physics/MassProperties.h"
 #include "voxel/VoxelGrid.h"
+#include "voxel/VoxelTopology.h"
 
-#include <algorithm>
-#include <cassert>
+#include <Eigen/Geometry>
+
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
-#include <utility>
-#include <vector>
-
-#include <igl/per_face_normals.h>
-#include <igl/signed_distance.h>
 
 
 namespace
 {
 
-constexpr int MAX_ITER = 20;
-constexpr int MAX_CARVE = 1000;
-constexpr double MAX_EMPTY = 0.80;
+constexpr int MAX_ITER = 100;
+
+
+class StagedVoxelRemoval
+{
+public:
+    StagedVoxelRemoval(
+        VoxelGrid& voxelGrid,
+        const PlaneCarvingCandidates& candidates,
+        std::size_t prefixLength
+    )
+        : voxelGrid_(voxelGrid), keys_(), committed_(false)
+    {
+        keys_.reserve(prefixLength);
+
+        for (std::size_t index = 0; index < prefixLength; ++index)
+        {
+            const VoxelKey key = candidates[index].key;
+            Voxel& voxel = voxelGrid_(key.x, key.y, key.z);
+
+            if (!voxel.isFilled)
+            {
+                throw std::logic_error(
+                    "carving prefix contains an already empty voxel"
+                );
+            }
+
+            keys_.push_back(key);
+            voxel.isFilled = false;
+        }
+    }
+
+    StagedVoxelRemoval(const StagedVoxelRemoval&) = delete;
+    StagedVoxelRemoval& operator=(const StagedVoxelRemoval&) = delete;
+
+    ~StagedVoxelRemoval()
+    {
+        if (!committed_)
+        {
+            for (const VoxelKey& key : keys_)
+            {
+                voxelGrid_(key.x, key.y, key.z).isFilled = true;
+            }
+        }
+    }
+
+    void commit() noexcept
+    {
+        committed_ = true;
+    }
+
+private:
+    VoxelGrid& voxelGrid_;
+    std::vector<VoxelKey> keys_;
+    bool committed_;
+};
 
 
 BalanceObjectives makeSingleBalanceObjectives(
@@ -55,38 +105,6 @@ BalanceObjectives validateAndCopyBalanceObjectives(
 }
 
 
-bool areFacingSameDirection(
-    const Eigen::RowVector3d& first,
-    const Eigen::RowVector3d& second
-)
-{
-    return first.dot(second) > 0.0;
-}
-
-
-void flipFaces(Eigen::MatrixXi& faces)
-{
-    for (Eigen::Index row = 0; row < faces.rows(); ++row)
-    {
-        std::swap(
-            faces(row, 0),
-            faces(row, 2)
-        );
-    }
-}
-
-
-struct CompareVoxelDistance
-{
-    bool operator()(
-        const std::pair<Voxel*, double>& first,
-        const std::pair<Voxel*, double>& second
-    ) const
-    {
-        return first.second < second.second;
-    }
-};
-
 } // namespace
 
 
@@ -116,13 +134,14 @@ CarvingSolver::CarvingSolver(
     currentMassProperties_(initialMassProperties_),
     carvedVoxelCount_(0),
     iterations_(0),
-    candidateSearchPerformed_(false),
-    lastCandidateVoxelCount_(0),
+    minimumRemovalsToContinue_(1),
+    terminalReason_(CarvingStopReason::None),
     diagnosticsEnabled_(false),
     diagnosticsInitialized_(false),
     initialInsideVoxelCount_(0),
     initialCarveableVoxelCount_(0),
-    diagnosticsHistory_()
+    diagnosticsHistory_(),
+    preCommitHookForTesting_()
 {
     if (!isClosedConsistentlyOrientedTriangleMesh(F))
     {
@@ -257,35 +276,12 @@ double CarvingSolver::carvedCarveableRatio() const
 
 CarvingStopReason CarvingSolver::stopReason() const
 {
-    if (objectives_.size() != 1)
+    if (terminalReason_ != CarvingStopReason::None)
     {
-        throw std::logic_error(
-            "multi-target carving belongs to R4"
-        );
+        return terminalReason_;
     }
 
-    const Eigen::Vector3d& voxelSize =
-        voxelGrid_.voxelSize();
-
-    if (getCoMDistance() < voxelSize.maxCoeff())
-    {
-        return CarvingStopReason::TargetToleranceReached;
-    }
-
-    if (
-        candidateSearchPerformed_ &&
-        lastCandidateVoxelCount_ == 0
-    )
-    {
-        return CarvingStopReason::NoCandidatesAvailable;
-    }
-
-    if (carvedGridRatio() > MAX_EMPTY)
-    {
-        return CarvingStopReason::MaximumEmptyRatioReached;
-    }
-
-    if (iterations_ > MAX_ITER)
+    if (iterations_ >= MAX_ITER)
     {
         return CarvingStopReason::MaximumIterationsReached;
     }
@@ -336,6 +332,7 @@ void CarvingSolver::ensureDiagnosticsInitialized()
     }
 
     diagnosticsInitialized_ = true;
+
 }
 
 
@@ -400,40 +397,6 @@ CarvingSolver::recomputeCarvingState() const
 }
 
 
-void CarvingSolver::subtractVoxelMassProperties(
-    const Voxel& voxel
-)
-{
-    const MassProperties contribution =
-        computeAxisAlignedBoxMassProperties(
-            voxel.center,
-            voxelGrid_.voxelSize()
-        );
-
-    const MassProperties proposed =
-        currentMassProperties_ - contribution;
-
-    Eigen::Vector3d proposedCenterOfMass =
-        Eigen::Vector3d::Zero();
-
-    if (
-        proposed.mass <= 0.0 ||
-        !proposed.tryCenterOfMass(
-            proposedCenterOfMass,
-            0.0
-        )
-    )
-    {
-        throw std::runtime_error(
-            "carving would produce non-positive/non-finite remaining mass"
-        );
-    }
-
-    currentMassProperties_ = proposed;
-    currCOM_ = proposedCenterOfMass;
-}
-
-
 void CarvingSolver::refreshCenterOfMass()
 {
     if (
@@ -457,180 +420,50 @@ void CarvingSolver::carveStep(
     Eigen::Vector3d& centerOfMass
 )
 {
-    if (objectives_.size() != 1)
+    if (isOptimized())
     {
         throw std::logic_error(
-            "multi-target carving belongs to R4"
+            "carveStep requires a non-terminal solver"
         );
     }
 
     ensureDiagnosticsInitialized();
 
-    const BalanceObjective& objective =
-        objectives_.front();
-
-    const Eigen::Vector3d& targetCenterOfMass =
-        objective.target();
-
-    const Eigen::Vector3d& gravity =
-        objective.gravity();
+    Eigen::MatrixXd plannedPlaneVertices;
+    Eigen::MatrixXi plannedPlaneFaces;
 
     CarvingStepDiagnostics diagnostics;
-
     diagnostics.centerOfMassBefore = currCOM_;
     diagnostics.firstMomentBefore =
         currentMassProperties_.firstMoment;
-
     diagnostics.projectedDistanceBefore =
         getCoMDistance();
-
     diagnostics.projectedEnergyBefore =
         getCoMEnergy();
-
     diagnostics.initialMass =
         initialMassProperties_.mass;
-
     diagnostics.remainingMassBefore =
         currentMassProperties_.mass;
 
-    ++iterations_;
-    diagnostics.iteration = iterations_;
+    const int nextIteration = iterations_ + 1;
+    diagnostics.iteration = nextIteration;
 
     const Eigen::Vector3i& dimensions =
         voxelGrid_.dimensions();
-
     const Eigen::Vector3d& voxelSize =
         voxelGrid_.voxelSize();
 
-    Eigen::MatrixXd cuttingPlaneTriangleVertices(3, 3);
-    Eigen::MatrixXi cuttingPlaneTriangleFaces(1, 3);
-
-    cuttingPlaneTriangleVertices <<
-        targetCenterOfMass.transpose(),
-        currCOM_.transpose(),
-        (targetCenterOfMass + gravity).transpose();
-
-    cuttingPlaneTriangleFaces <<
-        0, 1, 2;
-
-    Eigen::MatrixXd cuttingPlaneTriangleNormals;
-
-    igl::per_face_normals(
-        cuttingPlaneTriangleVertices,
-        cuttingPlaneTriangleFaces,
-        cuttingPlaneTriangleNormals
+    const CuttingPlanes planes = makeCuttingPlanes(
+        currCOM_,
+        objectives_
+    );
+    buildDebugPlaneMesh(
+        planes,
+        plannedPlaneVertices,
+        plannedPlaneFaces
     );
 
-
-    const double gridExtent =
-        dimensions.maxCoeff() *
-        voxelSize.maxCoeff() *
-        10.0;
-
-    const double gravitySquaredNorm =
-        gravity.squaredNorm();
-
-    const double planeNormalSquaredNorm =
-        cuttingPlaneTriangleNormals.row(0).squaredNorm();
-
-    assert(gravitySquaredNorm > 0.0);
-    assert(planeNormalSquaredNorm > 0.0);
-
-    const double gravityMultiplier =
-        gridExtent / gravitySquaredNorm;
-
-    const double otherVectorMultiplier =
-        gridExtent / planeNormalSquaredNorm;
-
-
-    carvePlaneV.resize(5, 3);
-
-    carvePlaneV <<
-        targetCenterOfMass.transpose(),
-        (
-            targetCenterOfMass +
-            gravity * gravityMultiplier
-        ).transpose(),
-        targetCenterOfMass.transpose() +
-            cuttingPlaneTriangleNormals.row(0) *
-            otherVectorMultiplier,
-        (
-            targetCenterOfMass -
-            gravity * gravityMultiplier
-        ).transpose(),
-        targetCenterOfMass.transpose() -
-            cuttingPlaneTriangleNormals.row(0) *
-            otherVectorMultiplier;
-
-    carvePlaneF.resize(4, 3);
-
-    carvePlaneF <<
-        0, 1, 2,
-        2, 3, 0,
-        0, 3, 4,
-        4, 1, 0;
-
-
-    Eigen::MatrixXd carvingPlaneNormals;
-
-    igl::per_face_normals(
-        carvePlaneV,
-        carvePlaneF,
-        carvingPlaneNormals
-    );
-
-    assert(
-        areFacingSameDirection(
-            carvingPlaneNormals.row(0),
-            carvingPlaneNormals.row(1)
-        )
-    );
-
-    assert(
-        areFacingSameDirection(
-            carvingPlaneNormals.row(1),
-            carvingPlaneNormals.row(2)
-        )
-    );
-
-    assert(
-        areFacingSameDirection(
-            carvingPlaneNormals.row(2),
-            carvingPlaneNormals.row(3)
-        )
-    );
-
-
-    Eigen::MatrixXd currentCenterPoint(1, 3);
-
-    currentCenterPoint.row(0) =
-        currCOM_.transpose();
-
-    Eigen::VectorXd currentCenterDistance;
-    Eigen::VectorXd currentCenterClosestFaces;
-    Eigen::MatrixXd currentCenterClosestPoints;
-    Eigen::MatrixXd currentCenterClosestNormals;
-
-    igl::signed_distance(
-        currentCenterPoint,
-        carvePlaneV,
-        carvePlaneF,
-        igl::SIGNED_DISTANCE_TYPE_PSEUDONORMAL,
-        std::numeric_limits<double>::min(),
-        std::numeric_limits<double>::max(),
-        currentCenterDistance,
-        currentCenterClosestFaces,
-        currentCenterClosestPoints,
-        currentCenterClosestNormals
-    );
-
-    if (currentCenterDistance(0) < 0.0)
-    {
-        flipFaces(carvePlaneF);
-    }
-
-
-    std::vector<std::pair<Voxel*, double> > candidateVoxels;
+    PlaneCarvingCandidates candidates;
 
     for (int x = 1; x < dimensions(0) - 1; ++x)
     {
@@ -638,183 +471,299 @@ void CarvingSolver::carveStep(
         {
             for (int z = 1; z < dimensions(2) - 1; ++z)
             {
-                Voxel* currentVoxel =
-                    &voxelGrid_(x, y, z);
+                const Voxel& voxel =
+                    voxelGrid_(x, y, z);
 
-                if (
-                    !currentVoxel->isInner ||
-                    !currentVoxel->isFilled
-                )
+                if (!voxel.isInner || !voxel.isFilled)
                 {
                     continue;
                 }
 
-                Eigen::MatrixXd voxelCenterPoint(1, 3);
-
-                voxelCenterPoint.row(0) =
-                    currentVoxel->center.transpose();
-
-                Eigen::VectorXd voxelDistance;
-                Eigen::VectorXd voxelClosestFaces;
-                Eigen::MatrixXd voxelClosestPoints;
-                Eigen::MatrixXd voxelClosestNormals;
-
-                igl::signed_distance(
-                    voxelCenterPoint,
-                    carvePlaneV,
-                    carvePlaneF,
-                    igl::SIGNED_DISTANCE_TYPE_PSEUDONORMAL,
-                    std::numeric_limits<double>::min(),
-                    std::numeric_limits<double>::max(),
-                    voxelDistance,
-                    voxelClosestFaces,
-                    voxelClosestPoints,
-                    voxelClosestNormals
-                );
-
-                if (voxelDistance(0) > 0.0)
-                {
-                    candidateVoxels.push_back(
-                        std::make_pair(
-                            currentVoxel,
-                            voxelDistance(0)
-                        )
+                const double score =
+                    aggregatePositivePlaneScore(
+                        voxel.center,
+                        planes
                     );
+
+                if (score <= 0.0)
+                {
+                    continue;
                 }
+
+                PlaneCarvingCandidate candidate;
+                candidate.key = {x, y, z};
+                candidate.center = voxel.center;
+                candidate.massProperties =
+                    computeAxisAlignedBoxMassProperties(
+                        voxel.center,
+                        voxelSize
+                    );
+                candidate.score = score;
+                candidates.push_back(candidate);
             }
         }
     }
 
+    sortPlaneCarvingCandidates(candidates);
 
-    std::sort(
-        candidateVoxels.begin(),
-        candidateVoxels.end(),
-        CompareVoxelDistance()
-    );
-
-    const int candidateCount =
-        static_cast<int>(candidateVoxels.size());
-
-    candidateSearchPerformed_ = true;
-    lastCandidateVoxelCount_ = candidateCount;
+    if (candidates.size() > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+    {
+        throw std::overflow_error(
+            "carving candidate count exceeds diagnostic capacity"
+        );
+    }
 
     diagnostics.candidateVoxelCount =
-        candidateCount;
+        static_cast<int>(candidates.size());
 
-    const int firstCandidateIndex =
-        std::max(
-            0,
-            candidateCount - MAX_CARVE
+    const PlaneCarvingPrefixResult prefixResult =
+        selectBestCarvingPrefix(
+            currentMassProperties_,
+            objectives_,
+            candidates
         );
 
-    const int carvedThisStep =
-        candidateCount - firstCandidateIndex;
-
-    for (
-        int candidateIndex = candidateCount - 1;
-        candidateIndex >= firstCandidateIndex;
-        --candidateIndex
+    if (
+        prefixResult.evaluatedPrefixCount >
+            static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
+        prefixResult.bestPrefixLength >
+            static_cast<std::size_t>(std::numeric_limits<int>::max())
     )
     {
-        Voxel* currentVoxel =
-            candidateVoxels[candidateIndex].first;
+        throw std::overflow_error(
+            "carving prefix count exceeds diagnostic capacity"
+        );
+    }
 
-        subtractVoxelMassProperties(*currentVoxel);
+    diagnostics.evaluatedPrefixCount =
+        static_cast<int>(prefixResult.evaluatedPrefixCount);
+    diagnostics.bestPrefixLength =
+        static_cast<int>(prefixResult.bestPrefixLength);
+    diagnostics.bestPrefixEnergy =
+        prefixResult.bestEnergy;
 
-        currentVoxel->isFilled = false;
-        ++carvedVoxelCount_;
+    const std::size_t committedPrefixLength =
+        prefixResult.bestPrefixLength;
+
+    StagedVoxelRemoval stagedRemoval(
+        voxelGrid_,
+        candidates,
+        committedPrefixLength
+    );
+
+    const MassProperties committedMassProperties =
+        prefixResult.bestMassProperties;
+    const Eigen::Vector3d committedCenterOfMass =
+        prefixResult.bestCenterOfMass;
+
+    const int carvedThisStep =
+        static_cast<int>(committedPrefixLength);
+    const int committedCarvedVoxelCount =
+        carvedVoxelCount_ + carvedThisStep;
+
+    CarvingStopReason proposedTerminalReason =
+        CarvingStopReason::None;
+
+    if (candidates.empty())
+    {
+        proposedTerminalReason =
+            CarvingStopReason::NoCandidatesAvailable;
+    }
+    else if (
+        carvedThisStep < minimumRemovalsToContinue_
+    )
+    {
+        proposedTerminalReason =
+            CarvingStopReason::TooFewVoxelsRemoved;
     }
 
     const RecomputedCarvingState recomputedState =
         recomputeCarvingState();
+    const VoxelTopologyReport topology =
+        analyzeVoxelTopology(voxelGrid_);
 
-    diagnostics.centerOfMassAfter = currCOM_;
+    diagnostics.centerOfMassAfter = committedCenterOfMass;
     diagnostics.recomputedCenterOfMassAfter =
         recomputedState.centerOfMass;
-
     diagnostics.firstMomentAfter =
-        currentMassProperties_.firstMoment;
-
+        committedMassProperties.firstMoment;
     diagnostics.recomputedFirstMomentAfter =
         recomputedState.massProperties.firstMoment;
-
     diagnostics.projectedDistanceAfter =
-        getCoMDistance();
-
+        aggregateProjectedCenterOfMassDistance(
+            committedCenterOfMass,
+            objectives_
+        );
     diagnostics.projectedEnergyAfter =
-        getCoMEnergy();
-
+        aggregateProjectedCenterOfMassEnergy(
+            committedCenterOfMass,
+            objectives_
+        );
     diagnostics.centerOfMassDiscrepancyAfter =
-        (
-            currCOM_ -
-            recomputedState.centerOfMass
-        ).norm();
-
+        (committedCenterOfMass - recomputedState.centerOfMass).norm();
     diagnostics.firstMomentDiscrepancyAfter =
         (
-            currentMassProperties_.firstMoment -
+            committedMassProperties.firstMoment -
             recomputedState.massProperties.firstMoment
         ).norm();
-
     diagnostics.remainingMassAfter =
-        currentMassProperties_.mass;
-
+        committedMassProperties.mass;
     diagnostics.recomputedRemainingMassAfter =
         recomputedState.massProperties.mass;
-
     diagnostics.massDiscrepancyAfter =
         std::abs(
-            currentMassProperties_.mass -
+            committedMassProperties.mass -
             recomputedState.massProperties.mass
         );
-
     diagnostics.carvedVoxelCountThisStep =
         carvedThisStep;
-
     diagnostics.totalCarvedVoxelCount =
-        carvedVoxelCount_;
-
+        committedCarvedVoxelCount;
     diagnostics.initialInsideVoxelCount =
         initialInsideVoxelCount_;
-
     diagnostics.initialCarveableVoxelCount =
         initialCarveableVoxelCount_;
-
     diagnostics.remainingInsideVoxelCount =
         recomputedState.filledInsideVoxelCount;
-
+    diagnostics.materialComponentCountAfter =
+        topology.materialComponentCount;
+    diagnostics.carvedVoidComponentCountAfter =
+        topology.carvedVoidComponentCount;
+    const double totalGridVoxelCount =
+        static_cast<double>(dimensions(0)) *
+        static_cast<double>(dimensions(1)) *
+        static_cast<double>(dimensions(2));
     diagnostics.carvedGridRatio =
-        carvedGridRatio();
-
+        committedCarvedVoxelCount / totalGridVoxelCount;
     diagnostics.carvedCarveableRatio =
-        carvedCarveableRatio();
+        initialCarveableVoxelCount_ > 0 ?
+            committedCarvedVoxelCount /
+                static_cast<double>(initialCarveableVoxelCount_) :
+            0.0;
+    diagnostics.stopReason = proposedTerminalReason;
 
-    diagnostics.stopReason =
-        stopReason();
+    diagnosticsHistory_.reserve(
+        diagnosticsHistory_.size() + 1
+    );
 
+    if (preCommitHookForTesting_)
+    {
+        preCommitHookForTesting_();
+    }
+
+    /*
+     * Everything below this point is non-allocating under the reserved
+     * history capacity. Commit scalar state and staged flags as one step.
+     */
+    currentMassProperties_ = committedMassProperties;
+    currCOM_ = committedCenterOfMass;
+    carvedVoxelCount_ = committedCarvedVoxelCount;
+    terminalReason_ = proposedTerminalReason;
+    iterations_ = nextIteration;
+    stagedRemoval.commit();
     diagnosticsHistory_.push_back(diagnostics);
+
+    carvePlaneV.swap(plannedPlaneVertices);
+    carvePlaneF.swap(plannedPlaneFaces);
+    centerOfMass = currCOM_;
 
     if (diagnosticsEnabled_)
     {
-        printCarvingStepDiagnostics(
-            std::cout,
-            diagnostics
-        );
+        try
+        {
+            printCarvingStepDiagnostics(
+                std::cout,
+                diagnostics
+            );
+        }
+        catch (const std::ios_base::failure&)
+        {
+            // Optional logging cannot roll back an already committed step.
+        }
+    }
+}
+
+
+void CarvingSolver::buildDebugPlaneMesh(
+    const CuttingPlanes& planes,
+    Eigen::MatrixXd& vertices,
+    Eigen::MatrixXi& faces
+) const
+{
+    std::size_t activePlaneCount = 0;
+
+    for (const CuttingPlane& plane : planes)
+    {
+        if (plane.active)
+        {
+            ++activePlaneCount;
+        }
     }
 
-    centerOfMass = currCOM_;
+    vertices.resize(
+        static_cast<Eigen::Index>(4 * activePlaneCount),
+        3
+    );
+    faces.resize(
+        static_cast<Eigen::Index>(2 * activePlaneCount),
+        3
+    );
+
+    if (activePlaneCount == 0)
+    {
+        return;
+    }
+
+    const double extent =
+        voxelGrid_.dimensions().maxCoeff() *
+        voxelGrid_.voxelSize().maxCoeff() *
+        10.0;
+
+    Eigen::Index planeIndex = 0;
+
+    for (const CuttingPlane& plane : planes)
+    {
+        if (!plane.active)
+        {
+            continue;
+        }
+
+        const Eigen::Vector3d firstAxis =
+            plane.gravity.normalized();
+        const Eigen::Vector3d planeNormal =
+            normalizedGravityDirection(plane.normal);
+        const Eigen::Vector3d secondAxis =
+            planeNormal.cross(firstAxis).normalized();
+        const Eigen::Index vertexOffset =
+            4 * planeIndex;
+        const Eigen::Index faceOffset =
+            2 * planeIndex;
+
+        vertices.row(vertexOffset + 0) =
+            (plane.point - extent * firstAxis - extent * secondAxis).transpose();
+        vertices.row(vertexOffset + 1) =
+            (plane.point + extent * firstAxis - extent * secondAxis).transpose();
+        vertices.row(vertexOffset + 2) =
+            (plane.point - extent * firstAxis + extent * secondAxis).transpose();
+        vertices.row(vertexOffset + 3) =
+            (plane.point + extent * firstAxis + extent * secondAxis).transpose();
+
+        faces.row(faceOffset + 0) <<
+            vertexOffset + 0,
+            vertexOffset + 1,
+            vertexOffset + 2;
+        faces.row(faceOffset + 1) <<
+            vertexOffset + 2,
+            vertexOffset + 1,
+            vertexOffset + 3;
+
+        ++planeIndex;
+    }
 }
 
 
 void CarvingSolver::carveAll()
 {
-    if (objectives_.size() != 1)
-    {
-        throw std::logic_error(
-            "multi-target carving belongs to R4"
-        );
-    }
-
     while (!isOptimized())
     {
         Eigen::MatrixXd temporaryPlaneVertices;
@@ -950,4 +899,47 @@ int CarvingSolver::initialInsideVoxelCount() const
 int CarvingSolver::initialCarveableVoxelCount() const
 {
     return initialCarveableVoxelCount_;
+}
+
+
+void CarvingSolver::setMinimumRemovalsToContinue(
+    int count
+)
+{
+    if (count < 1)
+    {
+        throw std::invalid_argument(
+            "minimum removals to continue must be at least one"
+        );
+    }
+
+    if (iterations_ != 0)
+    {
+        throw std::logic_error(
+            "minimum removals must be configured before carving"
+        );
+    }
+
+    minimumRemovalsToContinue_ = count;
+}
+
+
+int CarvingSolver::minimumRemovalsToContinue() const
+{
+    return minimumRemovalsToContinue_;
+}
+
+
+void CarvingSolver::setPreCommitHookForTesting(
+    const std::function<void()>& hook
+)
+{
+    if (iterations_ != 0)
+    {
+        throw std::logic_error(
+            "pre-commit test hook must be configured before carving"
+        );
+    }
+
+    preCommitHookForTesting_ = hook;
 }

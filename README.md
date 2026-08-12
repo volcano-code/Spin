@@ -25,10 +25,14 @@ license boundary are recorded in [`docs/provenance.md`](docs/provenance.md).
 
 The current code modularizes and instruments the original carving prototype:
 
-- `VoxelGrid` owns voxelization and volumetric state;
+- `VoxelGrid` owns configurable-resolution voxelization, volumetric state and
+  conservative fixed-surface `t_min` eligibility;
 - `VoxelSurface` triangulates exposed voxel faces;
 - `VoidMeshExtractor` extracts the carved cavity boundary;
-- `CarvingSolver` owns carving state and consumes R3 objective collections;
+- `PlaneCarvingPolicy` implements paper Eq. (8), deterministic multi-target
+  ordering and complete true-energy prefix selection;
+- `CarvingSolver` owns transactional carving state and consumes arbitrary
+  objective collections;
 - `CarvingDiagnostics` records per-step metrics and CSV traces;
 - `MassProperties` keeps signed mass and first moment as one state;
 - `BalanceEnergy` implements the normalized-gravity projection in Eq. (2);
@@ -37,25 +41,32 @@ The current code modularizes and instruments the original carving prototype:
 - `BalanceObjective` represents standing or suspension targets and sums the
   projected CoM term of Eq. (5) for any finite number of objectives;
 - `InnerVoidMesh` remains a compatibility facade for the existing viewer;
-- `carving-regression` provides deterministic initial, one-step, full-run and
-  empty-candidate headless scenarios.
+- `VoxelTopology` reports six-neighbor material and carved-void components;
+- the headless regressions cover analytic policy, manufacturing constraints,
+  deterministic initial/step/full behavior and empty candidates.
 
 R2 adds analytic mass/first-moment/energy tests and verifies the Bunny solver's
 incremental state against an independent full recompute after every carving
 step. R3 adds paper-governed support/safe-region geometry, standing and
 suspension target construction, and arbitrary-`K` Eq. (5) CoM evaluation.
+R4 replaces the inherited finite-plane SDF and fixed 1000-voxel batch with
+the paper's analytic cutting planes, `sum(max(0,d_ik))` multi-target score,
+a complete prefix scan and the lowest computed true Eq. (5) energy under the
+documented floating-point comparison. Prefix
+zero remains eligible, and temporary energy increases do not end the scan.
+The paper leaves “too few voxels” unspecified; the local configurable
+threshold defaults to one. R4 also adds a model-space wall-thickness input and
+component-count diagnostics.
+
 The viewer now constructs a standing target from the actual lowest contacts
 when its flatten-band input is zero, rather than treating the clicked posture
 anchor as the target. A positive band previews the support that a later
-flattening stage would create; R3 does not mutate the mesh. These stages still do
-not establish paper-equivalent optimization. Remaining known
+flattening stage would create; R3 does not mutate the mesh. These stages still
+do not establish the complete paper optimizer. Remaining known
 non-conformances include:
 
-- carving removes a fixed-size batch instead of selecting the best energy
-  prefix over the ordered candidates;
-- the old stopping ratio is based on the entire regular grid;
-- multi-target carving is intentionally rejected until the R4 candidate
-  ordering and best-prefix policy are implemented;
+- target refresh and voxel refill across carving/deformation alternations are
+  not scheduled yet;
 - BBW/LBS deformation, Laplacian preservation,
   analytic gradients and deformation/carving alternation are not implemented;
 - `make_it_stand()` remains a placeholder API.
@@ -111,8 +122,7 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-The active headless suite registers six R3 tests in addition to the eight R2
-tests:
+The active headless suite registers 25 tests through R4:
 
 ```text
 mass-surface-analytic
@@ -125,6 +135,17 @@ standing-target-analytic
 suspension-target-analytic
 multi-target-energy-analytic
 multi-target-solver-boundary
+cutting-plane-analytic
+multi-plane-score-analytic
+carving-order-deterministic
+global-prefix-transient
+global-prefix-middle
+global-prefix-zero
+global-prefix-shortest-tie
+global-prefix-scale-invariant
+global-prefix-over-1000
+minimum-wall-thickness-analytic
+voxel-topology-report
 carving-initial-state
 carving-one-step
 carving-full-mass-consistency
@@ -133,7 +154,7 @@ carving-no-candidates
 
 They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
 eight-voxel deletion fixture, oblique/scaled gravity, state/count continuity,
-the exact 39-column CSV schema, per-step incremental/full consistency and safe
+the exact 44-column CSV schema, per-step incremental/full consistency and safe
 termination on an empty candidate search. Density is fixed to one, so reported
 mass is a signed-volume proxy in model units, not a calibrated value in kg.
 
@@ -155,11 +176,11 @@ but no longer treats its divergent numbers as an executable target.
 
 ```text
 include/, src/
-  carving/       solver state, R3 objectives, and R1/R2 diagnostics
+  carving/       R4 plane policy, solver state and diagnostics
   extraction/    carved-cavity surface extraction
   physics/       signed mass properties and projected CoM objectives
   stability/     standing support, safe-region and target construction
-  voxel/         voxel data, grid construction and exposed faces
+  voxel/         grid, wall eligibility, topology reports and exposed faces
   center_of_mass compatibility wrapper over signed mass properties
   grid_util      alignment, transforms and regular-grid construction
   inner_void_mesh compatibility facade used by the viewer
@@ -168,7 +189,9 @@ tests/
   carving_regression.cpp
   mass_properties_regression.cpp
   objective_integration_regression.cpp
+  plane_carving_policy_regression.cpp
   stability_regression.cpp
+  voxel_constraints_regression.cpp
   baselines/       frozen known-failure traces; never target outputs
 data/
   inherited sample meshes; Bunny is used by the carving regressions
