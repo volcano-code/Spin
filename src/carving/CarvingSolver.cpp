@@ -1,5 +1,6 @@
 #include "carving/CarvingSolver.h"
 
+#include "deformation/DeformedVoxelMassField.h"
 #include "physics/BalanceEnergy.h"
 #include "physics/BalanceObjective.h"
 #include "physics/MassProperties.h"
@@ -8,6 +9,7 @@
 
 #include <Eigen/Geometry>
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -76,6 +78,36 @@ private:
 };
 
 
+class CarveStepActivityGuard
+{
+public:
+    explicit CarveStepActivityGuard(bool& active)
+        : active_(active)
+    {
+        if (active_)
+        {
+            throw std::logic_error(
+                "carveStep does not permit reentrant execution"
+            );
+        }
+        active_ = true;
+    }
+
+    ~CarveStepActivityGuard()
+    {
+        active_ = false;
+    }
+
+    CarveStepActivityGuard(const CarveStepActivityGuard&) = delete;
+    CarveStepActivityGuard& operator=(
+        const CarveStepActivityGuard&
+    ) = delete;
+
+private:
+    bool& active_;
+};
+
+
 BalanceObjectives makeSingleBalanceObjectives(
     const Eigen::Vector3d& targetCenterOfMass,
     const Eigen::Vector3d& gravity
@@ -132,6 +164,7 @@ CarvingSolver::CarvingSolver(
         computeSurfaceMassProperties(V, F)
     ),
     currentMassProperties_(initialMassProperties_),
+    deformedVoxelMassField_(nullptr),
     carvedVoxelCount_(0),
     iterations_(0),
     minimumRemovalsToContinue_(1),
@@ -141,7 +174,8 @@ CarvingSolver::CarvingSolver(
     initialInsideVoxelCount_(0),
     initialCarveableVoxelCount_(0),
     diagnosticsHistory_(),
-    preCommitHookForTesting_()
+    preCommitHookForTesting_(),
+    carveStepInProgress_(false)
 {
     if (!isClosedConsistentlyOrientedTriangleMesh(F))
     {
@@ -160,38 +194,53 @@ CarvingSolver::CarvingSolver(
         );
     }
 
-    const Eigen::Vector3i& dimensions = voxelGrid_.dimensions();
-    const Eigen::Vector3d& voxelSize = voxelGrid_.voxelSize();
-
-    if (
-        (dimensions.array() < 3).any() ||
-        !voxelSize.allFinite() ||
-        (voxelSize.array() <= 0.0).any()
-    )
-    {
-        throw std::invalid_argument(
-            "carving requires a built voxel grid with positive dimensions"
-        );
-    }
-
-    for (int x = 0; x < dimensions(0); ++x)
-    {
-        for (int y = 0; y < dimensions(1); ++y)
-        {
-            for (int z = 0; z < dimensions(2); ++z)
-            {
-                if (!voxelGrid_(x, y, z).isFilled)
-                {
-                    throw std::invalid_argument(
-                        "carving solver requires an initially filled voxel grid"
-                    );
-                }
-            }
-        }
-    }
+    validateInitialGridState();
 
     refreshCenterOfMass();
 
+    ensureDiagnosticsInitialized();
+}
+
+
+CarvingSolver::CarvingSolver(
+    VoxelGrid& voxelGrid,
+    const MassProperties& deformedOuterMassProperties,
+    const deformation::DeformedVoxelMassField& deformedVoxelMassField,
+    const BalanceObjectives& objectives
+)
+    :
+    voxelGrid_(voxelGrid),
+    objectives_(validateAndCopyBalanceObjectives(objectives)),
+    currCOM_(Eigen::Vector3d::Zero()),
+    initialMassProperties_(deformedOuterMassProperties),
+    currentMassProperties_(initialMassProperties_),
+    deformedVoxelMassField_(nullptr),
+    carvedVoxelCount_(0),
+    iterations_(0),
+    minimumRemovalsToContinue_(1),
+    terminalReason_(CarvingStopReason::None),
+    diagnosticsEnabled_(false),
+    diagnosticsInitialized_(false),
+    initialInsideVoxelCount_(0),
+    initialCarveableVoxelCount_(0),
+    diagnosticsHistory_(),
+    preCommitHookForTesting_(),
+    carveStepInProgress_(false)
+{
+    if (
+        !initialMassProperties_.isFinite() ||
+        initialMassProperties_.mass <= 0.0
+    )
+    {
+        throw std::invalid_argument(
+            "deformed outer mass properties must be finite and positive"
+        );
+    }
+
+    validateInitialGridState();
+    initializeDeformedVoxelMassField(deformedVoxelMassField);
+
+    refreshCenterOfMass();
     ensureDiagnosticsInitialized();
 }
 
@@ -296,6 +345,187 @@ bool CarvingSolver::isOptimized() const
 }
 
 
+void CarvingSolver::validateInitialGridState() const
+{
+    const Eigen::Vector3i& dimensions = voxelGrid_.dimensions();
+    const Eigen::Vector3d& voxelSize = voxelGrid_.voxelSize();
+
+    if (
+        (dimensions.array() < 3).any() ||
+        !voxelSize.allFinite() ||
+        (voxelSize.array() <= 0.0).any()
+    )
+    {
+        throw std::invalid_argument(
+            "carving requires a built voxel grid with positive dimensions"
+        );
+    }
+
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                if (!voxelGrid_(x, y, z).isFilled)
+                {
+                    throw std::invalid_argument(
+                        "carving solver requires an initially filled voxel grid"
+                    );
+                }
+            }
+        }
+    }
+}
+
+
+int CarvingSolver::linearCellIndex(
+    int x,
+    int y,
+    int z
+) const
+{
+    const Eigen::Vector3i& dimensions = voxelGrid_.dimensions();
+
+    if (
+        x < 0 || x >= dimensions(0) ||
+        y < 0 || y >= dimensions(1) ||
+        z < 0 || z >= dimensions(2)
+    )
+    {
+        throw std::out_of_range(
+            "voxel mass-field coordinate is outside the grid"
+        );
+    }
+
+    return
+        (x * dimensions(1) + y) * dimensions(2) + z;
+}
+
+
+void CarvingSolver::initializeDeformedVoxelMassField(
+    const deformation::DeformedVoxelMassField& deformedVoxelMassField
+)
+{
+    const Eigen::Vector3i& dimensions = voxelGrid_.dimensions();
+    const int cellCount = dimensions.prod();
+
+    if (
+        deformedVoxelMassField.dimensions() != dimensions ||
+        deformedVoxelMassField.cellCount() != cellCount
+    )
+    {
+        throw std::invalid_argument(
+            "deformed voxel mass field does not match the carving grid dimensions"
+        );
+    }
+
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                const Voxel& voxel = voxelGrid_(x, y, z);
+                if (!voxel.isInner)
+                {
+                    continue;
+                }
+
+                const int linear = linearCellIndex(x, y, z);
+                if (!deformedVoxelMassField.contains(linear))
+                {
+                    throw std::invalid_argument(
+                        "a carveable voxel is absent from the deformed mass field"
+                    );
+                }
+
+                const MassProperties properties =
+                    deformedVoxelMassField.massProperties(linear);
+                const Eigen::Vector3d center =
+                    deformedVoxelMassField.centroid(linear);
+
+                if (
+                    !properties.isFinite() ||
+                    !(properties.mass > 0.0) ||
+                    !center.allFinite() ||
+                    (
+                        properties.firstMoment -
+                        properties.mass * center
+                    ).norm() >
+                        128.0 * std::numeric_limits<double>::epsilon() *
+                        std::max(
+                            {
+                                1.0,
+                                properties.firstMoment.norm(),
+                                (properties.mass * center).norm()
+                            }
+                        )
+                )
+                {
+                    throw std::invalid_argument(
+                        "deformed carveable voxel has inconsistent mass properties"
+                    );
+                }
+
+            }
+        }
+    }
+
+    deformedVoxelMassField_ = &deformedVoxelMassField;
+}
+
+
+MassProperties CarvingSolver::voxelMassProperties(
+    int x,
+    int y,
+    int z
+) const
+{
+    const int linear = linearCellIndex(x, y, z);
+    if (deformedVoxelMassField_ != nullptr)
+    {
+        return deformedVoxelMassField_->massProperties(linear);
+    }
+
+    const Voxel& voxel = voxelGrid_(x, y, z);
+    if (!voxel.isInner)
+    {
+        throw std::logic_error(
+            "voxel does not have a carving mass contribution"
+        );
+    }
+
+    return computeAxisAlignedBoxMassProperties(
+        voxel.center,
+        voxelGrid_.voxelSize()
+    );
+}
+
+
+Eigen::Vector3d CarvingSolver::voxelMassCentroid(
+    int x,
+    int y,
+    int z
+) const
+{
+    const int linear = linearCellIndex(x, y, z);
+    if (deformedVoxelMassField_ != nullptr)
+    {
+        return deformedVoxelMassField_->centroid(linear);
+    }
+
+    const Voxel& voxel = voxelGrid_(x, y, z);
+    if (!voxel.isInner)
+    {
+        throw std::logic_error(
+            "voxel does not have a carving mass centroid"
+        );
+    }
+    return voxel.center;
+}
+
+
 void CarvingSolver::ensureDiagnosticsInitialized()
 {
     if (diagnosticsInitialized_)
@@ -345,9 +575,6 @@ CarvingSolver::recomputeCarvingState() const
     const Eigen::Vector3i& dimensions =
         voxelGrid_.dimensions();
 
-    const Eigen::Vector3d& voxelSize =
-        voxelGrid_.voxelSize();
-
     for (int x = 0; x < dimensions(0); ++x)
     {
         for (int y = 0; y < dimensions(1); ++y)
@@ -371,10 +598,7 @@ CarvingSolver::recomputeCarvingState() const
                 )
                 {
                     state.massProperties -=
-                        computeAxisAlignedBoxMassProperties(
-                            voxel.center,
-                            voxelSize
-                        );
+                        voxelMassProperties(x, y, z);
                 }
             }
         }
@@ -427,6 +651,8 @@ void CarvingSolver::carveStep(
         );
     }
 
+    CarveStepActivityGuard activityGuard(carveStepInProgress_);
+
     ensureDiagnosticsInitialized();
 
     Eigen::MatrixXd plannedPlaneVertices;
@@ -450,9 +676,6 @@ void CarvingSolver::carveStep(
 
     const Eigen::Vector3i& dimensions =
         voxelGrid_.dimensions();
-    const Eigen::Vector3d& voxelSize =
-        voxelGrid_.voxelSize();
-
     const CuttingPlanes planes = makeCuttingPlanes(
         currCOM_,
         objectives_
@@ -479,9 +702,12 @@ void CarvingSolver::carveStep(
                     continue;
                 }
 
+                const Eigen::Vector3d center =
+                    voxelMassCentroid(x, y, z);
+
                 const double score =
                     aggregatePositivePlaneScore(
-                        voxel.center,
+                        center,
                         planes
                     );
 
@@ -492,12 +718,9 @@ void CarvingSolver::carveStep(
 
                 PlaneCarvingCandidate candidate;
                 candidate.key = {x, y, z};
-                candidate.center = voxel.center;
+                candidate.center = center;
                 candidate.massProperties =
-                    computeAxisAlignedBoxMassProperties(
-                        voxel.center,
-                        voxelSize
-                    );
+                    voxelMassProperties(x, y, z);
                 candidate.score = score;
                 candidates.push_back(candidate);
             }
@@ -794,6 +1017,28 @@ const Eigen::Vector3d& CarvingSolver::targetCenterOfMass() const
 const BalanceObjectives& CarvingSolver::balanceObjectives() const
 {
     return objectives_;
+}
+
+
+void CarvingSolver::updateBalanceObjectives(
+    const BalanceObjectives& objectives
+)
+{
+    if (carveStepInProgress_)
+    {
+        throw std::logic_error(
+            "balance objectives may be updated only between carving steps"
+        );
+    }
+
+    /*
+     * Validate and allocate before touching the committed solver state.  A
+     * same-allocator vector swap is non-throwing, giving this scheduling API
+     * the strong exception guarantee even when allocation fails.
+     */
+    BalanceObjectives replacement =
+        validateAndCopyBalanceObjectives(objectives);
+    objectives_.swap(replacement);
 }
 
 

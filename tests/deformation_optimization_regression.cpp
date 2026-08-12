@@ -135,6 +135,82 @@ void reverseOrientation(Eigen::MatrixXi& faces)
 }
 
 
+void appendMesh(
+    const Eigen::MatrixXd& sourceVertices,
+    const Eigen::MatrixXi& sourceFaces,
+    Eigen::MatrixXd& destinationVertices,
+    Eigen::MatrixXi& destinationFaces
+)
+{
+    const Eigen::Index vertexOffset = destinationVertices.rows();
+    const Eigen::Index faceOffset = destinationFaces.rows();
+
+    destinationVertices.conservativeResize(
+        vertexOffset + sourceVertices.rows(),
+        3
+    );
+    destinationVertices.bottomRows(sourceVertices.rows()) = sourceVertices;
+
+    destinationFaces.conservativeResize(
+        faceOffset + sourceFaces.rows(),
+        3
+    );
+    destinationFaces.bottomRows(sourceFaces.rows()) =
+        sourceFaces.array() + vertexOffset;
+}
+
+
+void makeEdgeTouchingBoxChain(
+    Eigen::MatrixXd& vertices,
+    Eigen::MatrixXi& faces
+)
+{
+    Eigen::MatrixXd firstVertices;
+    Eigen::MatrixXi firstFaces;
+    makeBox(
+        Eigen::Vector3d(0.0, 0.0, 0.0),
+        Eigen::Vector3d(1.0, 1.0, 1.0),
+        firstVertices,
+        firstFaces
+    );
+
+    Eigen::MatrixXd secondVertices;
+    Eigen::MatrixXi secondFaces;
+    makeBox(
+        Eigen::Vector3d(1.0, 1.0, 0.0),
+        Eigen::Vector3d(2.0, 2.0, 1.0),
+        secondVertices,
+        secondFaces
+    );
+
+    vertices = firstVertices;
+    faces = firstFaces;
+    appendMesh(secondVertices, secondFaces, vertices, faces);
+
+    /*
+     * Give both boxes the same indices on their shared geometric edge.  That
+     * edge is then used twice in each direction: a closed oriented chain,
+     * but deliberately not a strict two-face-per-edge triangle manifold.
+     */
+    const int secondOffset = 8;
+    const int replacements[2][2] =
+    {
+        {secondOffset + 0, 2},
+        {secondOffset + 4, 6}
+    };
+    for (int replacement = 0; replacement < 2; ++replacement)
+    {
+        for (Eigen::Index index = 0; index < faces.size(); ++index)
+        {
+            if (faces(index) == replacements[replacement][0])
+            {
+                faces(index) = replacements[replacement][1];
+            }
+        }
+    }
+}
+
+
 Eigen::VectorXd finiteDifferenceVertexGradient(
     const Eigen::MatrixXd& vertices,
     const std::function<double(const Eigen::MatrixXd&)>& energy
@@ -485,6 +561,169 @@ int runMassGradient(const std::string& scenario)
         << " moment_error=" << momentGradientError
         << " center_errors=" << outerCenterError
         << ',' << innerCenterError << '\n';
+    return EXIT_SUCCESS;
+}
+
+
+int runTriangleChainGradient(const std::string& scenario)
+{
+    constexpr double density = 1.3;
+
+    Eigen::MatrixXd vertices;
+    Eigen::MatrixXi faces;
+    makeEdgeTouchingBoxChain(vertices, faces);
+
+    const bool chainAccepted = isClosedOrientedTriangleChain(faces);
+    const bool strictManifoldRejected =
+        !isClosedConsistentlyOrientedTriangleMesh(faces);
+    const SurfaceMassDifferential differential =
+        computeSurfaceMassDifferential(vertices, faces, density);
+
+    const Eigen::VectorXd numericalMass = finiteDifferenceVertexGradient(
+        vertices,
+        [&](const Eigen::MatrixXd& value)
+        {
+            return computeSurfaceMassProperties(
+                value,
+                faces,
+                density
+            ).mass;
+        }
+    );
+    Eigen::MatrixXd numericalFirstMoment(3, 3 * vertices.rows());
+    for (Eigen::Index component = 0; component < 3; ++component)
+    {
+        numericalFirstMoment.row(component) =
+            finiteDifferenceVertexGradient(
+                vertices,
+                [&](const Eigen::MatrixXd& value)
+                {
+                    return computeSurfaceMassProperties(
+                        value,
+                        faces,
+                        density
+                    ).firstMoment(component);
+                }
+            ).transpose();
+    }
+
+    const double massError = relativeVectorError(
+        differential.massGradient,
+        numericalMass
+    );
+    const double momentError = relativeVectorError(
+        Eigen::Map<const Eigen::VectorXd>(
+            differential.firstMomentJacobian.data(),
+            differential.firstMomentJacobian.size()
+        ),
+        Eigen::Map<const Eigen::VectorXd>(
+            numericalFirstMoment.data(),
+            numericalFirstMoment.size()
+        )
+    );
+
+    Eigen::MatrixXd outerVertices;
+    Eigen::MatrixXi outerFaces;
+    makeBox(
+        Eigen::Vector3d(-1.0, -1.0, -1.0),
+        Eigen::Vector3d(3.0, 3.0, 2.0),
+        outerVertices,
+        outerFaces
+    );
+    Eigen::MatrixXi inwardFaces = faces;
+    reverseOrientation(inwardFaces);
+    const CenterOfMassDifferential centerDifferential =
+        computeCenterOfMassDifferential(
+            outerVertices,
+            outerFaces,
+            vertices,
+            inwardFaces,
+            density
+        );
+    Eigen::MatrixXd numericalInnerCenter(3, 3 * vertices.rows());
+    for (Eigen::Index component = 0; component < 3; ++component)
+    {
+        numericalInnerCenter.row(component) =
+            finiteDifferenceVertexGradient(
+                vertices,
+                [&](const Eigen::MatrixXd& value)
+                {
+                    return requireCenterOfMass(combinedMassProperties(
+                        outerVertices,
+                        outerFaces,
+                        value,
+                        inwardFaces,
+                        density
+                    ))(component);
+                }
+            ).transpose();
+    }
+    const double centerError = relativeVectorError(
+        Eigen::Map<const Eigen::VectorXd>(
+            centerDifferential.innerJacobian.data(),
+            centerDifferential.innerJacobian.size()
+        ),
+        Eigen::Map<const Eigen::VectorXd>(
+            numericalInnerCenter.data(),
+            numericalInnerCenter.size()
+        )
+    );
+
+    Eigen::MatrixXi openFaces = faces.topRows(faces.rows() - 1);
+    Eigen::MatrixXi unbalancedFaces = faces;
+    std::swap(unbalancedFaces(0, 1), unbalancedFaces(0, 2));
+
+    bool openRejected = false;
+    try
+    {
+        static_cast<void>(computeSurfaceMassDifferential(
+            vertices,
+            openFaces,
+            density
+        ));
+    }
+    catch (const std::invalid_argument&)
+    {
+        openRejected = true;
+    }
+
+    bool unbalancedRejected = false;
+    try
+    {
+        static_cast<void>(computeSurfaceMassDifferential(
+            vertices,
+            unbalancedFaces,
+            density
+        ));
+    }
+    catch (const std::invalid_argument&)
+    {
+        unbalancedRejected = true;
+    }
+
+    if (
+        !chainAccepted ||
+        !strictManifoldRejected ||
+        massError > GRADIENT_RELATIVE_TOLERANCE ||
+        momentError > GRADIENT_RELATIVE_TOLERANCE ||
+        centerError > GRADIENT_RELATIVE_TOLERANCE ||
+        !openRejected ||
+        !unbalancedRejected
+    )
+    {
+        return fail(
+            scenario,
+            "closed non-manifold chain or rejection contract failed"
+        );
+    }
+
+    std::cout
+        << "[PASS] scenario=" << scenario
+        << " strict_manifold=0 closed_chain=1"
+        << " mass_error=" << massError
+        << " moment_error=" << momentError
+        << " center_error=" << centerError
+        << " open_rejected=1 unbalanced_rejected=1\n";
     return EXIT_SUCCESS;
 }
 
@@ -1277,6 +1516,10 @@ int main(int argc, char** argv)
     if (scenario == "mass-gradient")
     {
         return runMassGradient(scenario);
+    }
+    if (scenario == "triangle-chain-gradient")
+    {
+        return runTriangleChainGradient(scenario);
     }
     if (scenario == "objective-gradient")
     {

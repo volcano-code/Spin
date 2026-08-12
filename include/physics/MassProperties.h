@@ -73,6 +73,21 @@ bool isClosedConsistentlyOrientedTriangleMesh(
 );
 
 
+/**
+ * Return true when the oriented triangle chain has zero boundary.
+ *
+ * Unlike isClosedConsistentlyOrientedTriangleMesh(), this predicate permits
+ * more than two triangles to meet along an edge, provided that every use in
+ * one direction is paired with a use in the opposite direction.  This is the
+ * appropriate contract for voxel-cavity surfaces whose closed components may
+ * touch along an edge: the surface remains a valid closed integration chain
+ * even though its indexed connectivity is not a strict 2-manifold.
+ */
+bool isClosedOrientedTriangleChain(
+    const Eigen::MatrixXi& faces
+);
+
+
 /** Compute the exact contribution of a uniform axis-aligned box. */
 MassProperties computeAxisAlignedBoxMassProperties(
     const Eigen::Vector3d& center,

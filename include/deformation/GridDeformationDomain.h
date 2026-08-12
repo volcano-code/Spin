@@ -72,6 +72,9 @@ public:
     bool isActiveCell(int linearIndex) const;
     std::array<int, 8> cellNodes(int linearIndex) const;
 
+    /** Full-grid corner indices in x/y/z binary-bit order. */
+    std::array<int, 8> cellGlobalCorners(int linearIndex) const;
+
     /** Embed a finite point in a deterministically selected active cell. */
     TrilinearEmbedding embed(const Eigen::Vector3d& point) const;
 

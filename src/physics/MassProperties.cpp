@@ -11,6 +11,17 @@
 namespace
 {
 
+
+struct EdgeUse
+{
+    int forwardCount = 0;
+    int reverseCount = 0;
+};
+
+
+using EdgeUseMap = std::map<std::pair<int, int>, EdgeUse>;
+
+
 void requirePositiveFiniteDensity(
     double density
 )
@@ -21,6 +32,58 @@ void requirePositiveFiniteDensity(
             "mass density must be finite and positive"
         );
     }
+}
+
+
+bool collectOrientedEdgeUses(
+    const Eigen::MatrixXi& faces,
+    EdgeUseMap& edges
+)
+{
+    if (faces.cols() != 3 || faces.rows() == 0)
+    {
+        return false;
+    }
+
+    for (Eigen::Index row = 0; row < faces.rows(); ++row)
+    {
+        const int indices[3] =
+        {
+            faces(row, 0),
+            faces(row, 1),
+            faces(row, 2)
+        };
+
+        if (
+            indices[0] < 0 ||
+            indices[1] < 0 ||
+            indices[2] < 0 ||
+            indices[0] == indices[1] ||
+            indices[1] == indices[2] ||
+            indices[2] == indices[0]
+        )
+        {
+            return false;
+        }
+
+        for (int edgeIndex = 0; edgeIndex < 3; ++edgeIndex)
+        {
+            const int from = indices[edgeIndex];
+            const int to = indices[(edgeIndex + 1) % 3];
+            EdgeUse& use = edges[std::minmax(from, to)];
+
+            if (from < to)
+            {
+                ++use.forwardCount;
+            }
+            else
+            {
+                ++use.reverseCount;
+            }
+        }
+    }
+
+    return true;
 }
 
 } // namespace
@@ -199,64 +262,41 @@ bool isClosedConsistentlyOrientedTriangleMesh(
     const Eigen::MatrixXi& faces
 )
 {
-    if (faces.cols() != 3 || faces.rows() == 0)
+    EdgeUseMap edges;
+    if (!collectOrientedEdgeUses(faces, edges))
     {
         return false;
     }
 
-    struct EdgeUse
+    for (const auto& entry : edges)
     {
-        int count = 0;
-        int orientationSum = 0;
-    };
-
-    std::map<std::pair<int, int>, EdgeUse> edges;
-
-    for (Eigen::Index row = 0; row < faces.rows(); ++row)
-    {
-        const int indices[3] =
-        {
-            faces(row, 0),
-            faces(row, 1),
-            faces(row, 2)
-        };
-
         if (
-            indices[0] < 0 ||
-            indices[1] < 0 ||
-            indices[2] < 0 ||
-            indices[0] == indices[1] ||
-            indices[1] == indices[2] ||
-            indices[2] == indices[0]
+            entry.second.forwardCount != 1 ||
+            entry.second.reverseCount != 1
         )
         {
             return false;
         }
-
-        for (int edgeIndex = 0; edgeIndex < 3; ++edgeIndex)
-        {
-            const int from = indices[edgeIndex];
-            const int to = indices[(edgeIndex + 1) % 3];
-
-            const std::pair<int, int> key =
-                std::minmax(from, to);
-
-            EdgeUse& use = edges[key];
-            ++use.count;
-            use.orientationSum += from < to ? 1 : -1;
-        }
     }
 
-    for (
-        std::map<std::pair<int, int>, EdgeUse>::const_iterator iterator =
-            edges.begin();
-        iterator != edges.end();
-        ++iterator
-    )
+    return true;
+}
+
+
+bool isClosedOrientedTriangleChain(
+    const Eigen::MatrixXi& faces
+)
+{
+    EdgeUseMap edges;
+    if (!collectOrientedEdgeUses(faces, edges))
+    {
+        return false;
+    }
+
+    for (const auto& entry : edges)
     {
         if (
-            iterator->second.count != 2 ||
-            iterator->second.orientationSum != 0
+            entry.second.forwardCount != entry.second.reverseCount
         )
         {
             return false;

@@ -56,6 +56,15 @@ public:
 
     int longestAxisResolution() const;
 
+    /**
+     * Restore every lattice cell to the filled state used at the beginning
+     * of a paper Section 4 carving block.
+     *
+     * Returns the number of flags changed from empty to filled. Geometry,
+     * signed-distance metadata and carve eligibility are left untouched.
+     */
+    int refillAll();
+
 private:
     List3d<Voxel> voxels_;
 

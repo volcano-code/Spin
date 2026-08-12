@@ -55,6 +55,7 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/carving/CarvingSolver.cpp
     src/center_of_mass.cpp
     src/deformation/BoundedBiharmonicWeights.cpp
+    src/deformation/DeformedVoxelMassField.cpp
     src/deformation/DeformationObjective.cpp
     src/deformation/DeformationOptimizer.cpp
     src/deformation/DeformationSystem.cpp
@@ -66,11 +67,13 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/grid_util.cpp
     src/inner_void_mesh.cpp
     src/make_it_stand.cpp
+    src/optimization/AlternatingBalanceOptimizer.cpp
     src/physics/BalanceEnergy.cpp
     src/physics/BalanceObjective.cpp
     src/physics/MassProperties.cpp
     src/physics/SurfaceMassDifferential.cpp
     src/stability/SupportRegion.cpp
+    src/stability/BalanceTargetSchedule.cpp
     src/voxel/Voxel.cpp
     src/voxel/VoxelGrid.cpp
     src/voxel/VoxelSurface.cpp
@@ -83,6 +86,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/carving/CarvingSolver.h
     include/center_of_mass.h
     include/deformation/BoundedBiharmonicWeights.h
+    include/deformation/DeformedVoxelMassField.h
     include/deformation/DeformationObjective.h
     include/deformation/DeformationOptimizer.h
     include/deformation/DeformationSystem.h
@@ -95,11 +99,13 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/inner_void_mesh.h
     include/list3d.h
     include/make_it_stand.h
+    include/optimization/AlternatingBalanceOptimizer.h
     include/physics/BalanceEnergy.h
     include/physics/BalanceObjective.h
     include/physics/MassProperties.h
     include/physics/SurfaceMassDifferential.h
     include/stability/SupportRegion.h
+    include/stability/BalanceTargetSchedule.h
     include/voxel/Voxel.h
     include/voxel/VoxelGrid.h
     include/voxel/VoxelSurface.h
@@ -384,6 +390,10 @@ if(BUILD_TESTING)
         mass-gradient
     )
     add_deformation_optimization_test(
+        surface-mass-triangle-chain-analytic
+        triangle-chain-gradient
+    )
+    add_deformation_optimization_test(
         deformation-objective-gradient-analytic
         objective-gradient
     )
@@ -394,6 +404,221 @@ if(BUILD_TESTING)
     add_deformation_optimization_test(
         deformation-optimizer-end-to-end
         optimizer-e2e
+    )
+
+    add_executable(
+        deformed-voxel-mass-field-regression
+        tests/deformed_voxel_mass_field_regression.cpp
+    )
+    target_compile_features(
+        deformed-voxel-mass-field-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        deformed-voxel-mass-field-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        deformed-voxel-mass-field-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_deformed_voxel_mass_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:deformed-voxel-mass-field-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r7;deformation;physics;carving"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_deformed_voxel_mass_test(
+        deformed-voxel-mass-identity-similarity
+        identity-similarity
+    )
+    add_deformed_voxel_mass_test(
+        deformed-voxel-mass-cavity-sum
+        distorted-cavity-sum
+    )
+    add_deformed_voxel_mass_test(
+        deformed-voxel-mass-invalid
+        invalid
+    )
+
+    add_executable(
+        deformed-carving-solver-regression
+        tests/deformed_carving_solver_regression.cpp
+    )
+    target_compile_features(
+        deformed-carving-solver-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        deformed-carving-solver-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        deformed-carving-solver-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_deformed_carving_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:deformed-carving-solver-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r7;alternating;carving;transaction"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_deformed_carving_test(deformed-carving-identity identity)
+    add_deformed_carving_test(deformed-carving-mass-field deformed)
+    add_deformed_carving_test(deformed-carving-transaction transaction)
+    add_deformed_carving_test(
+        deformed-carving-objective-update
+        objective-update
+    )
+
+    add_executable(
+        balance-target-schedule-regression
+        tests/balance_target_schedule_regression.cpp
+    )
+    target_compile_features(
+        balance-target-schedule-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        balance-target-schedule-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        balance-target-schedule-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_balance_target_schedule_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:balance-target-schedule-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r7;alternating;stability;multi-target"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_balance_target_schedule_test(
+        alternating-target-refresh
+        refresh
+    )
+    add_balance_target_schedule_test(
+        alternating-stability-terminal
+        stability
+    )
+    add_balance_target_schedule_test(
+        alternating-multi-target-terminal
+        multi
+    )
+
+    add_executable(
+        alternating-block-semantics-regression
+        tests/alternating_block_semantics_regression.cpp
+    )
+    target_compile_features(
+        alternating-block-semantics-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        alternating-block-semantics-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        alternating-block-semantics-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_alternating_block_semantics_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:alternating-block-semantics-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r7;alternating;transaction"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_alternating_block_semantics_test(
+        alternating-refill-reset
+        refill
+    )
+    add_alternating_block_semantics_test(
+        alternating-fixed-alpha-transaction
+        paper-transaction
+    )
+    add_alternating_block_semantics_test(
+        alternating-paper-beta-profile
+        profile-discriminator
+    )
+
+    add_executable(
+        alternating-balance-optimizer-regression
+        tests/alternating_balance_optimizer_regression.cpp
+    )
+    target_compile_features(
+        alternating-balance-optimizer-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        alternating-balance-optimizer-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        alternating-balance-optimizer-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_alternating_balance_optimizer_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:alternating-balance-optimizer-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r7;alternating;integration;physics"
+                TIMEOUT 60
+        )
+    endfunction()
+
+    add_alternating_balance_optimizer_test(
+        alternating-controller-refill-block
+        refill-block
+    )
+    add_alternating_balance_optimizer_test(
+        alternating-controller-transaction
+        transaction
+    )
+    add_alternating_balance_optimizer_test(
+        alternating-controller-end-to-end
+        e2e
     )
 
     add_executable(

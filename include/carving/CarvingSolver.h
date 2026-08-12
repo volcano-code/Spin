@@ -15,6 +15,12 @@
 class VoxelGrid;
 
 
+namespace deformation
+{
+class DeformedVoxelMassField;
+}
+
+
 /**
  * Implements the mass-redistribution carving procedure.
  *
@@ -50,6 +56,29 @@ public:
         const Eigen::Vector3d& gravity,
         const Eigen::Vector3d& targetCenterOfMass
     );
+
+    /**
+     * Construct a carving solver for one synchronously deformed lattice.
+     *
+     * The outer mass properties and per-cell sidecar must describe the same
+     * deformed geometry. VoxelGrid contributes only immutable topology and
+     * transactional fill flags; its rest centers and axis-aligned voxel size
+     * are deliberately not used for carving mass or ordering in this mode.
+     * The mass field is referenced, not copied, and must outlive the solver.
+     */
+    CarvingSolver(
+        VoxelGrid& voxelGrid,
+        const MassProperties& deformedOuterMassProperties,
+        const deformation::DeformedVoxelMassField& deformedVoxelMassField,
+        const BalanceObjectives& objectives
+    );
+
+    CarvingSolver(
+        VoxelGrid&,
+        const MassProperties&,
+        deformation::DeformedVoxelMassField&&,
+        const BalanceObjectives&
+    ) = delete;
 
     CarvingSolver(const CarvingSolver&) = delete;
     CarvingSolver& operator=(const CarvingSolver&) = delete;
@@ -91,6 +120,22 @@ public:
 
     /** The non-empty objective collection used by every energy query. */
     const BalanceObjectives& balanceObjectives() const;
+
+    /**
+     * Replace the targets used by the next carving step.
+     *
+     * This is a scheduling operation between transactional carveStep() calls:
+     * it changes no voxel flag, mass property, center of mass, counter or
+     * terminal state. Existing diagnostics remain historical records under
+     * the targets active when their steps were committed; they are not
+     * reweighted retroactively. A terminal solver is deliberately not
+     * reopened. Reentrant updates during carveStep() are rejected. The current
+     * energy/distance accessors immediately use the new targets. Empty input
+     * is rejected with the strong exception guarantee.
+     */
+    void updateBalanceObjectives(
+        const BalanceObjectives& objectives
+    );
 
     const MassProperties& initialMassProperties() const;
     const MassProperties& currentMassProperties() const;
@@ -144,6 +189,30 @@ private:
 
     void refreshCenterOfMass();
 
+    void validateInitialGridState() const;
+
+    void initializeDeformedVoxelMassField(
+        const deformation::DeformedVoxelMassField& deformedVoxelMassField
+    );
+
+    int linearCellIndex(
+        int x,
+        int y,
+        int z
+    ) const;
+
+    MassProperties voxelMassProperties(
+        int x,
+        int y,
+        int z
+    ) const;
+
+    Eigen::Vector3d voxelMassCentroid(
+        int x,
+        int y,
+        int z
+    ) const;
+
     void buildDebugPlaneMesh(
         const CuttingPlanes& planes,
         Eigen::MatrixXd& vertices,
@@ -161,6 +230,9 @@ private:
     MassProperties initialMassProperties_;
     MassProperties currentMassProperties_;
 
+    /** Null selects the legacy axis-aligned rest-cell mass oracle. */
+    const deformation::DeformedVoxelMassField* deformedVoxelMassField_;
+
     int carvedVoxelCount_;
     int iterations_;
 
@@ -175,4 +247,5 @@ private:
 
     std::vector<CarvingStepDiagnostics> diagnosticsHistory_;
     std::function<void()> preCommitHookForTesting_;
+    bool carveStepInProgress_;
 };

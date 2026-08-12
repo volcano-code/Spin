@@ -396,3 +396,27 @@ int VoxelGrid::longestAxisResolution() const
 {
     return longestAxisResolution_;
 }
+
+
+int VoxelGrid::refillAll()
+{
+    int refilled = 0;
+
+    for (int x = 0; x < dimensions_(0); ++x)
+    {
+        for (int y = 0; y < dimensions_(1); ++y)
+        {
+            for (int z = 0; z < dimensions_(2); ++z)
+            {
+                Voxel& voxel = (*this)(x, y, z);
+                if (!voxel.isFilled)
+                {
+                    voxel.isFilled = true;
+                    ++refilled;
+                }
+            }
+        }
+    }
+
+    return refilled;
+}

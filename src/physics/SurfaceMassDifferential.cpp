@@ -41,11 +41,11 @@ void validateSurfaceInputs(
 
     if (
         faces.rows() > 0 &&
-        !isClosedConsistentlyOrientedTriangleMesh(faces)
+        !isClosedOrientedTriangleChain(faces)
     )
     {
         throw std::invalid_argument(
-            "surface differential requires a closed consistently oriented boundary"
+            "surface differential requires a closed oriented triangle chain"
         );
     }
 }

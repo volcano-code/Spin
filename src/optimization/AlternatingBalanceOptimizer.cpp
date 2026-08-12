@@ -1,0 +1,831 @@
+#include "optimization/AlternatingBalanceOptimizer.h"
+
+#include "carving/CarvingSolver.h"
+#include "deformation/DeformedVoxelMassField.h"
+#include "deformation/DeformationObjective.h"
+#include "physics/BalanceObjective.h"
+#include "physics/MassProperties.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
+#include <utility>
+
+
+namespace optimization
+{
+namespace
+{
+
+
+struct MaterialSnapshot
+{
+    VoxelGrid voxelFill;
+    deformation::DeformedGeometry geometry;
+    MassProperties massProperties;
+    Eigen::Vector3d centerOfMass = Eigen::Vector3d::Zero();
+};
+
+
+void validateConfig(
+    const AlternatingBalanceOptimizerConfig& config
+)
+{
+    const deformation::PaperLineSearchConfig& line = config.lineSearch;
+
+    if (
+        config.maximumCarvingBlocks <= 0 ||
+        config.maximumDeformationIterationsPerBlock <= 0 ||
+        config.minimumCarvingRemovalsToContinue < 0 ||
+        !std::isfinite(config.gradientTolerance) ||
+        config.gradientTolerance < 0.0 ||
+        !std::isfinite(config.shapeScaleLambda) ||
+        config.shapeScaleLambda < 0.0 ||
+        !std::isfinite(config.density) ||
+        config.density <= 0.0 ||
+        !std::isfinite(config.minimumPositiveMass) ||
+        config.minimumPositiveMass < 0.0 ||
+        !std::isfinite(config.minimumPositiveCellMass) ||
+        config.minimumPositiveCellMass < 0.0 ||
+        !std::isfinite(line.initialStep) ||
+        !std::isfinite(line.reductionRatio) ||
+        !std::isfinite(line.minimumStep) ||
+        !std::isfinite(line.requiredRelativeDecrease) ||
+        !std::isfinite(line.muDecrement) ||
+        line.initialStep <= 0.0 ||
+        line.minimumStep <= 0.0 ||
+        line.minimumStep > line.initialStep ||
+        line.reductionRatio <= 0.0 ||
+        line.reductionRatio >= 1.0 ||
+        line.requiredRelativeDecrease < 0.0 ||
+        line.requiredRelativeDecrease >= 1.0 ||
+        line.muDecrement <= 0.0 ||
+        line.muDecrement > 1.0
+    )
+    {
+        throw std::invalid_argument(
+            "alternating optimizer configuration is invalid"
+        );
+    }
+}
+
+
+void validateInitialParameters(
+    const deformation::DeformationSystem& system,
+    const Eigen::VectorXd& parameters,
+    double initialMu
+)
+{
+    if (
+        parameters.size() !=
+            system.bindingHandles().optimizableParameterCount() ||
+        !parameters.allFinite() ||
+        !std::isfinite(initialMu) ||
+        initialMu < 0.0 ||
+        initialMu > 1.0
+    )
+    {
+        throw std::invalid_argument(
+            "alternating optimizer initial state is invalid"
+        );
+    }
+
+    deformation::HandleSet handles = system.bindingHandles();
+    handles.setOptimizationParameters(parameters);
+}
+
+
+int alphaHammingDistance(
+    const VoxelGrid& first,
+    const VoxelGrid& second
+)
+{
+    if (first.dimensions() != second.dimensions())
+    {
+        throw std::invalid_argument(
+            "alpha comparison requires identical grid dimensions"
+        );
+    }
+
+    int distance = 0;
+    const Eigen::Vector3i dimensions = first.dimensions();
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                distance +=
+                    first(x, y, z).isFilled !=
+                    second(x, y, z).isFilled ? 1 : 0;
+            }
+        }
+    }
+    return distance;
+}
+
+
+std::uint64_t alphaHash(const VoxelGrid& grid)
+{
+    std::uint64_t hash = UINT64_C(1469598103934665603);
+    std::uint64_t index = 0;
+    const Eigen::Vector3i dimensions = grid.dimensions();
+
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                hash ^= index++;
+                hash *= UINT64_C(1099511628211);
+                hash ^= grid(x, y, z).isFilled ? UINT64_C(1) : UINT64_C(0);
+                hash *= UINT64_C(1099511628211);
+            }
+        }
+    }
+    return hash;
+}
+
+
+Eigen::Vector3d requireCenterOfMass(
+    const MassProperties& properties,
+    double minimumPositiveMass,
+    const char* message
+)
+{
+    Eigen::Vector3d center = Eigen::Vector3d::Zero();
+    if (
+        !properties.isFinite() ||
+        !(properties.mass > minimumPositiveMass) ||
+        !properties.tryCenterOfMass(center, minimumPositiveMass)
+    )
+    {
+        throw deformation::InfeasibleDeformationState(message);
+    }
+    return center;
+}
+
+
+deformation::HandleSet makeHandles(
+    const deformation::DeformationSystem& system,
+    const Eigen::VectorXd& parameters
+)
+{
+    deformation::HandleSet handles = system.bindingHandles();
+    try
+    {
+        handles.setOptimizationParameters(parameters);
+    }
+    catch (const std::invalid_argument& error)
+    {
+        throw deformation::InfeasibleDeformationState(error.what());
+    }
+    return handles;
+}
+
+
+MaterialSnapshot evaluateFixedAlphaState(
+    const deformation::DeformationSystem& system,
+    const VoxelGrid& fixedVoxelFill,
+    const Eigen::VectorXd& parameters,
+    double density,
+    double minimumPositiveMass,
+    double minimumPositiveCellMass
+)
+{
+    MaterialSnapshot snapshot;
+    snapshot.voxelFill = fixedVoxelFill;
+    const deformation::HandleSet handles = makeHandles(system, parameters);
+    snapshot.geometry = system.evaluate(handles, snapshot.voxelFill);
+
+    try
+    {
+        static_cast<void>(deformation::DeformedVoxelMassField(
+            system.domain(),
+            snapshot.geometry.gridCorners,
+            density,
+            minimumPositiveCellMass
+        ));
+    }
+    catch (const deformation::InfeasibleDeformedVoxel& error)
+    {
+        throw deformation::InfeasibleDeformationState(error.what());
+    }
+
+    snapshot.massProperties =
+        computeSurfaceMassProperties(
+            snapshot.geometry.outerVertices,
+            snapshot.geometry.outerFaces,
+            density
+        ) +
+        computeSurfaceMassProperties(
+            snapshot.geometry.innerVertices,
+            snapshot.geometry.innerFaces,
+            density
+        );
+    snapshot.centerOfMass = requireCenterOfMass(
+        snapshot.massProperties,
+        minimumPositiveMass,
+        "deformed material has non-positive or non-finite mass"
+    );
+    return snapshot;
+}
+
+
+MaterialSnapshot evaluateSolidState(
+    const deformation::DeformationSystem& system,
+    const VoxelGrid& restGrid,
+    const Eigen::VectorXd& parameters,
+    double density,
+    double minimumPositiveMass,
+    double minimumPositiveCellMass
+)
+{
+    VoxelGrid solid = restGrid;
+    solid.refillAll();
+    return evaluateFixedAlphaState(
+        system,
+        solid,
+        parameters,
+        density,
+        minimumPositiveMass,
+        minimumPositiveCellMass
+    );
+}
+
+
+struct CarvingBlockOutcome
+{
+    MaterialSnapshot state;
+    AlternatingCarvingRecord record;
+    int carvingIterations = 0;
+    int carvedVoxelCount = 0;
+    CarvingStopReason stopReason = CarvingStopReason::None;
+    bool stable = false;
+    bool maximumIterationsReached = false;
+};
+
+
+CarvingBlockOutcome runCarvingBlock(
+    const deformation::DeformationSystem& system,
+    const VoxelGrid& restGrid,
+    const VoxelGrid& alphaBeforeReset,
+    const Eigen::VectorXd& parameters,
+    stability::BalanceTargetSchedule& schedule,
+    stability::BalanceTargetSnapshot& targets,
+    const AlternatingBalanceOptimizerConfig& config,
+    int block,
+    int& geometryEpoch,
+    std::vector<AlternatingCarvingIterationRecord>& iterationTrace
+)
+{
+    CarvingBlockOutcome outcome;
+    outcome.record.block = block;
+    outcome.record.geometryEpochBeforeReset = geometryEpoch;
+    outcome.record.alphaHashBeforeReset = alphaHash(alphaBeforeReset);
+
+    VoxelGrid resetProbe = alphaBeforeReset;
+    outcome.record.refilledVoxelCount = resetProbe.refillAll();
+    outcome.state = evaluateSolidState(
+        system,
+        restGrid,
+        parameters,
+        config.density,
+        config.minimumPositiveMass,
+        config.minimumPositiveCellMass
+    );
+    if (outcome.record.refilledVoxelCount > 0)
+    {
+        ++geometryEpoch;
+    }
+    outcome.record.geometryEpochAfterReset = geometryEpoch;
+    outcome.record.alphaHashAfterReset = alphaHash(outcome.state.voxelFill);
+
+    outcome.record.resetTargetGenerationBefore = targets.generation;
+    targets = schedule.refresh(outcome.state.centerOfMass);
+    outcome.record.resetTargetGenerationAfter = targets.generation;
+    outcome.record.resetObjectiveContextChanged = targets.contextChanged;
+    outcome.record.resetAllTargetsReached = targets.allReached;
+    outcome.record.targetGenerationBefore = targets.generation;
+    outcome.record.resetTargetEnergy =
+        aggregateProjectedCenterOfMassEnergy(
+            outcome.state.centerOfMass,
+            targets.objectives
+        );
+
+    if (targets.allReached)
+    {
+        outcome.stable = true;
+        outcome.record.geometryEpoch = geometryEpoch;
+        outcome.record.alphaHammingDistance = alphaHammingDistance(
+            alphaBeforeReset,
+            outcome.state.voxelFill
+        );
+        outcome.record.targetGenerationAfter = targets.generation;
+        outcome.record.allTargetsReached = true;
+        outcome.record.finalTargetEnergy = outcome.record.resetTargetEnergy;
+        outcome.record.alphaHash = alphaHash(outcome.state.voxelFill);
+        outcome.record.massProperties = outcome.state.massProperties;
+        outcome.record.centerOfMass = outcome.state.centerOfMass;
+        return outcome;
+    }
+
+    try
+    {
+        const deformation::DeformedVoxelMassField field(
+            system.domain(),
+            outcome.state.geometry.gridCorners,
+            config.density,
+            config.minimumPositiveCellMass
+        );
+        CarvingSolver solver(
+            outcome.state.voxelFill,
+            outcome.state.massProperties,
+            field,
+            targets.objectives
+        );
+        solver.setMinimumRemovalsToContinue(
+            config.minimumCarvingRemovalsToContinue
+        );
+
+        while (!solver.isOptimized())
+        {
+            const VoxelGrid alphaBeforeStep = outcome.state.voxelFill;
+            const std::uint64_t alphaBeforeHash = alphaHash(alphaBeforeStep);
+            const std::size_t generationBefore = targets.generation;
+            const double energyBefore = solver.getCoMEnergy();
+            const int carvedBefore = solver.carvedVoxelCount();
+            const int epochBefore = geometryEpoch;
+
+            Eigen::MatrixXd temporaryPlaneVertices;
+            Eigen::MatrixXi temporaryPlaneFaces;
+            Eigen::Vector3d temporaryCenterOfMass;
+            solver.carveStep(
+                temporaryPlaneVertices,
+                temporaryPlaneFaces,
+                temporaryCenterOfMass
+            );
+
+            const int carvedThisStep =
+                solver.carvedVoxelCount() - carvedBefore;
+            if (carvedThisStep > 0)
+            {
+                ++geometryEpoch;
+            }
+
+            targets = schedule.refresh(solver.currentCenterOfMass());
+
+            AlternatingCarvingIterationRecord iteration;
+            iteration.block = block;
+            iteration.iteration = solver.iterationCount() - 1;
+            iteration.geometryEpochBefore = epochBefore;
+            iteration.geometryEpochAfter = geometryEpoch;
+            iteration.carvedVoxelCount = carvedThisStep;
+            iteration.totalCarvedVoxelCount = solver.carvedVoxelCount();
+            iteration.stopReason = solver.stopReason();
+            iteration.frozenTargetEnergyBefore = energyBefore;
+            iteration.frozenTargetEnergyAfter =
+                solver.diagnosticsHistory().back().projectedEnergyAfter;
+            iteration.refreshedTargetEnergyAfter =
+                aggregateProjectedCenterOfMassEnergy(
+                    solver.currentCenterOfMass(),
+                    targets.objectives
+                );
+            iteration.targetGenerationBefore = generationBefore;
+            iteration.targetGenerationAfter = targets.generation;
+            iteration.objectiveContextChanged = targets.contextChanged;
+            iteration.allTargetsReached = targets.allReached;
+            iteration.alphaHashBefore = alphaBeforeHash;
+            iteration.alphaHashAfter = alphaHash(outcome.state.voxelFill);
+            iteration.massProperties = solver.currentMassProperties();
+            iteration.centerOfMass = solver.currentCenterOfMass();
+
+            const int observedHamming = alphaHammingDistance(
+                alphaBeforeStep,
+                outcome.state.voxelFill
+            );
+            const double energyTolerance =
+                1024.0 * std::numeric_limits<double>::epsilon() *
+                std::max({
+                    1.0,
+                    std::abs(iteration.frozenTargetEnergyBefore),
+                    std::abs(iteration.frozenTargetEnergyAfter)
+                });
+            if (
+                observedHamming != carvedThisStep ||
+                iteration.frozenTargetEnergyAfter >
+                    iteration.frozenTargetEnergyBefore + energyTolerance
+            )
+            {
+                throw std::logic_error(
+                    "committed carving iteration violated its frozen context"
+                );
+            }
+            iterationTrace.push_back(iteration);
+
+            if (targets.allReached)
+            {
+                outcome.stable = true;
+                break;
+            }
+
+            if (solver.isOptimized())
+            {
+                break;
+            }
+
+            solver.updateBalanceObjectives(targets.objectives);
+        }
+
+        outcome.carvingIterations = solver.iterationCount();
+        outcome.carvedVoxelCount = solver.carvedVoxelCount();
+        outcome.stopReason = solver.stopReason();
+        outcome.maximumIterationsReached =
+            !outcome.stable &&
+            outcome.stopReason == CarvingStopReason::MaximumIterationsReached;
+        const deformation::HandleSet handles = makeHandles(system, parameters);
+        outcome.state.geometry = system.evaluate(
+            handles,
+            outcome.state.voxelFill
+        );
+        outcome.state.massProperties = solver.currentMassProperties();
+        outcome.state.centerOfMass = solver.currentCenterOfMass();
+
+        const MassProperties surfaceOracle =
+            computeSurfaceMassProperties(
+                outcome.state.geometry.outerVertices,
+                outcome.state.geometry.outerFaces,
+                config.density
+            ) +
+            computeSurfaceMassProperties(
+                outcome.state.geometry.innerVertices,
+                outcome.state.geometry.innerFaces,
+                config.density
+            );
+        const double scale = std::max({
+            1.0,
+            surfaceOracle.mass,
+            outcome.state.massProperties.mass,
+            surfaceOracle.firstMoment.norm(),
+            outcome.state.massProperties.firstMoment.norm()
+        });
+        const double tolerance =
+            4096.0 * std::numeric_limits<double>::epsilon() * scale;
+        if (
+            std::abs(
+                surfaceOracle.mass - outcome.state.massProperties.mass
+            ) > tolerance ||
+            (
+                surfaceOracle.firstMoment -
+                outcome.state.massProperties.firstMoment
+            ).norm() > tolerance
+        )
+        {
+            throw std::logic_error(
+                "deformed carving mass disagrees with the cavity surface"
+            );
+        }
+        outcome.record.geometryEpoch = geometryEpoch;
+        outcome.record.alphaHammingDistance = alphaHammingDistance(
+            alphaBeforeReset,
+            outcome.state.voxelFill
+        );
+        outcome.record.carvingIterations = outcome.carvingIterations;
+        outcome.record.carvedVoxelCount = outcome.carvedVoxelCount;
+        outcome.record.stopReason = outcome.stopReason;
+        outcome.record.targetGenerationAfter = targets.generation;
+        outcome.record.objectiveContextChanged =
+            targets.generation != outcome.record.targetGenerationBefore;
+        outcome.record.allTargetsReached = targets.allReached;
+        outcome.record.finalTargetEnergy =
+            aggregateProjectedCenterOfMassEnergy(
+                outcome.state.centerOfMass,
+                targets.objectives
+            );
+        outcome.record.alphaHash = alphaHash(outcome.state.voxelFill);
+        outcome.record.massProperties = outcome.state.massProperties;
+        outcome.record.centerOfMass = outcome.state.centerOfMass;
+        return outcome;
+    }
+    catch (const deformation::InfeasibleDeformedVoxel& error)
+    {
+        throw deformation::InfeasibleDeformationState(error.what());
+    }
+}
+
+
+void copyStateToResult(
+    const MaterialSnapshot& state,
+    AlternatingBalanceOptimizationResult& result
+)
+{
+    result.voxelFill = state.voxelFill;
+    result.geometry = state.geometry;
+    result.massProperties = state.massProperties;
+    result.centerOfMass = state.centerOfMass;
+}
+
+
+} // namespace
+
+
+AlternatingBalanceOptimizer::AlternatingBalanceOptimizer(
+    const deformation::DeformationSystem& deformationSystem,
+    const VoxelGrid& restVoxelGrid,
+    const stability::BalanceTargetSchedule& targetSchedule,
+    const AlternatingBalanceOptimizerConfig& config
+)
+    :
+    deformationSystem_(deformationSystem),
+    restVoxelGrid_(restVoxelGrid),
+    targetSpecifications_(targetSchedule.specifications()),
+    config_(config)
+{
+    validateConfig(config_);
+    deformationSystem_.validateVoxelFill(restVoxelGrid_);
+    restVoxelGrid_.refillAll();
+}
+
+
+AlternatingBalanceOptimizationResult
+AlternatingBalanceOptimizer::optimize(
+    const Eigen::VectorXd& initialParameters,
+    double initialMu
+) const
+{
+    validateInitialParameters(
+        deformationSystem_,
+        initialParameters,
+        initialMu
+    );
+
+    AlternatingBalanceOptimizationResult result;
+    result.parameters = initialParameters;
+    result.mu = initialMu;
+    result.lineSearchState.step = config_.lineSearch.initialStep;
+    result.lineSearchState.mu = initialMu;
+
+    stability::BalanceTargetSchedule schedule(targetSpecifications_);
+    MaterialSnapshot current = evaluateSolidState(
+        deformationSystem_,
+        restVoxelGrid_,
+        result.parameters,
+        config_.density,
+        config_.minimumPositiveMass,
+        config_.minimumPositiveCellMass
+    );
+    for (int block = 0;
+         block < config_.maximumCarvingBlocks;
+         ++block)
+    {
+        CarvingBlockOutcome carved = runCarvingBlock(
+            deformationSystem_,
+            restVoxelGrid_,
+            current.voxelFill,
+            result.parameters,
+            schedule,
+            result.targets,
+            config_,
+            block,
+            result.geometryEpoch,
+            result.carvingIterations
+        );
+
+        current = std::move(carved.state);
+        result.carvingBlocks.push_back(carved.record);
+
+        if (carved.stable)
+        {
+            result.status = AlternatingOptimizationStatus::StableAfterCarving;
+            copyStateToResult(current, result);
+            result.mu = result.lineSearchState.mu;
+            return result;
+        }
+
+        if (carved.maximumIterationsReached)
+        {
+            result.status =
+                AlternatingOptimizationStatus::MaximumCarvingIterations;
+            copyStateToResult(current, result);
+            result.mu = result.lineSearchState.mu;
+            return result;
+        }
+
+        if (result.parameters.size() == 0)
+        {
+            result.status =
+                AlternatingOptimizationStatus::NoDeformationDegreesOfFreedom;
+            copyStateToResult(current, result);
+            result.mu = result.lineSearchState.mu;
+            return result;
+        }
+
+        const std::uint64_t blockAlphaHash = alphaHash(current.voxelFill);
+        const VoxelGrid fixedAlpha = current.voxelFill;
+        const std::size_t deformationTraceBegin =
+            result.deformationIterations.size();
+        bool gradientConverged = false;
+
+        for (int iteration = 0;
+             iteration < config_.maximumDeformationIterationsPerBlock;
+             ++iteration)
+        {
+            deformation::DeformationObjective objective(
+                deformationSystem_,
+                fixedAlpha,
+                result.targets.objectives,
+                config_.shapeScaleLambda,
+                config_.density,
+                config_.minimumPositiveMass
+            );
+            const deformation::DeformationEnergyEvaluation evaluation =
+                objective.evaluate(
+                    result.parameters,
+                    result.lineSearchState.mu
+                );
+            const double gradientNorm = evaluation.gradient.norm();
+            if (!std::isfinite(gradientNorm))
+            {
+                throw std::overflow_error(
+                    "alternating deformation gradient norm overflowed"
+                );
+            }
+
+            if (gradientNorm <= config_.gradientTolerance)
+            {
+                gradientConverged = true;
+                break;
+            }
+
+            const Eigen::VectorXd parametersBefore = result.parameters;
+            const int geometryEpochBefore = result.geometryEpoch;
+            const std::size_t targetGenerationBefore =
+                result.targets.generation;
+            const std::uint64_t alphaBeforeHash =
+                alphaHash(current.voxelFill);
+
+            const deformation::PaperLineSearchResult trial =
+                deformation::paperGradientDescentTrial(
+                    result.parameters,
+                    evaluation.gradient,
+                    result.lineSearchState,
+                    config_.lineSearch,
+                    [&](const Eigen::VectorXd& parameters, double mu)
+                    {
+                        const deformation::DeformationEnergyEvaluation value =
+                            objective.evaluate(parameters, mu);
+                        if (!parameters.isApprox(result.parameters, 0.0))
+                        {
+                            static_cast<void>(evaluateFixedAlphaState(
+                                deformationSystem_,
+                                fixedAlpha,
+                                parameters,
+                                config_.density,
+                                config_.minimumPositiveMass,
+                                config_.minimumPositiveCellMass
+                            ));
+                        }
+                        return value.totalEnergy;
+                    }
+                );
+
+            AlternatingDeformationRecord record;
+            record.block = block;
+            record.iteration = iteration;
+            record.geometryEpochBefore = geometryEpochBefore;
+            record.decision = trial.decision;
+            record.accepted = trial.accepted;
+            record.rolledBack = trial.rolledBack;
+            record.energyBefore = trial.energyBefore;
+            record.trialEnergy = trial.trialEnergy;
+            record.energyAfter = trial.energyAfter;
+            record.gradientNorm = gradientNorm;
+            record.attemptedStep = trial.attemptedStep;
+            record.muBefore = trial.muBefore;
+            record.objectiveReweighted = trial.objectiveReweighted;
+            record.stateAfter = trial.nextState;
+            record.targetGenerationBefore = targetGenerationBefore;
+            record.alphaHashBefore = alphaBeforeHash;
+            record.parametersBefore = parametersBefore;
+
+            if (trial.accepted)
+            {
+                MaterialSnapshot accepted = evaluateFixedAlphaState(
+                    deformationSystem_,
+                    fixedAlpha,
+                    trial.parameters,
+                    config_.density,
+                    config_.minimumPositiveMass,
+                    config_.minimumPositiveCellMass
+                );
+                result.parameters = trial.parameters;
+                current = std::move(accepted);
+                ++result.geometryEpoch;
+                result.targets = schedule.refresh(current.centerOfMass);
+            }
+            else
+            {
+                if (
+                    !trial.parameters.isApprox(parametersBefore, 0.0) ||
+                    !result.parameters.isApprox(parametersBefore, 0.0)
+                )
+                {
+                    throw std::logic_error(
+                        "rejected deformation trial changed live parameters"
+                    );
+                }
+            }
+
+            result.lineSearchState = trial.nextState;
+            result.mu = result.lineSearchState.mu;
+            record.geometryEpochAfter = result.geometryEpoch;
+            record.targetGenerationAfter = result.targets.generation;
+            record.objectiveContextChanged =
+                trial.accepted && result.targets.contextChanged;
+            record.allTargetsReached = result.targets.allReached;
+            record.refreshedTargetEnergyAfter =
+                aggregateProjectedCenterOfMassEnergy(
+                    current.centerOfMass,
+                    result.targets.objectives
+                );
+            record.alphaHashAfter = alphaHash(current.voxelFill);
+            record.alphaHammingDistance = alphaHammingDistance(
+                fixedAlpha,
+                current.voxelFill
+            );
+            record.parametersAfter = result.parameters;
+            record.massPropertiesAfter = current.massProperties;
+            record.centerOfMassAfter = current.centerOfMass;
+
+            if (
+                record.alphaHashBefore != blockAlphaHash ||
+                record.alphaHashAfter != blockAlphaHash ||
+                record.alphaHammingDistance != 0
+            )
+            {
+                throw std::logic_error(
+                    "fixed-alpha deformation block changed voxel fill"
+                );
+            }
+
+            result.deformationIterations.push_back(record);
+
+            if (result.targets.allReached)
+            {
+                result.status =
+                    AlternatingOptimizationStatus::StableAfterDeformation;
+                copyStateToResult(current, result);
+                return result;
+            }
+
+            if (
+                trial.decision ==
+                    deformation::PaperTrialDecision::MuExhausted
+            )
+            {
+                result.status =
+                    AlternatingOptimizationStatus::MuExhaustedUnstable;
+                copyStateToResult(current, result);
+                return result;
+            }
+        }
+
+        if (!gradientConverged)
+        {
+            result.status =
+                AlternatingOptimizationStatus::MaximumDeformationIterations;
+            copyStateToResult(current, result);
+            return result;
+        }
+
+        const bool acceptedDeformationThisBlock = std::any_of(
+            result.deformationIterations.begin() +
+                static_cast<std::ptrdiff_t>(deformationTraceBegin),
+            result.deformationIterations.end(),
+            [](const AlternatingDeformationRecord& record)
+            {
+                return record.accepted;
+            }
+        );
+        if (
+            result.carvingBlocks.back().alphaHammingDistance == 0 &&
+            !acceptedDeformationThisBlock
+        )
+        {
+            result.status = AlternatingOptimizationStatus::AlternatingStalled;
+            copyStateToResult(current, result);
+            return result;
+        }
+    }
+
+    result.status = AlternatingOptimizationStatus::MaximumCarvingBlocks;
+    copyStateToResult(current, result);
+    result.mu = result.lineSearchState.mu;
+    return result;
+}
+
+
+} // namespace optimization

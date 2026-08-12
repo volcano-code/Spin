@@ -901,6 +901,25 @@ std::array<int, 8> GridDeformationDomain::cellNodes(
 }
 
 
+std::array<int, 8> GridDeformationDomain::cellGlobalCorners(
+    int linearIndex
+) const
+{
+    if (linearIndex < 0 || linearIndex >= cellGlobalCorners_.rows())
+    {
+        throw std::out_of_range("linear cell index is outside the grid");
+    }
+
+    std::array<int, 8> result{};
+    for (int bit = 0; bit < 8; ++bit)
+    {
+        result[static_cast<std::size_t>(bit)] =
+            cellGlobalCorners_(linearIndex, bit);
+    }
+    return result;
+}
+
+
 TrilinearEmbedding GridDeformationDomain::embed(
     const Eigen::Vector3d& point
 ) const
