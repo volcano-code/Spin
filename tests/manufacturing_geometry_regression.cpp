@@ -1084,6 +1084,189 @@ int runExportSeal()
 }
 
 
+int runSourceRejection()
+{
+    const std::string scenario = "source-rejection";
+
+    auto expect = [&scenario](
+        optimization::AlternatingBalanceOptimizationResult source,
+        const std::string& expected
+    ) -> bool
+    {
+        const ManufacturingGeometry prepared =
+            manufacturing::prepareManufacturingGeometry(source);
+        if (
+            prepared.report.ready ||
+            !prepared.report.sourceBound ||
+            !hasFailure(prepared.report, expected)
+        )
+        {
+            std::cerr
+                << "[FAIL] scenario=" << scenario
+                << " expected=" << expected << '\n';
+            return false;
+        }
+        return true;
+    };
+
+    optimization::AlternatingBalanceOptimizationResult invalidEpoch =
+        sourceResultFixture();
+    invalidEpoch.geometryEpoch = -1;
+    invalidEpoch.carvingBlocks.back().geometryEpoch = -1;
+
+    optimization::AlternatingBalanceOptimizationResult wrongHash =
+        sourceResultFixture();
+    ++wrongHash.carvingBlocks.back().alphaHash;
+
+    optimization::AlternatingBalanceOptimizationResult wrongTraceEpoch =
+        sourceResultFixture();
+    ++wrongTraceEpoch.carvingBlocks.back().geometryEpoch;
+
+    optimization::AlternatingBalanceOptimizationResult nonfinite =
+        sourceResultFixture();
+    nonfinite.parameters = Eigen::VectorXd::Constant(
+        1,
+        std::numeric_limits<double>::quiet_NaN()
+    );
+
+    optimization::AlternatingBalanceOptimizationResult unsafe =
+        sourceResultFixture();
+    unsafe.targets.allReached = false;
+
+    optimization::AlternatingBalanceOptimizationResult wrongMass =
+        sourceResultFixture();
+    wrongMass.massProperties.mass += 0.125;
+
+    optimization::AlternatingBalanceOptimizationResult wrongMoment =
+        sourceResultFixture();
+    wrongMoment.massProperties.firstMoment(1) += 0.125;
+
+    optimization::AlternatingBalanceOptimizationResult wrongCenter =
+        sourceResultFixture();
+    wrongCenter.centerOfMass(2) += 0.125;
+
+    if (
+        !expect(invalidEpoch, "source_geometry_epoch_invalid") ||
+        !expect(wrongHash, "source_occupancy_trace_hash_mismatch") ||
+        !expect(wrongTraceEpoch, "source_geometry_epoch_trace_mismatch") ||
+        !expect(nonfinite, "source_parameters_nonfinite") ||
+        !expect(unsafe, "source_targets_not_all_reached") ||
+        !expect(wrongMass, "source_mass_properties_disagree") ||
+        !expect(wrongMoment, "source_mass_properties_disagree") ||
+        !expect(wrongCenter, "source_mass_properties_disagree")
+    )
+    {
+        return EXIT_FAILURE;
+    }
+    return pass(scenario);
+}
+
+
+int runRawSubstitution()
+{
+    const std::string scenario = "raw-substitution";
+    optimization::AlternatingBalanceOptimizationResult source =
+        sourceResultFixture();
+
+    TriangleMesh substitute = makeBox(
+        Eigen::Vector3d::Zero(),
+        Eigen::Vector3d(0.9, 1.0, 1.0)
+    );
+    source.geometry.outerVertices = substitute.vertices;
+    source.geometry.outerFaces = substitute.faces;
+
+    const ManufacturingGeometry raw =
+        manufacturing::prepareManufacturingGeometry(
+            source.geometry,
+            source.voxelFill
+        );
+    if (
+        raw.report.ready ||
+        raw.report.sourceBound ||
+        !hasFailure(raw.report, "r7_source_result_not_bound")
+    )
+    {
+        return fail(scenario, "raw substituted outer was incorrectly source-bound");
+    }
+
+    const ScopedTemporaryDirectory temporary(scenario);
+    const std::filesystem::path target = temporary.path() / "preserve.obj";
+    writeSentinel(target);
+    const std::vector<unsigned char> sentinel = readBytes(target);
+    bool rejected = false;
+    try
+    {
+        manufacturing::exportReadyManufacturingMesh(
+            raw,
+            target.string(),
+            manufacturing::ManufacturingMeshFormat::Obj
+        );
+    }
+    catch (const std::logic_error&)
+    {
+        rejected = true;
+    }
+
+    if (!rejected || readBytes(target) != sentinel)
+    {
+        return fail(scenario, "raw substituted outer escaped export guard");
+    }
+    return pass(scenario);
+}
+
+
+int runScaleTranslation()
+{
+    const std::string scenario = "scale-translation";
+    const TriangleMesh reference = makeBox(
+        Eigen::Vector3d::Zero(),
+        Eigen::Vector3d::Ones()
+    );
+    const BoundaryAudit baseline = auditOutward(reference);
+    if (!baseline.strictBoundaryValid())
+    {
+        return fail(scenario, "reference cube is invalid");
+    }
+
+    const double scales[3] = {1.0e-4, 1.0, 1.0e4};
+    const Eigen::Vector3d translations[3] =
+    {
+        Eigen::Vector3d::Zero(),
+        Eigen::Vector3d(1.0e6, -2.0e6, 3.0e6),
+        Eigen::Vector3d(-7.0e8, 4.0e8, 2.0e8)
+    };
+
+    for (int index = 0; index < 3; ++index)
+    {
+        TriangleMesh transformed = reference;
+        transformed.vertices *= scales[index];
+        transformed.vertices.rowwise() += translations[index].transpose();
+        const BoundaryAudit audit = auditOutward(transformed);
+        const double expectedVolume =
+            scales[index] * scales[index] * scales[index];
+        const double relativeError = std::abs(
+            audit.signedVolume - expectedVolume
+        ) / std::max(expectedVolume, std::numeric_limits<double>::min());
+        if (
+            !audit.strictBoundaryValid() ||
+            audit.faceComponentCount != 1 ||
+            relativeError > 1.0e-8
+        )
+        {
+            std::cerr
+                << " transformed_index=" << index
+                << " measured_volume=" << audit.signedVolume
+                << " expected_volume=" << expectedVolume;
+            return fail(
+                scenario,
+                "boundary verdict changed under scale/translation"
+            );
+        }
+    }
+    return pass(scenario);
+}
+
+
 int runCube()
 {
     const std::string scenario = "cube";
@@ -1264,7 +1447,8 @@ int main(int argc, char** argv)
             << "self-intersection|prepare-empty|prepare-cavity|stale-inner|"
             << "cell-collapse|cell-swap|material-components|containment|"
             << "wall-threshold|source-bound|export-roundtrip|"
-            << "export-transaction|export-seal>\n";
+            << "export-transaction|export-seal|source-rejection|"
+            << "raw-substitution|scale-translation>\n";
         return EXIT_FAILURE;
     }
 
@@ -1288,6 +1472,9 @@ int main(int argc, char** argv)
     if (scenario == "export-roundtrip") return runExportRoundTrip();
     if (scenario == "export-transaction") return runExportTransaction();
     if (scenario == "export-seal") return runExportSeal();
+    if (scenario == "source-rejection") return runSourceRejection();
+    if (scenario == "raw-substitution") return runRawSubstitution();
+    if (scenario == "scale-translation") return runScaleTranslation();
 
     return fail(scenario, "unknown scenario");
 }
