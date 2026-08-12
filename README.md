@@ -111,8 +111,9 @@ flattening stage would create; R3 does not mutate the mesh. These stages still
 do not establish the complete paper optimizer. Remaining known
 non-conformances include:
 
-- carving/deformation alternation, carved-voxel refill, target/support refresh
-  and the paper's stability-driven outer stopping rule remain R7;
+- carving/deformation alternation, carved-voxel refill, target refresh,
+  optimizer-wide support invariance and the paper's stability-driven outer
+  stopping rule remain R7;
 - final deformed-wall, connectivity and fabrication checks remain R8;
 - `make_it_stand()` remains a placeholder API.
 
