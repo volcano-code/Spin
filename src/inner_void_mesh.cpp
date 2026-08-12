@@ -6,10 +6,7 @@
 InnerVoidMesh::InnerVoidMesh(
     const Eigen::MatrixXd& V,
     const Eigen::MatrixXi& F,
-    const Eigen::MatrixXd& planeV,
-    const Eigen::MatrixXi& planeF,
-    const Eigen::Vector3d& gravity,
-    const Eigen::Vector3d& balancePoint
+    const BalanceObjectives& objectives
 )
     :
     voxelGrid(V, F),
@@ -17,12 +14,33 @@ InnerVoidMesh::InnerVoidMesh(
         voxelGrid,
         V,
         F,
-        planeV,
-        planeF,
-        gravity,
-        balancePoint
+        objectives
     )
 {
+}
+
+
+InnerVoidMesh::InnerVoidMesh(
+    const Eigen::MatrixXd& V,
+    const Eigen::MatrixXi& F,
+    const Eigen::MatrixXd& planeV,
+    const Eigen::MatrixXi& planeF,
+    const Eigen::Vector3d& gravity,
+    const Eigen::Vector3d& balancePoint
+)
+    : InnerVoidMesh(
+        V,
+        F,
+        BalanceObjectives{
+            BalanceObjective(
+                balancePoint,
+                gravity
+            )
+        }
+    )
+{
+    static_cast<void>(planeV);
+    static_cast<void>(planeF);
 }
 
 
@@ -56,6 +74,12 @@ void InnerVoidMesh::carveInnerMeshStep(
 double InnerVoidMesh::getCoMDistance()
 {
     return carvingSolver.getCoMDistance();
+}
+
+
+const BalanceObjectives& InnerVoidMesh::balanceObjectives() const
+{
+    return carvingSolver.balanceObjectives();
 }
 
 

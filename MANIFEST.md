@@ -27,7 +27,7 @@ remain identical to the upstream baseline.
 | `include/voxel/VoxelGrid.h`, `src/voxel/VoxelGrid.cpp` | Regular-grid construction, SDF classification and corner associations. | Compiles; paper fidelity not yet verified |
 | `include/voxel/VoxelSurface.h`, `src/voxel/VoxelSurface.cpp` | Shared-face triangulation and cavity orientation. | Compiles; regression evidence pending |
 | `include/extraction/VoidMeshExtractor.h`, `src/extraction/VoidMeshExtractor.cpp` | Carved-cavity boundary extraction. | Compiles; printable-output claim not made |
-| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp` | Single-target carving state and inherited heuristic. | Implemented but algorithmically non-conformant |
+| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp` | Carving state, R3 objective collection and inherited one-target heuristic. | R3 objective integration verified; carving remains algorithmically non-conformant until R4. |
 | `include/carving/CarvingDiagnostics.h`, `src/carving/CarvingDiagnostics.cpp` | Per-step diagnostics, stop reasons and CSV serialization. | Verified by clean headless regression |
 | `tests/carving_regression.cpp` | Headless Bunny diagnostic smoke test. | CTest passes; does not establish paper correctness |
 
@@ -97,3 +97,22 @@ thickness guarantees, deformation, analytic gradients, or alternating
 optimization. Consequently, its unit/regression evidence is not a claim of
 paper-equivalent carving, objective monotonicity, physical stability,
 printability, or `VERIFIED_PAPER` status.
+
+## R3 support and objective changes
+
+| Files | R3 change | Evidence / status |
+|---|---|---|
+| `include/stability/SupportRegion.h`, `src/stability/SupportRegion.cpp` | Extracts the inclusive contact hull in a gravity-orthogonal local frame, constructs `h*tan(gamma)` safe offsets, classifies outside/feasible/safe states, projects to the closed safe set, and explicitly reports unattainable margins. | `support-polygon-analytic`, `safe-region-analytic`, and `standing-target-analytic` pass. |
+| `include/physics/BalanceObjective.h`, `src/physics/BalanceObjective.cpp` | Represents normalized target/gravity pairs, suspension targets and the unweighted arbitrary-`K` projected CoM sum from paper Eq. 5. | Suspension and `K=1..4` analytic fixtures pass. |
+| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp`, `include/inner_void_mesh.h`, `src/inner_void_mesh.cpp` | Makes a non-empty objective vector the single target state while preserving the legacy one-target constructor; aggregate queries consume all objectives. Incomplete multi-target carving is rejected before mutation and remains R4. | `multi-target-solver-boundary` and all four R1/R2 carving regressions pass. |
+| `main.cpp` | Treats the clicked vertex as a lateral posture anchor, places the actual lowest geometry on the ground, exposes contact/toppling inputs and constructs the carving target from the standing support geometry. | Viewer target compiles in the final viewer and clean-clone gates. |
+| `tests/stability_regression.cpp`, `tests/objective_integration_regression.cpp` | Adds five analytic geometry/objective scenarios and one production integration/R4-boundary scenario. | Six R3 CTests pass; active suite is `14/14`. |
+| `docs/r3_acceptance.md`, `docs/conformance_matrix.md`, `README.md`, `CMakeLists.txt` | Records paper/beta differences, status ceilings, test targets and remaining phase boundaries. | Final R3 verification record. |
+
+R3 is limited to support/target construction and the CoM term of Eq. 5. It
+does not claim multi-target carving, target updates during alternation,
+deformation, cord clearance, printability, physical stability or complete
+paper reproduction. The current exact inset implementation also has a
+documented worst-case `O(H^4)` performance ceiling in the number of support
+hull edges; normal and analytic fixtures are verified, not unbounded hull
+scalability.

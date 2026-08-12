@@ -28,24 +28,35 @@ The current code modularizes and instruments the original carving prototype:
 - `VoxelGrid` owns voxelization and volumetric state;
 - `VoxelSurface` triangulates exposed voxel faces;
 - `VoidMeshExtractor` extracts the carved cavity boundary;
-- `CarvingSolver` owns the current single-target carving state;
+- `CarvingSolver` owns carving state and consumes R3 objective collections;
 - `CarvingDiagnostics` records per-step metrics and CSV traces;
 - `MassProperties` keeps signed mass and first moment as one state;
 - `BalanceEnergy` implements the normalized-gravity projection in Eq. (2);
+- `SupportRegion` extracts contact hulls and constructs toppling-angle-safe
+  standing targets;
+- `BalanceObjective` represents standing or suspension targets and sums the
+  projected CoM term of Eq. (5) for any finite number of objectives;
 - `InnerVoidMesh` remains a compatibility facade for the existing viewer;
 - `carving-regression` provides deterministic initial, one-step, full-run and
   empty-candidate headless scenarios.
 
 R2 adds analytic mass/first-moment/energy tests and verifies the Bunny solver's
 incremental state against an independent full recompute after every carving
-step. It still does **not** establish paper-equivalent optimization. Remaining
-known non-conformances include:
+step. R3 adds paper-governed support/safe-region geometry, standing and
+suspension target construction, and arbitrary-`K` Eq. (5) CoM evaluation.
+The viewer now constructs a standing target from the actual lowest contacts
+when its flatten-band input is zero, rather than treating the clicked posture
+anchor as the target. A positive band previews the support that a later
+flattening stage would create; R3 does not mutate the mesh. These stages still do
+not establish paper-equivalent optimization. Remaining known
+non-conformances include:
 
 - carving removes a fixed-size batch instead of selecting the best energy
   prefix over the ordered candidates;
 - the old stopping ratio is based on the entire regular grid;
-- the target is a single point rather than a support polygon/safe region;
-- suspension, multiple bases, BBW/LBS deformation, Laplacian preservation,
+- multi-target carving is intentionally rejected until the R4 candidate
+  ordering and best-prefix policy are implemented;
+- BBW/LBS deformation, Laplacian preservation,
   analytic gradients and deformation/carving alternation are not implemented;
 - `make_it_stand()` remains a placeholder API.
 
@@ -100,13 +111,20 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-R2 registers four analytic physics tests and four carving regressions:
+The active headless suite registers six R3 tests in addition to the eight R2
+tests:
 
 ```text
 mass-surface-analytic
 mass-voxel-analytic
 mass-deletion-exhaustive
 balance-energy-analytic
+support-polygon-analytic
+safe-region-analytic
+standing-target-analytic
+suspension-target-analytic
+multi-target-energy-analytic
+multi-target-solver-boundary
 carving-initial-state
 carving-one-step
 carving-full-mass-consistency
@@ -137,9 +155,10 @@ but no longer treats its divergent numbers as an executable target.
 
 ```text
 include/, src/
-  carving/       single-target solver and diagnostics
+  carving/       solver state, R3 objectives, and R1/R2 diagnostics
   extraction/    carved-cavity surface extraction
-  physics/       signed mass properties and projected CoM energy
+  physics/       signed mass properties and projected CoM objectives
+  stability/     standing support, safe-region and target construction
   voxel/         voxel data, grid construction and exposed faces
   center_of_mass compatibility wrapper over signed mass properties
   grid_util      alignment, transforms and regular-grid construction
@@ -148,6 +167,8 @@ include/, src/
 tests/
   carving_regression.cpp
   mass_properties_regression.cpp
+  objective_integration_regression.cpp
+  stability_regression.cpp
   baselines/       frozen known-failure traces; never target outputs
 data/
   inherited sample meshes; Bunny is used by the carving regressions

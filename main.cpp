@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 #include <string>
 #include <math.h>
@@ -16,6 +17,8 @@
 
 #include "include/grid_util.h"
 #include "include/inner_void_mesh.h"
+#include "include/physics/MassProperties.h"
+#include "include/stability/SupportRegion.h"
 
 
 #define PI 3.14159265
@@ -35,6 +38,8 @@ const Eigen::Vector3d DEFAULT_GRAVITY(0.0,-1.0,0.0);
 const float DEFAULT_GRAVITY_YAW = 0.0;
 const float DEFAULT_GRAVITY_PITCH = 0.0;
 const float DEFAULT_GRAVITY_ROLL = 180.0;
+const float DEFAULT_CONTACT_THRESHOLD = 0.0f;
+const float DEFAULT_TOPPLING_ANGLE = 5.0f;
 
 // Predefined colors
 const Eigen::RowVector3d orange(1.0,0.7,0.2);
@@ -73,6 +78,9 @@ struct State
 	float yaw;
 	float pitch;	
 	float roll;
+	float contactThreshold;
+	float topplingAngle;
+	std::string stabilityMessage;
 
 	// user workflow state
 	bool selectBalancePoint = true;
@@ -148,8 +156,10 @@ void updateMesh()
 	state.V *= pitchR.transpose();
 	state.V *= yawR.transpose();
 
-	// Translate mesh to middle of plane
+	// Place the actual lowest geometry on the ground. The selected point is a
+	// lateral posture anchor; the support target is derived from all contacts.
 	Eigen::RowVector3d translate = state.planeCenter - getBalancePoint();
+	translate(1) = state.planeCenter(1) - state.V.col(1).minCoeff();
 	for (int i = 0; i < state.V.rows(); i++) 
 	{
 		state.V.row(i) += translate;
@@ -231,6 +241,9 @@ void initState(int argc, char *argv[])
 	state.yaw = DEFAULT_GRAVITY_YAW;
 	state.pitch = DEFAULT_GRAVITY_PITCH;
 	state.roll = DEFAULT_GRAVITY_ROLL;
+	state.contactThreshold = DEFAULT_CONTACT_THRESHOLD;
+	state.topplingAngle = DEFAULT_TOPPLING_ANGLE;
+	state.stabilityMessage = "Support target not constructed";
 	updateGravityVector();
 	
 	// set lowest point as balance point
@@ -288,9 +301,9 @@ void draw_workflow_control_window()
 		ImGuiWindowFlags_NoSavedSettings
 	);
 
-	// Balance point selection
-	ImGui::Text("1. Balance Point");
-	if (ImGui::Checkbox("Select a balance point", &(state.selectBalancePoint)))
+	// Posture-anchor selection
+	ImGui::Text("1. Posture Anchor");
+	if (ImGui::Checkbox("Select a posture anchor", &(state.selectBalancePoint)))
 	{
 		if (state.selectBalancePoint) // switching to balance point selection
 		{
@@ -358,6 +371,20 @@ void draw_workflow_control_window()
 	// Carving selection
 	ImGui::Separator();
 	ImGui::Text("3. Inner Carving");
+	ImGui::InputFloat(
+		"Planned flatten band",
+		&(state.contactThreshold),
+		0.001f,
+		0.01f,
+		"%.4f"
+	);
+	ImGui::SliderFloat(
+		"Toppling angle",
+		&(state.topplingAngle),
+		0.0f,
+		45.0f,
+		"%.1f deg"
+	);
 	if (ImGui::Checkbox("Begin carving", &(state.isCarving)))
 	{
 		if (state.isCarving) // switching to carving
@@ -374,12 +401,59 @@ void draw_workflow_control_window()
 			if (state.innerMesh != NULL)
 			{
 				delete state.innerMesh;
+				state.innerMesh = NULL;
 			}
-			state.innerMesh = new InnerVoidMesh(state.V, state.F, state.planeV, state.planeF, Eigen::Vector3d(0, -1, 0), getBalancePoint());
-			state.innerMesh->convertToMesh(state.innerV, state.innerF);
-			updateInnerMesh();
+			try
+			{
+				const Eigen::Vector3d worldGravity(0.0, -1.0, 0.0);
+				const stability::SupportRegion support =
+					stability::SupportRegion::fromMesh(
+						state.V,
+						worldGravity,
+						static_cast<double>(state.contactThreshold)
+					);
+
+				const MassProperties massProperties =
+					computeSurfaceMassProperties(state.V, state.F);
+				Eigen::Vector3d centerOfMass;
+				if (!massProperties.tryCenterOfMass(centerOfMass))
+				{
+					throw std::runtime_error("Could not compute a finite center of mass");
+				}
+
+				const stability::StandingTarget standingTarget =
+					stability::makeStandingTarget(
+						support,
+						centerOfMass,
+						static_cast<double>(state.topplingAngle) * PI / 180.0
+					);
+
+				if (!standingTarget.requestedMarginAttainable())
+				{
+					throw std::runtime_error(
+						"Requested toppling margin exceeds the support inradius"
+					);
+				}
+
+				BalanceObjectives objectives;
+				objectives.push_back(standingTarget.objective());
+				state.innerMesh = new InnerVoidMesh(state.V, state.F, objectives);
+				state.stabilityMessage =
+					state.contactThreshold > 0.0f ?
+					"Target uses a hypothetical flatten band; mesh is not flattened in R3" :
+					"Standing target constructed from actual lowest contacts";
+				state.innerMesh->convertToMesh(state.innerV, state.innerF);
+				updateInnerMesh();
+			}
+			catch (const std::exception& exception)
+			{
+				state.isCarving = false;
+				state.stabilityMessage = exception.what();
+				viewer.data(mesh_data_id).show_faces = true;
+			}
 		}
 	}
+	ImGui::TextWrapped("%s", state.stabilityMessage.c_str());
 	if (state.isCarving)
 	{
 		if (ImGui::Button("Carve", ImVec2(-1, 0)))

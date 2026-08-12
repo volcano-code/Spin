@@ -50,7 +50,9 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/inner_void_mesh.cpp
     src/make_it_stand.cpp
     src/physics/BalanceEnergy.cpp
+    src/physics/BalanceObjective.cpp
     src/physics/MassProperties.cpp
+    src/stability/SupportRegion.cpp
     src/voxel/Voxel.cpp
     src/voxel/VoxelGrid.cpp
     src/voxel/VoxelSurface.cpp
@@ -66,7 +68,9 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/list3d.h
     include/make_it_stand.h
     include/physics/BalanceEnergy.h
+    include/physics/BalanceObjective.h
     include/physics/MassProperties.h
+    include/stability/SupportRegion.h
     include/voxel/Voxel.h
     include/voxel/VoxelGrid.h
     include/voxel/VoxelSurface.h
@@ -150,6 +154,88 @@ if(BUILD_TESTING)
     add_mass_properties_test(mass-voxel-analytic voxel)
     add_mass_properties_test(mass-deletion-exhaustive deletion)
     add_mass_properties_test(balance-energy-analytic energy)
+
+    add_executable(
+        stability-regression
+        tests/stability_regression.cpp
+    )
+    target_compile_features(
+        stability-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        stability-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        stability-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_stability_regression_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:stability-regression>"
+                "${scenario}"
+        )
+
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r3;physics;stability"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_stability_regression_test(
+        support-polygon-analytic
+        support
+    )
+    add_stability_regression_test(
+        safe-region-analytic
+        safe
+    )
+    add_stability_regression_test(
+        standing-target-analytic
+        standing-target
+    )
+    add_stability_regression_test(
+        suspension-target-analytic
+        suspension
+    )
+    add_stability_regression_test(
+        multi-target-energy-analytic
+        multi
+    )
+
+    add_executable(
+        objective-integration-regression
+        tests/objective_integration_regression.cpp
+    )
+    target_compile_features(
+        objective-integration-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        objective-integration-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        objective-integration-regression
+        PRIVATE make_it_stand::core
+    )
+
+    add_test(
+        NAME multi-target-solver-boundary
+        COMMAND "$<TARGET_FILE:objective-integration-regression>"
+            "${CMAKE_CURRENT_SOURCE_DIR}/data/bunny.off"
+    )
+    set_tests_properties(
+        multi-target-solver-boundary
+        PROPERTIES
+            LABELS "r3;integration;carving"
+            TIMEOUT 30
+    )
 
     add_executable(carving-regression tests/carving_regression.cpp)
     target_compile_features(carving-regression PRIVATE cxx_std_17)

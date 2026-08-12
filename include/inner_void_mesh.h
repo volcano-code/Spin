@@ -23,6 +23,14 @@ private:
     CarvingSolver carvingSolver;
 
 public:
+    /** Construct the facade with a non-empty R3 objective collection. */
+    InnerVoidMesh(
+        const Eigen::MatrixXd& V,
+        const Eigen::MatrixXi& F,
+        const BalanceObjectives& objectives
+    );
+
+    /** Compatibility constructor for the existing single-target viewer. */
     InnerVoidMesh(
         const Eigen::MatrixXd& V,
         const Eigen::MatrixXi& F,
@@ -44,6 +52,8 @@ public:
     );
 
     double getCoMDistance();
+
+    const BalanceObjectives& balanceObjectives() const;
 
     bool isOptimized();
 

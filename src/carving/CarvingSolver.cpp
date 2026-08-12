@@ -1,6 +1,6 @@
 #include "carving/CarvingSolver.h"
 
-#include "physics/BalanceEnergy.h"
+#include "physics/BalanceObjective.h"
 #include "physics/MassProperties.h"
 #include "voxel/VoxelGrid.h"
 
@@ -24,6 +24,35 @@ namespace
 constexpr int MAX_ITER = 20;
 constexpr int MAX_CARVE = 1000;
 constexpr double MAX_EMPTY = 0.80;
+
+
+BalanceObjectives makeSingleBalanceObjectives(
+    const Eigen::Vector3d& targetCenterOfMass,
+    const Eigen::Vector3d& gravity
+)
+{
+    BalanceObjectives objectives;
+    objectives.emplace_back(
+        targetCenterOfMass,
+        gravity
+    );
+    return objectives;
+}
+
+
+BalanceObjectives validateAndCopyBalanceObjectives(
+    const BalanceObjectives& objectives
+)
+{
+    if (objectives.empty())
+    {
+        throw std::invalid_argument(
+            "at least one balance objective is required"
+        );
+    }
+
+    return objectives;
+}
 
 
 bool areFacingSameDirection(
@@ -75,15 +104,11 @@ CarvingSolver::CarvingSolver(
     VoxelGrid& voxelGrid,
     const Eigen::MatrixXd& V,
     const Eigen::MatrixXi& F,
-    const Eigen::MatrixXd& planeV,
-    const Eigen::MatrixXi& planeF,
-    const Eigen::Vector3d& gravity,
-    const Eigen::Vector3d& targetCenterOfMass
+    const BalanceObjectives& objectives
 )
     :
     voxelGrid_(voxelGrid),
-    gravity_(normalizedGravityDirection(gravity)),
-    targetCOM_(targetCenterOfMass),
+    objectives_(validateAndCopyBalanceObjectives(objectives)),
     currCOM_(Eigen::Vector3d::Zero()),
     initialMassProperties_(
         computeSurfaceMassProperties(V, F)
@@ -99,9 +124,6 @@ CarvingSolver::CarvingSolver(
     initialCarveableVoxelCount_(0),
     diagnosticsHistory_()
 {
-    static_cast<void>(planeV);
-    static_cast<void>(planeF);
-
     if (!isClosedConsistentlyOrientedTriangleMesh(F))
     {
         throw std::invalid_argument(
@@ -116,13 +138,6 @@ CarvingSolver::CarvingSolver(
     {
         throw std::invalid_argument(
             "outer mesh must be closed, outward-oriented and have positive mass"
-        );
-    }
-
-    if (!targetCOM_.allFinite())
-    {
-        throw std::invalid_argument(
-            "target center of mass must be finite"
         );
     }
 
@@ -162,22 +177,44 @@ CarvingSolver::CarvingSolver(
 }
 
 
+CarvingSolver::CarvingSolver(
+    VoxelGrid& voxelGrid,
+    const Eigen::MatrixXd& V,
+    const Eigen::MatrixXi& F,
+    const Eigen::MatrixXd& planeV,
+    const Eigen::MatrixXi& planeF,
+    const Eigen::Vector3d& gravity,
+    const Eigen::Vector3d& targetCenterOfMass
+)
+    : CarvingSolver(
+        voxelGrid,
+        V,
+        F,
+        makeSingleBalanceObjectives(
+            targetCenterOfMass,
+            gravity
+        )
+    )
+{
+    static_cast<void>(planeV);
+    static_cast<void>(planeF);
+}
+
+
 double CarvingSolver::getCoMDistance() const
 {
-    return projectedCenterOfMassDistance(
+    return aggregateProjectedCenterOfMassDistance(
         currCOM_,
-        targetCOM_,
-        gravity_
+        objectives_
     );
 }
 
 
 double CarvingSolver::getCoMEnergy() const
 {
-    return projectedCenterOfMassEnergy(
+    return aggregateProjectedCenterOfMassEnergy(
         currCOM_,
-        targetCOM_,
-        gravity_
+        objectives_
     );
 }
 
@@ -220,6 +257,13 @@ double CarvingSolver::carvedCarveableRatio() const
 
 CarvingStopReason CarvingSolver::stopReason() const
 {
+    if (objectives_.size() != 1)
+    {
+        throw std::logic_error(
+            "multi-target carving belongs to R4"
+        );
+    }
+
     const Eigen::Vector3d& voxelSize =
         voxelGrid_.voxelSize();
 
@@ -413,7 +457,23 @@ void CarvingSolver::carveStep(
     Eigen::Vector3d& centerOfMass
 )
 {
+    if (objectives_.size() != 1)
+    {
+        throw std::logic_error(
+            "multi-target carving belongs to R4"
+        );
+    }
+
     ensureDiagnosticsInitialized();
+
+    const BalanceObjective& objective =
+        objectives_.front();
+
+    const Eigen::Vector3d& targetCenterOfMass =
+        objective.target();
+
+    const Eigen::Vector3d& gravity =
+        objective.gravity();
 
     CarvingStepDiagnostics diagnostics;
 
@@ -446,9 +506,9 @@ void CarvingSolver::carveStep(
     Eigen::MatrixXi cuttingPlaneTriangleFaces(1, 3);
 
     cuttingPlaneTriangleVertices <<
-        targetCOM_.transpose(),
+        targetCenterOfMass.transpose(),
         currCOM_.transpose(),
-        (targetCOM_ + gravity_).transpose();
+        (targetCenterOfMass + gravity).transpose();
 
     cuttingPlaneTriangleFaces <<
         0, 1, 2;
@@ -468,7 +528,7 @@ void CarvingSolver::carveStep(
         10.0;
 
     const double gravitySquaredNorm =
-        gravity_.squaredNorm();
+        gravity.squaredNorm();
 
     const double planeNormalSquaredNorm =
         cuttingPlaneTriangleNormals.row(0).squaredNorm();
@@ -486,19 +546,19 @@ void CarvingSolver::carveStep(
     carvePlaneV.resize(5, 3);
 
     carvePlaneV <<
-        targetCOM_.transpose(),
+        targetCenterOfMass.transpose(),
         (
-            targetCOM_ +
-            gravity_ * gravityMultiplier
+            targetCenterOfMass +
+            gravity * gravityMultiplier
         ).transpose(),
-        targetCOM_.transpose() +
+        targetCenterOfMass.transpose() +
             cuttingPlaneTriangleNormals.row(0) *
             otherVectorMultiplier,
         (
-            targetCOM_ -
-            gravity_ * gravityMultiplier
+            targetCenterOfMass -
+            gravity * gravityMultiplier
         ).transpose(),
-        targetCOM_.transpose() -
+        targetCenterOfMass.transpose() -
             cuttingPlaneTriangleNormals.row(0) *
             otherVectorMultiplier;
 
@@ -748,6 +808,13 @@ void CarvingSolver::carveStep(
 
 void CarvingSolver::carveAll()
 {
+    if (objectives_.size() != 1)
+    {
+        throw std::logic_error(
+            "multi-target carving belongs to R4"
+        );
+    }
+
     while (!isOptimized())
     {
         Eigen::MatrixXd temporaryPlaneVertices;
@@ -771,7 +838,13 @@ const Eigen::Vector3d& CarvingSolver::currentCenterOfMass() const
 
 const Eigen::Vector3d& CarvingSolver::targetCenterOfMass() const
 {
-    return targetCOM_;
+    return objectives_.front().target();
+}
+
+
+const BalanceObjectives& CarvingSolver::balanceObjectives() const
+{
+    return objectives_;
 }
 
 

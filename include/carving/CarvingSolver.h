@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 
 #include "carving/CarvingDiagnostics.h"
+#include "physics/BalanceObjective.h"
 #include "physics/MassProperties.h"
 
 #include <string>
@@ -25,6 +26,20 @@ class Voxel;
 class CarvingSolver
 {
 public:
+    /**
+     * Construct a solver around one or more projected CoM objectives.
+     *
+     * Aggregate objective queries support any non-empty collection. Actual
+     * multi-target carving is deliberately deferred to R4.
+     */
+    CarvingSolver(
+        VoxelGrid& voxelGrid,
+        const Eigen::MatrixXd& V,
+        const Eigen::MatrixXi& F,
+        const BalanceObjectives& objectives
+    );
+
+    /** Compatibility constructor for the existing single-target viewer. */
     CarvingSolver(
         VoxelGrid& voxelGrid,
         const Eigen::MatrixXd& V,
@@ -53,23 +68,28 @@ public:
     /** Continue carving until an active stopping condition is reached. */
     void carveAll();
 
-    /** Paper Eq. (2) projected distance before the 0.5*square operation. */
+    /** Root-sum-square projected distance; Eq. 2 distance for one target. */
     double getCoMDistance() const;
 
-    /** Paper Eq. (2): 0.5 times the squared projected CoM distance. */
+    /** Summed projected CoM energy: paper Eq. 2 for K=1, Eq. 5 for K>1. */
     double getCoMEnergy() const;
 
     /** Compatibility alias for getCoMDistance(). */
     double getGeometricProjectedDistance() const;
 
-    /** Return the currently active stopping condition. */
+    /** Return the one-target stopping condition; K>1 carving is deferred. */
     CarvingStopReason stopReason() const;
 
-    /** Return true when any active stopping condition is satisfied. */
+    /** Return true for a one-target stop; K>1 carving is deferred. */
     bool isOptimized() const;
 
     const Eigen::Vector3d& currentCenterOfMass() const;
+
+    /** Compatibility accessor for the first (and historically only) target. */
     const Eigen::Vector3d& targetCenterOfMass() const;
+
+    /** The non-empty objective collection used by every energy query. */
+    const BalanceObjectives& balanceObjectives() const;
 
     const MassProperties& initialMassProperties() const;
     const MassProperties& currentMassProperties() const;
@@ -123,8 +143,7 @@ private:
 
     VoxelGrid& voxelGrid_;
 
-    Eigen::Vector3d gravity_;
-    Eigen::Vector3d targetCOM_;
+    BalanceObjectives objectives_;
     Eigen::Vector3d currCOM_;
 
     MassProperties initialMassProperties_;
