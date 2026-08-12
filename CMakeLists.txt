@@ -656,6 +656,48 @@ if(BUILD_TESTING)
             TIMEOUT 30
     )
 
+    add_executable(
+        manufacturing-geometry-regression
+        tests/manufacturing_geometry_regression.cpp
+    )
+    target_compile_features(
+        manufacturing-geometry-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        manufacturing-geometry-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        manufacturing-geometry-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_manufacturing_geometry_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:manufacturing-geometry-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r8;manufacturing;geometry"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_manufacturing_geometry_test(r8-boundary-cube cube)
+    add_manufacturing_geometry_test(r8-boundary-missing-face missing)
+    add_manufacturing_geometry_test(r8-boundary-reversed reversed)
+    add_manufacturing_geometry_test(r8-boundary-duplicate duplicate)
+    add_manufacturing_geometry_test(r8-boundary-degenerate degenerate)
+    add_manufacturing_geometry_test(r8-boundary-double-outer double-outer)
+    add_manufacturing_geometry_test(
+        r8-boundary-self-intersection
+        self-intersection
+    )
+
     add_executable(carving-regression tests/carving_regression.cpp)
     target_compile_features(carving-regression PRIVATE cxx_std_17)
     set_target_properties(carving-regression PROPERTIES CXX_EXTENSIONS OFF)
