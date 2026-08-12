@@ -42,6 +42,16 @@ The current code modularizes and instruments the original carving prototype:
   projected CoM term of Eq. (5) for any finite number of objectives;
 - `InnerVoidMesh` remains a compatibility facade for the existing viewer;
 - `VoxelTopology` reports six-neighbor material and carved-void components;
+- `GridDeformationDomain` builds the deterministic active voxel-corner graph
+  and trilinear transfer used by the Section 5 representation;
+- `BoundedBiharmonicWeights` solves graph BBW with libigl's open active-set
+  solver and audits bounds, partition of unity and handle interpolation;
+- `HandleSet` separates locked support handles from user handles and exposes
+  only three translations plus one uniform scale per free user handle;
+- `LinearBlendSkinning` evaluates paper Eq. (9) directly and through the
+  reduced Eq. (10) matrix;
+- `DeformationSystem` evaluates `M_O`, `M_I` and the voxel lattice from the
+  same immutable rest binding without mutating the R4 carving state;
 - the headless regressions cover analytic policy, manufacturing constraints,
   deterministic initial/step/full behavior and empty candidates.
 
@@ -58,6 +68,23 @@ The paper leaves “too few voxels” unspecified; the local configurable
 threshold defaults to one. R4 also adds a model-space wall-thickness input and
 component-count diagnostics.
 
+R5 adds the paper Section 5 deformation representation. It binds fixed support
+contacts and user handles to an active voxel-corner graph, computes bounded
+biharmonic weights with an open solver, transfers those weights to arbitrary
+outer-surface points by trilinear interpolation, and evaluates synchronized
+outer, cavity and grid snapshots by linear blend skinning. The direct Eq. (9)
+evaluation and reduced Eq. (10) matrix are checked against one another. This
+stage only supplies the deformation state and parameterization: it does not
+yet choose an energy-minimizing handle update.
+
+The active graph contains corners incident to object-intersecting cells under
+the documented signed-distance/half-diagonal construction. Outer-mesh points
+and carved-cavity corners inside that domain use the solved BBW field exactly.
+For a complete regular-grid snapshot, global corners outside the active domain
+receive the weights of the nearest active node; this is a deterministic
+compatibility extension for non-object grid storage, not an additional BBW
+claim and not a field used to bind `M_O` or the cavity.
+
 The viewer now constructs a standing target from the actual lowest contacts
 when its flatten-band input is zero, rather than treating the clicked posture
 anchor as the target. A positive band previews the support that a later
@@ -67,8 +94,10 @@ non-conformances include:
 
 - target refresh and voxel refill across carving/deformation alternations are
   not scheduled yet;
-- BBW/LBS deformation, Laplacian preservation,
-  analytic gradients and deformation/carving alternation are not implemented;
+- the Laplacian preservation energy, analytic mass/CoM/deformation gradients,
+  deformation optimizer and rollback/step-size policy remain R6;
+- carving/deformation alternation and target/grid refresh remain R7;
+- final deformed-wall, connectivity and fabrication checks remain R8;
 - `make_it_stand()` remains a placeholder API.
 
 These limitations are intentional baseline facts, not accepted final behavior.
@@ -122,7 +151,7 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-The active headless suite registers 25 tests through R4:
+The active headless suite registers 33 tests through R5:
 
 ```text
 mass-surface-analytic
@@ -150,13 +179,24 @@ carving-initial-state
 carving-one-step
 carving-full-mass-consistency
 carving-no-candidates
+bbw-path-analytic
+bbw-active-bound-analytic
+bbw-contract-analytic
+handle-parameter-contract
+lbs-equation-9-10
+grid-weight-trilinear
+deformation-geometry-sync
+deformation-invalid-inputs
 ```
 
 They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
 eight-voxel deletion fixture, oblique/scaled gravity, state/count continuity,
 the exact 44-column CSV schema, per-step incremental/full consistency and safe
-termination on an empty candidate search. Density is fixed to one, so reported
-mass is a signed-volume proxy in model units, not a calibrated value in kg.
+termination on an empty candidate search. The R5 additions cover analytic
+bounded-BBW solutions and feasibility, handle contracts, Eq. (9)/(10)
+equivalence, trilinear weight transfer, synchronized geometry and invalid
+state rejection. Density is fixed to one, so reported mass is a signed-volume
+proxy in model units, not a calibrated value in kg.
 
 To generate the full diagnostic trace manually after building the headless
 target:
@@ -177,6 +217,7 @@ but no longer treats its divergent numbers as an executable target.
 ```text
 include/, src/
   carving/       R4 plane policy, solver state and diagnostics
+  deformation/   R5 graph BBW, handles, Eq. (9)/(10) LBS and synced snapshots
   extraction/    carved-cavity surface extraction
   physics/       signed mass properties and projected CoM objectives
   stability/     standing support, safe-region and target construction
@@ -187,6 +228,7 @@ include/, src/
   make_it_stand  placeholder public API
 tests/
   carving_regression.cpp
+  deformation_regression.cpp
   mass_properties_regression.cpp
   objective_integration_regression.cpp
   plane_carving_policy_regression.cpp

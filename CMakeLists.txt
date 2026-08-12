@@ -38,6 +38,14 @@ set(LIBIGL_DIR "${MAKE_IT_STAND_LIBIGL_DIR}" CACHE PATH "libigl root" FORCE)
 option(LIBIGL_WITH_OPENGL "Use OpenGL" ${MAKE_IT_STAND_BUILD_VIEWER})
 option(LIBIGL_WITH_OPENGL_GLFW "Use GLFW" ${MAKE_IT_STAND_BUILD_VIEWER})
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui" ${MAKE_IT_STAND_BUILD_VIEWER})
+set(LIBIGL_WITH_MOSEK OFF CACHE BOOL "Do not use proprietary MOSEK" FORCE)
+set(
+    LIBIGL_USE_STATIC_LIBRARY
+    OFF
+    CACHE BOOL
+    "Use the verified header-only libigl core configuration"
+    FORCE
+)
 
 find_package(LIBIGL REQUIRED QUIET)
 
@@ -46,6 +54,11 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/carving/PlaneCarvingPolicy.cpp
     src/carving/CarvingSolver.cpp
     src/center_of_mass.cpp
+    src/deformation/BoundedBiharmonicWeights.cpp
+    src/deformation/DeformationSystem.cpp
+    src/deformation/GridDeformationDomain.cpp
+    src/deformation/HandleSet.cpp
+    src/deformation/LinearBlendSkinning.cpp
     src/extraction/VoidMeshExtractor.cpp
     src/grid_util.cpp
     src/inner_void_mesh.cpp
@@ -65,6 +78,11 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/carving/PlaneCarvingPolicy.h
     include/carving/CarvingSolver.h
     include/center_of_mass.h
+    include/deformation/BoundedBiharmonicWeights.h
+    include/deformation/DeformationSystem.h
+    include/deformation/GridDeformationDomain.h
+    include/deformation/HandleSet.h
+    include/deformation/LinearBlendSkinning.h
     include/extraction/VoidMeshExtractor.h
     include/grid_util.h
     include/inner_void_mesh.h
@@ -281,6 +299,42 @@ if(BUILD_TESTING)
     add_plane_carving_policy_test(global-prefix-shortest-tie tie-prefix)
     add_plane_carving_policy_test(global-prefix-scale-invariant scale-prefix)
     add_plane_carving_policy_test(global-prefix-over-1000 over-thousand)
+
+    add_executable(
+        deformation-regression
+        tests/deformation_regression.cpp
+    )
+    target_compile_features(deformation-regression PRIVATE cxx_std_17)
+    set_target_properties(
+        deformation-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        deformation-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_deformation_regression_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:deformation-regression>" "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r5;deformation"
+                TIMEOUT 60
+        )
+    endfunction()
+
+    add_deformation_regression_test(bbw-path-analytic bbw-path)
+    add_deformation_regression_test(bbw-active-bound-analytic bbw-active-bound)
+    add_deformation_regression_test(bbw-contract-analytic bbw-contract)
+    add_deformation_regression_test(handle-parameter-contract handles)
+    add_deformation_regression_test(lbs-equation-9-10 lbs)
+    add_deformation_regression_test(grid-weight-trilinear domain-trilinear)
+    add_deformation_regression_test(deformation-geometry-sync geometry-sync)
+    add_deformation_regression_test(deformation-invalid-inputs invalid)
 
     add_executable(
         voxel-constraints-regression

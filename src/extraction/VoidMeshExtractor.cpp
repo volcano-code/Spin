@@ -10,14 +10,23 @@ void VoidMeshExtractor::extract(
     Eigen::MatrixXi& faces
 )
 {
+    // Preserve the original representation: retain all shared grid corners.
+    vertices = voxelGrid.corners();
+
+    extractFaces(voxelGrid, faces);
+}
+
+
+void VoidMeshExtractor::extractFaces(
+    const VoxelGrid& voxelGrid,
+    Eigen::MatrixXi& faces
+)
+{
     const Eigen::MatrixXd& corners =
         voxelGrid.corners();
 
     const Eigen::Vector3i& dimensions =
         voxelGrid.dimensions();
-
-    // Preserve the original representation: retain all shared grid corners.
-    vertices = corners;
 
     faces.resize(0, 3);
 
