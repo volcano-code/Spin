@@ -67,6 +67,7 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/grid_util.cpp
     src/inner_void_mesh.cpp
     src/make_it_stand.cpp
+    src/manufacturing/ManufacturingGeometry.cpp
     src/optimization/AlternatingBalanceOptimizer.cpp
     src/physics/BalanceEnergy.cpp
     src/physics/BalanceObjective.cpp
@@ -99,6 +100,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/inner_void_mesh.h
     include/list3d.h
     include/make_it_stand.h
+    include/manufacturing/ManufacturingGeometry.h
     include/optimization/AlternatingBalanceOptimizer.h
     include/physics/BalanceEnergy.h
     include/physics/BalanceObjective.h
