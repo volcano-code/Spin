@@ -284,19 +284,27 @@ case at `VERIFIED_REGRESSION`. The following claims are not permitted:
 
 ## Final verification gate
 
-The focused working-tree run observed on 2026-08-12 is:
+Observed on 2026-08-12:
 
 ```text
-R6 focused tests                                      5/5 passed
-Maximum observed focused gradient relative error     5.20851e-09
-Paper acceptance boundary                            exactly 1%
-Deterministic failed-step sequence                    6/6 passed
-Fixed-alpha end-to-end trace                          passed
+RelWithDebInfo headless configure/build                passed
+RelWithDebInfo complete CTest                          38/38 passed
+Independent Debug complete CTest                       38/38 passed
+R6 tests, each repeated until-fail:20                   5/5 passed
+RelWithDebInfo viewer configure/build                   passed
+Maximum observed focused gradient relative error       5.20851e-09
+Paper acceptance boundary                              exactly 1%
+Deterministic failed-step sequence                      6/6 passed
+Fixed-alpha end-to-end trace                            passed
+git diff --check                                        passed
+Pinned libigl status                                    clean
+Historical R0 trace SHA-256                             unchanged
 ```
 
-Before the acceptance commit is treated as a release gate, the parent R6
-workflow must additionally record a complete RelWithDebInfo suite, an
-independent Debug suite, repeated focused tests, viewer build, `git diff
---check`, pinned-submodule cleanliness, unchanged historical R0 trace, and a
-recursive clean-clone build/test. Passing those repository gates still cannot
-promote R6 above its documented unit/local-regression ceiling.
+The implementation committed at `9571209` was then checked through a recursive
+clean clone with hard links disabled. Its headless suite passed 38/38, its
+viewer target built, the parent and pinned submodule remained clean, and the
+historical trace stayed byte-identical at SHA-256
+`3f9108649fc329a136a5371597335a99275021b6ddd9a3984198ce2b8e8c1856`.
+Passing these repository gates still cannot promote R6 above its documented
+unit/local-regression ceiling.
