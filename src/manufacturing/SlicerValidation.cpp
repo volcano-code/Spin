@@ -781,6 +781,13 @@ void assignCapture(
 
 GcodeToolpathAudit auditGcode(const std::string& filename)
 {
+    enum class ExtrusionMode
+    {
+        Unknown,
+        Absolute,
+        Relative
+    };
+
     GcodeToolpathAudit audit;
     if (!regularFile(filename))
     {
@@ -801,10 +808,13 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
     input.imbue(std::locale::classic());
     std::string line;
     bool absolutePositioning = true;
-    bool absoluteExtrusion = true;
+    ExtrusionMode extrusionMode = ExtrusionMode::Unknown;
     double xPosition = 0.0;
     double yPosition = 0.0;
     double extrusionPosition = 0.0;
+    bool xPositionKnown = true;
+    bool yPositionKnown = true;
+    bool extrusionPositionKnown = true;
     while (std::getline(input, line))
     {
         ++audit.lineCount;
@@ -886,30 +896,50 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
         if (opcode == "G90")
         {
             absolutePositioning = true;
-            absoluteExtrusion = true;
+            if (extrusionMode == ExtrusionMode::Relative)
+            {
+                /* Firmware families disagree whether G90 also changes E. */
+                extrusionMode = ExtrusionMode::Unknown;
+            }
             continue;
         }
         if (opcode == "G91")
         {
             absolutePositioning = false;
-            absoluteExtrusion = false;
+            if (extrusionMode == ExtrusionMode::Absolute)
+            {
+                /* Firmware families disagree whether G91 also changes E. */
+                extrusionMode = ExtrusionMode::Unknown;
+            }
             continue;
         }
         if (opcode == "M82")
         {
-            absoluteExtrusion = true;
+            extrusionMode = ExtrusionMode::Absolute;
             continue;
         }
         if (opcode == "M83")
         {
-            absoluteExtrusion = false;
+            extrusionMode = ExtrusionMode::Relative;
             continue;
         }
         if (opcode == "G92")
         {
-            if (hasX) xPosition = x;
-            if (hasY) yPosition = y;
-            if (hasExtrusion) extrusionPosition = extrusion;
+            if (hasX)
+            {
+                xPosition = x;
+                xPositionKnown = true;
+            }
+            if (hasY)
+            {
+                yPosition = y;
+                yPositionKnown = true;
+            }
+            if (hasExtrusion)
+            {
+                extrusionPosition = extrusion;
+                extrusionPositionKnown = true;
+            }
             continue;
         }
 
@@ -919,26 +949,75 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
             bool hasPlanarMotion = false;
             if (hasX)
             {
-                const double delta = absolutePositioning
-                    ? x - xPosition : x;
-                hasPlanarMotion = hasPlanarMotion || delta != 0.0;
-                xPosition = absolutePositioning ? x : xPosition + x;
+                if (absolutePositioning)
+                {
+                    if (xPositionKnown)
+                    {
+                        const double delta = x - xPosition;
+                        hasPlanarMotion = hasPlanarMotion ||
+                            (std::isfinite(delta) && delta != 0.0);
+                    }
+                    xPosition = x;
+                    xPositionKnown = true;
+                }
+                else if (xPositionKnown)
+                {
+                    const double next = xPosition + x;
+                    hasPlanarMotion = hasPlanarMotion ||
+                        (std::isfinite(next) && x != 0.0);
+                    xPosition = next;
+                    xPositionKnown = std::isfinite(next);
+                }
             }
             if (hasY)
             {
-                const double delta = absolutePositioning
-                    ? y - yPosition : y;
-                hasPlanarMotion = hasPlanarMotion || delta != 0.0;
-                yPosition = absolutePositioning ? y : yPosition + y;
+                if (absolutePositioning)
+                {
+                    if (yPositionKnown)
+                    {
+                        const double delta = y - yPosition;
+                        hasPlanarMotion = hasPlanarMotion ||
+                            (std::isfinite(delta) && delta != 0.0);
+                    }
+                    yPosition = y;
+                    yPositionKnown = true;
+                }
+                else if (yPositionKnown)
+                {
+                    const double next = yPosition + y;
+                    hasPlanarMotion = hasPlanarMotion ||
+                        (std::isfinite(next) && y != 0.0);
+                    yPosition = next;
+                    yPositionKnown = std::isfinite(next);
+                }
             }
             bool positiveExtrusion = false;
             if (hasExtrusion)
             {
-                const double delta = absoluteExtrusion
-                    ? extrusion - extrusionPosition : extrusion;
-                positiveExtrusion = delta > 0.0;
-                extrusionPosition = absoluteExtrusion
-                    ? extrusion : extrusionPosition + extrusion;
+                if (extrusionMode == ExtrusionMode::Absolute)
+                {
+                    if (extrusionPositionKnown)
+                    {
+                        const double delta = extrusion - extrusionPosition;
+                        positiveExtrusion =
+                            std::isfinite(delta) && delta > 0.0;
+                    }
+                    extrusionPosition = extrusion;
+                    extrusionPositionKnown = true;
+                }
+                else if (extrusionMode == ExtrusionMode::Relative &&
+                         extrusionPositionKnown)
+                {
+                    const double next = extrusionPosition + extrusion;
+                    positiveExtrusion =
+                        std::isfinite(next) && extrusion > 0.0;
+                    extrusionPosition = next;
+                    extrusionPositionKnown = std::isfinite(next);
+                }
+                else
+                {
+                    extrusionPositionKnown = false;
+                }
             }
             if (hasPlanarMotion && positiveExtrusion)
             {

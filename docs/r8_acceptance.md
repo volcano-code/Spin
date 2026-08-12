@@ -81,7 +81,9 @@ diagnostics are rejected.
 The G-code audit is intentionally a smoke test: it requires text, a recognized
 layer marker, and at least one finite positive-extrusion G0/G1 command with X
 or Y displacement while tracking absolute/relative coordinate and extrusion
-modes plus G92 resets.
+modes plus G92 resets. Because firmware families disagree about whether G90/G91
+also changes the E mode, a conflicting sequence is treated as ambiguous until
+an explicit M82/M83; non-finite computed deltas are never deposition evidence.
 It is not a full G-code parser, collision simulation, printer compatibility
 check or build-success proof.
 

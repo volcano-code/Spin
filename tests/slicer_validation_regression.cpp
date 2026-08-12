@@ -621,13 +621,13 @@ int runInvalidToolpath(const std::string& fakeExecutable)
     );
     const SlicerValidationReport stationaryPlanarReport =
         stationaryPlanar.validate();
-    Fixture g90ClearsRelativeExtrusion(
-        scenario + "-g90-clears-relative-extrusion",
+    Fixture g90AmbiguousExtrusion(
+        scenario + "-g90-ambiguous-extrusion",
         fakeExecutable,
-        "g90-clears-relative-extrusion"
+        "g90-ambiguous-extrusion"
     );
-    const SlicerValidationReport g90ClearsRelativeExtrusionReport =
-        g90ClearsRelativeExtrusion.validate();
+    const SlicerValidationReport g90AmbiguousExtrusionReport =
+        g90AmbiguousExtrusion.validate();
     Fixture g91M82Override(
         scenario + "-g91-m82-override",
         fakeExecutable,
@@ -635,6 +635,13 @@ int runInvalidToolpath(const std::string& fakeExecutable)
     );
     const SlicerValidationReport g91M82OverrideReport =
         g91M82Override.validate();
+    Fixture overflowDelta(
+        scenario + "-overflow-delta",
+        fakeExecutable,
+        "overflow-delta"
+    );
+    const SlicerValidationReport overflowDeltaReport =
+        overflowDelta.validate();
 
     if (
         emptyReport.status != SlicerValidationStatus::InvalidToolpath ||
@@ -664,13 +671,16 @@ int runInvalidToolpath(const std::string& fakeExecutable)
             SlicerValidationStatus::InvalidToolpath ||
         stationaryPlanarReport.passed ||
         stationaryPlanarReport.toolpath.hasDeposition ||
-        g90ClearsRelativeExtrusionReport.status !=
+        g90AmbiguousExtrusionReport.status !=
             SlicerValidationStatus::InvalidToolpath ||
-        g90ClearsRelativeExtrusionReport.passed ||
-        g90ClearsRelativeExtrusionReport.toolpath.hasDeposition ||
+        g90AmbiguousExtrusionReport.passed ||
+        g90AmbiguousExtrusionReport.toolpath.hasDeposition ||
         g91M82OverrideReport.status != SlicerValidationStatus::Passed ||
         !g91M82OverrideReport.passed ||
-        !g91M82OverrideReport.toolpath.hasDeposition
+        !g91M82OverrideReport.toolpath.hasDeposition ||
+        overflowDeltaReport.status != SlicerValidationStatus::InvalidToolpath ||
+        overflowDeltaReport.passed ||
+        overflowDeltaReport.toolpath.hasDeposition
     )
     {
         return fail(scenario, "invalid G-code semantic gate failed");
