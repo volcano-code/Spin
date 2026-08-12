@@ -68,6 +68,7 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/inner_void_mesh.cpp
     src/make_it_stand.cpp
     src/manufacturing/ManufacturingGeometry.cpp
+    src/manufacturing/SlicerValidation.cpp
     src/optimization/AlternatingBalanceOptimizer.cpp
     src/physics/BalanceEnergy.cpp
     src/physics/BalanceObjective.cpp
@@ -101,6 +102,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/list3d.h
     include/make_it_stand.h
     include/manufacturing/ManufacturingGeometry.h
+    include/manufacturing/SlicerValidation.h
     include/optimization/AlternatingBalanceOptimizer.h
     include/physics/BalanceEnergy.h
     include/physics/BalanceObjective.h
@@ -715,6 +717,74 @@ if(BUILD_TESTING)
     add_manufacturing_geometry_test(r8-source-rejection source-rejection)
     add_manufacturing_geometry_test(r8-raw-substitution raw-substitution)
     add_manufacturing_geometry_test(r8-scale-translation scale-translation)
+
+    add_executable(r8-fake-slicer tests/fake_slicer.cpp)
+    target_compile_features(r8-fake-slicer PRIVATE cxx_std_17)
+    set_target_properties(
+        r8-fake-slicer
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+
+    add_executable(
+        slicer-validation-regression
+        tests/slicer_validation_regression.cpp
+    )
+    target_compile_features(
+        slicer-validation-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        slicer-validation-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        slicer-validation-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_slicer_validation_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:slicer-validation-regression>"
+                "${scenario}"
+                "$<TARGET_FILE:r8-fake-slicer>"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r8;manufacturing;slicer-unit"
+                TIMEOUT 15
+        )
+    endfunction()
+
+    add_test(
+        NAME r8-slicer-not-configured
+        COMMAND "$<TARGET_FILE:slicer-validation-regression>"
+            not-configured
+    )
+    set_tests_properties(
+        r8-slicer-not-configured
+        PROPERTIES
+            LABELS "r8;manufacturing;slicer-unit"
+            TIMEOUT 15
+    )
+    add_slicer_validation_test(
+        r8-slicer-executable-hash-mismatch
+        executable-hash-mismatch
+    )
+    add_slicer_validation_test(
+        r8-slicer-profile-hash-mismatch
+        profile-hash-mismatch
+    )
+    add_slicer_validation_test(r8-slicer-version-mismatch version-mismatch)
+    add_slicer_validation_test(r8-slicer-success success)
+    add_slicer_validation_test(r8-slicer-repair-rejected repair)
+    add_slicer_validation_test(r8-slicer-invalid-toolpath invalid-toolpath)
+    add_slicer_validation_test(r8-slicer-nonzero nonzero)
+    add_slicer_validation_test(r8-slicer-signal signal)
+    add_slicer_validation_test(r8-slicer-timeout timeout)
+    add_slicer_validation_test(r8-slicer-shell-safe shell-safe)
+    add_slicer_validation_test(r8-slicer-report-json report-json)
 
     add_executable(carving-regression tests/carving_regression.cpp)
     target_compile_features(carving-regression PRIVATE cxx_std_17)
