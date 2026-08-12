@@ -697,6 +697,21 @@ if(BUILD_TESTING)
         r8-boundary-self-intersection
         self-intersection
     )
+    add_manufacturing_geometry_test(r8-prepare-empty prepare-empty)
+    add_manufacturing_geometry_test(r8-prepare-cavity prepare-cavity)
+    add_manufacturing_geometry_test(r8-prepare-stale-inner stale-inner)
+    add_manufacturing_geometry_test(r8-prepare-cell-collapse cell-collapse)
+    add_manufacturing_geometry_test(r8-prepare-cell-swap cell-swap)
+    add_manufacturing_geometry_test(
+        r8-prepare-material-components
+        material-components
+    )
+    add_manufacturing_geometry_test(r8-prepare-containment containment)
+    add_manufacturing_geometry_test(r8-prepare-wall-threshold wall-threshold)
+    add_manufacturing_geometry_test(r8-source-bound source-bound)
+    add_manufacturing_geometry_test(r8-export-roundtrip export-roundtrip)
+    add_manufacturing_geometry_test(r8-export-transaction export-transaction)
+    add_manufacturing_geometry_test(r8-export-seal export-seal)
 
     add_executable(carving-regression tests/carving_regression.cpp)
     target_compile_features(carving-regression PRIVATE cxx_std_17)

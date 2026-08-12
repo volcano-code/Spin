@@ -2,7 +2,9 @@
 
 #include <Eigen/Core>
 
+#include <array>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <vector>
@@ -13,6 +15,11 @@
 
 
 class VoxelGrid;
+
+namespace optimization
+{
+struct AlternatingBalanceOptimizationResult;
+}
 
 
 namespace manufacturing
@@ -107,7 +114,12 @@ struct ContainmentAudit
 };
 
 
-/** Conservative sampled local-injectivity gate for deformed active cells. */
+/**
+ * Sampled local-injectivity gate for deformed active cells.
+ *
+ * Positive samples are a conservative rejection heuristic, not a continuous
+ * proof that the trilinear Jacobian remains positive between samples.
+ */
 struct DeformedCellAudit
 {
     bool completed = false;
@@ -150,8 +162,20 @@ struct ManufacturingReadinessReport
     bool singleMaterialComponent = false;
     bool positiveMaterialVolume = false;
     bool massPropertiesConsistent = false;
+    bool sourceBound = false;
+    bool targetsAllReached = false;
+    bool sourceMassPropertiesConsistent = false;
+    bool sourceTraceHashConsistent = false;
+    bool sourceParametersFinite = false;
+    bool sourceEpochTraceConsistent = false;
     bool ready = false;
 
+    int geometryEpoch = -1;
+    std::uint64_t occupancyHash = 0U;
+    std::size_t targetGeneration = 0U;
+    std::uint64_t parameterHash = 0U;
+    int parameterCount = 0;
+    double density = 1.0;
     double signedMaterialVolume = 0.0;
     MassProperties surfaceMassProperties;
     MassProperties cellOracleMassProperties;
@@ -163,6 +187,12 @@ struct ManufacturingReadinessReport
         std::numeric_limits<double>::infinity();
     double centerOfMassRelativeError =
         std::numeric_limits<double>::infinity();
+    double sourceMassRelativeError =
+        std::numeric_limits<double>::infinity();
+    double sourceFirstMomentRelativeError =
+        std::numeric_limits<double>::infinity();
+    double sourceCenterOfMassRelativeError =
+        std::numeric_limits<double>::infinity();
     std::string deformedCellFailure;
     std::vector<std::string> failures;
 
@@ -171,10 +201,38 @@ struct ManufacturingReadinessReport
 };
 
 
+struct ManufacturingOptions;
+enum class ManufacturingMeshFormat;
+
+
 struct ManufacturingGeometry
 {
     CoherentBoundaryMesh boundary;
     ManufacturingReadinessReport report;
+
+private:
+    std::array<std::uint64_t, 2> integritySeal_{{0U, 0U}};
+    bool sealedReady_ = false;
+
+    void applyIntegritySeal();
+    bool hasValidIntegritySeal() const;
+
+    friend ManufacturingGeometry prepareManufacturingGeometry(
+        const deformation::DeformedGeometry& geometry,
+        const VoxelGrid& voxelGrid,
+        const ManufacturingOptions& options
+    );
+
+    friend ManufacturingGeometry prepareManufacturingGeometry(
+        const optimization::AlternatingBalanceOptimizationResult& result,
+        const ManufacturingOptions& options
+    );
+
+    friend void exportReadyManufacturingMesh(
+        const ManufacturingGeometry& geometry,
+        const std::string& filename,
+        ManufacturingMeshFormat format
+    );
 };
 
 
@@ -183,7 +241,13 @@ struct ManufacturingOptions
     /** Zero selects a scale-aware tolerance. */
     double geometricTolerance = 0.0;
 
-    /** Require exactly one six-neighbor material component. */
+    /** Must match the uniform density used by the source R7 optimizer. */
+    double density = 1.0;
+
+    /**
+     * Retained for audit-profile compatibility. Strict ready status always
+     * requires exactly one six-neighbor material component.
+     */
     bool requireSingleMaterialComponent = true;
 };
 
@@ -210,6 +274,16 @@ BoundaryAudit auditTriangleBoundary(
 ManufacturingGeometry prepareManufacturingGeometry(
     const deformation::DeformedGeometry& geometry,
     const VoxelGrid& voxelGrid,
+    const ManufacturingOptions& options = ManufacturingOptions()
+);
+
+
+/**
+ * Bind the audit to an immutable R7 result and seal it for guarded export.
+ * Only this overload can produce report.ready=true and a valid export seal.
+ */
+ManufacturingGeometry prepareManufacturingGeometry(
+    const optimization::AlternatingBalanceOptimizationResult& result,
     const ManufacturingOptions& options = ManufacturingOptions()
 );
 

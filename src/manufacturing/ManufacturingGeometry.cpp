@@ -3,6 +3,7 @@
 #include "deformation/DeformedVoxelMassField.h"
 #include "deformation/GridDeformationDomain.h"
 #include "extraction/VoidMeshExtractor.h"
+#include "optimization/AlternatingBalanceOptimizer.h"
 #include "physics/MassProperties.h"
 #include "voxel/VoxelGrid.h"
 
@@ -22,6 +23,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <locale>
 #include <map>
 #include <numeric>
 #include <sstream>
@@ -103,13 +105,36 @@ double coordinateScale(const Eigen::MatrixXd& vertices)
     const Eigen::Vector3d maximum =
         vertices.colwise().maxCoeff().transpose();
 
-    return std::max(
-        {
-            1.0,
-            vertices.cwiseAbs().maxCoeff(),
-            (maximum - minimum).norm()
-        }
-    );
+    const double extent = (maximum - minimum).norm();
+    return std::isfinite(extent) && extent > 0.0
+        ? extent
+        : std::numeric_limits<double>::min();
+}
+
+
+Eigen::Vector3d localOrigin(const Eigen::MatrixXd& vertices)
+{
+    if (vertices.rows() == 0)
+    {
+        return Eigen::Vector3d::Zero();
+    }
+
+    const Eigen::Vector3d minimum =
+        vertices.colwise().minCoeff().transpose();
+    const Eigen::Vector3d maximum =
+        vertices.colwise().maxCoeff().transpose();
+    return minimum + 0.5 * (maximum - minimum);
+}
+
+
+Eigen::MatrixXd translatedVertices(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::Vector3d& origin
+)
+{
+    Eigen::MatrixXd result = vertices;
+    result.rowwise() -= origin.transpose();
+    return result;
 }
 
 
@@ -132,6 +157,48 @@ double resolvedTolerance(
 
     return 2048.0 * std::numeric_limits<double>::epsilon() *
         coordinateScale(vertices);
+}
+
+
+std::uint64_t occupancyHash(const VoxelGrid& grid)
+{
+    std::uint64_t hash = UINT64_C(1469598103934665603);
+    std::uint64_t index = 0U;
+    const Eigen::Vector3i dimensions = grid.dimensions();
+
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                hash ^= index++;
+                hash *= UINT64_C(1099511628211);
+                hash ^= grid(x, y, z).isFilled
+                    ? UINT64_C(1)
+                    : UINT64_C(0);
+                hash *= UINT64_C(1099511628211);
+            }
+        }
+    }
+    return hash;
+}
+
+
+std::uint64_t parameterHash(const Eigen::VectorXd& parameters)
+{
+    std::uint64_t hash = UINT64_C(1469598103934665603);
+    for (Eigen::Index index = 0; index < parameters.size(); ++index)
+    {
+        std::uint64_t bits = 0U;
+        const double value = parameters(index);
+        std::memcpy(&bits, &value, sizeof(bits));
+        hash ^= static_cast<std::uint64_t>(index);
+        hash *= UINT64_C(1099511628211);
+        hash ^= bits;
+        hash *= UINT64_C(1099511628211);
+    }
+    return hash;
 }
 
 
@@ -496,6 +563,57 @@ bool segmentIntersectsTriangle(
 }
 
 
+bool segmentTriangleIntersectionPoint(
+    const Eigen::Vector3d& start,
+    const Eigen::Vector3d& end,
+    const Triangle& triangle,
+    double tolerance,
+    Eigen::Vector3d& intersection
+)
+{
+    const Eigen::Vector3d direction = end - start;
+    const Eigen::Vector3d edge1 = triangle.points[1] - triangle.points[0];
+    const Eigen::Vector3d edge2 = triangle.points[2] - triangle.points[0];
+    const Eigen::Vector3d p = direction.cross(edge2);
+    const double determinant = edge1.dot(p);
+    const double productScale =
+        direction.norm() * edge1.norm() * edge2.norm();
+    const double relativeTolerance = tolerance / std::max(
+        {
+            direction.norm(),
+            edge1.norm(),
+            edge2.norm(),
+            std::numeric_limits<double>::min()
+        }
+    );
+
+    if (std::abs(determinant) <= relativeTolerance * productScale)
+    {
+        return false;
+    }
+
+    const double inverse = 1.0 / determinant;
+    const Eigen::Vector3d offset = start - triangle.points[0];
+    const double u = offset.dot(p) * inverse;
+    const Eigen::Vector3d q = offset.cross(edge1);
+    const double v = direction.dot(q) * inverse;
+    const double parameter = edge2.dot(q) * inverse;
+    if (
+        u < -relativeTolerance ||
+        v < -relativeTolerance ||
+        u + v > 1.0 + relativeTolerance ||
+        parameter < -relativeTolerance ||
+        parameter > 1.0 + relativeTolerance
+    )
+    {
+        return false;
+    }
+
+    intersection = start + std::clamp(parameter, 0.0, 1.0) * direction;
+    return intersection.allFinite();
+}
+
+
 bool trianglesIntersect(
     const Triangle& first,
     const Triangle& second,
@@ -786,6 +904,84 @@ bool shareIndexedVertex(const Triangle& first, const Triangle& second)
 }
 
 
+std::vector<int> sharedIndexedVertices(
+    const Triangle& first,
+    const Triangle& second
+)
+{
+    std::vector<int> result;
+    for (const int firstVertex : first.vertices)
+    {
+        if (std::find(
+                second.vertices.begin(),
+                second.vertices.end(),
+                firstVertex
+            ) != second.vertices.end())
+        {
+            result.push_back(firstVertex);
+        }
+    }
+    return result;
+}
+
+
+bool pointBelongsToSharedSimplex(
+    const Eigen::Vector3d& point,
+    const Triangle& first,
+    const std::vector<int>& sharedVertices,
+    double tolerance
+)
+{
+    if (sharedVertices.size() == 1U)
+    {
+        const auto iterator = std::find(
+            first.vertices.begin(),
+            first.vertices.end(),
+            sharedVertices[0]
+        );
+        const std::size_t local = static_cast<std::size_t>(
+            std::distance(first.vertices.begin(), iterator)
+        );
+        return (point - first.points[local]).norm() <= tolerance;
+    }
+
+    if (sharedVertices.size() == 2U)
+    {
+        std::array<Eigen::Vector3d, 2> endpoints;
+        for (int endpoint = 0; endpoint < 2; ++endpoint)
+        {
+            const auto iterator = std::find(
+                first.vertices.begin(),
+                first.vertices.end(),
+                sharedVertices[static_cast<std::size_t>(endpoint)]
+            );
+            endpoints[static_cast<std::size_t>(endpoint)] = first.points[
+                static_cast<std::size_t>(
+                    std::distance(first.vertices.begin(), iterator)
+                )
+            ];
+        }
+
+        const Eigen::Vector3d edge = endpoints[1] - endpoints[0];
+        const double squaredLength = edge.squaredNorm();
+        if (squaredLength == 0.0)
+        {
+            return (point - endpoints[0]).norm() <= tolerance;
+        }
+        const double parameter = std::clamp(
+            (point - endpoints[0]).dot(edge) / squaredLength,
+            0.0,
+            1.0
+        );
+        return (
+            point - (endpoints[0] + parameter * edge)
+        ).norm() <= tolerance;
+    }
+
+    return false;
+}
+
+
 bool trianglesHaveDisallowedSelfIntersection(
     const Triangle& first,
     const Triangle& second,
@@ -798,6 +994,56 @@ bool trianglesHaveDisallowedSelfIntersection(
     }
 
     const double toleranceSquared = tolerance * tolerance;
+    const std::vector<int> sharedVertices = sharedIndexedVertices(
+        first,
+        second
+    );
+
+    if (sharedVertices.size() >= 3U)
+    {
+        return true;
+    }
+
+    for (int edge = 0; edge < 3; ++edge)
+    {
+        Eigen::Vector3d intersection = Eigen::Vector3d::Zero();
+        if (
+            segmentTriangleIntersectionPoint(
+                first.points[static_cast<std::size_t>(edge)],
+                first.points[static_cast<std::size_t>((edge + 1) % 3)],
+                second,
+                tolerance,
+                intersection
+            ) &&
+            !pointBelongsToSharedSimplex(
+                intersection,
+                first,
+                sharedVertices,
+                tolerance
+            )
+        )
+        {
+            return true;
+        }
+        if (
+            segmentTriangleIntersectionPoint(
+                second.points[static_cast<std::size_t>(edge)],
+                second.points[static_cast<std::size_t>((edge + 1) % 3)],
+                first,
+                tolerance,
+                intersection
+            ) &&
+            !pointBelongsToSharedSimplex(
+                intersection,
+                first,
+                sharedVertices,
+                tolerance
+            )
+        )
+        {
+            return true;
+        }
+    }
     for (int firstVertex = 0; firstVertex < 3; ++firstVertex)
     {
         const int index = first.vertices[static_cast<std::size_t>(firstVertex)];
@@ -1269,8 +1515,25 @@ WallClearanceAudit auditWallClearance(
     }
 
     result.applicable = true;
-    const TriangleBvh outer(makeTriangles(outerVertices, outerFaces));
-    const TriangleBvh inner(makeTriangles(innerVertices, innerFaces));
+    const Eigen::Vector3d minimum =
+        outerVertices.colwise().minCoeff().transpose().cwiseMin(
+            innerVertices.colwise().minCoeff().transpose()
+        );
+    const Eigen::Vector3d maximum =
+        outerVertices.colwise().maxCoeff().transpose().cwiseMax(
+            innerVertices.colwise().maxCoeff().transpose()
+        );
+    const Eigen::Vector3d origin = minimum + 0.5 * (maximum - minimum);
+    const Eigen::MatrixXd localOuter = translatedVertices(
+        outerVertices,
+        origin
+    );
+    const Eigen::MatrixXd localInner = translatedVertices(
+        innerVertices,
+        origin
+    );
+    const TriangleBvh outer(makeTriangles(localOuter, outerFaces));
+    const TriangleBvh inner(makeTriangles(localInner, innerFaces));
     double bestSquared = std::numeric_limits<double>::infinity();
     closestCrossNodes(
         outer,
@@ -1315,6 +1578,24 @@ ContainmentAudit auditContainment(
         return result;
     }
 
+    const Eigen::Vector3d minimum =
+        outerVertices.colwise().minCoeff().transpose().cwiseMin(
+            innerVertices.colwise().minCoeff().transpose()
+        );
+    const Eigen::Vector3d maximum =
+        outerVertices.colwise().maxCoeff().transpose().cwiseMax(
+            innerVertices.colwise().maxCoeff().transpose()
+        );
+    const Eigen::Vector3d origin = minimum + 0.5 * (maximum - minimum);
+    const Eigen::MatrixXd localOuter = translatedVertices(
+        outerVertices,
+        origin
+    );
+    const Eigen::MatrixXd localInner = translatedVertices(
+        innerVertices,
+        origin
+    );
+
     Eigen::VectorXi components;
     const int componentCount = igl::facet_components(innerFaces, components);
     result.testedComponentCount = componentCount;
@@ -1354,7 +1635,7 @@ ContainmentAudit auditContainment(
         for (int corner = 0; corner < 3; ++corner)
         {
             representatives[static_cast<std::size_t>(component)] +=
-                innerVertices.row(
+                localInner.row(
                     componentFaces[static_cast<std::size_t>(component)](
                         0,
                         corner
@@ -1363,7 +1644,7 @@ ContainmentAudit auditContainment(
         }
 
         const double winding = igl::winding_number(
-            outerVertices,
+            localOuter,
             outerFaces,
             representatives[static_cast<std::size_t>(component)]
         );
@@ -1389,7 +1670,7 @@ ContainmentAudit auditContainment(
                 }
 
                 const double winding = igl::winding_number(
-                    innerVertices,
+                    localInner,
                     componentFaces[static_cast<std::size_t>(containing)],
                     representatives[static_cast<std::size_t>(nested)]
                 );
@@ -1473,9 +1754,15 @@ DeformedCellAudit auditDeformedCells(
         tolerance * tolerance * tolerance,
         4096.0 * std::numeric_limits<double>::epsilon() * restJacobian
     );
+    const double faceLengthScale = domain.voxelSize().norm();
     const double areaFloorSquared =
-        tolerance * tolerance *
-        std::max(1.0, domain.voxelSize().squaredNorm());
+        tolerance * tolerance * faceLengthScale * faceLengthScale;
+    /*
+     * The 3x3x3 samples deliberately fail closed for observed inversions and
+     * boundary collapse. They are not a continuous positivity proof for the
+     * trilinear Jacobian between samples; the report names this as a sampled
+     * pre-slicer gate rather than a fabrication certificate.
+     */
     const double samples[3] = {0.0, 0.5, 1.0};
 
     for (int cell = 0; cell < domain.cellCount(); ++cell)
@@ -1626,15 +1913,29 @@ bool synchronizedInnerGeometry(
     Eigen::MatrixXi expectedFaces;
     VoidMeshExtractor::extractFaces(voxelGrid, expectedFaces);
 
-    return
+    if (
         geometry.gridCorners.rows() == voxelGrid.corners().rows() &&
         geometry.gridCorners.cols() == 3 &&
         geometry.gridCorners.allFinite() &&
         geometry.innerVertices.rows() == geometry.gridCorners.rows() &&
         geometry.innerVertices.cols() == 3 &&
         geometry.innerVertices.allFinite() &&
-        geometry.innerVertices.isApprox(geometry.gridCorners, tolerance) &&
-        sameFaceMatrix(geometry.innerFaces, expectedFaces);
+        sameFaceMatrix(geometry.innerFaces, expectedFaces)
+    )
+    {
+        if (geometry.gridCorners.rows() == 0)
+        {
+            return true;
+        }
+
+        const Eigen::VectorXd rowErrors =
+            (geometry.innerVertices - geometry.gridCorners)
+                .rowwise()
+                .norm();
+        return rowErrors.maxCoeff() <= tolerance;
+    }
+
+    return false;
 }
 
 
@@ -1681,6 +1982,7 @@ CoherentBoundaryMesh makeCoherentBoundary(
 std::string escapedJson(const std::string& value)
 {
     std::ostringstream output;
+    output.imbue(std::locale::classic());
     for (const unsigned char character : value)
     {
         switch (character)
@@ -1732,6 +2034,37 @@ void appendJsonNumber(std::ostringstream& output, double value)
 }
 
 
+void appendJsonVector3(
+    std::ostringstream& output,
+    const Eigen::Vector3d& value
+)
+{
+    output << '[';
+    for (int axis = 0; axis < 3; ++axis)
+    {
+        if (axis > 0)
+        {
+            output << ", ";
+        }
+        appendJsonNumber(output, value(axis));
+    }
+    output << ']';
+}
+
+
+void appendMassPropertiesJson(
+    std::ostringstream& output,
+    const MassProperties& properties
+)
+{
+    output << "{\"mass\": ";
+    appendJsonNumber(output, properties.mass);
+    output << ", \"first_moment\": ";
+    appendJsonVector3(output, properties.firstMoment);
+    output << '}';
+}
+
+
 void appendBoundaryJson(
     std::ostringstream& output,
     const char* name,
@@ -1741,24 +2074,64 @@ void appendBoundaryJson(
     output
         << "  \"" << name << "\": {\n"
         << "    \"empty\": " << jsonBool(audit.empty) << ",\n"
+        << "    \"matrix_shape_valid\": "
+        << jsonBool(audit.matrixShapeValid) << ",\n"
+        << "    \"finite_vertices\": "
+        << jsonBool(audit.finiteVertices) << ",\n"
+        << "    \"face_indices_valid\": "
+        << jsonBool(audit.faceIndicesValid) << ",\n"
+        << "    \"nondegenerate_faces\": "
+        << jsonBool(audit.nondegenerateFaces) << ",\n"
         << "    \"vertices\": " << audit.vertexCount << ",\n"
+        << "    \"referenced_vertices\": "
+        << audit.referencedVertexCount << ",\n"
+        << "    \"unreferenced_vertices\": "
+        << audit.unreferencedVertexCount << ",\n"
         << "    \"faces\": " << audit.faceCount << ",\n"
         << "    \"components\": " << audit.faceComponentCount << ",\n"
         << "    \"degenerate_faces\": " << audit.degenerateFaceCount << ",\n"
         << "    \"boundary_edges\": " << audit.boundaryEdgeCount << ",\n"
         << "    \"nonmanifold_edges\": " << audit.nonManifoldEdgeCount << ",\n"
+        << "    \"inconsistent_edges\": "
+        << audit.inconsistentEdgeCount << ",\n"
         << "    \"nonmanifold_vertices\": "
         << audit.nonManifoldVertexCount << ",\n"
+        << "    \"edge_manifold\": " << jsonBool(audit.edgeManifold)
+        << ",\n"
+        << "    \"vertex_manifold\": " << jsonBool(audit.vertexManifold)
+        << ",\n"
         << "    \"closed\": " << jsonBool(audit.closed) << ",\n"
         << "    \"consistently_oriented\": "
         << jsonBool(audit.consistentlyOriented) << ",\n"
         << "    \"component_orientations_valid\": "
         << jsonBool(audit.componentOrientationsValid) << ",\n"
+        << "    \"self_intersection_completed\": "
+        << jsonBool(audit.selfIntersections.completed) << ",\n"
+        << "    \"self_intersection_free\": "
+        << jsonBool(audit.selfIntersections.intersectionFree) << ",\n"
+        << "    \"self_broad_phase_pairs\": "
+        << audit.selfIntersections.broadPhasePairCount << ",\n"
+        << "    \"self_narrow_phase_pairs\": "
+        << audit.selfIntersections.narrowPhasePairCount << ",\n"
         << "    \"self_intersection_pairs\": "
         << audit.selfIntersections.intersectingPairCount << ",\n"
-        << "    \"signed_volume\": " << std::setprecision(17)
-        << audit.signedVolume << "\n"
-        << "  },\n";
+        << "    \"first_self_intersection_faces\": ["
+        << audit.selfIntersections.firstFace << ", "
+        << audit.selfIntersections.secondFace << "],\n"
+        << "    \"component_signed_volumes\": [";
+    for (std::size_t index = 0;
+         index < audit.componentSignedVolumes.size();
+         ++index)
+    {
+        if (index > 0)
+        {
+            output << ", ";
+        }
+        appendJsonNumber(output, audit.componentSignedVolumes[index]);
+    }
+    output << "],\n    \"signed_volume\": ";
+    appendJsonNumber(output, audit.signedVolume);
+    output << "\n  },\n";
 }
 
 
@@ -1799,34 +2172,79 @@ void writeAtomicBytes(
     const std::filesystem::path directory = destination.has_parent_path()
         ? destination.parent_path()
         : std::filesystem::path(".");
-    const std::string temporaryName =
-        "." + destination.filename().string() +
-        ".r8tmp." + std::to_string(static_cast<long long>(::getpid())) +
-        "." + std::to_string(counter.fetch_add(1));
-    const std::filesystem::path temporary = directory / temporaryName;
-
-    int descriptor = ::open(
-        temporary.c_str(),
-        O_WRONLY | O_CREAT | O_EXCL,
-        0666
+    const int directoryDescriptor = ::open(
+        directory.c_str(),
+        O_RDONLY | O_DIRECTORY
     );
-    if (descriptor < 0)
+    if (directoryDescriptor < 0)
     {
         throw std::runtime_error(systemErrorMessage(
-            "failed to create transactional temporary file"
+            "failed to open transactional output directory"
+        ));
+    }
+    if (::fsync(directoryDescriptor) != 0)
+    {
+        const int savedError = errno;
+        ::close(directoryDescriptor);
+        errno = savedError;
+        throw std::runtime_error(systemErrorMessage(
+            "failed to pre-sync transactional output directory"
         ));
     }
 
+    std::filesystem::path temporary;
+    int descriptor = -1;
+    for (int attempt = 0; attempt < 128; ++attempt)
+    {
+        const std::string temporaryName =
+            ".make_it_stand_r8." +
+            std::to_string(static_cast<long long>(::getpid())) +
+            "." + std::to_string(counter.fetch_add(1)) + ".tmp";
+        temporary = directory / temporaryName;
+        descriptor = ::open(
+            temporary.c_str(),
+            O_WRONLY | O_CREAT | O_EXCL,
+            0666
+        );
+        if (descriptor >= 0)
+        {
+            break;
+        }
+        if (errno != EEXIST)
+        {
+            const int savedError = errno;
+            ::close(directoryDescriptor);
+            errno = savedError;
+            throw std::runtime_error(systemErrorMessage(
+                "failed to create transactional temporary file"
+            ));
+        }
+    }
+    if (descriptor < 0)
+    {
+        ::close(directoryDescriptor);
+        throw std::runtime_error(
+            "transactional temporary filename retries were exhausted"
+        );
+    }
+
     bool closed = false;
+    bool committed = false;
     try
     {
         std::size_t offset = 0;
         while (offset < bytes.size())
         {
+            const std::size_t chunk = std::min(
+                bytes.size() - offset,
+                static_cast<std::size_t>(
+                    std::numeric_limits<ssize_t>::max()
+                )
+            );
             const ssize_t written = ::write(
                 descriptor,
                 bytes.data() + offset,
-                bytes.size() - offset
+                chunk
             );
             if (written < 0)
             {
@@ -1876,24 +2294,16 @@ void writeAtomicBytes(
                 "failed to atomically replace export destination"
             ));
         }
+        committed = true;
 
-        const int directoryDescriptor = ::open(
-            directory.c_str(),
-            O_RDONLY | O_DIRECTORY
-        );
-        if (directoryDescriptor >= 0)
-        {
-            const int syncResult = ::fsync(directoryDescriptor);
-            const int savedError = errno;
-            ::close(directoryDescriptor);
-            if (syncResult != 0)
-            {
-                errno = savedError;
-                throw std::runtime_error(systemErrorMessage(
-                    "failed to fsync transactional output directory"
-                ));
-            }
-        }
+        /*
+         * After rename the new target is already atomically visible and the
+         * old target cannot truthfully be promised. Directory fsync is a
+         * best-effort durability barrier here; it must not turn a committed
+         * replacement into an exception claiming that the old file survived.
+         */
+        static_cast<void>(::fsync(directoryDescriptor));
+        static_cast<void>(::close(directoryDescriptor));
     }
     catch (...)
     {
@@ -1901,8 +2311,12 @@ void writeAtomicBytes(
         {
             ::close(descriptor);
         }
-        std::error_code ignored;
-        std::filesystem::remove(temporary, ignored);
+        if (!committed)
+        {
+            std::error_code ignored;
+            std::filesystem::remove(temporary, ignored);
+        }
+        static_cast<void>(::close(directoryDescriptor));
         throw;
     }
 }
@@ -1917,6 +2331,7 @@ std::vector<unsigned char> stringBytes(const std::string& value)
 std::string serializeObj(const CoherentBoundaryMesh& mesh)
 {
     std::ostringstream output;
+    output.imbue(std::locale::classic());
     output << "# make-it-stand R8 manufacturing boundary\n";
     output << std::setprecision(17);
     for (Eigen::Index row = 0; row < mesh.vertices.rows(); ++row)
@@ -1965,6 +2380,7 @@ Eigen::Vector3d triangleUnitNormal(
 std::string serializeAsciiStl(const CoherentBoundaryMesh& mesh)
 {
     std::ostringstream output;
+    output.imbue(std::locale::classic());
     output << "solid make_it_stand_r8\n" << std::setprecision(17);
     for (Eigen::Index face = 0; face < mesh.faces.rows(); ++face)
     {
@@ -2068,7 +2484,7 @@ std::vector<unsigned char> serializeBinaryStl(
 void validateBinaryFloatGeometry(const ManufacturingGeometry& geometry)
 {
     CoherentBoundaryMesh rounded = geometry.boundary;
-    double maximumError = 0.0;
+    double maximumCoordinateError = 0.0;
     for (Eigen::Index row = 0; row < rounded.vertices.rows(); ++row)
     {
         for (int axis = 0; axis < 3; ++axis)
@@ -2076,32 +2492,136 @@ void validateBinaryFloatGeometry(const ManufacturingGeometry& geometry)
             const double value = static_cast<double>(
                 static_cast<float>(rounded.vertices(row, axis))
             );
-            maximumError = std::max(
-                maximumError,
+            maximumCoordinateError = std::max(
+                maximumCoordinateError,
                 std::abs(value - rounded.vertices(row, axis))
             );
             rounded.vertices(row, axis) = value;
         }
     }
 
+    if (
+        rounded.outerVertexCount < 0 ||
+        rounded.outerFaceCount < 0 ||
+        rounded.innerVertexCount < 0 ||
+        rounded.innerFaceCount < 0 ||
+        rounded.outerVertexCount + rounded.innerVertexCount !=
+            rounded.vertices.rows() ||
+        rounded.outerFaceCount + rounded.innerFaceCount !=
+            rounded.faces.rows()
+    )
+    {
+        throw std::runtime_error(
+            "binary STL face partitions do not match the sealed boundary"
+        );
+    }
+
+    const Eigen::MatrixXd outerVertices = rounded.vertices.topRows(
+        rounded.outerVertexCount
+    );
+    const Eigen::MatrixXi outerFaces = rounded.faces.topRows(
+        rounded.outerFaceCount
+    );
+    const Eigen::MatrixXd innerVertices = rounded.vertices.bottomRows(
+        rounded.innerVertexCount
+    );
+    Eigen::MatrixXi innerFaces = rounded.faces.bottomRows(
+        rounded.innerFaceCount
+    );
+
+    if (
+        (outerFaces.size() > 0 &&
+         (outerFaces.minCoeff() < 0 ||
+          outerFaces.maxCoeff() >= rounded.outerVertexCount)) ||
+        (innerFaces.size() > 0 &&
+         (innerFaces.minCoeff() < rounded.outerVertexCount ||
+          innerFaces.maxCoeff() >= rounded.vertices.rows()))
+    )
+    {
+        throw std::runtime_error(
+            "binary STL face ranges do not preserve outer/inner partitions"
+        );
+    }
+    if (innerFaces.size() > 0)
+    {
+        innerFaces.array() -= rounded.outerVertexCount;
+    }
+
+    const BoundaryAudit outerAudit = auditTriangleBoundary(
+        outerVertices,
+        outerFaces,
+        BoundaryOrientation::OutwardPositive
+    );
+    const BoundaryAudit innerAudit = auditTriangleBoundary(
+        innerVertices,
+        innerFaces,
+        BoundaryOrientation::InwardNegative,
+        true
+    );
     const BoundaryAudit roundedAudit = auditTriangleBoundary(
         rounded.vertices,
         rounded.faces,
         BoundaryOrientation::AnyNonzero
     );
-    if (!roundedAudit.strictBoundaryValid())
+    if (
+        !outerAudit.strictBoundaryValid() ||
+        outerAudit.faceComponentCount != 1 ||
+        (!innerAudit.empty && !innerAudit.strictBoundaryValid()) ||
+        !roundedAudit.strictBoundaryValid()
+    )
     {
         throw std::runtime_error(
-            "binary STL float conversion invalidates the manufacturing boundary"
+            "binary STL float conversion invalidates a boundary shell"
         );
     }
 
-    if (geometry.report.wallClearance.applicable)
+    Eigen::MatrixXd allVertices = outerVertices;
+    allVertices.conservativeResize(
+        outerVertices.rows() + innerVertices.rows(),
+        3
+    );
+    if (innerVertices.rows() > 0)
+    {
+        allVertices.bottomRows(innerVertices.rows()) = innerVertices;
+    }
+    const double tolerance = resolvedTolerance(allVertices, 0.0);
+    const WallClearanceAudit clearance = auditWallClearance(
+        outerVertices,
+        outerFaces,
+        innerVertices,
+        innerFaces,
+        geometry.report.wallClearance.requestedThickness,
+        tolerance
+    );
+    const ContainmentAudit containment = auditContainment(
+        outerVertices,
+        outerFaces,
+        innerVertices,
+        innerFaces,
+        innerAudit,
+        clearance.intersectionFree
+    );
+    if (
+        !clearance.completed ||
+        !clearance.intersectionFree ||
+        !clearance.meetsRequestedThickness ||
+        !containment.completed ||
+        !containment.allCavitiesInsideOuter
+    )
+    {
+        throw std::runtime_error(
+            "binary STL float conversion invalidates clearance or containment"
+        );
+    }
+
+    if (clearance.applicable)
     {
         const double slack =
-            geometry.report.wallClearance.measuredMinimumClearance -
-            geometry.report.wallClearance.requestedThickness;
-        if (!(slack > 2.0 * maximumError))
+            clearance.measuredMinimumClearance -
+            clearance.requestedThickness;
+        const double twoSurfaceErrorBound =
+            2.0 * std::sqrt(3.0) * maximumCoordinateError;
+        if (!(slack > twoSurfaceErrorBound))
         {
             throw std::runtime_error(
                 "binary STL float conversion exhausts wall-clearance slack"
@@ -2111,7 +2631,119 @@ void validateBinaryFloatGeometry(const ManufacturingGeometry& geometry)
 }
 
 
+void mixSealByte(
+    std::array<std::uint64_t, 2>& state,
+    unsigned char value
+)
+{
+    state[0] ^= static_cast<std::uint64_t>(value);
+    state[0] *= UINT64_C(1099511628211);
+    state[1] += static_cast<std::uint64_t>(value) +
+        UINT64_C(0x9e3779b97f4a7c15);
+    state[1] ^= state[1] >> 29U;
+    state[1] *= UINT64_C(0xbf58476d1ce4e5b9);
+    state[1] ^= state[1] >> 32U;
+}
+
+
+void mixSealUint64(
+    std::array<std::uint64_t, 2>& state,
+    std::uint64_t value
+)
+{
+    for (int byte = 0; byte < 8; ++byte)
+    {
+        mixSealByte(
+            state,
+            static_cast<unsigned char>(
+                (value >> (8U * static_cast<unsigned int>(byte))) & 0xffU
+            )
+        );
+    }
+}
+
+
+std::array<std::uint64_t, 2> manufacturingIntegrityFingerprint(
+    const ManufacturingGeometry& geometry
+)
+{
+    std::array<std::uint64_t, 2> state{{
+        UINT64_C(1469598103934665603),
+        UINT64_C(0x6a09e667f3bcc909)
+    }};
+    mixSealUint64(
+        state,
+        static_cast<std::uint64_t>(geometry.boundary.vertices.rows())
+    );
+    mixSealUint64(
+        state,
+        static_cast<std::uint64_t>(geometry.boundary.faces.rows())
+    );
+    mixSealUint64(
+        state,
+        static_cast<std::uint64_t>(geometry.boundary.outerVertexCount)
+    );
+    mixSealUint64(
+        state,
+        static_cast<std::uint64_t>(geometry.boundary.outerFaceCount)
+    );
+    mixSealUint64(
+        state,
+        static_cast<std::uint64_t>(geometry.boundary.innerVertexCount)
+    );
+    mixSealUint64(
+        state,
+        static_cast<std::uint64_t>(geometry.boundary.innerFaceCount)
+    );
+
+    for (Eigen::Index index = 0;
+         index < geometry.boundary.vertices.size();
+         ++index)
+    {
+        std::uint64_t bits = 0U;
+        const double value = geometry.boundary.vertices(index);
+        static_assert(sizeof(bits) == sizeof(value), "seal needs 64-bit double");
+        std::memcpy(&bits, &value, sizeof(bits));
+        mixSealUint64(state, bits);
+    }
+    for (Eigen::Index index = 0;
+         index < geometry.boundary.faces.size();
+         ++index)
+    {
+        mixSealUint64(
+            state,
+            static_cast<std::uint64_t>(
+                static_cast<std::int64_t>(geometry.boundary.faces(index))
+            )
+        );
+    }
+
+    const std::string report = geometry.report.toJson();
+    for (const unsigned char value : report)
+    {
+        mixSealByte(state, value);
+    }
+    return state;
+}
+
+
 } // namespace
+
+
+void ManufacturingGeometry::applyIntegritySeal()
+{
+    sealedReady_ = report.ready;
+    integritySeal_ = manufacturingIntegrityFingerprint(*this);
+}
+
+
+bool ManufacturingGeometry::hasValidIntegritySeal() const
+{
+    return
+        sealedReady_ &&
+        report.ready &&
+        integritySeal_ == manufacturingIntegrityFingerprint(*this);
+}
 
 
 bool BoundaryAudit::strictBoundaryValid() const noexcept
@@ -2169,9 +2801,18 @@ BoundaryAudit auditTriangleBoundary(
         return result;
     }
 
-    const double tolerance = resolvedTolerance(vertices, geometricTolerance);
+    const Eigen::Vector3d origin = localOrigin(vertices);
+    const Eigen::MatrixXd localVertices = translatedVertices(
+        vertices,
+        origin
+    );
+    const double tolerance = resolvedTolerance(
+        localVertices,
+        geometricTolerance
+    );
+    const double scale = coordinateScale(localVertices);
     const double squaredAreaTolerance =
-        tolerance * tolerance * coordinateScale(vertices) * coordinateScale(vertices);
+        tolerance * tolerance * scale * scale;
 
     std::vector<unsigned char> referenced(
         static_cast<std::size_t>(vertices.rows()),
@@ -2211,9 +2852,12 @@ BoundaryAudit auditTriangleBoundary(
             continue;
         }
 
-        const Eigen::Vector3d first = vertices.row(indices[0]).transpose();
-        const Eigen::Vector3d second = vertices.row(indices[1]).transpose();
-        const Eigen::Vector3d third = vertices.row(indices[2]).transpose();
+        const Eigen::Vector3d first =
+            localVertices.row(indices[0]).transpose();
+        const Eigen::Vector3d second =
+            localVertices.row(indices[1]).transpose();
+        const Eigen::Vector3d third =
+            localVertices.row(indices[2]).transpose();
         if ((second - first).cross(third - first).squaredNorm() <=
             squaredAreaTolerance)
         {
@@ -2307,7 +2951,7 @@ BoundaryAudit auditTriangleBoundary(
             }
         }
         result.componentSignedVolumes[static_cast<std::size_t>(component)] =
-            computeSurfaceMassProperties(vertices, componentFaces).mass;
+            computeSurfaceMassProperties(localVertices, componentFaces).mass;
     }
 
     result.signedVolume = std::accumulate(
@@ -2316,7 +2960,6 @@ BoundaryAudit auditTriangleBoundary(
         0.0
     );
 
-    const double scale = coordinateScale(vertices);
     const double volumeTolerance = std::max(
         tolerance * tolerance * tolerance,
         4096.0 * std::numeric_limits<double>::epsilon() *
@@ -2344,7 +2987,7 @@ BoundaryAudit auditTriangleBoundary(
     if (result.nondegenerateFaces)
     {
         result.selfIntersections = auditSelfIntersections(
-            vertices,
+            localVertices,
             faces,
             tolerance
         );
@@ -2360,15 +3003,18 @@ ManufacturingGeometry prepareManufacturingGeometry(
 )
 {
     if (!std::isfinite(options.geometricTolerance) ||
-        options.geometricTolerance < 0.0)
+        options.geometricTolerance < 0.0 ||
+        !std::isfinite(options.density) ||
+        options.density <= 0.0)
     {
         throw std::invalid_argument(
-            "manufacturing geometric tolerance must be finite and nonnegative"
+            "manufacturing tolerance/density configuration is invalid"
         );
     }
 
     ManufacturingGeometry result;
     ManufacturingReadinessReport& report = result.report;
+    report.density = options.density;
 
     Eigen::MatrixXd toleranceVertices(0, 3);
     if (
@@ -2495,7 +3141,8 @@ ManufacturingGeometry prepareManufacturingGeometry(
         );
         const deformation::DeformedVoxelMassField field(
             domain,
-            geometry.gridCorners
+            geometry.gridCorners,
+            options.density
         );
         report.deformedCellsValid =
             field.activeCellCount() == domain.activeCellCount() &&
@@ -2503,11 +3150,13 @@ ManufacturingGeometry prepareManufacturingGeometry(
 
         report.surfaceMassProperties = computeSurfaceMassProperties(
             result.boundary.vertices,
-            result.boundary.faces
+            result.boundary.faces,
+            options.density
         );
         report.cellOracleMassProperties = computeSurfaceMassProperties(
             compactOuterVertices,
-            compactOuterFaces
+            compactOuterFaces,
+            options.density
         );
 
         const Eigen::Vector3i dimensions = voxelGrid.dimensions();
@@ -2528,12 +3177,22 @@ ManufacturingGeometry prepareManufacturingGeometry(
             }
         }
 
+        const double modelScale = coordinateScale(result.boundary.vertices);
+        const double massScaleFloor = std::max(
+            std::numeric_limits<double>::min(),
+            options.density * modelScale * modelScale * modelScale *
+                4096.0 * std::numeric_limits<double>::epsilon()
+        );
+        const double momentScaleFloor = std::max(
+            std::numeric_limits<double>::min(),
+            massScaleFloor * modelScale
+        );
         report.massRelativeError = std::abs(
             report.surfaceMassProperties.mass -
             report.cellOracleMassProperties.mass
         ) / std::max(
             {
-                1.0,
+                massScaleFloor,
                 std::abs(report.surfaceMassProperties.mass),
                 std::abs(report.cellOracleMassProperties.mass)
             }
@@ -2543,7 +3202,7 @@ ManufacturingGeometry prepareManufacturingGeometry(
             report.cellOracleMassProperties.firstMoment
         ).norm() / std::max(
             {
-                1.0,
+                momentScaleFloor,
                 report.surfaceMassProperties.firstMoment.norm(),
                 report.cellOracleMassProperties.firstMoment.norm()
             }
@@ -2565,11 +3224,8 @@ ManufacturingGeometry prepareManufacturingGeometry(
             surfaceCenterValid && oracleCenterValid
                 ? (report.centerOfMass - report.cellOracleCenterOfMass).norm() /
                     std::max(
-                        {
-                            1.0,
-                            report.centerOfMass.norm(),
-                            report.cellOracleCenterOfMass.norm()
-                        }
+                        modelScale,
+                        std::numeric_limits<double>::min()
                     )
                 : std::numeric_limits<double>::infinity();
         report.massPropertiesConsistent =
@@ -2651,8 +3307,7 @@ ManufacturingGeometry prepareManufacturingGeometry(
     {
         report.failures.push_back("surface_cell_mass_properties_disagree");
     }
-    if (options.requireSingleMaterialComponent &&
-        !report.singleMaterialComponent)
+    if (!report.singleMaterialComponent)
     {
         report.failures.push_back("material_not_single_component");
     }
@@ -2681,7 +3336,138 @@ ManufacturingGeometry prepareManufacturingGeometry(
         report.failures.push_back("cavity_not_contained_by_outer_boundary");
     }
 
+    /*
+     * The raw overload is useful for diagnostics, but cannot prove that M_O,
+     * M_I, alpha, q and the target snapshot came from one committed R7 state.
+     * It is therefore deliberately unsealed and never export-ready.
+     */
+    report.sourceBound = false;
+    report.failures.push_back("r7_source_result_not_bound");
+    report.ready = false;
+    return result;
+}
+
+
+ManufacturingGeometry prepareManufacturingGeometry(
+    const optimization::AlternatingBalanceOptimizationResult& source,
+    const ManufacturingOptions& options
+)
+{
+    ManufacturingGeometry result = prepareManufacturingGeometry(
+        source.geometry,
+        source.voxelFill,
+        options
+    );
+    ManufacturingReadinessReport& report = result.report;
+
+    report.sourceBound = true;
+    report.geometryEpoch = source.geometryEpoch;
+    report.occupancyHash = occupancyHash(source.voxelFill);
+    report.targetGeneration = source.targets.generation;
+    report.targetsAllReached = source.targets.allReached;
+    report.parameterCount = static_cast<int>(source.parameters.size());
+    report.parameterHash = parameterHash(source.parameters);
+    report.sourceParametersFinite = source.parameters.allFinite();
+
+    std::uint64_t tracedHash = report.occupancyHash;
+    bool hasTraceHash = false;
+    int tracedEpoch = std::numeric_limits<int>::min();
+    if (!source.carvingBlocks.empty())
+    {
+        tracedHash = source.carvingBlocks.back().alphaHash;
+        tracedEpoch = source.carvingBlocks.back().geometryEpoch;
+        hasTraceHash = true;
+    }
+    if (
+        !source.deformationIterations.empty() &&
+        source.deformationIterations.back().geometryEpochAfter >= tracedEpoch
+    )
+    {
+        tracedHash = source.deformationIterations.back().alphaHashAfter;
+        hasTraceHash = true;
+    }
+    report.sourceTraceHashConsistent =
+        hasTraceHash && tracedHash == report.occupancyHash;
+    report.sourceEpochTraceConsistent =
+        hasTraceHash && tracedEpoch == source.geometryEpoch;
+
+    const double modelScale = coordinateScale(result.boundary.vertices);
+    const double massFloor = std::max(
+        std::numeric_limits<double>::min(),
+        options.density * modelScale * modelScale * modelScale *
+            4096.0 * std::numeric_limits<double>::epsilon()
+    );
+    const double momentFloor = std::max(
+        std::numeric_limits<double>::min(),
+        massFloor * modelScale
+    );
+    report.sourceMassRelativeError = std::abs(
+        source.massProperties.mass - report.surfaceMassProperties.mass
+    ) / std::max(
+        {
+            massFloor,
+            std::abs(source.massProperties.mass),
+            std::abs(report.surfaceMassProperties.mass)
+        }
+    );
+    report.sourceFirstMomentRelativeError = (
+        source.massProperties.firstMoment -
+        report.surfaceMassProperties.firstMoment
+    ).norm() / std::max(
+        {
+            momentFloor,
+            source.massProperties.firstMoment.norm(),
+            report.surfaceMassProperties.firstMoment.norm()
+        }
+    );
+    report.sourceCenterOfMassRelativeError = (
+        source.centerOfMass - report.centerOfMass
+    ).norm() / std::max(modelScale, std::numeric_limits<double>::min());
+    report.sourceMassPropertiesConsistent =
+        source.massProperties.isFinite() &&
+        source.centerOfMass.allFinite() &&
+        report.sourceMassRelativeError <= 1.0e-10 &&
+        report.sourceFirstMomentRelativeError <= 1.0e-10 &&
+        report.sourceCenterOfMassRelativeError <= 1.0e-10;
+
+    report.failures.erase(
+        std::remove(
+            report.failures.begin(),
+            report.failures.end(),
+            "r7_source_result_not_bound"
+        ),
+        report.failures.end()
+    );
+    if (source.geometryEpoch < 0)
+    {
+        report.failures.push_back("source_geometry_epoch_invalid");
+    }
+    if (!report.sourceTraceHashConsistent)
+    {
+        report.failures.push_back("source_occupancy_trace_hash_mismatch");
+    }
+    if (!report.sourceEpochTraceConsistent)
+    {
+        report.failures.push_back("source_geometry_epoch_trace_mismatch");
+    }
+    if (!report.sourceParametersFinite)
+    {
+        report.failures.push_back("source_parameters_nonfinite");
+    }
+    if (!report.targetsAllReached)
+    {
+        report.failures.push_back("source_targets_not_all_reached");
+    }
+    if (!report.sourceMassPropertiesConsistent)
+    {
+        report.failures.push_back("source_mass_properties_disagree");
+    }
+
     report.ready = report.failures.empty();
+    if (report.ready)
+    {
+        result.applyIntegritySeal();
+    }
     return result;
 }
 
@@ -2689,9 +3475,30 @@ ManufacturingGeometry prepareManufacturingGeometry(
 std::string ManufacturingReadinessReport::toJson() const
 {
     std::ostringstream output;
+    output.imbue(std::locale::classic());
     output << std::boolalpha << "{\n";
     output << "  \"schema\": \"make-it-stand-r8-readiness-v1\",\n";
+    output << "  \"claim_ceiling\": \"pre-slicer geometry audit only\",\n";
     output << "  \"ready\": " << jsonBool(ready) << ",\n";
+    output << "  \"source_bound\": " << jsonBool(sourceBound) << ",\n";
+    output << "  \"geometry_epoch\": " << geometryEpoch << ",\n";
+    output << "  \"occupancy_hash\": \"" << occupancyHash << "\",\n";
+    output << "  \"target_generation\": " << targetGeneration << ",\n";
+    output << "  \"targets_all_reached\": "
+        << jsonBool(targetsAllReached) << ",\n";
+    output << "  \"source_trace_hash_consistent\": "
+        << jsonBool(sourceTraceHashConsistent) << ",\n";
+    output << "  \"source_epoch_trace_consistent\": "
+        << jsonBool(sourceEpochTraceConsistent) << ",\n";
+    output << "  \"source_parameters_finite\": "
+        << jsonBool(sourceParametersFinite) << ",\n";
+    output << "  \"parameter_count\": " << parameterCount << ",\n";
+    output << "  \"parameter_hash\": \"" << parameterHash << "\",\n";
+    output << "  \"source_mass_properties_consistent\": "
+        << jsonBool(sourceMassPropertiesConsistent) << ",\n";
+    output << "  \"density\": ";
+    appendJsonNumber(output, density);
+    output << ",\n";
     output << "  \"synchronized_inner_geometry\": "
         << jsonBool(synchronizedInnerGeometry) << ",\n";
     output << "  \"deformed_cells_valid\": "
@@ -2702,8 +3509,9 @@ std::string ManufacturingReadinessReport::toJson() const
         << jsonBool(positiveMaterialVolume) << ",\n";
     output << "  \"mass_properties_consistent\": "
         << jsonBool(massPropertiesConsistent) << ",\n";
-    output << "  \"signed_material_volume\": "
-        << std::setprecision(17) << signedMaterialVolume << ",\n";
+    output << "  \"signed_material_volume\": ";
+    appendJsonNumber(output, signedMaterialVolume);
+    output << ",\n";
     output << "  \"mass_relative_error\": ";
     appendJsonNumber(output, massRelativeError);
     output << ",\n";
@@ -2713,9 +3521,27 @@ std::string ManufacturingReadinessReport::toJson() const
     output << "  \"center_of_mass_relative_error\": ";
     appendJsonNumber(output, centerOfMassRelativeError);
     output << ",\n";
-    output << "  \"center_of_mass\": ["
-        << std::setprecision(17) << centerOfMass(0) << ", "
-        << centerOfMass(1) << ", " << centerOfMass(2) << "],\n";
+    output << "  \"source_mass_relative_error\": ";
+    appendJsonNumber(output, sourceMassRelativeError);
+    output << ",\n";
+    output << "  \"source_first_moment_relative_error\": ";
+    appendJsonNumber(output, sourceFirstMomentRelativeError);
+    output << ",\n";
+    output << "  \"source_center_of_mass_relative_error\": ";
+    appendJsonNumber(output, sourceCenterOfMassRelativeError);
+    output << ",\n";
+    output << "  \"surface_mass_properties\": ";
+    appendMassPropertiesJson(output, surfaceMassProperties);
+    output << ",\n";
+    output << "  \"cell_oracle_mass_properties\": ";
+    appendMassPropertiesJson(output, cellOracleMassProperties);
+    output << ",\n";
+    output << "  \"center_of_mass\": ";
+    appendJsonVector3(output, centerOfMass);
+    output << ",\n";
+    output << "  \"cell_oracle_center_of_mass\": ";
+    appendJsonVector3(output, cellOracleCenterOfMass);
+    output << ",\n";
     appendBoundaryJson(output, "outer_boundary", outerBoundary);
     appendBoundaryJson(output, "inner_boundary", innerBoundary);
     appendBoundaryJson(output, "coherent_boundary", coherentBoundary);
@@ -2728,19 +3554,26 @@ std::string ManufacturingReadinessReport::toJson() const
         << jsonBool(wallClearance.intersectionFree) << ",\n";
     output << "    \"meets_requested_thickness\": "
         << jsonBool(wallClearance.meetsRequestedThickness) << ",\n";
-    output << "    \"requested_thickness\": " << std::setprecision(17)
-        << wallClearance.requestedThickness << ",\n";
+    output << "    \"requested_thickness_model_units\": ";
+    appendJsonNumber(output, wallClearance.requestedThickness);
+    output << ",\n";
     output << "    \"measured_minimum_clearance\": ";
     if (std::isfinite(wallClearance.measuredMinimumClearance))
     {
-        output << std::setprecision(17)
-            << wallClearance.measuredMinimumClearance;
+        appendJsonNumber(output, wallClearance.measuredMinimumClearance);
     }
     else
     {
         output << "null";
     }
-    output << "\n  },\n";
+    output << ",\n    \"witness_outer_face\": "
+        << wallClearance.outerFace << ",\n";
+    output << "    \"witness_inner_face\": "
+        << wallClearance.innerFace << ",\n";
+    output << "    \"broad_phase_pairs\": "
+        << wallClearance.broadPhasePairCount << ",\n";
+    output << "    \"narrow_phase_pairs\": "
+        << wallClearance.narrowPhasePairCount << "\n  },\n";
     output << "  \"containment\": {\n";
     output << "    \"applicable\": " << jsonBool(containment.applicable)
         << ",\n";
@@ -2752,6 +3585,9 @@ std::string ManufacturingReadinessReport::toJson() const
         << containment.testedComponentCount << ",\n";
     output << "    \"failed_component\": "
         << containment.failedComponent << ",\n";
+    output << "    \"failed_winding_number\": ";
+    appendJsonNumber(output, containment.failedWindingNumber);
+    output << ",\n";
     output << "    \"nested_cavity_pairs\": "
         << containment.nestedCavityPairCount << ",\n";
     output << "    \"first_containing_component\": "
@@ -2817,10 +3653,14 @@ void exportReadyManufacturingMesh(
     ManufacturingMeshFormat format
 )
 {
-    if (!geometry.report.ready)
+    if (
+        !geometry.report.sourceBound ||
+        !geometry.report.ready ||
+        !geometry.hasValidIntegritySeal()
+    )
     {
         throw std::logic_error(
-            "manufacturing mesh export requires a passing readiness report"
+            "manufacturing mesh export requires an intact sealed R7-bound result"
         );
     }
     std::vector<unsigned char> bytes;
