@@ -318,11 +318,16 @@ R7 focused CTest                                      16/16 passed
 R7 semantic/code audit                 0 blocker, 0 major findings
 Independent Debug complete CTest                      55/55 passed
 RelWithDebInfo viewer configure/build                 passed
-Recursive clean-clone headless/viewer gate           pending final gate
+Recursive clean-clone headless/viewer gate                    passed
 ```
 
 The R7 tests were also repeated with CTest `until-fail:20`; all sixteen
-completed twenty consecutive passes. Repository hygiene, submodule status,
-the historical R0 trace hash, and the committed-tree clean clone are checked
-after the implementation commit below. Even a completely passing repository
-gate cannot promote R7 above the numerical and claim boundaries stated here.
+completed twenty consecutive passes. The implementation is commit `eaf2c99`;
+the conformance documents and README are commit `f638ccd`. A recursive,
+no-hardlink clone of `f638ccd` independently configured and built both the
+headless and viewer presets, passed all 55 headless tests, and ended with an
+empty superproject status. Its libigl submodule was clean at
+`f06fb13014aadff7eb1d7423ac018620441a3657`, and the historical R0 trace kept
+SHA-256 `3f9108649fc329a136a5371597335a99275021b6ddd9a3984198ce2b8e8c1856`.
+Even a completely passing repository gate cannot promote R7 above the
+numerical and claim boundaries stated here.
