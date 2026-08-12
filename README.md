@@ -30,17 +30,17 @@ The current code modularizes and instruments the original carving prototype:
 - `VoidMeshExtractor` extracts the carved cavity boundary;
 - `CarvingSolver` owns the current single-target carving state;
 - `CarvingDiagnostics` records per-step metrics and CSV traces;
+- `MassProperties` keeps signed mass and first moment as one state;
+- `BalanceEnergy` implements the normalized-gravity projection in Eq. (2);
 - `InnerVoidMesh` remains a compatibility facade for the existing viewer;
 - `carving-regression` provides deterministic initial, one-step, full-run and
   empty-candidate headless scenarios.
 
-The R1 regression suite verifies execution, finite diagnostics, count/state
-consistency and CSV round-tripping. It does **not** verify paper-equivalent
-optimization. In particular, the current solver still has known
-non-conformances:
+R2 adds analytic mass/first-moment/energy tests and verifies the Bunny solver's
+incremental state against an independent full recompute after every carving
+step. It still does **not** establish paper-equivalent optimization. Remaining
+known non-conformances include:
 
-- the legacy projected center-of-mass expression contains a repeated square;
-- mass and first moment are not updated as a consistent pair;
 - carving removes a fixed-size batch instead of selecting the best energy
   prefix over the ordered candidates;
 - the old stopping ratio is based on the entire regular grid;
@@ -100,34 +100,38 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-R1 registers four CTest cases:
+R2 registers four analytic physics tests and four carving regressions:
 
 ```text
+mass-surface-analytic
+mass-voxel-analytic
+mass-deletion-exhaustive
+balance-energy-analytic
 carving-initial-state
 carving-one-step
-carving-full-known-baseline
+carving-full-mass-consistency
 carving-no-candidates
 ```
 
-They verify state/count continuity, finite diagnostics, the exact 26-column
-CSV schema and safe termination when a completed candidate search is empty.
-The full scenario deliberately characterizes the known divergent R0 numerical
-state; it does not assert that the balancing objective improves.
+They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
+eight-voxel deletion fixture, oblique/scaled gravity, state/count continuity,
+the exact 39-column CSV schema, per-step incremental/full consistency and safe
+termination on an empty candidate search. Density is fixed to one, so reported
+mass is a signed-volume proxy in model units, not a calibrated value in kg.
 
 To generate the full diagnostic trace manually after building the headless
 target:
 
 ```bash
 ./build/headless/carving-regression \
-  full-known-baseline \
+  full-mass-consistency \
   data/bunny.off \
   build/headless/carving_full.csv
 ```
 
-The resulting R1 trace terminates at the first empty candidate set. The
-pre-R1 21-step trace is retained in
-`tests/baselines/bunny_r0_known_failure.csv` as historical evidence and still
-exposes the center-of-mass drift that R2 must replace with correctness tests.
+The historical pre-R1 trace remains in
+`tests/baselines/bunny_r0_known_failure.csv`; R2 preserves it as defect evidence
+but no longer treats its divergent numbers as an executable target.
 
 ## Repository structure
 
@@ -135,18 +139,20 @@ exposes the center-of-mass drift that R2 must replace with correctness tests.
 include/, src/
   carving/       single-target solver and diagnostics
   extraction/    carved-cavity surface extraction
+  physics/       signed mass properties and projected CoM energy
   voxel/         voxel data, grid construction and exposed faces
-  center_of_mass legacy signed-surface mass helper
+  center_of_mass compatibility wrapper over signed mass properties
   grid_util      alignment, transforms and regular-grid construction
   inner_void_mesh compatibility facade used by the viewer
   make_it_stand  placeholder public API
 tests/
   carving_regression.cpp
+  mass_properties_regression.cpp
   baselines/       frozen known-failure traces; never target outputs
 data/
-  inherited sample meshes; Bunny is used by the R1 regressions
+  inherited sample meshes; Bunny is used by the carving regressions
 docs/
-  conformance, environment, provenance and R0/R1 acceptance records
+  conformance, environment, provenance and staged acceptance records
 ```
 
 `list3d.h` is header-only; there is no `list3d.cpp`.

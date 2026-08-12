@@ -14,3 +14,8 @@ This file is not a target output and must not be interpreted as evidence of
 correct balancing. R1's live full-run regression stops at iteration 17 with
 `no_candidates` while preserving the same known-divergent numerical state for
 R2 to replace with mass/first-moment correctness tests.
+
+R2 has now retired every hard-coded value from the active regression suite.
+The live full-run test compares mass, first moment and derived center of mass
+with an independent full recompute after every step. This CSV remains unchanged
+only as historical defect evidence and retains its original SHA-256.

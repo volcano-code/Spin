@@ -68,3 +68,32 @@ R0; compatibility includes live in this project's own translation units.
 R1 does not modify the legacy projected-energy formula, mass/first-moment
 updates, fixed batch size or best-prefix policy. Passing these control-flow
 tests therefore does not establish paper equivalence.
+
+## R2 mass-property and projected-energy changes
+
+| Files | R2 change | Evidence / status |
+|---|---|---|
+| `include/physics/MassProperties.h`, `src/physics/MassProperties.cpp` | Adds the paired signed state `(m,Q)`, derives CoM only as `Q/m`, evaluates a consistently oriented closed triangle boundary by signed tetrahedra, validates closed edge orientation, and provides exact uniform axis-aligned-box contributions. | Four analytic physics tests pass in the final clean verification. |
+| `include/physics/BalanceEnergy.h`, `src/physics/BalanceEnergy.cpp` | Implements the normalized-gravity perpendicular projection, projected distance, and paper Eq. 2 energy `0.5*d^2`; rejects zero/non-finite gravity and normalizes finite non-zero directions without scale overflow/underflow. | `balance-energy-analytic` passes, including tiny and near-`DBL_MAX` direction scaling. |
+| `include/center_of_mass.h`, `src/center_of_mass.cpp` | Retains the inherited API as a compatibility wrapper over `MassProperties` instead of maintaining a second mass/CoM implementation. | Covered by the signed-surface implementation and final clean suite. |
+| `include/carving/CarvingSolver.h`, `src/carving/CarvingSolver.cpp` | Replaces direct CoM adjustment with exact subtraction of each carved axis-aligned voxel's mass and first moment; requires an initially filled grid and a closed, consistently edge-oriented, positive-mass outer mesh; derives all subsequent CoM states from `(m,Q)`. | Every-step comparison with a separately accumulated long-double voxel-state oracle passes. |
+| `include/carving/CarvingDiagnostics.h`, `src/carving/CarvingDiagnostics.cpp` | Replaces the legacy/repeated-square fields with mass, first moment, recomputed state, normalized-gravity distance/energy, discrepancies, counts and terminal state in a 39-column CSV schema. | Per-column round-trip and invariant checks pass in all four carving regressions. |
+| `tests/mass_properties_regression.cpp` | Adds `mass-surface-analytic`, `mass-voxel-analytic`, `mass-deletion-exhaustive`, and `balance-energy-analytic`. The deletion fixture enumerates all `8!` orders. | `VERIFIED_UNIT` is the maximum R2 claim for mass, first moment and Eq. 2. |
+| `tests/carving_regression.cpp` | Retains initial, one-step and no-candidate contracts, replaces the hard-coded divergent full-run target with `carving-full-mass-consistency`, and checks incremental `(m,Q,c)` against the long-double oracle after every step. | `VERIFIED_REGRESSION` is the R2 CoM claim after this oracle. |
+| `CMakeLists.txt` | Registers four analytic physics tests and four carving regressions as separate CTest cases. | Final clean headless suite: eight of eight tests passed. |
+| `tests/baselines/README.md` | Keeps the R0/R1 divergent CSV immutable as historical defect evidence while removing its values from active assertions. | Historical artifact only; it is not an R2 target. |
+| `docs/r2_acceptance.md` | Records R2 equations, preconditions, test matrix, tolerances, status ceiling and remaining non-conformances. | R2 accepted after headless, repeated, Debug, viewer and clean-state gates. |
+
+R2 uses density one inside `CarvingSolver`, so its reported mass is signed
+volume in model units rather than calibrated kilograms. The surface helper can
+scale a uniform positive density, but neither heterogeneous density nor physical
+units are claimed. The solver precondition is a closed, consistently
+edge-oriented, outward/positive-mass outer surface; R2 does not claim to repair
+open or misoriented input meshes.
+
+R2 does not implement support polygons or safe regions, multiple targets,
+paper best-prefix carving, the paper's too-few-removals stopping rule, wall-
+thickness guarantees, deformation, analytic gradients, or alternating
+optimization. Consequently, its unit/regression evidence is not a claim of
+paper-equivalent carving, objective monotonicity, physical stability,
+printability, or `VERIFIED_PAPER` status.
