@@ -9,14 +9,21 @@ CarvingStepDiagnostics::CarvingStepDiagnostics()
     iteration(0),
     centerOfMassBefore(Eigen::Vector3d::Zero()),
     centerOfMassAfter(Eigen::Vector3d::Zero()),
-    approximateVoxelCenterOfMassAfter(Eigen::Vector3d::Zero()),
-    legacyProjectedErrorBefore(0.0),
-    legacyProjectedErrorAfter(0.0),
-    geometricProjectedErrorBefore(0.0),
-    geometricProjectedErrorAfter(0.0),
+    recomputedCenterOfMassAfter(Eigen::Vector3d::Zero()),
+    firstMomentBefore(Eigen::Vector3d::Zero()),
+    firstMomentAfter(Eigen::Vector3d::Zero()),
+    recomputedFirstMomentAfter(Eigen::Vector3d::Zero()),
+    projectedDistanceBefore(0.0),
+    projectedDistanceAfter(0.0),
+    projectedEnergyBefore(0.0),
+    projectedEnergyAfter(0.0),
     centerOfMassDiscrepancyAfter(0.0),
-    exactInitialMass(0.0),
-    approximateRemainingVoxelMass(0.0),
+    firstMomentDiscrepancyAfter(0.0),
+    initialMass(0.0),
+    remainingMassBefore(0.0),
+    remainingMassAfter(0.0),
+    recomputedRemainingMassAfter(0.0),
+    massDiscrepancyAfter(0.0),
     candidateVoxelCount(0),
     carvedVoxelCountThisStep(0),
     totalCarvedVoxelCount(0),
@@ -67,14 +74,22 @@ void printCarvingStepDiagnostics(
         << " candidates=" << diagnostics.candidateVoxelCount
         << " carved_step=" << diagnostics.carvedVoxelCountThisStep
         << " carved_total=" << diagnostics.totalCarvedVoxelCount
-        << " legacy_error="
-        << diagnostics.legacyProjectedErrorBefore
+        << " distance="
+        << diagnostics.projectedDistanceBefore
         << "->"
-        << diagnostics.legacyProjectedErrorAfter
-        << " geometric_error="
-        << diagnostics.geometricProjectedErrorBefore
+        << diagnostics.projectedDistanceAfter
+        << " energy="
+        << diagnostics.projectedEnergyBefore
         << "->"
-        << diagnostics.geometricProjectedErrorAfter
+        << diagnostics.projectedEnergyAfter
+        << " mass="
+        << diagnostics.remainingMassBefore
+        << "->"
+        << diagnostics.remainingMassAfter
+        << " mass_discrepancy="
+        << diagnostics.massDiscrepancyAfter
+        << " first_moment_discrepancy="
+        << diagnostics.firstMomentDiscrepancyAfter
         << " com_discrepancy="
         << diagnostics.centerOfMassDiscrepancyAfter
         << " carved_grid_ratio="
@@ -95,11 +110,20 @@ void writeCarvingDiagnosticsCsvHeader(
         << "iteration,"
         << "com_before_x,com_before_y,com_before_z,"
         << "com_after_x,com_after_y,com_after_z,"
-        << "voxel_com_after_x,voxel_com_after_y,voxel_com_after_z,"
-        << "legacy_error_before,legacy_error_after,"
-        << "geometric_error_before,geometric_error_after,"
-        << "com_discrepancy_after,"
-        << "exact_initial_mass,approximate_remaining_voxel_mass,"
+        << "recomputed_com_after_x,recomputed_com_after_y,"
+        << "recomputed_com_after_z,"
+        << "first_moment_before_x,first_moment_before_y,"
+        << "first_moment_before_z,"
+        << "first_moment_after_x,first_moment_after_y,"
+        << "first_moment_after_z,"
+        << "recomputed_first_moment_after_x,"
+        << "recomputed_first_moment_after_y,"
+        << "recomputed_first_moment_after_z,"
+        << "projected_distance_before,projected_distance_after,"
+        << "projected_energy_before,projected_energy_after,"
+        << "com_discrepancy_after,first_moment_discrepancy_after,"
+        << "initial_mass,remaining_mass_before,remaining_mass_after,"
+        << "recomputed_remaining_mass_after,mass_discrepancy_after,"
         << "candidate_voxel_count,carved_voxel_count_step,"
         << "total_carved_voxel_count,"
         << "initial_inside_voxel_count,initial_carveable_voxel_count,"
@@ -123,16 +147,29 @@ void writeCarvingDiagnosticsCsvRow(
         << diagnostics.centerOfMassAfter(0) << ','
         << diagnostics.centerOfMassAfter(1) << ','
         << diagnostics.centerOfMassAfter(2) << ','
-        << diagnostics.approximateVoxelCenterOfMassAfter(0) << ','
-        << diagnostics.approximateVoxelCenterOfMassAfter(1) << ','
-        << diagnostics.approximateVoxelCenterOfMassAfter(2) << ','
-        << diagnostics.legacyProjectedErrorBefore << ','
-        << diagnostics.legacyProjectedErrorAfter << ','
-        << diagnostics.geometricProjectedErrorBefore << ','
-        << diagnostics.geometricProjectedErrorAfter << ','
+        << diagnostics.recomputedCenterOfMassAfter(0) << ','
+        << diagnostics.recomputedCenterOfMassAfter(1) << ','
+        << diagnostics.recomputedCenterOfMassAfter(2) << ','
+        << diagnostics.firstMomentBefore(0) << ','
+        << diagnostics.firstMomentBefore(1) << ','
+        << diagnostics.firstMomentBefore(2) << ','
+        << diagnostics.firstMomentAfter(0) << ','
+        << diagnostics.firstMomentAfter(1) << ','
+        << diagnostics.firstMomentAfter(2) << ','
+        << diagnostics.recomputedFirstMomentAfter(0) << ','
+        << diagnostics.recomputedFirstMomentAfter(1) << ','
+        << diagnostics.recomputedFirstMomentAfter(2) << ','
+        << diagnostics.projectedDistanceBefore << ','
+        << diagnostics.projectedDistanceAfter << ','
+        << diagnostics.projectedEnergyBefore << ','
+        << diagnostics.projectedEnergyAfter << ','
         << diagnostics.centerOfMassDiscrepancyAfter << ','
-        << diagnostics.exactInitialMass << ','
-        << diagnostics.approximateRemainingVoxelMass << ','
+        << diagnostics.firstMomentDiscrepancyAfter << ','
+        << diagnostics.initialMass << ','
+        << diagnostics.remainingMassBefore << ','
+        << diagnostics.remainingMassAfter << ','
+        << diagnostics.recomputedRemainingMassAfter << ','
+        << diagnostics.massDiscrepancyAfter << ','
         << diagnostics.candidateVoxelCount << ','
         << diagnostics.carvedVoxelCountThisStep << ','
         << diagnostics.totalCarvedVoxelCount << ','

@@ -12,7 +12,7 @@ InnerVoidMesh::InnerVoidMesh(
     const Eigen::Vector3d& balancePoint
 )
     :
-    voxelGrid(),
+    voxelGrid(V, F),
     carvingSolver(
         voxelGrid,
         V,
@@ -23,12 +23,6 @@ InnerVoidMesh::InnerVoidMesh(
         balancePoint
     )
 {
-    // Preserve the original initialization order: compute mass/COM first,
-    // then construct the volumetric representation.
-    voxelGrid.build(
-        V,
-        F
-    );
 }
 
 

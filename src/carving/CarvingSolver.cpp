@@ -1,8 +1,8 @@
 #include "carving/CarvingSolver.h"
 
-#include "center_of_mass.h"
+#include "physics/BalanceEnergy.h"
+#include "physics/MassProperties.h"
 #include "voxel/VoxelGrid.h"
-#include "voxel/VoxelSurface.h"
 
 #include <algorithm>
 #include <cassert>
@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -46,50 +47,6 @@ void flipFaces(Eigen::MatrixXi& faces)
 }
 
 
-/**
- * Preserve the incremental center-of-mass update used by the original
- * implementation. Phase 1.6 measures its discrepancy against a separate
- * voxel-based approximation, but does not yet change the update itself.
- */
-void updateCenterOfMass(
-    const Voxel& insertedVoxel,
-    const Voxel& neighbor,
-    const Eigen::MatrixXd& vertices,
-    double mass,
-    Eigen::Vector3d& globalCenterOfMass
-)
-{
-    Eigen::MatrixXi commonSideFaces(0, 3);
-
-    voxel_surface::appendCommonSide(
-        insertedVoxel,
-        neighbor,
-        vertices,
-        commonSideFaces,
-        true
-    );
-
-    Eigen::Vector3d localCenterOfMass =
-        Eigen::Vector3d::Zero();
-
-    center_of_mass(
-        vertices,
-        commonSideFaces,
-        mass,
-        localCenterOfMass
-    );
-
-    if (voxel_surface::isVoid(neighbor))
-    {
-        globalCenterOfMass -= localCenterOfMass;
-    }
-    else
-    {
-        globalCenterOfMass += localCenterOfMass;
-    }
-}
-
-
 struct CompareVoxelDistance
 {
     bool operator()(
@@ -104,10 +61,10 @@ struct CompareVoxelDistance
 } // namespace
 
 
-CarvingSolver::ApproximateVoxelMassProperties::
-ApproximateVoxelMassProperties()
+CarvingSolver::RecomputedCarvingState::
+RecomputedCarvingState()
     :
-    mass(0.0),
+    massProperties(),
     centerOfMass(Eigen::Vector3d::Zero()),
     filledInsideVoxelCount(0)
 {
@@ -125,12 +82,13 @@ CarvingSolver::CarvingSolver(
 )
     :
     voxelGrid_(voxelGrid),
-    planeV_(planeV),
-    planeF_(planeF),
-    gravity_(gravity),
+    gravity_(normalizedGravityDirection(gravity)),
     targetCOM_(targetCenterOfMass),
     currCOM_(Eigen::Vector3d::Zero()),
-    mass_(0.0),
+    initialMassProperties_(
+        computeSurfaceMassProperties(V, F)
+    ),
+    currentMassProperties_(initialMassProperties_),
     carvedVoxelCount_(0),
     iterations_(0),
     candidateSearchPerformed_(false),
@@ -141,113 +99,92 @@ CarvingSolver::CarvingSolver(
     initialCarveableVoxelCount_(0),
     diagnosticsHistory_()
 {
-    mass_ = center_of_mass(
-        V,
-        F,
-        currCOM_
-    );
+    static_cast<void>(planeV);
+    static_cast<void>(planeF);
+
+    if (!isClosedConsistentlyOrientedTriangleMesh(F))
+    {
+        throw std::invalid_argument(
+            "outer mesh must be a closed, consistently oriented triangle mesh"
+        );
+    }
+
+    if (
+        !initialMassProperties_.isFinite() ||
+        initialMassProperties_.mass <= 0.0
+    )
+    {
+        throw std::invalid_argument(
+            "outer mesh must be closed, outward-oriented and have positive mass"
+        );
+    }
+
+    if (!targetCOM_.allFinite())
+    {
+        throw std::invalid_argument(
+            "target center of mass must be finite"
+        );
+    }
+
+    const Eigen::Vector3i& dimensions = voxelGrid_.dimensions();
+    const Eigen::Vector3d& voxelSize = voxelGrid_.voxelSize();
+
+    if (
+        (dimensions.array() < 3).any() ||
+        !voxelSize.allFinite() ||
+        (voxelSize.array() <= 0.0).any()
+    )
+    {
+        throw std::invalid_argument(
+            "carving requires a built voxel grid with positive dimensions"
+        );
+    }
+
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                if (!voxelGrid_(x, y, z).isFilled)
+                {
+                    throw std::invalid_argument(
+                        "carving solver requires an initially filled voxel grid"
+                    );
+                }
+            }
+        }
+    }
+
+    refreshCenterOfMass();
+
+    ensureDiagnosticsInitialized();
 }
 
 
 double CarvingSolver::getCoMDistance() const
 {
-    Eigen::MatrixXd centerOfMassPoints(2, 3);
-
-    centerOfMassPoints <<
-        targetCOM_.transpose(),
-        currCOM_.transpose();
-
-    Eigen::VectorXd planeDistances;
-    Eigen::VectorXd closestFaces;
-    Eigen::MatrixXd closestPoints;
-    Eigen::MatrixXd closestNormals;
-
-    igl::signed_distance(
-        centerOfMassPoints,
-        planeV_,
-        planeF_,
-        igl::SIGNED_DISTANCE_TYPE_FAST_WINDING_NUMBER,
-        std::numeric_limits<double>::min(),
-        std::numeric_limits<double>::max(),
-        planeDistances,
-        closestFaces,
-        closestPoints,
-        closestNormals
-    );
-
-    // Preserve the original numerical formula during diagnostic collection.
-    const double centerDistanceSquared =
-        (
-            centerOfMassPoints.row(0) -
-            centerOfMassPoints.row(1)
-        ).squaredNorm();
-
-    const double centerHeightDifference =
-        std::abs(
-            planeDistances(1) -
-            planeDistances(0)
-        );
-
-    const double firstTerm =
-        std::pow(centerDistanceSquared, 2.0);
-
-    const double secondTerm =
-        std::pow(centerHeightDifference, 2.0);
-
-    return std::sqrt(
-        std::max(firstTerm, secondTerm) -
-        std::min(firstTerm, secondTerm)
+    return projectedCenterOfMassDistance(
+        currCOM_,
+        targetCOM_,
+        gravity_
     );
 }
 
 
-double CarvingSolver::projectedDistanceOnGround(
-    const Eigen::Vector3d& point
-) const
+double CarvingSolver::getCoMEnergy() const
 {
-    if (planeF_.rows() == 0 || planeV_.rows() == 0)
-    {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    const int firstIndex = planeF_(0, 0);
-    const int secondIndex = planeF_(0, 1);
-    const int thirdIndex = planeF_(0, 2);
-
-    const Eigen::Vector3d first =
-        planeV_.row(firstIndex).transpose();
-
-    const Eigen::Vector3d second =
-        planeV_.row(secondIndex).transpose();
-
-    const Eigen::Vector3d third =
-        planeV_.row(thirdIndex).transpose();
-
-    Eigen::Vector3d normal =
-        (second - first).cross(third - first);
-
-    const double normalLength = normal.norm();
-
-    if (normalLength <= std::numeric_limits<double>::epsilon())
-    {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    normal /= normalLength;
-
-    const Eigen::Vector3d difference =
-        point - targetCOM_;
-
-    const Eigen::Vector3d tangentialDifference =
-        difference - difference.dot(normal) * normal;
-
-    return tangentialDifference.norm();
+    return projectedCenterOfMassEnergy(
+        currCOM_,
+        targetCOM_,
+        gravity_
+    );
 }
 
 
 double CarvingSolver::getGeometricProjectedDistance() const
 {
-    return projectedDistanceOnGround(currCOM_);
+    return getCoMDistance();
 }
 
 
@@ -358,22 +295,17 @@ void CarvingSolver::ensureDiagnosticsInitialized()
 }
 
 
-CarvingSolver::ApproximateVoxelMassProperties
-CarvingSolver::computeApproximateVoxelMassProperties() const
+CarvingSolver::RecomputedCarvingState
+CarvingSolver::recomputeCarvingState() const
 {
-    ApproximateVoxelMassProperties properties;
+    RecomputedCarvingState state;
+    state.massProperties = initialMassProperties_;
 
     const Eigen::Vector3i& dimensions =
         voxelGrid_.dimensions();
 
     const Eigen::Vector3d& voxelSize =
         voxelGrid_.voxelSize();
-
-    const double voxelVolume =
-        voxelSize(0) * voxelSize(1) * voxelSize(2);
-
-    Eigen::Vector3d weightedCenter =
-        Eigen::Vector3d::Zero();
 
     for (int x = 0; x < dimensions(0); ++x)
     {
@@ -384,35 +316,94 @@ CarvingSolver::computeApproximateVoxelMassProperties() const
                 const Voxel& voxel =
                     voxelGrid_(x, y, z);
 
-                const bool isInsideOriginalMesh =
-                    voxel.distanceToMesh < 0.0;
-
                 if (
-                    isInsideOriginalMesh &&
+                    voxel.distanceToMesh < 0.0 &&
                     voxel.isFilled
                 )
                 {
-                    ++properties.filledInsideVoxelCount;
-                    weightedCenter += voxel.center;
+                    ++state.filledInsideVoxelCount;
+                }
+
+                if (
+                    voxel.isInner &&
+                    !voxel.isFilled
+                )
+                {
+                    state.massProperties -=
+                        computeAxisAlignedBoxMassProperties(
+                            voxel.center,
+                            voxelSize
+                        );
                 }
             }
         }
     }
 
-    properties.mass =
-        properties.filledInsideVoxelCount *
-        voxelVolume;
-
-    if (properties.filledInsideVoxelCount > 0)
+    if (
+        state.massProperties.mass <= 0.0 ||
+        !state.massProperties.tryCenterOfMass(
+            state.centerOfMass,
+            0.0
+        )
+    )
     {
-        properties.centerOfMass =
-            weightedCenter /
-            static_cast<double>(
-                properties.filledInsideVoxelCount
-            );
+        throw std::runtime_error(
+            "recomputed carving state has zero/non-finite remaining mass"
+        );
     }
 
-    return properties;
+    return state;
+}
+
+
+void CarvingSolver::subtractVoxelMassProperties(
+    const Voxel& voxel
+)
+{
+    const MassProperties contribution =
+        computeAxisAlignedBoxMassProperties(
+            voxel.center,
+            voxelGrid_.voxelSize()
+        );
+
+    const MassProperties proposed =
+        currentMassProperties_ - contribution;
+
+    Eigen::Vector3d proposedCenterOfMass =
+        Eigen::Vector3d::Zero();
+
+    if (
+        proposed.mass <= 0.0 ||
+        !proposed.tryCenterOfMass(
+            proposedCenterOfMass,
+            0.0
+        )
+    )
+    {
+        throw std::runtime_error(
+            "carving would produce non-positive/non-finite remaining mass"
+        );
+    }
+
+    currentMassProperties_ = proposed;
+    currCOM_ = proposedCenterOfMass;
+}
+
+
+void CarvingSolver::refreshCenterOfMass()
+{
+    if (
+        currentMassProperties_.mass <= 0.0 ||
+        !currentMassProperties_.tryCenterOfMass(
+            currCOM_,
+            0.0
+        )
+    )
+    {
+        throw std::runtime_error(
+            "carving produced zero/non-finite remaining mass"
+        );
+    }
 }
 
 
@@ -427,9 +418,20 @@ void CarvingSolver::carveStep(
     CarvingStepDiagnostics diagnostics;
 
     diagnostics.centerOfMassBefore = currCOM_;
-    diagnostics.legacyProjectedErrorBefore = getCoMDistance();
-    diagnostics.geometricProjectedErrorBefore =
-        getGeometricProjectedDistance();
+    diagnostics.firstMomentBefore =
+        currentMassProperties_.firstMoment;
+
+    diagnostics.projectedDistanceBefore =
+        getCoMDistance();
+
+    diagnostics.projectedEnergyBefore =
+        getCoMEnergy();
+
+    diagnostics.initialMass =
+        initialMassProperties_.mass;
+
+    diagnostics.remainingMassBefore =
+        currentMassProperties_.mass;
 
     ++iterations_;
     diagnostics.iteration = iterations_;
@@ -439,10 +441,6 @@ void CarvingSolver::carveStep(
 
     const Eigen::Vector3d& voxelSize =
         voxelGrid_.voxelSize();
-
-    const Eigen::MatrixXd& corners =
-        voxelGrid_.corners();
-
 
     Eigen::MatrixXd cuttingPlaneTriangleVertices(3, 3);
     Eigen::MatrixXi cuttingPlaneTriangleFaces(1, 3);
@@ -661,84 +659,54 @@ void CarvingSolver::carveStep(
         Voxel* currentVoxel =
             candidateVoxels[candidateIndex].first;
 
-        const int x = currentVoxel->xIdx;
-        const int y = currentVoxel->yIdx;
-        const int z = currentVoxel->zIdx;
+        subtractVoxelMassProperties(*currentVoxel);
 
         currentVoxel->isFilled = false;
         ++carvedVoxelCount_;
-
-        updateCenterOfMass(
-            *currentVoxel,
-            voxelGrid_(x + 1, y, z),
-            corners,
-            mass_,
-            currCOM_
-        );
-
-        updateCenterOfMass(
-            *currentVoxel,
-            voxelGrid_(x - 1, y, z),
-            corners,
-            mass_,
-            currCOM_
-        );
-
-        updateCenterOfMass(
-            *currentVoxel,
-            voxelGrid_(x, y + 1, z),
-            corners,
-            mass_,
-            currCOM_
-        );
-
-        updateCenterOfMass(
-            *currentVoxel,
-            voxelGrid_(x, y - 1, z),
-            corners,
-            mass_,
-            currCOM_
-        );
-
-        updateCenterOfMass(
-            *currentVoxel,
-            voxelGrid_(x, y, z + 1),
-            corners,
-            mass_,
-            currCOM_
-        );
-
-        updateCenterOfMass(
-            *currentVoxel,
-            voxelGrid_(x, y, z - 1),
-            corners,
-            mass_,
-            currCOM_
-        );
     }
 
-    const ApproximateVoxelMassProperties voxelProperties =
-        computeApproximateVoxelMassProperties();
+    const RecomputedCarvingState recomputedState =
+        recomputeCarvingState();
 
     diagnostics.centerOfMassAfter = currCOM_;
-    diagnostics.approximateVoxelCenterOfMassAfter =
-        voxelProperties.centerOfMass;
+    diagnostics.recomputedCenterOfMassAfter =
+        recomputedState.centerOfMass;
 
-    diagnostics.legacyProjectedErrorAfter =
+    diagnostics.firstMomentAfter =
+        currentMassProperties_.firstMoment;
+
+    diagnostics.recomputedFirstMomentAfter =
+        recomputedState.massProperties.firstMoment;
+
+    diagnostics.projectedDistanceAfter =
         getCoMDistance();
 
-    diagnostics.geometricProjectedErrorAfter =
-        getGeometricProjectedDistance();
+    diagnostics.projectedEnergyAfter =
+        getCoMEnergy();
 
     diagnostics.centerOfMassDiscrepancyAfter =
         (
             currCOM_ -
-            voxelProperties.centerOfMass
+            recomputedState.centerOfMass
         ).norm();
 
-    diagnostics.exactInitialMass = mass_;
-    diagnostics.approximateRemainingVoxelMass =
-        voxelProperties.mass;
+    diagnostics.firstMomentDiscrepancyAfter =
+        (
+            currentMassProperties_.firstMoment -
+            recomputedState.massProperties.firstMoment
+        ).norm();
+
+    diagnostics.remainingMassAfter =
+        currentMassProperties_.mass;
+
+    diagnostics.recomputedRemainingMassAfter =
+        recomputedState.massProperties.mass;
+
+    diagnostics.massDiscrepancyAfter =
+        std::abs(
+            currentMassProperties_.mass -
+            recomputedState.massProperties.mass
+        );
 
     diagnostics.carvedVoxelCountThisStep =
         carvedThisStep;
@@ -753,7 +721,7 @@ void CarvingSolver::carveStep(
         initialCarveableVoxelCount_;
 
     diagnostics.remainingInsideVoxelCount =
-        voxelProperties.filledInsideVoxelCount;
+        recomputedState.filledInsideVoxelCount;
 
     diagnostics.carvedGridRatio =
         carvedGridRatio();
@@ -807,9 +775,21 @@ const Eigen::Vector3d& CarvingSolver::targetCenterOfMass() const
 }
 
 
+const MassProperties& CarvingSolver::initialMassProperties() const
+{
+    return initialMassProperties_;
+}
+
+
+const MassProperties& CarvingSolver::currentMassProperties() const
+{
+    return currentMassProperties_;
+}
+
+
 double CarvingSolver::objectMass() const
 {
-    return mass_;
+    return currentMassProperties_.mass;
 }
 
 

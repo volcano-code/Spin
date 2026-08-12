@@ -2,12 +2,15 @@
 
 #include "carving/CarvingSolver.h"
 #include "grid_util.h"
+#include "physics/BalanceEnergy.h"
+#include "physics/MassProperties.h"
 #include "voxel/VoxelGrid.h"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
 #include <algorithm>
+#include <array>
 #include <cerrno>
 #include <cmath>
 #include <cstdlib>
@@ -28,7 +31,7 @@ enum class RegressionScenario
 {
     InitialState,
     OneStep,
-    FullKnownBaseline,
+    FullMassConsistency,
     NoCandidates
 };
 
@@ -37,27 +40,62 @@ const char* const CSV_HEADER =
     "iteration,"
     "com_before_x,com_before_y,com_before_z,"
     "com_after_x,com_after_y,com_after_z,"
-    "voxel_com_after_x,voxel_com_after_y,voxel_com_after_z,"
-    "legacy_error_before,legacy_error_after,"
-    "geometric_error_before,geometric_error_after,"
-    "com_discrepancy_after,"
-    "exact_initial_mass,approximate_remaining_voxel_mass,"
+    "recomputed_com_after_x,recomputed_com_after_y,"
+    "recomputed_com_after_z,"
+    "first_moment_before_x,first_moment_before_y,"
+    "first_moment_before_z,"
+    "first_moment_after_x,first_moment_after_y,"
+    "first_moment_after_z,"
+    "recomputed_first_moment_after_x,"
+    "recomputed_first_moment_after_y,"
+    "recomputed_first_moment_after_z,"
+    "projected_distance_before,projected_distance_after,"
+    "projected_energy_before,projected_energy_after,"
+    "com_discrepancy_after,first_moment_discrepancy_after,"
+    "initial_mass,remaining_mass_before,remaining_mass_after,"
+    "recomputed_remaining_mass_after,mass_discrepancy_after,"
     "candidate_voxel_count,carved_voxel_count_step,"
     "total_carved_voxel_count,"
     "initial_inside_voxel_count,initial_carveable_voxel_count,"
     "remaining_inside_voxel_count,"
     "carved_grid_ratio,carved_carveable_ratio,stop_reason";
 
-constexpr std::size_t CSV_COLUMN_COUNT = 26;
-constexpr double CONTINUITY_TOLERANCE = 1e-12;
-constexpr double BASELINE_TOLERANCE = 1e-6;
+constexpr std::size_t CSV_COLUMN_COUNT = 39;
+constexpr int MAXIMUM_TEST_STEPS = 100;
+
+constexpr double MASS_MOMENT_ABSOLUTE_TOLERANCE = 1e-12;
+constexpr double MASS_MOMENT_RELATIVE_TOLERANCE = 1e-10;
+constexpr double COM_ABSOLUTE_TOLERANCE = 1e-10;
+constexpr double COM_RELATIVE_TOLERANCE = 1e-10;
+constexpr double ENERGY_ABSOLUTE_TOLERANCE = 1e-12;
+constexpr double ENERGY_RELATIVE_TOLERANCE = 1e-10;
 
 
-struct VoxelStateSnapshot
+struct LongDoubleMassProperties
 {
+    long double mass;
+    std::array<long double, 3> firstMoment;
     int filledInsideVoxelCount;
-    double mass;
-    Eigen::Vector3d centerOfMass;
+    std::vector<unsigned char> filledFlags;
+
+    LongDoubleMassProperties()
+        :
+        mass(0.0L),
+        firstMoment{{0.0L, 0.0L, 0.0L}},
+        filledInsideVoxelCount(0),
+        filledFlags()
+    {
+    }
+};
+
+
+struct FixtureGeometry
+{
+    Eigen::MatrixXd vertices;
+    Eigen::MatrixXi faces;
+    Eigen::MatrixXd planeVertices;
+    Eigen::MatrixXi planeFaces;
+    Eigen::Vector3d targetCenterOfMass;
 };
 
 
@@ -78,9 +116,9 @@ bool parseScenario(
         return true;
     }
 
-    if (value == "full-known-baseline")
+    if (value == "full-mass-consistency")
     {
-        scenario = RegressionScenario::FullKnownBaseline;
+        scenario = RegressionScenario::FullMassConsistency;
         return true;
     }
 
@@ -106,35 +144,14 @@ const char* scenarioName(
         case RegressionScenario::OneStep:
             return "one-step";
 
-        case RegressionScenario::FullKnownBaseline:
-            return "full-known-baseline";
+        case RegressionScenario::FullMassConsistency:
+            return "full-mass-consistency";
 
         case RegressionScenario::NoCandidates:
             return "no-candidates";
     }
 
     return "unknown";
-}
-
-
-bool isFiniteVector(
-    const Eigen::Vector3d& value
-)
-{
-    return
-        std::isfinite(value(0)) &&
-        std::isfinite(value(1)) &&
-        std::isfinite(value(2));
-}
-
-
-bool approximatelyEqual(
-    double first,
-    double second,
-    double tolerance
-)
-{
-    return std::abs(first - second) <= tolerance;
 }
 
 
@@ -151,6 +168,123 @@ int fail(
 }
 
 
+bool isFiniteVector(
+    const Eigen::Vector3d& value
+)
+{
+    return value.allFinite();
+}
+
+
+bool approximatelyEqual(
+    double actual,
+    long double expected,
+    double absoluteTolerance,
+    double relativeTolerance
+)
+{
+    if (!std::isfinite(actual) || !std::isfinite(expected))
+    {
+        return false;
+    }
+
+    const long double difference =
+        std::abs(
+            static_cast<long double>(actual) -
+            expected
+        );
+
+    const long double scale =
+        std::max(
+            std::abs(static_cast<long double>(actual)),
+            std::abs(expected)
+        );
+
+    return difference <=
+        static_cast<long double>(absoluteTolerance) +
+        static_cast<long double>(relativeTolerance) * scale;
+}
+
+
+bool massMomentEqual(
+    double actual,
+    long double expected
+)
+{
+    return approximatelyEqual(
+        actual,
+        expected,
+        MASS_MOMENT_ABSOLUTE_TOLERANCE,
+        MASS_MOMENT_RELATIVE_TOLERANCE
+    );
+}
+
+
+bool centerEqual(
+    double actual,
+    long double expected
+)
+{
+    return approximatelyEqual(
+        actual,
+        expected,
+        COM_ABSOLUTE_TOLERANCE,
+        COM_RELATIVE_TOLERANCE
+    );
+}
+
+
+bool centerEqual(
+    const Eigen::Vector3d& actual,
+    const std::array<long double, 3>& expected
+)
+{
+    return
+        centerEqual(actual(0), expected[0]) &&
+        centerEqual(actual(1), expected[1]) &&
+        centerEqual(actual(2), expected[2]);
+}
+
+
+bool vectorMassMomentEqual(
+    const Eigen::Vector3d& actual,
+    const std::array<long double, 3>& expected
+)
+{
+    return
+        massMomentEqual(actual(0), expected[0]) &&
+        massMomentEqual(actual(1), expected[1]) &&
+        massMomentEqual(actual(2), expected[2]);
+}
+
+
+bool energyEqual(
+    double actual,
+    long double expected
+)
+{
+    return approximatelyEqual(
+        actual,
+        expected,
+        ENERGY_ABSOLUTE_TOLERANCE,
+        ENERGY_RELATIVE_TOLERANCE
+    );
+}
+
+
+std::array<long double, 3> oracleCenterOfMass(
+    const LongDoubleMassProperties& state
+)
+{
+    return
+    {{
+        state.firstMoment[0] / state.mass,
+        state.firstMoment[1] / state.mass,
+        state.firstMoment[2] / state.mass
+    }};
+}
+
+
 Eigen::RowVector3d createGroundPlane(
     const Eigen::MatrixXd& vertices,
     Eigen::MatrixXd& planeVertices,
@@ -158,10 +292,7 @@ Eigen::RowVector3d createGroundPlane(
 )
 {
     Eigen::AlignedBox3d boundingBox;
-    createAlignedBox(
-        vertices,
-        boundingBox
-    );
+    createAlignedBox(vertices, boundingBox);
 
     planeVertices.resize(4, 3);
 
@@ -189,6 +320,63 @@ Eigen::RowVector3d createGroundPlane(
 }
 
 
+bool prepareGeometry(
+    const std::string& meshPath,
+    FixtureGeometry& geometry,
+    std::string& error
+)
+{
+    Eigen::MatrixXd inputVertices;
+
+    if (
+        !igl::read_triangle_mesh(
+            meshPath,
+            inputVertices,
+            geometry.faces
+        )
+    )
+    {
+        error = "could not load mesh: " + meshPath;
+        return false;
+    }
+
+    if (
+        inputVertices.rows() == 0 ||
+        geometry.faces.rows() == 0
+    )
+    {
+        error = "loaded mesh is empty";
+        return false;
+    }
+
+    alignToAxis(
+        inputVertices,
+        geometry.vertices
+    );
+
+    const Eigen::RowVector3d planeCenter =
+        createGroundPlane(
+            geometry.vertices,
+            geometry.planeVertices,
+            geometry.planeFaces
+        );
+
+    Eigen::AlignedBox3d boundingBox;
+    createAlignedBox(
+        geometry.vertices,
+        boundingBox
+    );
+
+    geometry.targetCenterOfMass =
+        planeCenter.transpose();
+
+    geometry.targetCenterOfMass(0) +=
+        0.15 * boundingBox.sizes()(0);
+
+    return true;
+}
+
+
 void removeAllCarveableVoxels(
     VoxelGrid& voxelGrid
 )
@@ -209,20 +397,90 @@ void removeAllCarveableVoxels(
 }
 
 
-VoxelStateSnapshot captureVoxelState(
+int countInsideVoxels(
     const VoxelGrid& voxelGrid
 )
 {
-    VoxelStateSnapshot snapshot;
-    snapshot.filledInsideVoxelCount = 0;
-    snapshot.mass = 0.0;
-    snapshot.centerOfMass = Eigen::Vector3d::Zero();
+    int count = 0;
+    const Eigen::Vector3i& dimensions =
+        voxelGrid.dimensions();
+
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                if (voxelGrid(x, y, z).distanceToMesh < 0.0)
+                {
+                    ++count;
+                }
+            }
+        }
+    }
+
+    return count;
+}
+
+
+int countCarveableVoxels(
+    const VoxelGrid& voxelGrid
+)
+{
+    int count = 0;
+    const Eigen::Vector3i& dimensions =
+        voxelGrid.dimensions();
+
+    for (int x = 0; x < dimensions(0); ++x)
+    {
+        for (int y = 0; y < dimensions(1); ++y)
+        {
+            for (int z = 0; z < dimensions(2); ++z)
+            {
+                if (voxelGrid(x, y, z).isInner)
+                {
+                    ++count;
+                }
+            }
+        }
+    }
+
+    return count;
+}
+
+
+LongDoubleMassProperties captureOracle(
+    const MassProperties& initialOuter,
+    const VoxelGrid& voxelGrid
+)
+{
+    LongDoubleMassProperties result;
+
+    result.mass =
+        static_cast<long double>(initialOuter.mass);
+
+    for (int component = 0; component < 3; ++component)
+    {
+        result.firstMoment[component] =
+            static_cast<long double>(
+                initialOuter.firstMoment(component)
+            );
+    }
 
     const Eigen::Vector3i& dimensions =
         voxelGrid.dimensions();
 
-    Eigen::Vector3d weightedCenter =
-        Eigen::Vector3d::Zero();
+    const Eigen::Vector3d& voxelSize =
+        voxelGrid.voxelSize();
+
+    const long double voxelVolume =
+        static_cast<long double>(voxelSize(0)) *
+        static_cast<long double>(voxelSize(1)) *
+        static_cast<long double>(voxelSize(2));
+
+    result.filledFlags.reserve(
+        static_cast<std::size_t>(dimensions.prod())
+    );
 
     for (int x = 0; x < dimensions(0); ++x)
     {
@@ -233,35 +491,366 @@ VoxelStateSnapshot captureVoxelState(
                 const Voxel& voxel =
                     voxelGrid(x, y, z);
 
+                result.filledFlags.push_back(
+                    voxel.isFilled ? 1U : 0U
+                );
+
                 if (
                     voxel.distanceToMesh < 0.0 &&
                     voxel.isFilled
                 )
                 {
-                    ++snapshot.filledInsideVoxelCount;
-                    weightedCenter += voxel.center;
+                    ++result.filledInsideVoxelCount;
+                }
+
+                /*
+                 * Only carveable inner voxels can be removed by this solver.
+                 * The continuous outer surface remains the immutable positive
+                 * contribution; each removed inner voxel is subtracted.
+                 */
+                if (
+                    voxel.isInner &&
+                    !voxel.isFilled
+                )
+                {
+                    result.mass -= voxelVolume;
+
+                    for (int component = 0; component < 3; ++component)
+                    {
+                        result.firstMoment[component] -=
+                            voxelVolume *
+                            static_cast<long double>(
+                                voxel.center(component)
+                            );
+                    }
                 }
             }
         }
     }
 
-    const Eigen::Vector3d& voxelSize =
-        voxelGrid.voxelSize();
+    return result;
+}
 
-    snapshot.mass =
-        snapshot.filledInsideVoxelCount *
-        voxelSize(0) * voxelSize(1) * voxelSize(2);
 
-    if (snapshot.filledInsideVoxelCount > 0)
+bool validateMassProperties(
+    const MassProperties& actual,
+    const Eigen::Vector3d& actualCenterOfMass,
+    const LongDoubleMassProperties& oracle,
+    const std::string& label,
+    std::string& error
+)
+{
+    if (
+        !actual.isFinite() ||
+        actual.mass <= 0.0 ||
+        !isFiniteVector(actualCenterOfMass) ||
+        oracle.mass <= 0.0L
+    )
     {
-        snapshot.centerOfMass =
-            weightedCenter /
-            static_cast<double>(
-                snapshot.filledInsideVoxelCount
-            );
+        error = label + " contains non-finite/non-positive mass properties";
+        return false;
     }
 
-    return snapshot;
+    if (!massMomentEqual(actual.mass, oracle.mass))
+    {
+        error = label + " mass disagrees with the long-double oracle";
+        return false;
+    }
+
+    if (
+        !vectorMassMomentEqual(
+            actual.firstMoment,
+            oracle.firstMoment
+        )
+    )
+    {
+        error = label + " first moment disagrees with the long-double oracle";
+        return false;
+    }
+
+    const std::array<long double, 3> expectedCenter =
+        oracleCenterOfMass(oracle);
+
+    if (!centerEqual(actualCenterOfMass, expectedCenter))
+    {
+        error = label + " center of mass disagrees with the oracle";
+        return false;
+    }
+
+    Eigen::Vector3d derivedCenter =
+        Eigen::Vector3d::Zero();
+
+    if (
+        !actual.tryCenterOfMass(derivedCenter) ||
+        !centerEqual(derivedCenter, expectedCenter)
+    )
+    {
+        error = label + " does not satisfy center=firstMoment/mass";
+        return false;
+    }
+
+    return true;
+}
+
+
+bool validateEnergyPair(
+    double distance,
+    double energy,
+    const std::string& label,
+    std::string& error
+)
+{
+    if (
+        !std::isfinite(distance) ||
+        distance < 0.0 ||
+        !std::isfinite(energy) ||
+        energy < 0.0 ||
+        !energyEqual(
+            energy,
+            0.5L *
+                static_cast<long double>(distance) *
+                static_cast<long double>(distance)
+        )
+    )
+    {
+        error = label + " violates E=0.5*d^2";
+        return false;
+    }
+
+    return true;
+}
+
+
+bool validateDiagnosticStep(
+    const CarvingSolver& solver,
+    const CarvingStepDiagnostics& diagnostics,
+    const LongDoubleMassProperties& before,
+    const LongDoubleMassProperties& after,
+    const MassProperties& initialOuter,
+    int expectedIteration,
+    int previousTotalCarved,
+    int initialInsideCount,
+    int initialCarveableCount,
+    std::string& error
+)
+{
+    if (diagnostics.iteration != expectedIteration)
+    {
+        error = "diagnostic iteration is not consecutive";
+        return false;
+    }
+
+    if (
+        diagnostics.candidateVoxelCount < 0 ||
+        diagnostics.carvedVoxelCountThisStep < 0 ||
+        diagnostics.carvedVoxelCountThisStep >
+            diagnostics.candidateVoxelCount ||
+        diagnostics.totalCarvedVoxelCount !=
+            previousTotalCarved +
+            diagnostics.carvedVoxelCountThisStep ||
+        diagnostics.totalCarvedVoxelCount !=
+            solver.carvedVoxelCount()
+    )
+    {
+        error = "candidate/carved count invariant failed";
+        return false;
+    }
+
+    if (
+        diagnostics.initialInsideVoxelCount != initialInsideCount ||
+        diagnostics.initialCarveableVoxelCount != initialCarveableCount ||
+        diagnostics.remainingInsideVoxelCount !=
+            after.filledInsideVoxelCount ||
+        before.filledInsideVoxelCount -
+            after.filledInsideVoxelCount !=
+            diagnostics.carvedVoxelCountThisStep
+    )
+    {
+        error = "inside-voxel count disagrees with material state";
+        return false;
+    }
+
+    if (
+        !massMomentEqual(
+            diagnostics.initialMass,
+            static_cast<long double>(initialOuter.mass)
+        ) ||
+        !massMomentEqual(
+            diagnostics.remainingMassBefore,
+            before.mass
+        ) ||
+        !massMomentEqual(
+            diagnostics.remainingMassAfter,
+            after.mass
+        ) ||
+        !massMomentEqual(
+            diagnostics.recomputedRemainingMassAfter,
+            after.mass
+        ) ||
+        !vectorMassMomentEqual(
+            diagnostics.firstMomentBefore,
+            before.firstMoment
+        ) ||
+        !vectorMassMomentEqual(
+            diagnostics.firstMomentAfter,
+            after.firstMoment
+        ) ||
+        !vectorMassMomentEqual(
+            diagnostics.recomputedFirstMomentAfter,
+            after.firstMoment
+        ) ||
+        !centerEqual(
+            diagnostics.centerOfMassBefore,
+            oracleCenterOfMass(before)
+        ) ||
+        !centerEqual(
+            diagnostics.centerOfMassAfter,
+            oracleCenterOfMass(after)
+        ) ||
+        !centerEqual(
+            diagnostics.recomputedCenterOfMassAfter,
+            oracleCenterOfMass(after)
+        )
+    )
+    {
+        error = "diagnostic mass/first-moment/CoM disagrees with oracle";
+        return false;
+    }
+
+    if (
+        !validateMassProperties(
+            solver.currentMassProperties(),
+            solver.currentCenterOfMass(),
+            after,
+            "solver incremental state",
+            error
+        )
+    )
+    {
+        return false;
+    }
+
+    if (
+        !validateEnergyPair(
+            diagnostics.projectedDistanceBefore,
+            diagnostics.projectedEnergyBefore,
+            "diagnostic before energy",
+            error
+        ) ||
+        !validateEnergyPair(
+            diagnostics.projectedDistanceAfter,
+            diagnostics.projectedEnergyAfter,
+            "diagnostic after energy",
+            error
+        ) ||
+        !validateEnergyPair(
+            solver.getCoMDistance(),
+            solver.getCoMEnergy(),
+            "solver energy",
+            error
+        )
+    )
+    {
+        return false;
+    }
+
+    if (
+        !centerEqual(
+            solver.getCoMDistance(),
+            static_cast<long double>(
+                diagnostics.projectedDistanceAfter
+            )
+        ) ||
+        !energyEqual(
+            solver.getCoMEnergy(),
+            static_cast<long double>(
+                diagnostics.projectedEnergyAfter
+            )
+        )
+    )
+    {
+        error = "final diagnostic energy disagrees with solver getters";
+        return false;
+    }
+
+    const double expectedMassDiscrepancy =
+        std::abs(
+            diagnostics.remainingMassAfter -
+            diagnostics.recomputedRemainingMassAfter
+        );
+
+    const double expectedFirstMomentDiscrepancy =
+        (
+            diagnostics.firstMomentAfter -
+            diagnostics.recomputedFirstMomentAfter
+        ).norm();
+
+    const double expectedCenterDiscrepancy =
+        (
+            diagnostics.centerOfMassAfter -
+            diagnostics.recomputedCenterOfMassAfter
+        ).norm();
+
+    if (
+        !massMomentEqual(
+            diagnostics.massDiscrepancyAfter,
+            static_cast<long double>(expectedMassDiscrepancy)
+        ) ||
+        !massMomentEqual(
+            diagnostics.firstMomentDiscrepancyAfter,
+            static_cast<long double>(expectedFirstMomentDiscrepancy)
+        ) ||
+        !centerEqual(
+            diagnostics.centerOfMassDiscrepancyAfter,
+            static_cast<long double>(expectedCenterDiscrepancy)
+        )
+    )
+    {
+        error = "reported recompute discrepancy is internally inconsistent";
+        return false;
+    }
+
+    if (
+        !std::isfinite(diagnostics.carvedGridRatio) ||
+        diagnostics.carvedGridRatio < 0.0 ||
+        diagnostics.carvedGridRatio > 1.0 + COM_ABSOLUTE_TOLERANCE ||
+        !std::isfinite(diagnostics.carvedCarveableRatio) ||
+        diagnostics.carvedCarveableRatio < 0.0 ||
+        diagnostics.carvedCarveableRatio >
+            1.0 + COM_ABSOLUTE_TOLERANCE
+    )
+    {
+        error = "carved ratio is outside its valid range";
+        return false;
+    }
+
+    if (diagnostics.candidateVoxelCount == 0)
+    {
+        if (
+            diagnostics.carvedVoxelCountThisStep != 0 ||
+            before.filledFlags != after.filledFlags ||
+            !massMomentEqual(
+                diagnostics.remainingMassAfter,
+                before.mass
+            ) ||
+            !vectorMassMomentEqual(
+                diagnostics.firstMomentAfter,
+                before.firstMoment
+            ) ||
+            !centerEqual(
+                diagnostics.centerOfMassAfter,
+                oracleCenterOfMass(before)
+            ) ||
+            diagnostics.stopReason !=
+                CarvingStopReason::NoCandidatesAvailable
+        )
+        {
+            error = "zero-candidate step changed material state";
+            return false;
+        }
+    }
+
+    return true;
 }
 
 
@@ -270,10 +859,10 @@ std::vector<std::string> splitCsvLine(
 )
 {
     std::vector<std::string> fields;
-    std::stringstream stream(line);
+    std::stringstream input(line);
     std::string field;
 
-    while (std::getline(stream, field, ','))
+    while (std::getline(input, field, ','))
     {
         fields.push_back(field);
     }
@@ -288,7 +877,6 @@ bool parseFiniteNumber(
 )
 {
     errno = 0;
-
     char* end = nullptr;
     parsed = std::strtod(value.c_str(), &end);
 
@@ -307,8 +895,8 @@ bool parseInteger(
 )
 {
     errno = 0;
-
     char* end = nullptr;
+
     const long result =
         std::strtol(value.c_str(), &end, 10);
 
@@ -344,9 +932,9 @@ bool csvIntegerMatches(
     )
     {
         error =
-            "diagnostics CSV integer column " +
+            "CSV integer column " +
             std::to_string(column) +
-            " disagrees with solver history";
+            " disagrees with diagnostic history";
         return false;
     }
 
@@ -363,19 +951,15 @@ bool csvDoubleMatches(
 {
     double parsed = 0.0;
 
-    const double tolerance =
-        4.0 * std::numeric_limits<double>::epsilon() *
-        std::max(1.0, std::abs(expected));
-
     if (
         !parseFiniteNumber(fields[column], parsed) ||
-        !approximatelyEqual(parsed, expected, tolerance)
+        parsed != expected
     )
     {
         error =
-            "diagnostics CSV floating-point column " +
+            "CSV floating-point column " +
             std::to_string(column) +
-            " disagrees with solver history";
+            " disagrees with diagnostic history";
         return false;
     }
 
@@ -412,7 +996,7 @@ bool validateCsv(
 
     if (line != CSV_HEADER)
     {
-        error = "diagnostics CSV header does not match the 26-column schema";
+        error = "diagnostics CSV header does not match the 39-column schema";
         return false;
     }
 
@@ -427,7 +1011,7 @@ bool validateCsv(
 
         if (rowIndex >= history.size())
         {
-            error = "diagnostics CSV contains more rows than solver history";
+            error = "diagnostics CSV contains excess rows";
             return false;
         }
 
@@ -436,7 +1020,7 @@ bool validateCsv(
 
         if (fields.size() != CSV_COLUMN_COUNT)
         {
-            error = "diagnostics CSV data row does not contain 26 columns";
+            error = "diagnostics CSV row does not contain 39 columns";
             return false;
         }
 
@@ -451,35 +1035,48 @@ bool validateCsv(
             !csvDoubleMatches(fields, 4, diagnostics.centerOfMassAfter(0), error) ||
             !csvDoubleMatches(fields, 5, diagnostics.centerOfMassAfter(1), error) ||
             !csvDoubleMatches(fields, 6, diagnostics.centerOfMassAfter(2), error) ||
-            !csvDoubleMatches(fields, 7, diagnostics.approximateVoxelCenterOfMassAfter(0), error) ||
-            !csvDoubleMatches(fields, 8, diagnostics.approximateVoxelCenterOfMassAfter(1), error) ||
-            !csvDoubleMatches(fields, 9, diagnostics.approximateVoxelCenterOfMassAfter(2), error) ||
-            !csvDoubleMatches(fields, 10, diagnostics.legacyProjectedErrorBefore, error) ||
-            !csvDoubleMatches(fields, 11, diagnostics.legacyProjectedErrorAfter, error) ||
-            !csvDoubleMatches(fields, 12, diagnostics.geometricProjectedErrorBefore, error) ||
-            !csvDoubleMatches(fields, 13, diagnostics.geometricProjectedErrorAfter, error) ||
-            !csvDoubleMatches(fields, 14, diagnostics.centerOfMassDiscrepancyAfter, error) ||
-            !csvDoubleMatches(fields, 15, diagnostics.exactInitialMass, error) ||
-            !csvDoubleMatches(fields, 16, diagnostics.approximateRemainingVoxelMass, error) ||
-            !csvIntegerMatches(fields, 17, diagnostics.candidateVoxelCount, error) ||
-            !csvIntegerMatches(fields, 18, diagnostics.carvedVoxelCountThisStep, error) ||
-            !csvIntegerMatches(fields, 19, diagnostics.totalCarvedVoxelCount, error) ||
-            !csvIntegerMatches(fields, 20, diagnostics.initialInsideVoxelCount, error) ||
-            !csvIntegerMatches(fields, 21, diagnostics.initialCarveableVoxelCount, error) ||
-            !csvIntegerMatches(fields, 22, diagnostics.remainingInsideVoxelCount, error) ||
-            !csvDoubleMatches(fields, 23, diagnostics.carvedGridRatio, error) ||
-            !csvDoubleMatches(fields, 24, diagnostics.carvedCarveableRatio, error)
+            !csvDoubleMatches(fields, 7, diagnostics.recomputedCenterOfMassAfter(0), error) ||
+            !csvDoubleMatches(fields, 8, diagnostics.recomputedCenterOfMassAfter(1), error) ||
+            !csvDoubleMatches(fields, 9, diagnostics.recomputedCenterOfMassAfter(2), error) ||
+            !csvDoubleMatches(fields, 10, diagnostics.firstMomentBefore(0), error) ||
+            !csvDoubleMatches(fields, 11, diagnostics.firstMomentBefore(1), error) ||
+            !csvDoubleMatches(fields, 12, diagnostics.firstMomentBefore(2), error) ||
+            !csvDoubleMatches(fields, 13, diagnostics.firstMomentAfter(0), error) ||
+            !csvDoubleMatches(fields, 14, diagnostics.firstMomentAfter(1), error) ||
+            !csvDoubleMatches(fields, 15, diagnostics.firstMomentAfter(2), error) ||
+            !csvDoubleMatches(fields, 16, diagnostics.recomputedFirstMomentAfter(0), error) ||
+            !csvDoubleMatches(fields, 17, diagnostics.recomputedFirstMomentAfter(1), error) ||
+            !csvDoubleMatches(fields, 18, diagnostics.recomputedFirstMomentAfter(2), error) ||
+            !csvDoubleMatches(fields, 19, diagnostics.projectedDistanceBefore, error) ||
+            !csvDoubleMatches(fields, 20, diagnostics.projectedDistanceAfter, error) ||
+            !csvDoubleMatches(fields, 21, diagnostics.projectedEnergyBefore, error) ||
+            !csvDoubleMatches(fields, 22, diagnostics.projectedEnergyAfter, error) ||
+            !csvDoubleMatches(fields, 23, diagnostics.centerOfMassDiscrepancyAfter, error) ||
+            !csvDoubleMatches(fields, 24, diagnostics.firstMomentDiscrepancyAfter, error) ||
+            !csvDoubleMatches(fields, 25, diagnostics.initialMass, error) ||
+            !csvDoubleMatches(fields, 26, diagnostics.remainingMassBefore, error) ||
+            !csvDoubleMatches(fields, 27, diagnostics.remainingMassAfter, error) ||
+            !csvDoubleMatches(fields, 28, diagnostics.recomputedRemainingMassAfter, error) ||
+            !csvDoubleMatches(fields, 29, diagnostics.massDiscrepancyAfter, error) ||
+            !csvIntegerMatches(fields, 30, diagnostics.candidateVoxelCount, error) ||
+            !csvIntegerMatches(fields, 31, diagnostics.carvedVoxelCountThisStep, error) ||
+            !csvIntegerMatches(fields, 32, diagnostics.totalCarvedVoxelCount, error) ||
+            !csvIntegerMatches(fields, 33, diagnostics.initialInsideVoxelCount, error) ||
+            !csvIntegerMatches(fields, 34, diagnostics.initialCarveableVoxelCount, error) ||
+            !csvIntegerMatches(fields, 35, diagnostics.remainingInsideVoxelCount, error) ||
+            !csvDoubleMatches(fields, 36, diagnostics.carvedGridRatio, error) ||
+            !csvDoubleMatches(fields, 37, diagnostics.carvedCarveableRatio, error)
         )
         {
             return false;
         }
 
         if (
-            fields.back() !=
-            carvingStopReasonName(history[rowIndex].stopReason)
+            fields[38] !=
+            carvingStopReasonName(diagnostics.stopReason)
         )
         {
-            error = "diagnostics CSV stop reason disagrees with solver history";
+            error = "CSV stop reason disagrees with diagnostic history";
             return false;
         }
 
@@ -488,7 +1085,7 @@ bool validateCsv(
 
     if (rowIndex != history.size())
     {
-        error = "diagnostics CSV contains fewer rows than solver history";
+        error = "diagnostics CSV contains too few rows";
         return false;
     }
 
@@ -496,199 +1093,177 @@ bool validateCsv(
 }
 
 
-bool validateHistory(
-    const CarvingSolver& solver,
+std::string serializeHistory(
+    const std::vector<CarvingStepDiagnostics>& history
+)
+{
+    std::ostringstream output;
+    writeCarvingDiagnosticsCsvHeader(output);
+
+    for (const CarvingStepDiagnostics& diagnostics : history)
+    {
+        writeCarvingDiagnosticsCsvRow(output, diagnostics);
+    }
+
+    return output.str();
+}
+
+
+bool isNormalTerminalReason(
+    CarvingStopReason reason
+)
+{
+    return
+        reason == CarvingStopReason::TargetToleranceReached ||
+        reason == CarvingStopReason::MaximumEmptyRatioReached ||
+        reason == CarvingStopReason::NoCandidatesAvailable ||
+        reason == CarvingStopReason::MaximumIterationsReached;
+}
+
+
+bool runToTerminal(
+    CarvingSolver& solver,
+    VoxelGrid& voxelGrid,
+    const MassProperties& initialOuter,
+    int initialInsideCount,
+    int initialCarveableCount,
     std::string& error
 )
 {
-    const std::vector<CarvingStepDiagnostics>& history =
-        solver.diagnosticsHistory();
-
     int previousTotalCarved = 0;
+    int expectedIteration = 1;
 
-    for (std::size_t index = 0; index < history.size(); ++index)
+    while (!solver.isOptimized())
     {
-        const CarvingStepDiagnostics& diagnostics =
-            history[index];
-
-        if (
-            diagnostics.iteration !=
-            static_cast<int>(index + 1)
-        )
+        if (expectedIteration > MAXIMUM_TEST_STEPS)
         {
-            error = "diagnostic iterations are not consecutive";
+            error = "full run exceeded the 100-step safety limit";
+            return false;
+        }
+
+        const LongDoubleMassProperties before =
+            captureOracle(initialOuter, voxelGrid);
+
+        Eigen::MatrixXd carvePlaneVertices;
+        Eigen::MatrixXi carvePlaneFaces;
+        Eigen::Vector3d returnedCenterOfMass;
+
+        solver.carveStep(
+            carvePlaneVertices,
+            carvePlaneFaces,
+            returnedCenterOfMass
+        );
+
+        const LongDoubleMassProperties after =
+            captureOracle(initialOuter, voxelGrid);
+
+        const CarvingStepDiagnostics* diagnostics =
+            solver.lastDiagnostics();
+
+        if (diagnostics == nullptr)
+        {
+            error = "carveStep did not produce diagnostics";
             return false;
         }
 
         if (
-            diagnostics.candidateVoxelCount < 0 ||
-            diagnostics.carvedVoxelCountThisStep < 0 ||
-            diagnostics.candidateVoxelCount <
-                diagnostics.carvedVoxelCountThisStep
-        )
-        {
-            error = "candidate/carved count invariant failed";
-            return false;
-        }
-
-        if (
-            diagnostics.totalCarvedVoxelCount !=
-            previousTotalCarved +
-                diagnostics.carvedVoxelCountThisStep
-        )
-        {
-            error = "total carved count is not the sum of step removals";
-            return false;
-        }
-
-        if (
-            diagnostics.initialInsideVoxelCount < 0 ||
-            diagnostics.initialCarveableVoxelCount < 0 ||
-            diagnostics.remainingInsideVoxelCount < 0 ||
-            diagnostics.remainingInsideVoxelCount >
-                diagnostics.initialInsideVoxelCount
-        )
-        {
-            error = "inside-voxel count invariant failed";
-            return false;
-        }
-
-        if (
-            !isFiniteVector(diagnostics.centerOfMassBefore) ||
-            !isFiniteVector(diagnostics.centerOfMassAfter) ||
-            !isFiniteVector(
-                diagnostics.approximateVoxelCenterOfMassAfter
-            ) ||
-            !std::isfinite(diagnostics.legacyProjectedErrorBefore) ||
-            !std::isfinite(diagnostics.legacyProjectedErrorAfter) ||
-            !std::isfinite(diagnostics.geometricProjectedErrorBefore) ||
-            !std::isfinite(diagnostics.geometricProjectedErrorAfter) ||
-            !std::isfinite(diagnostics.centerOfMassDiscrepancyAfter) ||
-            !std::isfinite(diagnostics.exactInitialMass) ||
-            !std::isfinite(
-                diagnostics.approximateRemainingVoxelMass
-            ) ||
-            !std::isfinite(diagnostics.carvedGridRatio) ||
-            !std::isfinite(diagnostics.carvedCarveableRatio)
-        )
-        {
-            error = "diagnostic history contains a non-finite value";
-            return false;
-        }
-
-        if (
-            diagnostics.approximateRemainingVoxelMass < 0.0 ||
-            diagnostics.carvedGridRatio < 0.0 ||
-            diagnostics.carvedGridRatio > 1.0 + CONTINUITY_TOLERANCE ||
-            diagnostics.carvedCarveableRatio < 0.0 ||
-            diagnostics.carvedCarveableRatio >
-                1.0 + CONTINUITY_TOLERANCE
-        )
-        {
-            error = "diagnostic mass or ratio is outside its valid range";
-            return false;
-        }
-
-        if (index > 0)
-        {
-            const CarvingStepDiagnostics& previous =
-                history[index - 1];
-
-            if (
-                (
-                    diagnostics.centerOfMassBefore -
-                    previous.centerOfMassAfter
-                ).norm() > CONTINUITY_TOLERANCE ||
-                !approximatelyEqual(
-                    diagnostics.legacyProjectedErrorBefore,
-                    previous.legacyProjectedErrorAfter,
-                    CONTINUITY_TOLERANCE
-                ) ||
-                !approximatelyEqual(
-                    diagnostics.geometricProjectedErrorBefore,
-                    previous.geometricProjectedErrorAfter,
-                    CONTINUITY_TOLERANCE
-                )
+            !validateDiagnosticStep(
+                solver,
+                *diagnostics,
+                before,
+                after,
+                initialOuter,
+                expectedIteration,
+                previousTotalCarved,
+                initialInsideCount,
+                initialCarveableCount,
+                error
             )
-            {
-                error = "diagnostic before/after continuity invariant failed";
-                return false;
-            }
+        )
+        {
+            return false;
         }
 
         if (
-            index + 1 < history.size() &&
-            diagnostics.stopReason != CarvingStopReason::None
+            !centerEqual(
+                returnedCenterOfMass,
+                oracleCenterOfMass(after)
+            )
         )
         {
-            error = "a non-final diagnostic row reports a stop reason";
+            error = "carveStep returned CoM disagrees with oracle";
+            return false;
+        }
+
+        if (
+            !solver.isOptimized() &&
+            diagnostics->stopReason != CarvingStopReason::None
+        )
+        {
+            error = "non-terminal step reports a stop reason";
             return false;
         }
 
         previousTotalCarved =
-            diagnostics.totalCarvedVoxelCount;
+            diagnostics->totalCarvedVoxelCount;
+
+        ++expectedIteration;
     }
 
     if (
-        solver.iterationCount() !=
-        static_cast<int>(history.size())
+        solver.diagnosticsHistory().empty() ||
+        solver.iterationCount() > MAXIMUM_TEST_STEPS ||
+        !isNormalTerminalReason(solver.stopReason()) ||
+        solver.diagnosticsHistory().back().stopReason !=
+            solver.stopReason()
     )
     {
-        error = "solver iteration count disagrees with diagnostic history";
+        error = "full run did not reach a normal terminal state";
         return false;
     }
+
+    return true;
+}
+
+
+bool validateTerminalIdempotence(
+    CarvingSolver& solver,
+    const VoxelGrid& voxelGrid,
+    const MassProperties& initialOuter,
+    std::string& error
+)
+{
+    const int iterationCount = solver.iterationCount();
+    const int carvedCount = solver.carvedVoxelCount();
+    const std::size_t historySize =
+        solver.diagnosticsHistory().size();
+
+    const LongDoubleMassProperties before =
+        captureOracle(initialOuter, voxelGrid);
+
+    solver.carveAll();
+
+    const LongDoubleMassProperties after =
+        captureOracle(initialOuter, voxelGrid);
 
     if (
-        solver.carvedVoxelCount() !=
-        previousTotalCarved
-    )
-    {
-        error = "solver carved count disagrees with diagnostic history";
-        return false;
-    }
-
-    if (history.empty())
-    {
-        if (solver.lastDiagnostics() != nullptr)
-        {
-            error = "zero-step solver unexpectedly exposes last diagnostics";
-            return false;
-        }
-    }
-    else
-    {
-        if (solver.lastDiagnostics() != &history.back())
-        {
-            error = "lastDiagnostics does not reference the final record";
-            return false;
-        }
-
-        if (history.back().stopReason != solver.stopReason())
-        {
-            error = "final diagnostic stop reason disagrees with solver";
-            return false;
-        }
-
-        if (
-            (
-                history.back().centerOfMassAfter -
-                solver.currentCenterOfMass()
-            ).norm() > CONTINUITY_TOLERANCE ||
-            !approximatelyEqual(
-                history.back().legacyProjectedErrorAfter,
-                solver.getCoMDistance(),
-                CONTINUITY_TOLERANCE
-            ) ||
-            !approximatelyEqual(
-                history.back().geometricProjectedErrorAfter,
-                solver.getGeometricProjectedDistance(),
-                CONTINUITY_TOLERANCE
-            )
+        solver.iterationCount() != iterationCount ||
+        solver.carvedVoxelCount() != carvedCount ||
+        solver.diagnosticsHistory().size() != historySize ||
+        before.filledFlags != after.filledFlags ||
+        !massMomentEqual(solver.objectMass(), before.mass) ||
+        !vectorMassMomentEqual(
+            solver.currentMassProperties().firstMoment,
+            before.firstMoment
+        ) ||
+        !centerEqual(
+            solver.currentCenterOfMass(),
+            oracleCenterOfMass(before)
         )
-        {
-            error = "final diagnostics disagree with solver getters";
-            return false;
-        }
+    )
+    {
+        error = "carveAll is not idempotent after termination";
+        return false;
     }
 
     return true;
@@ -722,166 +1297,139 @@ int main(
     const std::string meshPath = argv[2];
     const std::string csvPath = argv[3];
 
-    Eigen::MatrixXd inputVertices;
-    Eigen::MatrixXi faces;
+    FixtureGeometry geometry;
+    std::string error;
 
-    if (
-        !igl::read_triangle_mesh(
-            meshPath,
-            inputVertices,
-            faces
-        )
-    )
+    if (!prepareGeometry(meshPath, geometry, error))
     {
-        return fail(
-            "could not load mesh: " + meshPath
-        );
+        return fail(error);
     }
-
-    if (
-        inputVertices.rows() == 0 ||
-        faces.rows() == 0
-    )
-    {
-        return fail(
-            "loaded mesh is empty"
-        );
-    }
-
-    Eigen::MatrixXd vertices;
-
-    alignToAxis(
-        inputVertices,
-        vertices
-    );
-
-    Eigen::MatrixXd planeVertices;
-    Eigen::MatrixXi planeFaces;
-
-    const Eigen::RowVector3d planeCenter =
-        createGroundPlane(
-            vertices,
-            planeVertices,
-            planeFaces
-        );
-
-    Eigen::AlignedBox3d boundingBox;
-
-    createAlignedBox(
-        vertices,
-        boundingBox
-    );
-
-    /*
-     * The deterministic horizontal offset avoids a degenerate cutting-plane
-     * triangle if the initial CoM projects exactly to the plane center.
-     */
-    Eigen::Vector3d targetCenterOfMass =
-        planeCenter.transpose();
-
-    targetCenterOfMass(0) +=
-        0.15 * boundingBox.sizes()(0);
 
     VoxelGrid voxelGrid;
-
-    voxelGrid.build(
-        vertices,
-        faces
-    );
+    voxelGrid.build(geometry.vertices, geometry.faces);
 
     if (scenario == RegressionScenario::NoCandidates)
     {
         removeAllCarveableVoxels(voxelGrid);
     }
 
-    const VoxelStateSnapshot initialVoxelState =
-        captureVoxelState(voxelGrid);
+    const int initialInsideCount =
+        countInsideVoxels(voxelGrid);
+
+    const int initialCarveableCount =
+        countCarveableVoxels(voxelGrid);
+
+    const MassProperties initialOuter =
+        computeSurfaceMassProperties(
+            geometry.vertices,
+            geometry.faces
+        );
+
+    if (scenario == RegressionScenario::InitialState)
+    {
+        CarvingSolver unitGravitySolver(
+            voxelGrid,
+            geometry.vertices,
+            geometry.faces,
+            geometry.planeVertices,
+            geometry.planeFaces,
+            Eigen::Vector3d(0.0, -1.0, 0.0),
+            geometry.targetCenterOfMass
+        );
+
+        CarvingSolver tinyGravitySolver(
+            voxelGrid,
+            geometry.vertices,
+            geometry.faces,
+            geometry.planeVertices,
+            geometry.planeFaces,
+            Eigen::Vector3d(0.0, -1e-300, 0.0),
+            geometry.targetCenterOfMass
+        );
+
+        CarvingSolver hugeGravitySolver(
+            voxelGrid,
+            geometry.vertices,
+            geometry.faces,
+            geometry.planeVertices,
+            geometry.planeFaces,
+            Eigen::Vector3d(0.0, -1e308, 0.0),
+            geometry.targetCenterOfMass
+        );
+
+        if (
+            !energyEqual(
+                tinyGravitySolver.getCoMDistance(),
+                unitGravitySolver.getCoMDistance()
+            ) ||
+            !energyEqual(
+                hugeGravitySolver.getCoMDistance(),
+                unitGravitySolver.getCoMDistance()
+            ) ||
+            !energyEqual(
+                tinyGravitySolver.getCoMEnergy(),
+                unitGravitySolver.getCoMEnergy()
+            ) ||
+            !energyEqual(
+                hugeGravitySolver.getCoMEnergy(),
+                unitGravitySolver.getCoMEnergy()
+            )
+        )
+        {
+            return fail(
+                "solver depends on finite non-zero gravity magnitude"
+            );
+        }
+    }
 
     CarvingSolver solver(
         voxelGrid,
-        vertices,
-        faces,
-        planeVertices,
-        planeFaces,
+        geometry.vertices,
+        geometry.faces,
+        geometry.planeVertices,
+        geometry.planeFaces,
         Eigen::Vector3d(0.0, -1.0, 0.0),
-        targetCenterOfMass
+        geometry.targetCenterOfMass
     );
 
-    solver.setDiagnosticsEnabled(true);
+    solver.setDiagnosticsEnabled(false);
+
+    const LongDoubleMassProperties initialOracle =
+        captureOracle(initialOuter, voxelGrid);
 
     if (
-        !std::isfinite(solver.objectMass()) ||
-        std::abs(solver.objectMass()) <=
-            std::numeric_limits<double>::epsilon()
-    )
-    {
-        return fail(
-            "initial mass is zero or non-finite"
-        );
-    }
-
-    if (
-        !isFiniteVector(solver.currentCenterOfMass()) ||
-        !std::isfinite(solver.getCoMDistance()) ||
-        !std::isfinite(
-            solver.getGeometricProjectedDistance()
+        !validateMassProperties(
+            solver.initialMassProperties(),
+            solver.currentCenterOfMass(),
+            initialOracle,
+            "initial solver state",
+            error
+        ) ||
+        !validateMassProperties(
+            solver.currentMassProperties(),
+            solver.currentCenterOfMass(),
+            initialOracle,
+            "current zero-step state",
+            error
+        ) ||
+        !validateEnergyPair(
+            solver.getCoMDistance(),
+            solver.getCoMEnergy(),
+            "initial solver energy",
+            error
         )
     )
     {
-        return fail(
-            "initial CoM or projected error is non-finite"
-        );
+        return fail(error);
     }
-
-    const Eigen::Vector3d initialCenterOfMass =
-        solver.currentCenterOfMass();
-
-    const double initialLegacyError =
-        solver.getCoMDistance();
-
-    const double initialGeometricError =
-        solver.getGeometricProjectedDistance();
-
-    Eigen::Vector3d oneStepReturnedCenterOfMass =
-        Eigen::Vector3d::Zero();
-
-    if (scenario == RegressionScenario::OneStep)
-    {
-        Eigen::MatrixXd carvePlaneVertices;
-        Eigen::MatrixXi carvePlaneFaces;
-        solver.carveStep(
-            carvePlaneVertices,
-            carvePlaneFaces,
-            oneStepReturnedCenterOfMass
-        );
-    }
-    else if (
-        scenario == RegressionScenario::FullKnownBaseline ||
-        scenario == RegressionScenario::NoCandidates
-    )
-    {
-        solver.carveAll();
-    }
-
-    std::string validationError;
-
-    if (!validateHistory(solver, validationError))
-    {
-        return fail(validationError);
-    }
-
-    const std::vector<CarvingStepDiagnostics>& history =
-        solver.diagnosticsHistory();
-
-    const VoxelStateSnapshot finalVoxelState =
-        captureVoxelState(voxelGrid);
 
     if (scenario == RegressionScenario::InitialState)
     {
         if (
             solver.iterationCount() != 0 ||
             solver.carvedVoxelCount() != 0 ||
-            !history.empty() ||
+            !solver.diagnosticsHistory().empty() ||
+            solver.lastDiagnostics() != nullptr ||
             solver.isOptimized()
         )
         {
@@ -892,239 +1440,150 @@ int main(
     }
     else if (scenario == RegressionScenario::OneStep)
     {
+        const LongDoubleMassProperties before =
+            captureOracle(initialOuter, voxelGrid);
+
+        Eigen::MatrixXd carvePlaneVertices;
+        Eigen::MatrixXi carvePlaneFaces;
+        Eigen::Vector3d returnedCenterOfMass;
+
+        solver.carveStep(
+            carvePlaneVertices,
+            carvePlaneFaces,
+            returnedCenterOfMass
+        );
+
+        const LongDoubleMassProperties after =
+            captureOracle(initialOuter, voxelGrid);
+
+        const CarvingStepDiagnostics* diagnostics =
+            solver.lastDiagnostics();
+
         if (
-            history.size() != 1 ||
-            history.front().candidateVoxelCount <= 0 ||
-            history.front().carvedVoxelCountThisStep <= 0 ||
-            history.front().stopReason != CarvingStopReason::None ||
-            (
-                history.front().centerOfMassBefore -
-                initialCenterOfMass
-            ).norm() > CONTINUITY_TOLERANCE ||
-            !approximatelyEqual(
-                history.front().legacyProjectedErrorBefore,
-                initialLegacyError,
-                CONTINUITY_TOLERANCE
+            diagnostics == nullptr ||
+            !validateDiagnosticStep(
+                solver,
+                *diagnostics,
+                before,
+                after,
+                initialOuter,
+                1,
+                0,
+                initialInsideCount,
+                initialCarveableCount,
+                error
             ) ||
-            !approximatelyEqual(
-                history.front().geometricProjectedErrorBefore,
-                initialGeometricError,
-                CONTINUITY_TOLERANCE
-            ) ||
-            (
-                oneStepReturnedCenterOfMass -
-                solver.currentCenterOfMass()
-            ).norm() > CONTINUITY_TOLERANCE
+            diagnostics->candidateVoxelCount <= 0 ||
+            diagnostics->carvedVoxelCountThisStep <= 0 ||
+            diagnostics->stopReason != CarvingStopReason::None ||
+            !centerEqual(
+                returnedCenterOfMass,
+                oracleCenterOfMass(after)
+            )
         )
         {
             return fail(
-                "one-step scenario did not exercise ordinary carving"
-            );
-        }
-    }
-    else if (scenario == RegressionScenario::NoCandidates)
-    {
-        if (
-            history.size() != 1 ||
-            history.front().candidateVoxelCount != 0 ||
-            history.front().carvedVoxelCountThisStep != 0 ||
-            history.front().totalCarvedVoxelCount != 0 ||
-            history.front().initialCarveableVoxelCount != 0 ||
-            history.front().remainingInsideVoxelCount !=
-                history.front().initialInsideVoxelCount ||
-            history.front().stopReason !=
-                CarvingStopReason::NoCandidatesAvailable ||
-            !solver.isOptimized() ||
-            (
-                history.front().centerOfMassAfter -
-                initialCenterOfMass
-            ).norm() > CONTINUITY_TOLERANCE ||
-            !approximatelyEqual(
-                history.front().legacyProjectedErrorAfter,
-                initialLegacyError,
-                CONTINUITY_TOLERANCE
-            ) ||
-            !approximatelyEqual(
-                history.front().geometricProjectedErrorAfter,
-                initialGeometricError,
-                CONTINUITY_TOLERANCE
-            ) ||
-            finalVoxelState.filledInsideVoxelCount !=
-                initialVoxelState.filledInsideVoxelCount ||
-            !approximatelyEqual(
-                finalVoxelState.mass,
-                initialVoxelState.mass,
-                CONTINUITY_TOLERANCE
-            ) ||
-            (
-                finalVoxelState.centerOfMass -
-                initialVoxelState.centerOfMass
-            ).norm() > CONTINUITY_TOLERANCE ||
-            history.front().remainingInsideVoxelCount !=
-                finalVoxelState.filledInsideVoxelCount ||
-            !approximatelyEqual(
-                history.front().approximateRemainingVoxelMass,
-                finalVoxelState.mass,
-                CONTINUITY_TOLERANCE
-            ) ||
-            (
-                history.front().approximateVoxelCenterOfMassAfter -
-                finalVoxelState.centerOfMass
-            ).norm() > CONTINUITY_TOLERANCE ||
-            history.front().carvedGridRatio != 0.0 ||
-            history.front().carvedCarveableRatio != 0.0
-        )
-        {
-            return fail(
-                "empty candidate set did not terminate without mutation"
+                error.empty()
+                    ? "one-step scenario did not exercise ordinary carving"
+                    : error
             );
         }
     }
     else
     {
         if (
-            history.size() != 17 ||
-            history.back().iteration != 17 ||
-            history.back().candidateVoxelCount != 0 ||
-            history.back().carvedVoxelCountThisStep != 0 ||
-            history.back().totalCarvedVoxelCount != 14028 ||
-            history.back().stopReason !=
-                CarvingStopReason::NoCandidatesAvailable ||
-            !solver.isOptimized()
+            !runToTerminal(
+                solver,
+                voxelGrid,
+                initialOuter,
+                initialInsideCount,
+                initialCarveableCount,
+                error
+            ) ||
+            !validateTerminalIdempotence(
+                solver,
+                voxelGrid,
+                initialOuter,
+                error
+            )
         )
         {
-            return fail(
-                "full run did not stop at the frozen candidate-exhaustion state"
-            );
+            return fail(error);
         }
 
-        for (
-            std::size_t index = 0;
-            index + 1 < history.size();
-            ++index
-        )
+        if (scenario == RegressionScenario::NoCandidates)
         {
-            if (history[index].candidateVoxelCount <= 0)
+            if (
+                solver.iterationCount() != 1 ||
+                solver.carvedVoxelCount() != 0 ||
+                solver.stopReason() !=
+                    CarvingStopReason::NoCandidatesAvailable ||
+                initialCarveableCount != 0 ||
+                captureOracle(
+                    initialOuter,
+                    voxelGrid
+                ).filledFlags != initialOracle.filledFlags
+            )
             {
                 return fail(
-                    "candidate exhaustion occurred before iteration 17"
+                    "initially empty candidate set did not stop without mutation"
                 );
             }
         }
-
-        if (
-            !approximatelyEqual(
-                history.front().geometricProjectedErrorBefore,
-                0.028996164626118211,
-                BASELINE_TOLERANCE
-            ) ||
-            !approximatelyEqual(
-                history.back().geometricProjectedErrorAfter,
-                0.81139676456917131,
-                BASELINE_TOLERANCE
-            ) ||
-            !approximatelyEqual(
-                history.back().centerOfMassDiscrepancyAfter,
-                0.80074263484909125,
-                BASELINE_TOLERANCE
-            ) ||
-            history.back().geometricProjectedErrorAfter <=
-                history.front().geometricProjectedErrorBefore
-        )
+        else
         {
-            return fail(
-                "known divergent R0 numerical baseline changed"
+            /*
+             * Repeat the complete live run. Exact serialized diagnostics and
+             * voxel flags form the deterministic-state contract without
+             * freezing any obsolete R0 trajectory value.
+             */
+            VoxelGrid repeatedGrid;
+            repeatedGrid.build(
+                geometry.vertices,
+                geometry.faces
             );
-        }
 
-        if (
-            history.size() < 2 ||
-            (
-                history.back().centerOfMassAfter -
-                history.back().centerOfMassBefore
-            ).norm() > CONTINUITY_TOLERANCE ||
-            !approximatelyEqual(
-                history.back().legacyProjectedErrorAfter,
-                history.back().legacyProjectedErrorBefore,
-                CONTINUITY_TOLERANCE
-            ) ||
-            !approximatelyEqual(
-                history.back().geometricProjectedErrorAfter,
-                history.back().geometricProjectedErrorBefore,
-                CONTINUITY_TOLERANCE
-            ) ||
-            history.back().remainingInsideVoxelCount !=
-                history[history.size() - 2].remainingInsideVoxelCount ||
-            !approximatelyEqual(
-                history.back().approximateRemainingVoxelMass,
-                history[history.size() - 2].approximateRemainingVoxelMass,
-                CONTINUITY_TOLERANCE
-            ) ||
-            (
-                history.back().approximateVoxelCenterOfMassAfter -
-                history[history.size() - 2].approximateVoxelCenterOfMassAfter
-            ).norm() > CONTINUITY_TOLERANCE ||
-            !approximatelyEqual(
-                history.back().carvedGridRatio,
-                history[history.size() - 2].carvedGridRatio,
-                CONTINUITY_TOLERANCE
-            ) ||
-            !approximatelyEqual(
-                history.back().carvedCarveableRatio,
-                history[history.size() - 2].carvedCarveableRatio,
-                CONTINUITY_TOLERANCE
-            ) ||
-            finalVoxelState.filledInsideVoxelCount !=
-                history.back().remainingInsideVoxelCount ||
-            !approximatelyEqual(
-                finalVoxelState.mass,
-                history.back().approximateRemainingVoxelMass,
-                CONTINUITY_TOLERANCE
-            ) ||
-            (
-                finalVoxelState.centerOfMass -
-                history.back().approximateVoxelCenterOfMassAfter
-            ).norm() > CONTINUITY_TOLERANCE
-        )
-        {
-            return fail(
-                "candidate-exhaustion probe changed the carving state"
+            CarvingSolver repeatedSolver(
+                repeatedGrid,
+                geometry.vertices,
+                geometry.faces,
+                geometry.planeVertices,
+                geometry.planeFaces,
+                Eigen::Vector3d(0.0, -1.0, 0.0),
+                geometry.targetCenterOfMass
             );
-        }
-    }
 
-    if (
-        scenario == RegressionScenario::FullKnownBaseline ||
-        scenario == RegressionScenario::NoCandidates
-    )
-    {
-        const int terminalIterationCount =
-            solver.iterationCount();
-
-        const int terminalCarvedVoxelCount =
-            solver.carvedVoxelCount();
-
-        const std::size_t terminalHistorySize =
-            history.size();
-
-        const Eigen::Vector3d terminalCenterOfMass =
-            solver.currentCenterOfMass();
-
-        solver.carveAll();
-
-        if (
-            solver.iterationCount() != terminalIterationCount ||
-            solver.carvedVoxelCount() != terminalCarvedVoxelCount ||
-            history.size() != terminalHistorySize ||
-            (
-                solver.currentCenterOfMass() -
-                terminalCenterOfMass
-            ).norm() > CONTINUITY_TOLERANCE
-        )
-        {
-            return fail(
-                "carveAll is not idempotent after a terminal state"
-            );
+            if (
+                !runToTerminal(
+                    repeatedSolver,
+                    repeatedGrid,
+                    initialOuter,
+                    countInsideVoxels(repeatedGrid),
+                    countCarveableVoxels(repeatedGrid),
+                    error
+                ) ||
+                serializeHistory(
+                    repeatedSolver.diagnosticsHistory()
+                ) !=
+                    serializeHistory(
+                        solver.diagnosticsHistory()
+                    ) ||
+                captureOracle(
+                    initialOuter,
+                    repeatedGrid
+                ).filledFlags !=
+                    captureOracle(
+                        initialOuter,
+                        voxelGrid
+                    ).filledFlags
+            )
+            {
+                return fail(
+                    error.empty()
+                        ? "two identical full runs produced different states"
+                        : error
+                );
+            }
         }
     }
 
@@ -1135,9 +1594,15 @@ int main(
         );
     }
 
-    if (!validateCsv(csvPath, history, validationError))
+    if (
+        !validateCsv(
+            csvPath,
+            solver.diagnosticsHistory(),
+            error
+        )
+    )
     {
-        return fail(validationError);
+        return fail(error);
     }
 
     std::cout
@@ -1145,11 +1610,10 @@ int main(
         << " mesh=" << meshPath
         << " steps=" << solver.iterationCount()
         << " carved_voxels=" << solver.carvedVoxelCount()
-        << " legacy_error=" << solver.getCoMDistance()
-        << " geometric_error="
-        << solver.getGeometricProjectedDistance()
-        << " stop="
-        << carvingStopReasonName(solver.stopReason())
+        << " mass=" << solver.objectMass()
+        << " distance=" << solver.getCoMDistance()
+        << " energy=" << solver.getCoMEnergy()
+        << " stop=" << carvingStopReasonName(solver.stopReason())
         << " csv=" << csvPath
         << '\n';
 

@@ -49,6 +49,8 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/grid_util.cpp
     src/inner_void_mesh.cpp
     src/make_it_stand.cpp
+    src/physics/BalanceEnergy.cpp
+    src/physics/MassProperties.cpp
     src/voxel/Voxel.cpp
     src/voxel/VoxelGrid.cpp
     src/voxel/VoxelSurface.cpp
@@ -63,6 +65,8 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/inner_void_mesh.h
     include/list3d.h
     include/make_it_stand.h
+    include/physics/BalanceEnergy.h
+    include/physics/MassProperties.h
     include/voxel/Voxel.h
     include/voxel/VoxelGrid.h
     include/voxel/VoxelSurface.h
@@ -110,6 +114,43 @@ endif()
 include(CTest)
 
 if(BUILD_TESTING)
+    add_executable(
+        mass-properties-regression
+        tests/mass_properties_regression.cpp
+    )
+    target_compile_features(
+        mass-properties-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        mass-properties-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        mass-properties-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_mass_properties_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:mass-properties-regression>"
+                "${scenario}"
+        )
+
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "r2;physics"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_mass_properties_test(mass-surface-analytic surface)
+    add_mass_properties_test(mass-voxel-analytic voxel)
+    add_mass_properties_test(mass-deletion-exhaustive deletion)
+    add_mass_properties_test(balance-energy-analytic energy)
+
     add_executable(carving-regression tests/carving_regression.cpp)
     target_compile_features(carving-regression PRIVATE cxx_std_17)
     set_target_properties(carving-regression PROPERTIES CXX_EXTENSIONS OFF)
@@ -127,14 +168,13 @@ if(BUILD_TESTING)
         set_tests_properties(
             "${test_name}"
             PROPERTIES
-                LABELS "r1;carving"
+                LABELS "r1;r2;carving"
                 TIMEOUT 30
         )
     endfunction()
 
-    # These are diagnostic and control-flow regressions, not paper-equivalence
-    # tests. In particular, the full test deliberately characterizes the
-    # currently divergent R0 CoM behavior so R2 cannot change it silently.
+    # These verify diagnostic/control-flow contracts and R2 mass-property
+    # invariants. R4 still owns paper-faithful best-prefix carving.
     add_carving_regression_test(
         carving-initial-state
         initial
@@ -144,11 +184,18 @@ if(BUILD_TESTING)
         one-step
     )
     add_carving_regression_test(
-        carving-full-known-baseline
-        full-known-baseline
+        carving-full-mass-consistency
+        full-mass-consistency
     )
     add_carving_regression_test(
         carving-no-candidates
         no-candidates
+    )
+
+    # Debug builds intentionally retain expensive libigl assertions and the
+    # full scenario executes two complete deterministic runs.
+    set_tests_properties(
+        carving-full-mass-consistency
+        PROPERTIES TIMEOUT 120
     )
 endif()

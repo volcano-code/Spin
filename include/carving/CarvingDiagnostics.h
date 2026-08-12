@@ -25,13 +25,9 @@ enum class CarvingStopReason
 /**
  * Diagnostic record for one call to CarvingSolver::carveStep().
  *
- * Two projected-error values are intentionally recorded:
- *
- * - legacyProjectedError*: the value used by the current/original solver;
- * - geometricProjectedError*: a direct ground-plane projection distance.
- *
- * The second value is diagnostic only in Phase 1.6 and does not yet affect
- * stopping behavior.
+ * R2 records both the incremental mass-property state and a full recompute
+ * from the immutable outer surface minus every carved voxel. Their
+ * discrepancies are expected to remain near floating-point roundoff.
  */
 struct CarvingStepDiagnostics
 {
@@ -39,18 +35,27 @@ struct CarvingStepDiagnostics
 
     Eigen::Vector3d centerOfMassBefore;
     Eigen::Vector3d centerOfMassAfter;
-    Eigen::Vector3d approximateVoxelCenterOfMassAfter;
+    Eigen::Vector3d recomputedCenterOfMassAfter;
 
-    double legacyProjectedErrorBefore;
-    double legacyProjectedErrorAfter;
+    Eigen::Vector3d firstMomentBefore;
+    Eigen::Vector3d firstMomentAfter;
+    Eigen::Vector3d recomputedFirstMomentAfter;
 
-    double geometricProjectedErrorBefore;
-    double geometricProjectedErrorAfter;
+    double projectedDistanceBefore;
+    double projectedDistanceAfter;
+
+    double projectedEnergyBefore;
+    double projectedEnergyAfter;
 
     double centerOfMassDiscrepancyAfter;
+    double firstMomentDiscrepancyAfter;
 
-    double exactInitialMass;
-    double approximateRemainingVoxelMass;
+    /** Density-one signed volume proxy, not a calibrated SI mass. */
+    double initialMass;
+    double remainingMassBefore;
+    double remainingMassAfter;
+    double recomputedRemainingMassAfter;
+    double massDiscrepancyAfter;
 
     int candidateVoxelCount;
     int carvedVoxelCountThisStep;

@@ -3,21 +3,24 @@
 #include <Eigen/Core>
 
 #include "carving/CarvingDiagnostics.h"
+#include "physics/MassProperties.h"
 
 #include <string>
 #include <vector>
 
 
 class VoxelGrid;
+class Voxel;
 
 
 /**
  * Implements the mass-redistribution carving procedure.
  *
- * The solver owns the optimization state (mass, current center of mass,
- * iteration count and carved-voxel count), while the referenced VoxelGrid
- * owns all voxel data. It deliberately does not perform visualization or
- * cavity-mesh extraction.
+ * The solver owns the optimization state (mass, first moment, derived center
+ * of mass, iteration count and carved-voxel count), while the referenced
+ * VoxelGrid owns all voxel data. The grid must outlive the solver and must not
+ * be mutated externally while the solver is active. The solver deliberately
+ * does not perform visualization or cavity-mesh extraction.
  */
 class CarvingSolver
 {
@@ -50,15 +53,13 @@ public:
     /** Continue carving until an active stopping condition is reached. */
     void carveAll();
 
-    /**
-     * Current projected center-of-mass error used by the original solver.
-     *
-     * Phase 1.6 intentionally preserves this formula so that diagnostics can
-     * compare it with a direct geometric projection distance.
-     */
+    /** Paper Eq. (2) projected distance before the 0.5*square operation. */
     double getCoMDistance() const;
 
-    /** Direct tangential distance between current and target COM on ground. */
+    /** Paper Eq. (2): 0.5 times the squared projected CoM distance. */
+    double getCoMEnergy() const;
+
+    /** Compatibility alias for getCoMDistance(). */
     double getGeometricProjectedDistance() const;
 
     /** Return the currently active stopping condition. */
@@ -70,6 +71,10 @@ public:
     const Eigen::Vector3d& currentCenterOfMass() const;
     const Eigen::Vector3d& targetCenterOfMass() const;
 
+    const MassProperties& initialMassProperties() const;
+    const MassProperties& currentMassProperties() const;
+
+    /** Current remaining signed mass, not the initial mass. */
     double objectMass() const;
     int iterationCount() const;
     int carvedVoxelCount() const;
@@ -93,37 +98,37 @@ public:
     int initialCarveableVoxelCount() const;
 
 private:
-    struct ApproximateVoxelMassProperties
+    struct RecomputedCarvingState
     {
-        double mass;
+        MassProperties massProperties;
         Eigen::Vector3d centerOfMass;
         int filledInsideVoxelCount;
 
-        ApproximateVoxelMassProperties();
+        RecomputedCarvingState();
     };
 
     void ensureDiagnosticsInitialized();
 
-    ApproximateVoxelMassProperties
-    computeApproximateVoxelMassProperties() const;
+    RecomputedCarvingState
+    recomputeCarvingState() const;
 
-    double projectedDistanceOnGround(
-        const Eigen::Vector3d& point
-    ) const;
+    void subtractVoxelMassProperties(
+        const Voxel& voxel
+    );
+
+    void refreshCenterOfMass();
 
     double carvedGridRatio() const;
     double carvedCarveableRatio() const;
 
     VoxelGrid& voxelGrid_;
 
-    Eigen::MatrixXd planeV_;
-    Eigen::MatrixXi planeF_;
-
     Eigen::Vector3d gravity_;
     Eigen::Vector3d targetCOM_;
     Eigen::Vector3d currCOM_;
 
-    double mass_;
+    MassProperties initialMassProperties_;
+    MassProperties currentMassProperties_;
 
     int carvedVoxelCount_;
     int iterations_;
