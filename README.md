@@ -52,6 +52,14 @@ The current code modularizes and instruments the original carving prototype:
   reduced Eq. (10) matrix;
 - `DeformationSystem` evaluates `M_O`, `M_I` and the voxel lattice from the
   same immutable rest binding without mutating the R4 carving state;
+- `LaplacianEditingEnergy` builds the Section 5 implicit-similarity residual
+  operator and its positive-semidefinite quadratic form;
+- `SurfaceMassDifferential` analytically differentiates signed mass, first
+  moment and the outer-minus-cavity center of mass;
+- `DeformationObjective` composes the multi-target CoM and shape terms over
+  the free handle parameters while keeping the R6 voxel fill and targets fixed;
+- `DeformationOptimizer` implements transactional gradient trials with the
+  paper's 1% decrease rule, step schedule and `mu` schedule;
 - the headless regressions cover analytic policy, manufacturing constraints,
   deterministic initial/step/full behavior and empty candidates.
 
@@ -74,8 +82,19 @@ biharmonic weights with an open solver, transfers those weights to arbitrary
 outer-surface points by trilinear interpolation, and evaluates synchronized
 outer, cavity and grid snapshots by linear blend skinning. The direct Eq. (9)
 evaluation and reduced Eq. (10) matrix are checked against one another. This
-stage only supplies the deformation state and parameterization: it does not
-yet choose an energy-minimizing handle update.
+stage supplies the deformation state and parameterization consumed by R6.
+
+R6 adds a fixed-`alpha` deformation block for paper Section 5. It constructs
+the implicit-similarity Laplacian editing energy, differentiates signed surface
+mass, first moment and CoM analytically, maps those derivatives through the
+free translation/scale LBS parameters, and evaluates the weighted Eq. (11)
+objective for arbitrary finite target collections. The transactional optimizer
+uses the paper's 1% acceptance boundary, the `1.0, 0.8, ..., 0.4` step policy
+and `mu -= 0.05`; infeasible physical trials roll back while internal errors
+propagate. The cavity is compacted to its referenced boundary corners for the
+objective, with its mass and CoM checked against the complete synchronized R5
+snapshot. This is fixed-fill integration evidence, not an alternating or
+paper-case reproduction claim.
 
 The active graph contains corners incident to object-intersecting cells under
 the documented signed-distance/half-diagonal construction. Outer-mesh points
@@ -92,11 +111,8 @@ flattening stage would create; R3 does not mutate the mesh. These stages still
 do not establish the complete paper optimizer. Remaining known
 non-conformances include:
 
-- target refresh and voxel refill across carving/deformation alternations are
-  not scheduled yet;
-- the Laplacian preservation energy, analytic mass/CoM/deformation gradients,
-  deformation optimizer and rollback/step-size policy remain R6;
-- carving/deformation alternation and target/grid refresh remain R7;
+- carving/deformation alternation, carved-voxel refill, target/support refresh
+  and the paper's stability-driven outer stopping rule remain R7;
 - final deformed-wall, connectivity and fabrication checks remain R8;
 - `make_it_stand()` remains a placeholder API.
 
@@ -151,7 +167,7 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-The active headless suite registers 33 tests through R5:
+The active headless suite registers 38 tests through R6:
 
 ```text
 mass-surface-analytic
@@ -187,6 +203,11 @@ lbs-equation-9-10
 grid-weight-trilinear
 deformation-geometry-sync
 deformation-invalid-inputs
+laplacian-editing-analytic
+surface-mass-gradient-analytic
+deformation-objective-gradient-analytic
+paper-line-search-state-machine
+deformation-optimizer-end-to-end
 ```
 
 They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
@@ -197,6 +218,15 @@ bounded-BBW solutions and feasibility, handle contracts, Eq. (9)/(10)
 equivalence, trilinear weight transfer, synchronized geometry and invalid
 state rejection. Density is fixed to one, so reported mass is a signed-volume
 proxy in model units, not a calibrated value in kg.
+
+The five R6 additions check the implicit-similarity residual and PSD quadratic,
+analytic mass/first-moment/CoM derivatives and the complete fixed-`alpha`
+objective gradient against central differences at relative tolerance `1e-5`.
+They also check the exact 1% acceptance boundary, rollback of insufficient and
+physically infeasible trials, the clamped step/`mu` state machine, synchronized
+cavity mass/CoM, fixed support and immutable voxel fill in an end-to-end
+optimizer fixture. A change of `mu` reweights the objective, so energies across
+that state transition are deliberately not compared as a descent pair.
 
 To generate the full diagnostic trace manually after building the headless
 target:
@@ -217,9 +247,9 @@ but no longer treats its divergent numbers as an executable target.
 ```text
 include/, src/
   carving/       R4 plane policy, solver state and diagnostics
-  deformation/   R5 graph BBW, handles, Eq. (9)/(10) LBS and synced snapshots
+  deformation/   R5 representation plus R6 Laplacian objective/optimizer
   extraction/    carved-cavity surface extraction
-  physics/       signed mass properties and projected CoM objectives
+  physics/       signed mass/CoM values, differentials and projected objectives
   stability/     standing support, safe-region and target construction
   voxel/         grid, wall eligibility, topology reports and exposed faces
   center_of_mass compatibility wrapper over signed mass properties
@@ -228,6 +258,7 @@ include/, src/
   make_it_stand  placeholder public API
 tests/
   carving_regression.cpp
+  deformation_optimization_regression.cpp
   deformation_regression.cpp
   mass_properties_regression.cpp
   objective_integration_regression.cpp
