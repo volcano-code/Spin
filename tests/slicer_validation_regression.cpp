@@ -621,6 +621,20 @@ int runInvalidToolpath(const std::string& fakeExecutable)
     );
     const SlicerValidationReport stationaryPlanarReport =
         stationaryPlanar.validate();
+    Fixture g90ClearsRelativeExtrusion(
+        scenario + "-g90-clears-relative-extrusion",
+        fakeExecutable,
+        "g90-clears-relative-extrusion"
+    );
+    const SlicerValidationReport g90ClearsRelativeExtrusionReport =
+        g90ClearsRelativeExtrusion.validate();
+    Fixture g91M82Override(
+        scenario + "-g91-m82-override",
+        fakeExecutable,
+        "g91-m82-override"
+    );
+    const SlicerValidationReport g91M82OverrideReport =
+        g91M82Override.validate();
 
     if (
         emptyReport.status != SlicerValidationStatus::InvalidToolpath ||
@@ -649,7 +663,14 @@ int runInvalidToolpath(const std::string& fakeExecutable)
         stationaryPlanarReport.status !=
             SlicerValidationStatus::InvalidToolpath ||
         stationaryPlanarReport.passed ||
-        stationaryPlanarReport.toolpath.hasDeposition
+        stationaryPlanarReport.toolpath.hasDeposition ||
+        g90ClearsRelativeExtrusionReport.status !=
+            SlicerValidationStatus::InvalidToolpath ||
+        g90ClearsRelativeExtrusionReport.passed ||
+        g90ClearsRelativeExtrusionReport.toolpath.hasDeposition ||
+        g91M82OverrideReport.status != SlicerValidationStatus::Passed ||
+        !g91M82OverrideReport.passed ||
+        !g91M82OverrideReport.toolpath.hasDeposition
     )
     {
         return fail(scenario, "invalid G-code semantic gate failed");

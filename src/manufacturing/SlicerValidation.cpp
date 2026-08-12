@@ -886,11 +886,13 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
         if (opcode == "G90")
         {
             absolutePositioning = true;
+            absoluteExtrusion = true;
             continue;
         }
         if (opcode == "G91")
         {
             absolutePositioning = false;
+            absoluteExtrusion = false;
             continue;
         }
         if (opcode == "M82")

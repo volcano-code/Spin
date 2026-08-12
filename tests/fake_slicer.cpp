@@ -256,6 +256,27 @@ int runSlice(int argc, char** argv)
             "G1 X1 Y2 E1\n"
         ) ? EXIT_SUCCESS : 73;
     }
+    if (mode == "g90-clears-relative-extrusion")
+    {
+        return writeToolpath(
+            output,
+            ";LAYER_CHANGE\n"
+            "M83\n"
+            "G1 E10\n"
+            "G90\n"
+            "G1 X1 E1\n"
+        ) ? EXIT_SUCCESS : 73;
+    }
+    if (mode == "g91-m82-override")
+    {
+        return writeToolpath(
+            output,
+            ";LAYER_CHANGE\n"
+            "G91\n"
+            "M82\n"
+            "G1 X1 E1\n"
+        ) ? EXIT_SUCCESS : 73;
+    }
 
     if (mode == "repair")
     {
