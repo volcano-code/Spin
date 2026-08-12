@@ -1,14 +1,14 @@
-# R5 deformation-representation provisional acceptance record
+# R5 deformation-representation acceptance record
 
 Specification audit date: 2026-08-12 (Asia/Shanghai)
 
-Acceptance status: **provisional at the documented R5 status ceiling**
+Acceptance status: **accepted at the documented R5 status ceiling**
 
-The RelWithDebInfo headless suite currently passes 33/33 tests, including all
-eight R5-focused tests. The independent Debug, viewer and committed-tree clean
-clone gates have not yet been completed for this revision. This record must
-therefore remain provisional until those gates are filled with observed
-results; no final implementation commit hash is recorded here.
+The RelWithDebInfo and independent Debug headless suites pass 33/33 tests,
+including all eight R5-focused tests. The viewer and committed-tree recursive
+clean-clone gates also pass. This accepts the implementation and focused
+verification at the unit-status ceiling described below; it is not a claim of
+full-paper or fabrication reproduction.
 
 ## Authority and phase boundary
 
@@ -187,7 +187,7 @@ These are deterministic unit and integration invariants on local fixtures;
 they are not cross-platform bitwise baselines and do not reproduce a paper
 experiment.
 
-The following claims are permitted after the provisional gates:
+The following claims are permitted after the acceptance gates:
 
 - the R5 local graph-BBW solution is bounded, partition-of-unity and
   handle-interpolating on the tested domains;
@@ -205,27 +205,26 @@ The following claims are not permitted:
 - final watertightness, structural strength, printability or fabrication
   success.
 
-## Provisional verification gate
+## Final verification gate
 
 Observed on 2026-08-12:
 
 ```text
 RelWithDebInfo headless configure/build                passed
 RelWithDebInfo complete CTest                          33/33 passed
+R5 tests, each repeated until-fail:10                  8/8 passed
+Independent Debug headless CTest                       33/33 passed
+RelWithDebInfo viewer configure/build                  passed
+git diff --check                                       passed
+Pinned libigl status                                   clean
+Historical R0 trace SHA-256                            unchanged
 ```
 
-Required before changing this record to accepted:
-
-```text
-R5-labeled repeat-until-fail gate                      pending
-Independent Debug headless CTest                       pending
-RelWithDebInfo viewer configure/build                  pending
-git diff --check and parent/submodule clean checks     pending
-Committed-tree recursive clean-clone headless CTest    pending
-Committed-tree recursive clean-clone viewer build      pending
-Historical R0 trace SHA-256 check                      pending
-Final implementation commit identifier                pending
-```
+The committed tree at `de3d3170f88e86b94590f54e703659ad8df800ca` was then
+checked through a recursive clean clone with hard links disabled. Its headless
+suite passed 33/33, its viewer target built, the parent and pinned submodule
+remained clean, and the historical trace stayed byte-identical at SHA-256
+`3f9108649fc329a136a5371597335a99275021b6ddd9a3984198ce2b8e8c1856`.
 
 An external official-beta `.bbw` comparison is optional for accepting the R5
 unit-status ceiling, but mandatory before considering any promotion of
