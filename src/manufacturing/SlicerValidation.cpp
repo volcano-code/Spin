@@ -800,7 +800,10 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
     std::istringstream input(std::string(bytes.begin(), bytes.end()));
     input.imbue(std::locale::classic());
     std::string line;
+    bool absolutePositioning = true;
     bool absoluteExtrusion = true;
+    double xPosition = 0.0;
+    double yPosition = 0.0;
     double extrusionPosition = 0.0;
     while (std::getline(input, line))
     {
@@ -838,8 +841,11 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
             }
         );
 
-        bool hasPlanarMotion = false;
+        bool hasX = false;
+        bool hasY = false;
         bool hasExtrusion = false;
+        double x = 0.0;
+        double y = 0.0;
         double extrusion = 0.0;
         std::string field;
         while (fields >> field)
@@ -860,9 +866,15 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
             {
                 continue;
             }
-            if (parameter == 'X' || parameter == 'Y')
+            if (parameter == 'X')
             {
-                hasPlanarMotion = true;
+                hasX = true;
+                x = value;
+            }
+            else if (parameter == 'Y')
+            {
+                hasY = true;
+                y = value;
             }
             else if (parameter == 'E')
             {
@@ -871,6 +883,16 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
             }
         }
 
+        if (opcode == "G90")
+        {
+            absolutePositioning = true;
+            continue;
+        }
+        if (opcode == "G91")
+        {
+            absolutePositioning = false;
+            continue;
+        }
         if (opcode == "M82")
         {
             absoluteExtrusion = true;
@@ -881,25 +903,40 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
             absoluteExtrusion = false;
             continue;
         }
-        if (opcode == "G92" && hasExtrusion)
+        if (opcode == "G92")
         {
-            extrusionPosition = extrusion;
+            if (hasX) xPosition = x;
+            if (hasY) yPosition = y;
+            if (hasExtrusion) extrusionPosition = extrusion;
             continue;
         }
 
         if (opcode == "G0" || opcode == "G00" || opcode == "G1" ||
             opcode == "G01")
         {
+            bool hasPlanarMotion = false;
+            if (hasX)
+            {
+                const double delta = absolutePositioning
+                    ? x - xPosition : x;
+                hasPlanarMotion = hasPlanarMotion || delta != 0.0;
+                xPosition = absolutePositioning ? x : xPosition + x;
+            }
+            if (hasY)
+            {
+                const double delta = absolutePositioning
+                    ? y - yPosition : y;
+                hasPlanarMotion = hasPlanarMotion || delta != 0.0;
+                yPosition = absolutePositioning ? y : yPosition + y;
+            }
             bool positiveExtrusion = false;
             if (hasExtrusion)
             {
-                positiveExtrusion = absoluteExtrusion
-                    ? extrusion > extrusionPosition
-                    : extrusion > 0.0;
-                if (absoluteExtrusion)
-                {
-                    extrusionPosition = extrusion;
-                }
+                const double delta = absoluteExtrusion
+                    ? extrusion - extrusionPosition : extrusion;
+                positiveExtrusion = delta > 0.0;
+                extrusionPosition = absoluteExtrusion
+                    ? extrusion : extrusionPosition + extrusion;
             }
             if (hasPlanarMotion && positiveExtrusion)
             {

@@ -607,6 +607,20 @@ int runInvalidToolpath(const std::string& fakeExecutable)
     );
     const SlicerValidationReport extrusionOnlyReport =
         extrusionOnly.validate();
+    Fixture switchedRetraction(
+        scenario + "-relative-absolute-retraction",
+        fakeExecutable,
+        "relative-absolute-retraction"
+    );
+    const SlicerValidationReport switchedRetractionReport =
+        switchedRetraction.validate();
+    Fixture stationaryPlanar(
+        scenario + "-stationary-planar",
+        fakeExecutable,
+        "stationary-planar"
+    );
+    const SlicerValidationReport stationaryPlanarReport =
+        stationaryPlanar.validate();
 
     if (
         emptyReport.status != SlicerValidationStatus::InvalidToolpath ||
@@ -627,7 +641,15 @@ int runInvalidToolpath(const std::string& fakeExecutable)
         extrusionOnlyReport.status != SlicerValidationStatus::InvalidToolpath ||
         extrusionOnlyReport.passed ||
         !extrusionOnlyReport.toolpath.hasLayers ||
-        extrusionOnlyReport.toolpath.hasDeposition
+        extrusionOnlyReport.toolpath.hasDeposition ||
+        switchedRetractionReport.status !=
+            SlicerValidationStatus::InvalidToolpath ||
+        switchedRetractionReport.passed ||
+        switchedRetractionReport.toolpath.hasDeposition ||
+        stationaryPlanarReport.status !=
+            SlicerValidationStatus::InvalidToolpath ||
+        stationaryPlanarReport.passed ||
+        stationaryPlanarReport.toolpath.hasDeposition
     )
     {
         return fail(scenario, "invalid G-code semantic gate failed");

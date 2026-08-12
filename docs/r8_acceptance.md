@@ -80,7 +80,8 @@ diagnostics are rejected.
 
 The G-code audit is intentionally a smoke test: it requires text, a recognized
 layer marker, and at least one finite positive-extrusion G0/G1 command with X
-or Y motion while tracking absolute/relative extrusion modes and G92 resets.
+or Y displacement while tracking absolute/relative coordinate and extrusion
+modes plus G92 resets.
 It is not a full G-code parser, collision simulation, printer compatibility
 check or build-success proof.
 

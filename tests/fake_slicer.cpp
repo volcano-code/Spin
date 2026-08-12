@@ -236,6 +236,26 @@ int runSlice(int argc, char** argv)
             "G1 E0.40 F1200\n"
         ) ? EXIT_SUCCESS : 73;
     }
+    if (mode == "relative-absolute-retraction")
+    {
+        return writeToolpath(
+            output,
+            ";LAYER_CHANGE\n"
+            "M83\n"
+            "G1 E10\n"
+            "M82\n"
+            "G1 X1 E1\n"
+        ) ? EXIT_SUCCESS : 73;
+    }
+    if (mode == "stationary-planar")
+    {
+        return writeToolpath(
+            output,
+            ";LAYER_CHANGE\n"
+            "G92 X1 Y2 E0\n"
+            "G1 X1 Y2 E1\n"
+        ) ? EXIT_SUCCESS : 73;
+    }
 
     if (mode == "repair")
     {
