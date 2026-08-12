@@ -68,6 +68,7 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/inner_void_mesh.cpp
     src/make_it_stand.cpp
     src/manufacturing/ManufacturingGeometry.cpp
+    src/manufacturing/PartitionManifest.cpp
     src/manufacturing/SlicerValidation.cpp
     src/optimization/AlternatingBalanceOptimizer.cpp
     src/physics/BalanceEnergy.cpp
@@ -102,6 +103,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/list3d.h
     include/make_it_stand.h
     include/manufacturing/ManufacturingGeometry.h
+    include/manufacturing/PartitionManifest.h
     include/manufacturing/SlicerValidation.h
     include/optimization/AlternatingBalanceOptimizer.h
     include/physics/BalanceEnergy.h
@@ -785,6 +787,33 @@ if(BUILD_TESTING)
     add_slicer_validation_test(r8-slicer-timeout timeout)
     add_slicer_validation_test(r8-slicer-shell-safe shell-safe)
     add_slicer_validation_test(r8-slicer-report-json report-json)
+
+    add_executable(
+        partition-manifest-regression
+        tests/partition_manifest_regression.cpp
+    )
+    target_compile_features(
+        partition-manifest-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        partition-manifest-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        partition-manifest-regression
+        PRIVATE make_it_stand::core
+    )
+    add_test(
+        NAME r8-partition-manifest
+        COMMAND "$<TARGET_FILE:partition-manifest-regression>"
+    )
+    set_tests_properties(
+        r8-partition-manifest
+        PROPERTIES
+            LABELS "r8;manufacturing;partition-interface"
+            TIMEOUT 15
+    )
 
     add_executable(carving-regression tests/carving_regression.cpp)
     target_compile_features(carving-regression PRIVATE cxx_std_17)
