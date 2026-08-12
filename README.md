@@ -31,8 +31,8 @@ The current code modularizes and instruments the original carving prototype:
 - `VoidMeshExtractor` extracts the carved cavity boundary;
 - `PlaneCarvingPolicy` implements paper Eq. (8), deterministic multi-target
   ordering and complete true-energy prefix selection;
-- `CarvingSolver` owns transactional carving state and consumes arbitrary
-  objective collections;
+- `CarvingSolver` owns transactional rest/deformed-lattice carving state and
+  accepts target-context updates between committed steps;
 - `CarvingDiagnostics` records per-step metrics and CSV traces;
 - `MassProperties` keeps signed mass and first moment as one state;
 - `BalanceEnergy` implements the normalized-gravity projection in Eq. (2);
@@ -55,11 +55,20 @@ The current code modularizes and instruments the original carving prototype:
 - `LaplacianEditingEnergy` builds the Section 5 implicit-similarity residual
   operator and its positive-semidefinite quadratic form;
 - `SurfaceMassDifferential` analytically differentiates signed mass, first
-  moment and the outer-minus-cavity center of mass;
+  moment and the outer-minus-cavity center of mass, including closed oriented
+  voxel triangle chains whose components touch along an edge;
 - `DeformationObjective` composes the multi-target CoM and shape terms over
   the free handle parameters while keeping the R6 voxel fill and targets fixed;
 - `DeformationOptimizer` implements transactional gradient trials with the
   paper's 1% decrease rule, step schedule and `mu` schedule;
+- `DeformedVoxelMassField` integrates exact mass, first moment and volume
+  centroid for every active synchronously deformed hexahedral cell;
+- `BalanceTargetSchedule` preserves fixed support/attachment specifications,
+  refreshes standing targets from committed CoM states and applies all-of
+  terminal semantics;
+- `AlternatingBalanceOptimizer` executes all-filled carving, fixed-`alpha`
+  deformation and recarving blocks with transactional traces and explicit
+  terminal states;
 - the headless regressions cover analytic policy, manufacturing constraints,
   deterministic initial/step/full behavior and empty candidates.
 
@@ -93,8 +102,28 @@ uses the paper's 1% acceptance boundary, the `1.0, 0.8, ..., 0.4` step policy
 and `mu -= 0.05`; infeasible physical trials roll back while internal errors
 propagate. The cavity is compacted to its referenced boundary corners for the
 objective, with its mass and CoM checked against the complete synchronized R5
-snapshot. This is fixed-fill integration evidence, not an alternating or
-paper-case reproduction claim.
+snapshot. This fixed-fill machinery is the foundation consumed by R7.
+
+R7 adds the Section 3.2/Figure 3 block-coordinate controller. Each carving
+block starts from an all-filled grid at the current deformation, refreshes the
+standing target from that solid CoM, and refreshes it again after every
+committed carving iteration. Each following deformation block freezes the
+complete voxel mask: line-search trials neither refill nor recarve. A new
+carving block begins only after the fixed-mask gradient has converged, and may
+therefore refill previously carved voxels before selecting a different
+pattern. Deformed carving uses exact signed mass and first moment for each
+piecewise-linear hexahedral cell rather than rest-grid box approximations.
+The controller distinguishes stable, stalled, `mu`-exhausted and local
+iteration-limit terminals; no limit is reported as stability.
+
+The production integration fixture completes Carving--Deformation--Carving,
+refilling all 304 voxels carved by the first block before producing a second
+pattern at Hamming distance 48. Its trace contains 27 deformation trials,
+including accepted commits and complete rejected-trial rollback. Repeated
+runs are deterministic, the support stays fixed, and final signed mass,
+first moment and CoM agree with an independent outer-plus-cavity surface
+oracle. These are local `VERIFIED_REGRESSION` results, not official asset or
+`VERIFIED_PAPER` alignment.
 
 The active graph contains corners incident to object-intersecting cells under
 the documented signed-distance/half-diagonal construction. Outer-mesh points
@@ -108,13 +137,12 @@ The viewer now constructs a standing target from the actual lowest contacts
 when its flatten-band input is zero, rather than treating the clicked posture
 anchor as the target. A positive band previews the support that a later
 flattening stage would create; R3 does not mutate the mesh. These stages still
-do not establish the complete paper optimizer. Remaining known
-non-conformances include:
+do not establish paper-asset equivalence or manufacturing readiness. Remaining
+known non-conformances include:
 
-- carving/deformation alternation, carved-voxel refill, target refresh,
-  optimizer-wide support invariance and the paper's stability-driven outer
-  stopping rule remain R7;
 - final deformed-wall, connectivity and fabrication checks remain R8;
+- official paper cases, metrics, ablations and performance alignment remain
+  R9;
 - `make_it_stand()` remains a placeholder API.
 
 These limitations are intentional baseline facts, not accepted final behavior.
@@ -168,7 +196,8 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-The active headless suite registers 38 tests through R6:
+The active headless suite registers 55 tests through R7. The 38 pre-R7 tests
+are:
 
 ```text
 mass-surface-analytic
@@ -211,6 +240,32 @@ paper-line-search-state-machine
 deformation-optimizer-end-to-end
 ```
 
+R7 adds one closed-triangle-chain extension to the R6 differential tests and
+16 tests carrying the `r7` label:
+
+```text
+surface-mass-triangle-chain-analytic
+deformed-voxel-mass-identity-similarity
+deformed-voxel-mass-cavity-sum
+deformed-voxel-mass-invalid
+deformed-carving-identity
+deformed-carving-mass-field
+deformed-carving-transaction
+deformed-carving-objective-update
+alternating-target-refresh
+alternating-stability-terminal
+alternating-multi-target-terminal
+alternating-refill-reset
+alternating-fixed-alpha-transaction
+alternating-paper-beta-profile
+alternating-controller-refill-block
+alternating-controller-transaction
+alternating-controller-end-to-end
+```
+
+The triangle-chain extension is labelled `r6`; the remaining 16 comprise the
+R7 label, so the complete total is `38 + 1 + 16 = 55`.
+
 They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
 eight-voxel deletion fixture, oblique/scaled gravity, state/count continuity,
 the exact 44-column CSV schema, per-step incremental/full consistency and safe
@@ -228,6 +283,12 @@ physically infeasible trials, the clamped step/`mu` state machine, synchronized
 cavity mass/CoM, fixed support and immutable voxel fill in an end-to-end
 optimizer fixture. A change of `mu` reweights the objective, so energies across
 that state transition are deliberately not compared as a descent pair.
+
+The R7 additions check exact deformed-cell mass integration, transactional
+target updates, fixed support/specifications, all-of stability, complete voxel
+refill, paper fixed-`alpha` versus beta recarving semantics, per-step target
+refresh, same-context energy descent, line-search rollback, repeated
+recarving, deterministic reruns and the final independent surface-mass oracle.
 
 To generate the full diagnostic trace manually after building the headless
 target:
@@ -248,10 +309,11 @@ but no longer treats its divergent numbers as an executable target.
 ```text
 include/, src/
   carving/       R4 plane policy, solver state and diagnostics
-  deformation/   R5 representation plus R6 Laplacian objective/optimizer
+  deformation/   R5 representation, R6 objective and R7 cell-mass sidecar
   extraction/    carved-cavity surface extraction
+  optimization/  R7 block-coordinate carving/deformation controller
   physics/       signed mass/CoM values, differentials and projected objectives
-  stability/     standing support, safe-region and target construction
+  stability/     standing support, safe-region and R7 target schedule
   voxel/         grid, wall eligibility, topology reports and exposed faces
   center_of_mass compatibility wrapper over signed mass properties
   grid_util      alignment, transforms and regular-grid construction
@@ -259,6 +321,11 @@ include/, src/
   make_it_stand  placeholder public API
 tests/
   carving_regression.cpp
+  alternating_balance_optimizer_regression.cpp
+  alternating_block_semantics_regression.cpp
+  balance_target_schedule_regression.cpp
+  deformed_carving_solver_regression.cpp
+  deformed_voxel_mass_field_regression.cpp
   deformation_optimization_regression.cpp
   deformation_regression.cpp
   mass_properties_regression.cpp
