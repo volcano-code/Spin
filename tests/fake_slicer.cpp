@@ -6,6 +6,9 @@
 #include <string>
 #include <thread>
 
+#include <sys/types.h>
+#include <unistd.h>
+
 
 namespace
 {
@@ -50,7 +53,7 @@ bool writeToolpath(const std::string& filename, const std::string& contents)
 }
 
 
-int runVersionProbe()
+int runVersionProbe(const char* executablePath)
 {
     const std::string mode = environment(
         "MAKE_IT_STAND_FAKE_SLICER_VERSION_MODE"
@@ -72,6 +75,22 @@ int runVersionProbe()
     if (mode == "mismatch")
     {
         std::cout << "PrusaSlicer 0.0.0-wrong\n";
+        return EXIT_SUCCESS;
+    }
+    if (mode == "long-suffix")
+    {
+        std::cout << FAKE_VERSION << std::string(4096, 'x') << '\n';
+        return EXIT_SUCCESS;
+    }
+    if (mode == "unlink-self")
+    {
+        std::cout << FAKE_VERSION << '\n';
+        std::cout.flush();
+        if (::unlink(executablePath) != 0)
+        {
+            std::cerr << "fake version probe could not unlink itself\n";
+            return 42;
+        }
         return EXIT_SUCCESS;
     }
 
@@ -144,6 +163,36 @@ int runSlice(int argc, char** argv)
     {
         std::this_thread::sleep_for(std::chrono::seconds(5));
     }
+    if (mode == "fork-grandchild")
+    {
+        const pid_t descendant = ::fork();
+        if (descendant < 0)
+        {
+            return 74;
+        }
+        if (descendant == 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(600));
+            writeToolpath(profile + ".late-marker", "survived timeout\n");
+            _exit(EXIT_SUCCESS);
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
+    if (mode == "orphan-grandchild")
+    {
+        const pid_t descendant = ::fork();
+        if (descendant < 0)
+        {
+            return 74;
+        }
+        if (descendant == 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(600));
+            writeToolpath(profile + ".late-marker", "survived leader exit\n");
+            _exit(EXIT_SUCCESS);
+        }
+        return EXIT_SUCCESS;
+    }
     if (mode == "signal")
     {
         std::raise(SIGTERM);
@@ -179,6 +228,14 @@ int runSlice(int argc, char** argv)
             "G0ARBAGE EVIDENCE\n"
         ) ? EXIT_SUCCESS : 73;
     }
+    if (mode == "extrusion-only")
+    {
+        return writeToolpath(
+            output,
+            ";LAYER_CHANGE\n"
+            "G1 E0.40 F1200\n"
+        ) ? EXIT_SUCCESS : 73;
+    }
 
     if (mode == "repair")
     {
@@ -186,6 +243,10 @@ int runSlice(int argc, char** argv)
         std::cerr
             << "Warning: The model was repaired.\n"
             << "1 degenerate facet was removed during auto-repair.\n";
+    }
+    if (mode == "noisy")
+    {
+        std::cout << std::string(4096, 'x') << '\n';
     }
 
     const bool written = writeToolpath(
@@ -215,7 +276,7 @@ int main(int argc, char** argv)
 {
     if (argc == 2 && std::string(argv[1]) == "--version")
     {
-        return runVersionProbe();
+        return runVersionProbe(argv[0]);
     }
     return runSlice(argc, argv);
 }

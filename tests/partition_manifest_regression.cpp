@@ -63,9 +63,14 @@ int main()
         std::filesystem::temp_directory_path() /
         ("make_it_stand_partition_" +
          std::to_string(static_cast<long long>(::getpid())));
+    const std::filesystem::path outside =
+        std::filesystem::temp_directory_path() /
+        ("make_it_stand_partition_outside_" +
+         std::to_string(static_cast<long long>(::getpid())) + ".stl");
     std::filesystem::create_directories(directory);
     try
     {
+        writeFile(outside, "outside fixture\n");
         writeFile(directory / "left.stl", "left fixture\n");
         writeFile(directory / "right.stl", "right fixture\n");
         writeFile(directory / "left-geometry.json", "left geometry\n");
@@ -92,9 +97,23 @@ int main()
             directory.string()
         );
         if (!passed.passed || passed.partCount != 2U ||
+            !passed.manifestFingerprintAvailable ||
+            passed.manifestFingerprint.size() != 64U ||
             passed.toJson().find("\"passed\": true") == std::string::npos)
         {
             throw std::runtime_error("valid manifest was rejected");
+        }
+
+        manufacturing::ExternalPartitionManifest changed = manifest;
+        changed.externalGeneratorVersion = "2";
+        const auto changedAudit =
+            manufacturing::auditExternalPartitionManifest(
+                changed, directory.string()
+            );
+        if (!changedAudit.passed ||
+            changedAudit.manifestFingerprint == passed.manifestFingerprint)
+        {
+            throw std::runtime_error("manifest fingerprint was not binding");
         }
 
         manufacturing::ExternalPartitionManifest duplicate = manifest;
@@ -137,6 +156,37 @@ int main()
             throw std::runtime_error("path traversal was accepted");
         }
 
+        manufacturing::ExternalPartitionManifest missing = manifest;
+        missing.parts[0].meshFilename = "missing.stl";
+        const auto missingAudit =
+            manufacturing::auditExternalPartitionManifest(
+                missing, directory.string()
+            );
+        if (missingAudit.passed || missingAudit.allFilesAvailable ||
+            missingAudit.allHashesMatch)
+        {
+            throw std::runtime_error(
+                "missing artifact retained a positive hash aggregate"
+            );
+        }
+
+        std::filesystem::create_symlink(outside, directory / "escaped.stl");
+        manufacturing::ExternalPartitionManifest escaped = manifest;
+        escaped.parts[0].meshFilename = "escaped.stl";
+        escaped.parts[0].expectedMeshSha256 =
+            manufacturing::computeFileSha256(outside.string());
+        const auto escapedAudit =
+            manufacturing::auditExternalPartitionManifest(
+                escaped, directory.string()
+            );
+        if (escapedAudit.passed || escapedAudit.allFilesAvailable ||
+            escapedAudit.allHashesMatch)
+        {
+            throw std::runtime_error(
+                "symlink escape outside manifest root was accepted"
+            );
+        }
+
         manufacturing::ExternalPartitionManifest scaled = manifest;
         scaled.parts[0].assemblyTransform(0, 0) = 2.0;
         if (manufacturing::auditExternalPartitionManifest(
@@ -149,11 +199,13 @@ int main()
     {
         std::error_code ignored;
         std::filesystem::remove_all(directory, ignored);
+        std::filesystem::remove(outside, ignored);
         return fail(error.what());
     }
 
     std::error_code ignored;
     std::filesystem::remove_all(directory, ignored);
+    std::filesystem::remove(outside, ignored);
     std::cout << "[PASS] partition-manifest\n";
     return EXIT_SUCCESS;
 }

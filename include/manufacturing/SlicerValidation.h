@@ -24,6 +24,7 @@ enum class SlicerValidationStatus
     LaunchFailed,
     TimedOut,
     NonzeroExit,
+    CaptureFailed,
     AutoRepairUnknown,
     AutoRepairDetected,
     InvalidToolpath,
@@ -70,6 +71,9 @@ struct SlicerValidationConfig
 
     /** Maximum bytes retained in each human-readable stdout/stderr excerpt. */
     std::uintmax_t maximumDiagnosticBytes = 4096;
+
+    /** Maximum bytes accepted from each complete captured process stream. */
+    std::uintmax_t maximumCaptureBytes = 16U * 1024U * 1024U;
 };
 
 
@@ -166,6 +170,10 @@ const char* automaticRepairStatusToken(
 std::string computeFileSha256(const std::string& filename);
 
 
+/** Compute a lower-case SHA-256 digest of an in-memory byte string. */
+std::string computeContentSha256(const std::string& content);
+
+
 /**
  * Run one argv-based, pinned-binary/profile PrusaSlicer FFF smoke test.
  *
@@ -173,7 +181,10 @@ std::string computeFileSha256(const std::string& filename);
  * `<exe> --version`, followed by an isolated `--load ... --export-gcode` run.
  * It never searches PATH, installs software, uploads a toolpath, or talks to a
  * printer. The child still inherits the host process environment and dynamic
- * library closure. `Passed` means only that the exact binary/profile/input produced a
+ * library closure. This fork/exec adapter must be called while the process is
+ * single-threaded, with normal exclusive SIGCHLD ownership: no
+ * SIG_IGN/SA_NOCLDWAIT and no concurrent reaper for this child. `Passed` means
+ * only that the exact binary/profile/input produced a
  * parseable nonempty G-code artifact without a known reported auto-repair.
  */
 SlicerValidationReport validateWithPinnedSlicer(

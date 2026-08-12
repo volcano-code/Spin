@@ -21,6 +21,8 @@
 #include <vector>
 
 #include <fcntl.h>
+#include <poll.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -289,6 +291,23 @@ std::vector<unsigned char> readBytes(const std::string& filename)
 }
 
 
+std::vector<unsigned char> readBytesBounded(
+    const std::string& filename,
+    std::uintmax_t maximumBytes
+)
+{
+    std::error_code sizeError;
+    const std::uintmax_t size = std::filesystem::file_size(
+        filename, sizeError
+    );
+    if (sizeError || size > maximumBytes)
+    {
+        throw std::runtime_error("slicer diagnostic stream exceeds limit");
+    }
+    return readBytes(filename);
+}
+
+
 std::string bytesHash(const std::vector<unsigned char>& bytes)
 {
     Sha256 hash;
@@ -304,12 +323,43 @@ struct ProcessCapture
 {
     bool launchSucceeded = false;
     bool completed = false;
+    bool waitFailed = false;
+    bool captureFailed = false;
     bool exitedNormally = false;
     bool timedOut = false;
     int exitCode = -1;
     int signal = 0;
+    int waitError = 0;
+    std::string diagnostic;
     std::vector<unsigned char> standardOutput;
     std::vector<unsigned char> standardError;
+};
+
+
+class ScopedArtifactCleanup
+{
+public:
+    explicit ScopedArtifactCleanup(
+        std::vector<std::filesystem::path> paths
+    )
+        : paths_(std::move(paths))
+    {
+    }
+
+    ~ScopedArtifactCleanup()
+    {
+        for (const std::filesystem::path& path : paths_)
+        {
+            std::error_code ignored;
+            std::filesystem::remove(path, ignored);
+        }
+    }
+
+    ScopedArtifactCleanup(const ScopedArtifactCleanup&) = delete;
+    ScopedArtifactCleanup& operator=(const ScopedArtifactCleanup&) = delete;
+
+private:
+    std::vector<std::filesystem::path> paths_;
 };
 
 
@@ -335,22 +385,109 @@ std::filesystem::path uniqueTemporary(
 }
 
 
+class ScopedPrivateDirectory
+{
+public:
+    ScopedPrivateDirectory(
+        const std::filesystem::path& parent,
+        const std::string& stem
+    )
+    {
+        static std::atomic<unsigned long long> counter{0};
+        for (int attempt = 0; attempt < 128; ++attempt)
+        {
+            path_ = parent /
+                ("." + stem + ".r8-work." +
+                 std::to_string(static_cast<long long>(::getpid())) + "." +
+                 std::to_string(counter.fetch_add(1)));
+            if (::mkdir(path_.c_str(), 0700) == 0)
+            {
+                return;
+            }
+            if (errno != EEXIST)
+            {
+                throw std::runtime_error(
+                    "cannot create private slicer workspace"
+                );
+            }
+        }
+        throw std::runtime_error("cannot allocate private slicer workspace");
+    }
+
+    ~ScopedPrivateDirectory()
+    {
+        std::error_code ignored;
+        std::filesystem::remove_all(path_, ignored);
+    }
+
+    ScopedPrivateDirectory(const ScopedPrivateDirectory&) = delete;
+    ScopedPrivateDirectory& operator=(const ScopedPrivateDirectory&) = delete;
+
+    const std::filesystem::path& path() const noexcept
+    {
+        return path_;
+    }
+
+private:
+    std::filesystem::path path_;
+};
+
+
+bool reapChild(pid_t child, int& status)
+{
+    while (true)
+    {
+        const pid_t state = ::waitpid(child, &status, 0);
+        if (state == child)
+        {
+            return true;
+        }
+        if (state < 0 && errno == EINTR)
+        {
+            continue;
+        }
+        return false;
+    }
+}
+
+
+void killProcessGroup(pid_t leader)
+{
+    ::kill(-leader, SIGKILL);
+    ::kill(leader, SIGKILL);
+}
+
+
 ProcessCapture runProcess(
     const std::vector<std::string>& arguments,
     int timeoutMilliseconds,
     const std::filesystem::path& directory,
-    const std::string& stem
+    const std::string& stem,
+    std::uintmax_t maximumCaptureBytes
 )
 {
     ProcessCapture result;
     const std::filesystem::path stdoutPath = uniqueTemporary(directory, stem + ".out");
     const std::filesystem::path stderrPath = uniqueTemporary(directory, stem + ".err");
-    const int stdoutDescriptor = ::open(
+    const ScopedArtifactCleanup captureCleanup({stdoutPath, stderrPath});
+    int stdoutDescriptor = ::open(
         stdoutPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600
     );
-    const int stderrDescriptor = ::open(
+    int stderrDescriptor = ::open(
         stderrPath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600
     );
+    const auto moveAboveStandardStreams = [](int descriptor)
+    {
+        if (descriptor < 0 || descriptor > STDERR_FILENO)
+        {
+            return descriptor;
+        }
+        const int moved = ::fcntl(descriptor, F_DUPFD_CLOEXEC, 3);
+        ::close(descriptor);
+        return moved;
+    };
+    stdoutDescriptor = moveAboveStandardStreams(stdoutDescriptor);
+    stderrDescriptor = moveAboveStandardStreams(stderrDescriptor);
     if (stdoutDescriptor < 0 || stderrDescriptor < 0)
     {
         if (stdoutDescriptor >= 0) ::close(stdoutDescriptor);
@@ -358,78 +495,254 @@ ProcessCapture runProcess(
         throw std::runtime_error("cannot create slicer capture files");
     }
 
+    std::vector<char*> argv;
+    argv.reserve(arguments.size() + 1U);
+    for (const std::string& argument : arguments)
+    {
+        argv.push_back(const_cast<char*>(argument.c_str()));
+    }
+    argv.push_back(nullptr);
+    const std::string workingDirectory = directory.string();
+
+    int launchPipe[2]{-1, -1};
+    if (::pipe2(launchPipe, O_CLOEXEC) != 0)
+    {
+        ::close(stdoutDescriptor);
+        ::close(stderrDescriptor);
+        throw std::runtime_error("cannot create slicer launch-status pipe");
+    }
+    launchPipe[0] = moveAboveStandardStreams(launchPipe[0]);
+    launchPipe[1] = moveAboveStandardStreams(launchPipe[1]);
+    if (launchPipe[0] < 0 || launchPipe[1] < 0)
+    {
+        if (launchPipe[0] >= 0) ::close(launchPipe[0]);
+        if (launchPipe[1] >= 0) ::close(launchPipe[1]);
+        ::close(stdoutDescriptor);
+        ::close(stderrDescriptor);
+        throw std::runtime_error(
+            "cannot isolate slicer launch-status descriptors"
+        );
+    }
+
+    const auto deadline = std::chrono::steady_clock::now() +
+        std::chrono::milliseconds(timeoutMilliseconds);
+
     const pid_t child = ::fork();
     if (child == 0)
     {
-        ::dup2(stdoutDescriptor, STDOUT_FILENO);
-        ::dup2(stderrDescriptor, STDERR_FILENO);
+        ::close(launchPipe[0]);
+        const auto failLaunch = [&launchPipe](unsigned char stage)
+        {
+            const int savedError = errno;
+            const std::array<unsigned char, 1U + sizeof(int)> message = [&]()
+            {
+                std::array<unsigned char, 1U + sizeof(int)> value{};
+                value[0] = stage;
+                std::memcpy(value.data() + 1U, &savedError, sizeof(int));
+                return value;
+            }();
+            ssize_t ignored = ::write(
+                launchPipe[1], message.data(), message.size()
+            );
+            static_cast<void>(ignored);
+            _exit(127);
+        };
+        if (::setpgid(0, 0) != 0)
+        {
+            failLaunch(1U);
+        }
+        if (::dup2(stdoutDescriptor, STDOUT_FILENO) < 0 ||
+            ::dup2(stderrDescriptor, STDERR_FILENO) < 0)
+        {
+            failLaunch(2U);
+        }
         ::close(stdoutDescriptor);
         ::close(stderrDescriptor);
-        if (::chdir(directory.c_str()) != 0)
+        if (::chdir(workingDirectory.c_str()) != 0)
         {
-            _exit(126);
+            failLaunch(3U);
         }
-
-        std::vector<char*> argv;
-        argv.reserve(arguments.size() + 1U);
-        for (const std::string& argument : arguments)
-        {
-            argv.push_back(const_cast<char*>(argument.c_str()));
-        }
-        argv.push_back(nullptr);
         ::execv(arguments.front().c_str(), argv.data());
-        _exit(127);
+        failLaunch(4U);
+    }
+    ::close(launchPipe[1]);
+    if (child > 0)
+    {
+        /* Close the fork/setpgid race before a timeout targets the group. */
+        while (::setpgid(child, child) != 0)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            /* EACCES means the child already crossed exec; child setpgid ran. */
+            if (errno != EACCES && errno != ESRCH)
+            {
+                ::kill(child, SIGKILL);
+            }
+            break;
+        }
     }
     ::close(stdoutDescriptor);
     ::close(stderrDescriptor);
 
     if (child < 0)
     {
-        std::error_code ignored;
-        std::filesystem::remove(stdoutPath, ignored);
-        std::filesystem::remove(stderrPath, ignored);
+        ::close(launchPipe[0]);
         return result;
     }
     result.launchSucceeded = true;
 
-    int status = 0;
-    const auto deadline = std::chrono::steady_clock::now() +
-        std::chrono::milliseconds(timeoutMilliseconds);
+    std::array<unsigned char, 1U + sizeof(int)> launchMessage{};
+    ssize_t launchBytes = 0;
     while (true)
     {
-        const pid_t state = ::waitpid(child, &status, WNOHANG);
+        const int remainingMilliseconds = static_cast<int>(
+            std::max<long long>(
+                0,
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    deadline - std::chrono::steady_clock::now()
+                ).count()
+            )
+        );
+        struct pollfd launchStatus{};
+        launchStatus.fd = launchPipe[0];
+        launchStatus.events = POLLIN | POLLHUP;
+        const int polled = ::poll(&launchStatus, 1, remainingMilliseconds);
+        if (polled < 0 && errno == EINTR)
+        {
+            continue;
+        }
+        if (polled <= 0)
+        {
+            if (polled == 0)
+            {
+                result.timedOut = true;
+                result.diagnostic = "slicer pre-exec launch timed out";
+            }
+            else
+            {
+                result.launchSucceeded = false;
+                result.diagnostic = "launch-status poll failed";
+            }
+            break;
+        }
+        launchBytes = ::read(
+            launchPipe[0], launchMessage.data(), launchMessage.size()
+        );
+        if (launchBytes < 0 && errno == EINTR)
+        {
+            continue;
+        }
+        break;
+    }
+    ::close(launchPipe[0]);
+    if (result.timedOut)
+    {
+        killProcessGroup(child);
+    }
+    if (launchBytes > 0)
+    {
+        result.launchSucceeded = false;
+        int launchError = 0;
+        if (launchBytes == static_cast<ssize_t>(launchMessage.size()))
+        {
+            std::memcpy(&launchError, launchMessage.data() + 1U, sizeof(int));
+        }
+        result.diagnostic =
+            "pre-exec stage " + std::to_string(launchMessage[0]) +
+            " failed with errno " + std::to_string(launchError);
+    }
+    else if (launchBytes < 0)
+    {
+        result.launchSucceeded = false;
+        result.diagnostic = "launch-status pipe read failed";
+    }
+
+    int status = 0;
+    bool hasWaitStatus = false;
+    while (true)
+    {
+        siginfo_t childInfo{};
+        const int observation = ::waitid(
+            P_PID,
+            static_cast<id_t>(child),
+            &childInfo,
+            WEXITED | WNOHANG | WNOWAIT
+        );
+        if (observation < 0 && errno == EINTR)
+        {
+            if (std::chrono::steady_clock::now() < deadline)
+            {
+                continue;
+            }
+            result.timedOut = true;
+            killProcessGroup(child);
+            hasWaitStatus = reapChild(child, status);
+            break;
+        }
+        const pid_t state = observation == 0 && childInfo.si_pid == child
+            ? child : (observation == 0 ? 0 : -1);
         if (state == child)
         {
-            result.completed = true;
+            /* The zombie pins the numeric leader/PGID until cleanup finishes. */
+            if (std::chrono::steady_clock::now() > deadline)
+            {
+                result.timedOut = true;
+            }
+            ::kill(-child, SIGKILL);
+            hasWaitStatus = reapChild(child, status);
+            result.completed = hasWaitStatus;
             break;
         }
         if (state < 0)
         {
+            const int waitError = errno;
+            result.waitFailed = true;
+            result.waitError = waitError;
+            if (waitError != ECHILD)
+            {
+                killProcessGroup(child);
+                hasWaitStatus = reapChild(child, status);
+            }
             break;
         }
         if (std::chrono::steady_clock::now() >= deadline)
         {
             result.timedOut = true;
-            ::kill(child, SIGKILL);
-            ::waitpid(child, &status, 0);
+            killProcessGroup(child);
+            hasWaitStatus = reapChild(child, status);
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    if (WIFEXITED(status))
+    if (hasWaitStatus && WIFEXITED(status))
     {
         result.exitedNormally = true;
         result.exitCode = WEXITSTATUS(status);
     }
-    else if (WIFSIGNALED(status))
+    else if (hasWaitStatus && WIFSIGNALED(status))
     {
         result.signal = WTERMSIG(status);
     }
-    result.standardOutput = readBytes(stdoutPath.string());
-    result.standardError = readBytes(stderrPath.string());
-    std::error_code ignored;
-    std::filesystem::remove(stdoutPath, ignored);
-    std::filesystem::remove(stderrPath, ignored);
+    try
+    {
+        result.standardOutput = readBytesBounded(
+            stdoutPath.string(), maximumCaptureBytes
+        );
+        result.standardError = readBytesBounded(
+            stderrPath.string(), maximumCaptureBytes
+        );
+    }
+    catch (const std::exception& error)
+    {
+        result.captureFailed = true;
+        if (!result.diagnostic.empty())
+        {
+            result.diagnostic += "; ";
+        }
+        result.diagnostic += error.what();
+    }
     return result;
 }
 
@@ -487,6 +800,8 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
     std::istringstream input(std::string(bytes.begin(), bytes.end()));
     input.imbue(std::locale::classic());
     std::string line;
+    bool absoluteExtrusion = true;
+    double extrusionPosition = 0.0;
     while (std::getline(input, line))
     {
         ++audit.lineCount;
@@ -515,28 +830,81 @@ GcodeToolpathAudit auditGcode(const std::string& filename)
         fields.imbue(std::locale::classic());
         std::string opcode;
         fields >> opcode;
-        bool finitePositiveExtrusion = false;
+        std::transform(
+            opcode.begin(), opcode.end(), opcode.begin(),
+            [](unsigned char character)
+            {
+                return static_cast<char>(std::toupper(character));
+            }
+        );
+
+        bool hasPlanarMotion = false;
+        bool hasExtrusion = false;
+        double extrusion = 0.0;
         std::string field;
         while (fields >> field)
         {
-            if (field.size() <= 1U || field.front() != 'E')
+            if (field.size() <= 1U)
             {
                 continue;
             }
+            const char parameter = static_cast<char>(std::toupper(
+                static_cast<unsigned char>(field.front())
+            ));
             std::istringstream valueInput(field.substr(1));
             valueInput.imbue(std::locale::classic());
             double value = 0.0;
             char trailing = '\0';
-            if ((valueInput >> value) && !(valueInput >> trailing) &&
-                std::isfinite(value) && value > 0.0)
+            if (!(valueInput >> value) || (valueInput >> trailing) ||
+                !std::isfinite(value))
             {
-                finitePositiveExtrusion = true;
+                continue;
+            }
+            if (parameter == 'X' || parameter == 'Y')
+            {
+                hasPlanarMotion = true;
+            }
+            else if (parameter == 'E')
+            {
+                hasExtrusion = true;
+                extrusion = value;
             }
         }
-        if ((opcode == "G0" || opcode == "G00" || opcode == "G1" ||
-             opcode == "G01") && finitePositiveExtrusion)
+
+        if (opcode == "M82")
         {
-            ++audit.depositionCommandCount;
+            absoluteExtrusion = true;
+            continue;
+        }
+        if (opcode == "M83")
+        {
+            absoluteExtrusion = false;
+            continue;
+        }
+        if (opcode == "G92" && hasExtrusion)
+        {
+            extrusionPosition = extrusion;
+            continue;
+        }
+
+        if (opcode == "G0" || opcode == "G00" || opcode == "G1" ||
+            opcode == "G01")
+        {
+            bool positiveExtrusion = false;
+            if (hasExtrusion)
+            {
+                positiveExtrusion = absoluteExtrusion
+                    ? extrusion > extrusionPosition
+                    : extrusion > 0.0;
+                if (absoluteExtrusion)
+                {
+                    extrusionPosition = extrusion;
+                }
+            }
+            if (hasPlanarMotion && positiveExtrusion)
+            {
+                ++audit.depositionCommandCount;
+            }
         }
     }
     audit.hasLayers = audit.layerCount > 0;
@@ -675,6 +1043,7 @@ const char* slicerValidationStatusToken(SlicerValidationStatus status) noexcept
         case SlicerValidationStatus::LaunchFailed: return "launch_failed";
         case SlicerValidationStatus::TimedOut: return "timed_out";
         case SlicerValidationStatus::NonzeroExit: return "nonzero_exit";
+        case SlicerValidationStatus::CaptureFailed: return "capture_failed";
         case SlicerValidationStatus::AutoRepairUnknown: return "auto_repair_unknown";
         case SlicerValidationStatus::AutoRepairDetected: return "auto_repair_detected";
         case SlicerValidationStatus::InvalidToolpath: return "invalid_toolpath";
@@ -705,6 +1074,12 @@ std::string computeFileSha256(const std::string& filename)
 }
 
 
+std::string computeContentSha256(const std::string& content)
+{
+    return bytesHash(std::vector<unsigned char>(content.begin(), content.end()));
+}
+
+
 std::string SlicerValidationReport::toJson() const
 {
     std::ostringstream output;
@@ -724,13 +1099,29 @@ std::string SlicerValidationReport::toJson() const
         << "  \"termination_signal\": " << terminationSignal << ",\n"
         << "  \"timed_out\": " << timedOut << ",\n"
         << "  \"executable_path\": \"" << escapeJson(executableAbsolutePath) << "\",\n"
-        << "  \"executable_sha256\": \"" << observedExecutableSha256 << "\",\n"
+        << "  \"expected_executable_sha256\": \""
+        << expectedExecutableSha256 << "\",\n"
+        << "  \"observed_executable_sha256\": \""
+        << observedExecutableSha256 << "\",\n"
         << "  \"profile_path\": \"" << escapeJson(profileAbsolutePath) << "\",\n"
-        << "  \"profile_sha256\": \"" << observedProfileSha256 << "\",\n"
+        << "  \"expected_profile_sha256\": \""
+        << expectedProfileSha256 << "\",\n"
+        << "  \"observed_profile_sha256\": \""
+        << observedProfileSha256 << "\",\n"
         << "  \"expected_version\": \"" << escapeJson(expectedVersion) << "\",\n"
         << "  \"observed_version\": \"" << escapeJson(observedVersion) << "\",\n"
         << "  \"input_mesh_sha256\": \"" << inputMeshSha256 << "\",\n"
+        << "  \"output_toolpath_sha256\": \""
+        << outputToolpathSha256 << "\",\n"
         << "  \"invocation_sha256\": \"" << invocationSha256 << "\",\n"
+        << "  \"version_stdout_bytes\": " << versionStdoutBytes << ",\n"
+        << "  \"version_stderr_bytes\": " << versionStderrBytes << ",\n"
+        << "  \"version_stdout_sha256\": \""
+        << versionStdoutSha256 << "\",\n"
+        << "  \"version_stderr_sha256\": \""
+        << versionStderrSha256 << "\",\n"
+        << "  \"stdout_bytes\": " << stdoutBytes << ",\n"
+        << "  \"stderr_bytes\": " << stderrBytes << ",\n"
         << "  \"stdout_sha256\": \"" << stdoutSha256 << "\",\n"
         << "  \"stderr_sha256\": \"" << stderrSha256 << "\",\n"
         << "  \"stdout_excerpt\": \"" << escapeJson(stdoutExcerpt) << "\",\n"
@@ -785,7 +1176,8 @@ SlicerValidationReport validateWithPinnedSlicer(
         validHash(config.expectedExecutableSha256) &&
         validHash(config.expectedProfileSha256) &&
         !config.expectedVersion.empty() &&
-        config.timeoutMilliseconds > 0;
+        config.timeoutMilliseconds > 0 &&
+        config.maximumCaptureBytes > 0U;
     if (!report.configurationComplete || outputToolpath.empty())
     {
         report.status = SlicerValidationStatus::InvalidConfiguration;
@@ -869,7 +1261,8 @@ SlicerValidationReport validateWithPinnedSlicer(
         {executablePath.string(), "--version"},
         config.timeoutMilliseconds,
         directory,
-        "slicer-version"
+        "slicer-version",
+        config.maximumCaptureBytes
     );
     assignCapture(
         version,
@@ -881,14 +1274,25 @@ SlicerValidationReport validateWithPinnedSlicer(
         report.versionStderrSha256,
         report.versionStderrExcerpt
     );
-    if (!version.launchSucceeded || version.timedOut ||
+    if (!version.diagnostic.empty())
+    {
+        report.diagnostic = version.diagnostic;
+    }
+    if (!version.launchSucceeded || !version.completed ||
+        version.captureFailed ||
+        version.waitFailed || version.timedOut ||
         !version.exitedNormally || version.exitCode != 0)
     {
         report.status = SlicerValidationStatus::VersionProbeFailed;
         report.failures.push_back("slicer_version_probe_failed");
         return report;
     }
-    report.observedVersion = trim(report.versionStdoutExcerpt);
+    report.observedVersion = trim(
+        std::string(
+            version.standardOutput.begin(),
+            version.standardOutput.end()
+        )
+    );
     if (report.observedVersion != config.expectedVersion)
     {
         report.status = SlicerValidationStatus::VersionMismatch;
@@ -897,10 +1301,12 @@ SlicerValidationReport validateWithPinnedSlicer(
     }
     report.versionVerified = true;
 
-    const std::filesystem::path stagedOutput = uniqueTemporary(
+    const ScopedPrivateDirectory privateWorkspace(
         directory,
         outputPath.filename().string() + ".gcode"
     );
+    const std::filesystem::path stagedOutput =
+        privateWorkspace.path() / "toolpath.gcode";
     const std::vector<std::string> arguments{
         executablePath.string(),
         "--load", profilePath.string(),
@@ -908,13 +1314,16 @@ SlicerValidationReport validateWithPinnedSlicer(
         "--output", stagedOutput.string(),
         inputPath.string()
     };
-    report.invocationSha256 = invocationFingerprint(arguments);
+    std::vector<std::string> fingerprintArguments = arguments;
+    fingerprintArguments[5] = "<private-staged-output>";
+    report.invocationSha256 = invocationFingerprint(fingerprintArguments);
     report.attempted = true;
     const ProcessCapture slice = runProcess(
         arguments,
         config.timeoutMilliseconds,
         directory,
-        "slicer-run"
+        "slicer-run",
+        config.maximumCaptureBytes
     );
     assignCapture(
         slice,
@@ -926,12 +1335,18 @@ SlicerValidationReport validateWithPinnedSlicer(
         report.stderrSha256,
         report.stderrExcerpt
     );
+    if (!slice.diagnostic.empty())
+    {
+        report.diagnostic = slice.diagnostic;
+    }
     report.completed = slice.completed;
     report.exitedNormally = slice.exitedNormally;
     report.exitCode = slice.exitCode;
     report.terminationSignal = slice.signal;
     report.timedOut = slice.timedOut;
-    report.exitSuccess = slice.exitedNormally && slice.exitCode == 0;
+    report.exitSuccess =
+        slice.completed && !slice.waitFailed &&
+        !slice.captureFailed && slice.exitedNormally && slice.exitCode == 0;
     if (!slice.launchSucceeded)
     {
         report.status = SlicerValidationStatus::LaunchFailed;
@@ -941,6 +1356,11 @@ SlicerValidationReport validateWithPinnedSlicer(
     {
         report.status = SlicerValidationStatus::TimedOut;
         report.failures.push_back("slicer_timed_out");
+    }
+    else if (slice.captureFailed)
+    {
+        report.status = SlicerValidationStatus::CaptureFailed;
+        report.failures.push_back("slicer_capture_failed");
     }
     else if (!report.exitSuccess)
     {
@@ -979,8 +1399,24 @@ SlicerValidationReport validateWithPinnedSlicer(
             {
                 try
                 {
-                    writeAtomic(outputToolpath, readBytes(stagedOutput.string()));
-                    report.outputToolpathSha256 = computeFileSha256(outputToolpath);
+                    const std::vector<unsigned char> stagedBytes =
+                        readBytes(stagedOutput.string());
+                    if (bytesHash(stagedBytes) != report.toolpath.sha256)
+                    {
+                        throw std::runtime_error(
+                            "slicer staged output changed after audit"
+                        );
+                    }
+                    writeAtomic(outputPath.string(), stagedBytes);
+                    report.outputToolpathSha256 = computeFileSha256(
+                        outputPath.string()
+                    );
+                    if (report.outputToolpathSha256 != report.toolpath.sha256)
+                    {
+                        throw std::runtime_error(
+                            "committed slicer output hash mismatch"
+                        );
+                    }
                     report.status = SlicerValidationStatus::Passed;
                     report.passed = true;
                 }
@@ -993,8 +1429,6 @@ SlicerValidationReport validateWithPinnedSlicer(
             }
         }
     }
-    std::error_code ignored;
-    std::filesystem::remove(stagedOutput, ignored);
     return report;
 }
 

@@ -56,13 +56,88 @@ bool regularFile(const std::filesystem::path& path)
 
 bool safeRelativePath(const std::filesystem::path& path)
 {
-    return !path.empty() && !path.is_absolute() && std::none_of(
+    const std::filesystem::path::string_type native = path.native();
+    return !path.empty() && !path.is_absolute() &&
+        std::find(native.begin(), native.end(), '\0') == native.end() &&
+        std::none_of(
         path.begin(), path.end(),
         [](const std::filesystem::path& component)
         {
             return component == "..";
         }
     );
+}
+
+
+bool resolvedInside(
+    const std::filesystem::path& base,
+    const std::filesystem::path& candidate
+)
+{
+    std::error_code baseError;
+    const std::filesystem::path resolvedBase =
+        std::filesystem::weakly_canonical(base, baseError);
+    std::error_code candidateError;
+    const std::filesystem::path resolvedCandidate =
+        std::filesystem::weakly_canonical(candidate, candidateError);
+    if (baseError || candidateError)
+    {
+        return false;
+    }
+
+    auto basePart = resolvedBase.begin();
+    auto candidatePart = resolvedCandidate.begin();
+    for (; basePart != resolvedBase.end(); ++basePart, ++candidatePart)
+    {
+        if (candidatePart == resolvedCandidate.end() ||
+            *candidatePart != *basePart)
+        {
+            return false;
+        }
+    }
+    return candidatePart != resolvedCandidate.end();
+}
+
+
+std::string manifestFingerprint(const ExternalPartitionManifest& manifest)
+{
+    std::ostringstream serialized;
+    serialized.imbue(std::locale::classic());
+    const auto appendField = [&serialized](const std::string& value)
+    {
+        serialized << value.size() << ':';
+        serialized.write(
+            value.data(), static_cast<std::streamsize>(value.size())
+        );
+        serialized << '\0';
+    };
+    serialized << std::setprecision(17);
+    appendField(manifest.sourceBoundaryFilename);
+    appendField(lowercase(manifest.sourceBoundarySha256));
+    serialized << manifest.modelUnitsToMillimeters << '\0';
+    appendField(manifest.externalGenerator);
+    appendField(manifest.externalGeneratorVersion);
+    serialized << manifest.parts.size() << '\0';
+    for (const DeclaredManufacturingPart& part : manifest.parts)
+    {
+        appendField(part.id);
+        appendField(part.meshFilename);
+        appendField(lowercase(part.expectedMeshSha256));
+        appendField(part.geometryReportFilename);
+        appendField(lowercase(part.expectedGeometryReportSha256));
+        appendField(part.slicerReportFilename);
+        appendField(lowercase(part.expectedSlicerReportSha256));
+        for (int row = 0; row < 4; ++row)
+        {
+            for (int column = 0; column < 4; ++column)
+            {
+                serialized << part.assemblyTransform(row, column) << '\0';
+            }
+        }
+    }
+
+    const std::string bytes = serialized.str();
+    return computeContentSha256(bytes);
 }
 
 
@@ -105,27 +180,34 @@ PartitionManifestAudit auditExternalPartitionManifest(
     );
     const bool sourcePathSafe = safeRelativePath(sourceRelative);
     const std::filesystem::path sourceBoundary = base / sourceRelative;
+    const bool sourceContained =
+        sourcePathSafe && resolvedInside(base, sourceBoundary);
     const bool sourceAvailable =
-        sourcePathSafe && regularFile(sourceBoundary);
+        sourceContained && regularFile(sourceBoundary);
     const bool sourceHashValid = hashTokenValid(
         manifest.sourceBoundarySha256
     );
     audit.schemaValid =
-        sourcePathSafe && sourceHashValid &&
+        sourcePathSafe && sourceContained && sourceHashValid &&
         std::isfinite(manifest.modelUnitsToMillimeters) &&
         manifest.modelUnitsToMillimeters > 0.0 &&
         !manifest.externalGenerator.empty() &&
         !manifest.externalGeneratorVersion.empty() &&
         !manifest.parts.empty() &&
         std::filesystem::path(manifestDirectory).is_absolute();
+    audit.manifestFingerprint = manifestFingerprint(manifest);
+    audit.manifestFingerprintAvailable = true;
 
     std::set<std::string> identifiers;
     audit.uniquePartIds = true;
     audit.allFilesAvailable = sourceAvailable;
-    audit.allHashesMatch =
-        sourceHashValid && sourceAvailable &&
-        computeFileSha256(sourceBoundary.string()) ==
-            lowercase(manifest.sourceBoundarySha256);
+    audit.allHashesMatch = false;
+    if (sourceHashValid && sourceAvailable)
+    {
+        audit.allHashesMatch =
+            computeFileSha256(sourceBoundary.string()) ==
+                lowercase(manifest.sourceBoundarySha256);
+    }
     audit.allTransformsFinite = true;
     audit.allTransformsRigid = true;
 
@@ -173,9 +255,11 @@ PartitionManifestAudit auditExternalPartitionManifest(
             const std::filesystem::path relative(artifact.first);
             const bool safeRelative = safeRelativePath(relative);
             const std::filesystem::path file = base / relative;
-            const bool available = safeRelative && regularFile(file);
+            const bool contained = safeRelative && resolvedInside(base, file);
+            const bool available =
+                contained && regularFile(file);
             const bool hashValid = hashTokenValid(artifact.second);
-            if (!safeRelative || !hashValid)
+            if (!safeRelative || !contained || !hashValid)
             {
                 audit.schemaValid = false;
                 failPart();
@@ -183,6 +267,7 @@ PartitionManifestAudit auditExternalPartitionManifest(
             if (!available)
             {
                 audit.allFilesAvailable = false;
+                audit.allHashesMatch = false;
                 failPart();
             }
             if (!hashValid ||
@@ -222,6 +307,10 @@ std::string PartitionManifestAudit::toJson() const
         << "  \"all_transforms_finite\": " << jsonBool(allTransformsFinite) << ",\n"
         << "  \"all_transforms_rigid\": " << jsonBool(allTransformsRigid) << ",\n"
         << "  \"first_failed_part\": " << firstFailedPart << ",\n"
+        << "  \"manifest_fingerprint_scheme\": "
+        << "\"canonical-field-stream-v1+sha256\",\n"
+        << "  \"manifest_fingerprint\": \""
+        << manifestFingerprint << "\",\n"
         << "  \"failures\": [";
     for (std::size_t index = 0; index < failures.size(); ++index)
     {

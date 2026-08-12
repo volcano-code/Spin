@@ -77,7 +77,7 @@ struct BoundaryAudit
     std::vector<double> componentSignedVolumes;
     IntersectionAudit selfIntersections;
 
-    /** True for a nonempty strict printable triangle boundary. */
+    /** True for a strict closed/manifold/oriented/intersection-free boundary. */
     bool strictBoundaryValid() const noexcept;
 };
 
@@ -134,7 +134,7 @@ struct DeformedCellAudit
 };
 
 
-/** Compact printable boundary; inner face indices follow the outer range. */
+/** Compact coherent boundary; inner face indices follow the outer range. */
 struct CoherentBoundaryMesh
 {
     Eigen::MatrixXd vertices;

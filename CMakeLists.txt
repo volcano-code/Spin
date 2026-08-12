@@ -792,7 +792,15 @@ if(BUILD_TESTING)
         profile-hash-mismatch
     )
     add_slicer_validation_test(r8-slicer-version-mismatch version-mismatch)
+    add_slicer_validation_test(
+        r8-slicer-version-truncation
+        version-truncation
+    )
     add_slicer_validation_test(r8-slicer-success success)
+    add_slicer_validation_test(
+        r8-slicer-stable-invocation
+        stable-invocation
+    )
     add_slicer_validation_test(r8-slicer-repair-rejected repair)
     add_slicer_validation_test(r8-slicer-invalid-toolpath invalid-toolpath)
     add_slicer_validation_test(r8-slicer-nonzero nonzero)
@@ -801,6 +809,15 @@ if(BUILD_TESTING)
     add_slicer_validation_test(r8-slicer-shell-safe shell-safe)
     add_slicer_validation_test(r8-slicer-report-json report-json)
     add_slicer_validation_test(r8-slicer-paths paths)
+    add_slicer_validation_test(
+        r8-slicer-sigchld-ownership
+        sigchld-ownership
+    )
+    add_slicer_validation_test(
+        r8-slicer-closed-stdio-launch-failure
+        closed-stdio-launch-failure
+    )
+    add_slicer_validation_test(r8-slicer-capture-limit capture-limit)
 
     add_executable(
         partition-manifest-regression

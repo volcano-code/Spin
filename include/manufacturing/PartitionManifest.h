@@ -49,19 +49,26 @@ struct PartitionManifestAudit
     bool uniquePartIds = false;
     bool allFilesAvailable = false;
     bool allHashesMatch = false;
+    bool manifestFingerprintAvailable = false;
     bool allTransformsFinite = false;
     bool allTransformsRigid = false;
     bool passed = false;
 
     std::size_t partCount = 0;
     int firstFailedPart = -1;
+    std::string manifestFingerprint;
     std::vector<std::string> failures;
 
     std::string toJson() const;
 };
 
 
-/** Validate an explicit partition declaration without altering any mesh. */
+/**
+ * Validate an explicit partition declaration without altering any mesh.
+ * Referenced regular files must resolve within the absolute manifest root.
+ * The manifest root must be a trusted, non-mutating local filesystem snapshot;
+ * this API is not an adversarial path-resolution sandbox.
+ */
 PartitionManifestAudit auditExternalPartitionManifest(
     const ExternalPartitionManifest& manifest,
     const std::string& manifestDirectory

@@ -10,8 +10,10 @@
 #include <limits>
 #include <string>
 #include <system_error>
+#include <thread>
 #include <vector>
 
+#include <fcntl.h>
 #include <unistd.h>
 
 
@@ -123,6 +125,52 @@ private:
     std::string name_;
     std::string old_;
     bool hadOld_ = false;
+};
+
+
+class ScopedClosedStandardDescriptors
+{
+public:
+    ScopedClosedStandardDescriptors()
+    {
+        savedInput_ = ::fcntl(STDIN_FILENO, F_DUPFD_CLOEXEC, 3);
+        savedOutput_ = ::fcntl(STDOUT_FILENO, F_DUPFD_CLOEXEC, 3);
+        if (savedInput_ < 0 || savedOutput_ < 0)
+        {
+            if (savedInput_ >= 0) ::close(savedInput_);
+            if (savedOutput_ >= 0) ::close(savedOutput_);
+            throw std::runtime_error(
+                "failed to save standard descriptors for regression"
+            );
+        }
+        ::close(STDIN_FILENO);
+        ::close(STDOUT_FILENO);
+    }
+
+    ~ScopedClosedStandardDescriptors()
+    {
+        if (savedInput_ >= 0)
+        {
+            ::dup2(savedInput_, STDIN_FILENO);
+            ::close(savedInput_);
+        }
+        if (savedOutput_ >= 0)
+        {
+            ::dup2(savedOutput_, STDOUT_FILENO);
+            ::close(savedOutput_);
+        }
+    }
+
+    ScopedClosedStandardDescriptors(
+        const ScopedClosedStandardDescriptors&
+    ) = delete;
+    ScopedClosedStandardDescriptors& operator=(
+        const ScopedClosedStandardDescriptors&
+    ) = delete;
+
+private:
+    int savedInput_ = -1;
+    int savedOutput_ = -1;
 };
 
 
@@ -252,6 +300,121 @@ int runNotConfigured()
 }
 
 
+int runSigchldOwnership(const std::string& fakeExecutable)
+{
+    const std::string scenario = "sigchld-ownership";
+    Fixture fixture(scenario, fakeExecutable);
+    struct sigaction previous{};
+    struct sigaction ignored{};
+    ignored.sa_handler = SIG_IGN;
+    ::sigemptyset(&ignored.sa_mask);
+    ignored.sa_flags = 0;
+    if (::sigaction(SIGCHLD, &ignored, &previous) != 0)
+    {
+        return fail(scenario, "could not install SIGCHLD test disposition");
+    }
+    SlicerValidationReport report;
+    try
+    {
+        report = fixture.validate();
+    }
+    catch (...)
+    {
+        ::sigaction(SIGCHLD, &previous, nullptr);
+        throw;
+    }
+    ::sigaction(SIGCHLD, &previous, nullptr);
+    if (report.passed || report.completed || report.exitSuccess)
+    {
+        return fail(scenario, "unsupported SIGCHLD ownership was accepted");
+    }
+    return pass(scenario);
+}
+
+
+int runClosedStdioLaunchFailure(const std::string& fakeExecutable)
+{
+    const std::string scenario = "closed-stdio-launch-failure";
+    ScopedTemporaryDirectory executableDirectory(scenario + "_executable");
+    const std::filesystem::path privateExecutable =
+        executableDirectory.path() / "fake-slicer";
+    std::filesystem::copy_file(fakeExecutable, privateExecutable);
+    Fixture fixture(scenario, privateExecutable.string());
+    ScopedEnvironment versionMode(
+        "MAKE_IT_STAND_FAKE_SLICER_VERSION_MODE",
+        "unlink-self"
+    );
+
+    SlicerValidationReport report;
+    {
+        ScopedClosedStandardDescriptors closedDescriptors;
+        report = fixture.validate();
+    }
+    if (
+        !report.versionVerified ||
+        !report.attempted ||
+        report.status != SlicerValidationStatus::LaunchFailed ||
+        report.passed ||
+        report.exitSuccess ||
+        report.diagnostic.find("pre-exec stage 4") == std::string::npos
+    )
+    {
+        return fail(
+            scenario,
+            "closed stdio corrupted pre-exec failure classification"
+        );
+    }
+    return pass(scenario);
+}
+
+
+int runCaptureLimit(const std::string& fakeExecutable)
+{
+    const std::string scenario = "capture-limit";
+    Fixture fixture(scenario, fakeExecutable, "noisy");
+    fixture.config.maximumCaptureBytes = 128;
+
+    SlicerValidationReport report;
+    try
+    {
+        report = fixture.validate();
+    }
+    catch (const std::exception& error)
+    {
+        return fail(
+            scenario,
+            std::string("capture failure escaped the report: ") + error.what()
+        );
+    }
+    bool temporaryArtifact = false;
+    for (const std::filesystem::directory_entry& entry :
+         std::filesystem::directory_iterator(fixture.temporary.path()))
+    {
+        if (entry.path().filename().string().find(".r8.") != std::string::npos)
+        {
+            temporaryArtifact = true;
+        }
+    }
+    if (
+        report.status != SlicerValidationStatus::CaptureFailed ||
+        !report.versionVerified ||
+        !report.attempted ||
+        !report.completed ||
+        !report.exitedNormally ||
+        report.exitCode != 0 ||
+        report.exitSuccess ||
+        report.passed ||
+        report.diagnostic.find("exceeds limit") == std::string::npos ||
+        std::filesystem::exists(fixture.output) ||
+        temporaryArtifact
+    )
+    {
+        return fail(scenario, "capture limit was not transactional");
+    }
+    return pass(scenario);
+}
+
+
 int runPinMismatch(const std::string& fakeExecutable, bool executableMismatch)
 {
     const std::string scenario = executableMismatch
@@ -314,6 +477,29 @@ int runVersionMismatch(const std::string& fakeExecutable)
 }
 
 
+int runVersionTruncation(const std::string& fakeExecutable)
+{
+    const std::string scenario = "version-truncation";
+    Fixture fixture(scenario, fakeExecutable);
+    fixture.config.maximumDiagnosticBytes =
+        std::char_traits<char>::length(EXPECTED_VERSION);
+    const ScopedEnvironment mode(
+        "MAKE_IT_STAND_FAKE_SLICER_VERSION_MODE",
+        "long-suffix"
+    );
+    const SlicerValidationReport report = fixture.validate();
+    if (
+        report.status != SlicerValidationStatus::VersionMismatch ||
+        report.versionVerified || report.attempted || report.passed ||
+        report.observedVersion.size() <= fixture.config.maximumDiagnosticBytes
+    )
+    {
+        return fail(scenario, "truncated version excerpt was used as identity");
+    }
+    return pass(scenario);
+}
+
+
 int runSuccess(const std::string& fakeExecutable, bool shellSafe)
 {
     const std::string scenario = shellSafe ? "shell-safe" : "success";
@@ -349,6 +535,21 @@ int runSuccess(const std::string& fakeExecutable, bool shellSafe)
     )
     {
         return fail(scenario, "pinned fake slicer success contract failed");
+    }
+    return pass(scenario);
+}
+
+
+int runStableInvocation(const std::string& fakeExecutable)
+{
+    const std::string scenario = "stable-invocation";
+    Fixture fixture(scenario, fakeExecutable);
+    const SlicerValidationReport first = fixture.validate();
+    const SlicerValidationReport second = fixture.validate();
+    if (!first.passed || !second.passed ||
+        first.invocationSha256 != second.invocationSha256)
+    {
+        return fail(scenario, "equivalent argv fingerprint was not stable");
     }
     return pass(scenario);
 }
@@ -399,6 +600,13 @@ int runInvalidToolpath(const std::string& fakeExecutable)
         "garbage-gcode"
     );
     const SlicerValidationReport garbageReport = garbage.validate();
+    Fixture extrusionOnly(
+        scenario + "-extrusion-only",
+        fakeExecutable,
+        "extrusion-only"
+    );
+    const SlicerValidationReport extrusionOnlyReport =
+        extrusionOnly.validate();
 
     if (
         emptyReport.status != SlicerValidationStatus::InvalidToolpath ||
@@ -415,7 +623,11 @@ int runInvalidToolpath(const std::string& fakeExecutable)
         !layerReport.toolpath.hasDeposition ||
         garbageReport.status != SlicerValidationStatus::InvalidToolpath ||
         garbageReport.passed || garbageReport.toolpath.hasLayers ||
-        garbageReport.toolpath.hasDeposition
+        garbageReport.toolpath.hasDeposition ||
+        extrusionOnlyReport.status != SlicerValidationStatus::InvalidToolpath ||
+        extrusionOnlyReport.passed ||
+        !extrusionOnlyReport.toolpath.hasLayers ||
+        extrusionOnlyReport.toolpath.hasDeposition
     )
     {
         return fail(scenario, "invalid G-code semantic gate failed");
@@ -473,6 +685,39 @@ int runTimeout(const std::string& fakeExecutable)
     {
         return fail(scenario, "slicer timeout was not bounded and fail-closed");
     }
+
+    Fixture descendantFixture(
+        scenario + "-descendant",
+        fakeExecutable,
+        "fork-grandchild"
+    );
+    descendantFixture.config.timeoutMilliseconds = 100;
+    const std::filesystem::path lateMarker =
+        descendantFixture.profile.string() + ".late-marker";
+    const SlicerValidationReport descendantReport =
+        descendantFixture.validate();
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    if (descendantReport.status != SlicerValidationStatus::TimedOut ||
+        !descendantReport.timedOut || descendantReport.passed ||
+        std::filesystem::exists(lateMarker))
+    {
+        return fail(scenario, "timed-out slicer descendant survived");
+    }
+
+    Fixture orphanFixture(
+        scenario + "-orphan",
+        fakeExecutable,
+        "orphan-grandchild"
+    );
+    orphanFixture.config.timeoutMilliseconds = 1000;
+    const std::filesystem::path orphanMarker =
+        orphanFixture.profile.string() + ".late-marker";
+    const SlicerValidationReport orphanReport = orphanFixture.validate();
+    std::this_thread::sleep_for(std::chrono::milliseconds(800));
+    if (orphanReport.passed || std::filesystem::exists(orphanMarker))
+    {
+        return fail(scenario, "slicer descendant outlived leader");
+    }
     return pass(scenario);
 }
 
@@ -512,7 +757,18 @@ int runReportJson(const std::string& fakeExecutable)
         first.find("\"automatic_repair\": \"none_reported\"") ==
             std::string::npos ||
         first.find("\"passed\": true") == std::string::npos ||
-        first.find(report.outputToolpathSha256) == std::string::npos ||
+        first.find(
+            "\"output_toolpath_sha256\": \"" +
+            report.outputToolpathSha256 + "\""
+        ) == std::string::npos ||
+        first.find(
+            "\"expected_executable_sha256\": \"" +
+            report.expectedExecutableSha256 + "\""
+        ) == std::string::npos ||
+        first.find(
+            "\"version_stdout_sha256\": \"" +
+            report.versionStdoutSha256 + "\""
+        ) == std::string::npos ||
         temporaryLeak
     )
     {
@@ -628,7 +884,11 @@ int main(int argc, char** argv)
         return runPinMismatch(fakeExecutable, false);
     if (scenario == "version-mismatch")
         return runVersionMismatch(fakeExecutable);
+    if (scenario == "version-truncation")
+        return runVersionTruncation(fakeExecutable);
     if (scenario == "success") return runSuccess(fakeExecutable, false);
+    if (scenario == "stable-invocation")
+        return runStableInvocation(fakeExecutable);
     if (scenario == "repair") return runRepair(fakeExecutable);
     if (scenario == "invalid-toolpath")
         return runInvalidToolpath(fakeExecutable);
@@ -638,6 +898,12 @@ int main(int argc, char** argv)
     if (scenario == "shell-safe") return runSuccess(fakeExecutable, true);
     if (scenario == "report-json") return runReportJson(fakeExecutable);
     if (scenario == "paths") return runRelativePathsAndCollisions(fakeExecutable);
+    if (scenario == "sigchld-ownership")
+        return runSigchldOwnership(fakeExecutable);
+    if (scenario == "closed-stdio-launch-failure")
+        return runClosedStdioLaunchFailure(fakeExecutable);
+    if (scenario == "capture-limit")
+        return runCaptureLimit(fakeExecutable);
 
     return fail(scenario, "unknown scenario");
 }
