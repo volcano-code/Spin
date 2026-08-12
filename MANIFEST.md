@@ -127,7 +127,7 @@ scalability.
 | `include/voxel/VoxelTopology.h`, `src/voxel/VoxelTopology.cpp` | Reports six-neighbor material and carved-void component counts without imposing an unsupported single-void condition. | Analytic topology CTest plus every-step diagnostic comparison. |
 | `include/carving/CarvingDiagnostics.h`, `src/carving/CarvingDiagnostics.cpp` | Extends the diagnostic schema from 39 to 44 columns with evaluated/best prefixes, best energy and topology counts. | Per-column round-trip and production-state checks pass. |
 | `tests/plane_carving_policy_regression.cpp`, `tests/voxel_constraints_regression.cpp`, `tests/objective_integration_regression.cpp`, `tests/carving_regression.cpp` | Adds focused policy/manufacturing fixtures and upgrades K=3/Bunny production integration. | Active suite registers 25 tests, fourteen labeled R4. |
-| `docs/r4_acceptance.md`, `docs/conformance_matrix.md`, `README.md`, `CMakeLists.txt` | Records equations, paper/beta discrepancies, local too-few rule, status ceiling and R4 tests. | R4 acceptance record; clean verification is recorded there after the final gate. |
+| `docs/r4_acceptance.md`, `docs/conformance_matrix.md`, `README.md`, `CMakeLists.txt` | Records equations, paper/beta discrepancies, local too-few rule, status ceiling and R4 tests. | R4 acceptance record; clean recursive-clone headless and viewer gates passed. |
 
 R4 reproduces only paper Section 4 under a fixed outer surface. It does not
 claim deformation, alternation, final printability, physical balance or

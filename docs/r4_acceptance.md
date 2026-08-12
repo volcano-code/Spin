@@ -183,5 +183,7 @@ Pinned libigl status                                 clean
 Historical R0 trace SHA-256                          unchanged
 ```
 
-The committed-tree recursive clean-clone build is recorded after the R4
-implementation commit. It must pass before this acceptance record is finalized.
+The committed tree at `989f82fe3332d4e718bef099bbdb0bf5923d3cd5` was then
+checked through a recursive clean clone. Its headless suite passed 25/25, its
+viewer target built, the parent and pinned submodule remained clean, and the
+historical trace hash remained unchanged.
