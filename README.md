@@ -69,6 +69,15 @@ The current code modularizes and instruments the original carving prototype:
 - `AlternatingBalanceOptimizer` executes all-filled carving, fixed-`alpha`
   deformation and recarving blocks with transactional traces and explicit
   terminal states;
+- `ManufacturingGeometry` fail-closes on final outer/cavity boundary topology,
+  orientation, self-intersection, containment, wall clearance, deformed-cell
+  validity, material connectivity and signed-mass consistency before export;
+- `SlicerValidation` provides an opt-in, hash/version/profile-pinned local
+  Prusa-style slicer smoke-test interface with bounded process execution and
+  auditable G-code hashes;
+- `ExternalPartitionManifest` validates a user-authored split declaration,
+  contained artifact paths, hashes and rigid assembly transforms without
+  pretending to design the split;
 - the headless regressions cover analytic policy, manufacturing constraints,
   deterministic initial/step/full behavior and empty candidates.
 
@@ -133,14 +142,34 @@ receive the weights of the nearest active node; this is a deterministic
 compatibility extension for non-object grid storage, not an additional BBW
 claim and not a field used to bind `M_O` or the cavity.
 
+R8 adds a fail-closed final geometry gate. It accepts one outward outer shell,
+zero or more inward nonnested cavity shells, a strict coherent triangle
+boundary, exact closest-feature wall clearance, cavity containment, a single
+six-neighbor material component and positive consistent signed material mass.
+The R7-bound overload additionally checks supplied-result terminal, target,
+trace, epoch, occupancy, parameter, geometry and mass consistency. This is an
+internal-consistency contract, not proof that a publicly constructible result
+originated from the optimizer. Only a sealed ready result can be atomically
+exported as deterministic OBJ, ASCII STL or binary STL.
+
+The optional slicer adapter executes an absolute pinned binary with a pinned
+profile and exact version, never a shell or PATH lookup. Its fake-slicer tests
+verify adapter behavior only; no real PrusaSlicer/profile artifact is bundled,
+so real-slicer compatibility remains unverified. The fork/exec call requires a
+single-threaded caller with exclusive, conventional `SIGCHLD` ownership. The
+external partition interface records hashes and rigid transforms but does not generate cuts,
+connectors, supports, drainage, coverage or assembly feasibility. Detailed
+scope and evidence are in [`docs/r8_acceptance.md`](docs/r8_acceptance.md).
+
 The viewer now constructs a standing target from the actual lowest contacts
 when its flatten-band input is zero, rather than treating the clicked posture
 anchor as the target. A positive band previews the support that a later
 flattening stage would create; R3 does not mutate the mesh. These stages still
-do not establish paper-asset equivalence or manufacturing readiness. Remaining
-known non-conformances include:
+do not establish paper-asset equivalence or physical manufacturing readiness.
+Remaining known non-conformances include:
 
-- final deformed-wall, connectivity and fabrication checks remain R8;
+- real process-specific slicing, printing, assembly and physical standing
+  evidence are outside the local R8 unit-contract ceiling;
 - official paper cases, metrics, ablations and performance alignment remain
   R9;
 - `make_it_stand()` remains a placeholder API.
@@ -196,7 +225,7 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-The active headless suite registers 55 tests through R7. The 38 pre-R7 tests
+The active headless suite registers 100 tests through R8. The 38 pre-R7 tests
 are:
 
 ```text
@@ -264,7 +293,9 @@ alternating-controller-end-to-end
 ```
 
 The triangle-chain extension is labelled `r6`; the remaining 16 comprise the
-R7 label, so the complete total is `38 + 1 + 16 = 55`.
+R7 label. R8 adds 45 labelled tests: 26 geometry/export contracts, 18 pinned
+slicer-adapter contracts, and one external-partition-interface contract. The
+complete total is `38 + 1 + 16 + 45 = 100`.
 
 They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
 eight-voxel deletion fixture, oblique/scaled gravity, state/count continuity,
@@ -289,6 +320,13 @@ target updates, fixed support/specifications, all-of stability, complete voxel
 refill, paper fixed-`alpha` versus beta recarving semantics, per-step target
 refresh, same-context energy descent, line-search rollback, repeated
 recarving, deterministic reruns and the final independent surface-mass oracle.
+The R8 additions check closed/manifold/oriented/intersection-free boundaries,
+outer/cavity coherence, exact wall clearance, material connectivity,
+deformation inversion/collapse rejection, supplied-result consistency,
+transactional deterministic export, binary round trips, executable/profile/
+version pins, timeout and failure classification, auto-repair diagnostics,
+minimal layer-and-XY-extrusion G-code semantics, artifact hashes and contained
+external partition manifests on a trusted, non-mutating local filesystem.
 
 To generate the full diagnostic trace manually after building the headless
 target:
@@ -318,6 +356,8 @@ include/, src/
   center_of_mass compatibility wrapper over signed mass properties
   grid_util      alignment, transforms and regular-grid construction
   inner_void_mesh compatibility facade used by the viewer
+  manufacturing/ final geometry gate, deterministic export, slicer adapter
+                 and external partition declaration audit
   make_it_stand  placeholder public API
 tests/
   carving_regression.cpp
@@ -330,6 +370,10 @@ tests/
   deformation_regression.cpp
   mass_properties_regression.cpp
   objective_integration_regression.cpp
+  manufacturing_geometry_regression.cpp
+  slicer_validation_regression.cpp
+  partition_manifest_regression.cpp
+  fake_slicer.cpp
   plane_carving_policy_regression.cpp
   stability_regression.cpp
   voxel_constraints_regression.cpp
