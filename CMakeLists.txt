@@ -741,6 +741,30 @@ if(BUILD_TESTING)
     )
 
     add_executable(
+        r10-ablation-regression
+        tests/r10_ablation_regression.cpp
+    )
+    target_compile_features(r10-ablation-regression PRIVATE cxx_std_17)
+    set_target_properties(
+        r10-ablation-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        r10-ablation-regression
+        PRIVATE make_it_stand::core
+    )
+    add_test(
+        NAME r10-ablation-switches
+        COMMAND "$<TARGET_FILE:r10-ablation-regression>"
+    )
+    set_tests_properties(
+        r10-ablation-switches
+        PROPERTIES
+            LABELS "r10;ablation;alternating;integration;physics"
+            TIMEOUT 120
+    )
+
+    add_executable(
         voxel-constraints-regression
         tests/voxel_constraints_regression.cpp
     )
