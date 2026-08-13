@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://make-it-stand.invalid/schemas/r10-run-record-v1.schema.json",
+  "title": "Make-It-Stand R10 run record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schema_version",
+    "canonicalization",
+    "experiment_id",
+    "run_id",
+    "repeat_index",
+    "seed",
+    "manifest_sha256",
+    "claim_level",
+    "status",
+    "execution",
+    "paper_reference_metrics",
+    "local_metrics",
+    "artifacts",
+    "notes"
+  ],
+  "properties": {
+    "schema": {"const": "make-it-stand-r10-run-record-v1"},
+    "schema_version": {"const": 1},
+    "canonicalization": {"const": "utf8-json-sorted-keys-compact-v1"},
+    "experiment_id": {"$ref": "#/$defs/identifier"},
+    "run_id": {"$ref": "#/$defs/identifier"},
+    "repeat_index": {"type": "integer", "minimum": 0},
+    "seed": {"type": "integer", "minimum": 0},
+    "manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "claim_level": {
+      "enum": ["paper_governed", "configuration_anchored", "local_robustness", "smoke"]
+    },
+    "status": {"enum": ["succeeded", "failed", "skipped", "invalid"]},
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hardware", "build", "timing"],
+      "properties": {
+        "hardware": {"$ref": "#/$defs/hardware"},
+        "build": {"$ref": "#/$defs/build"},
+        "timing": {"$ref": "#/$defs/timing"}
+      }
+    },
+    "paper_reference_metrics": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/paper_metric"}
+    },
+    "local_metrics": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/local_metric"}
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/artifact_binding"}
+    },
+    "notes": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "git_object_id": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "relative_path": {
+      "type": "string",
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "paper_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name", "value", "unit", "source", "semantics",
+        "paper_location", "comparability"
+      ],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1},
+        "source": {"const": "paper_reference"},
+        "semantics": {"type": "string", "minLength": 1},
+        "paper_location": {"type": "string", "minLength": 1},
+        "comparability": {"const": "reference_only"}
+      }
+    },
+    "local_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value", "unit", "source", "semantics"],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1},
+        "source": {"const": "local_measurement"},
+        "semantics": {"type": "string", "minLength": 1}
+      }
+    },
+    "artifact_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "relative_path", "sha256", "byte_count", "role"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/identifier"},
+        "relative_path": {"$ref": "#/$defs/relative_path"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "byte_count": {"type": "integer", "minimum": 0},
+        "role": {"$ref": "#/$defs/identifier"},
+        "media_type": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1}
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu_model", "logical_cpu_count", "memory_bytes", "os", "machine"],
+      "properties": {
+        "cpu_model": {"type": "string", "minLength": 1},
+        "logical_cpu_count": {"type": "integer", "minimum": 1},
+        "memory_bytes": {"type": "integer", "minimum": 1},
+        "os": {"type": "string", "minLength": 1},
+        "machine": {"type": "string", "minLength": 1},
+        "accelerator": {"type": "string", "minLength": 1}
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "build_type", "compiler", "compiler_version", "commit_sha",
+        "dirty_worktree", "flags"
+      ],
+      "properties": {
+        "build_type": {"type": "string", "minLength": 1},
+        "compiler": {"type": "string", "minLength": 1},
+        "compiler_version": {"type": "string", "minLength": 1},
+        "commit_sha": {"$ref": "#/$defs/git_object_id"},
+        "dirty_worktree": {"type": "boolean"},
+        "flags": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clock", "scope", "warmup_runs", "phases", "total_seconds"],
+      "properties": {
+        "clock": {"const": "monotonic_performance_counter"},
+        "scope": {"type": "string", "minLength": 1},
+        "warmup_runs": {"type": "integer", "minimum": 0},
+        "phases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "seconds"],
+            "properties": {
+              "name": {"$ref": "#/$defs/identifier"},
+              "seconds": {"type": "number", "minimum": 0}
+            }
+          }
+        },
+        "total_seconds": {"type": "number", "minimum": 0}
+      }
+    }
+  }
+}

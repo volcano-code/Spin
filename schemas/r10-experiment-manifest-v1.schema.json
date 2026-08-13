@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://make-it-stand.invalid/schemas/r10-experiment-manifest-v1.schema.json",
+  "title": "Make-It-Stand R10 experiment manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schema_version",
+    "canonicalization",
+    "experiment_id",
+    "title",
+    "claim",
+    "paper_reference",
+    "protocol",
+    "provenance",
+    "inputs"
+  ],
+  "properties": {
+    "schema": {"const": "make-it-stand-r10-experiment-manifest-v1"},
+    "schema_version": {"const": 1},
+    "canonicalization": {"const": "utf8-json-sorted-keys-compact-v1"},
+    "experiment_id": {"$ref": "#/$defs/identifier"},
+    "title": {"type": "string", "minLength": 1},
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "statement", "exact_reproduction_claim", "limitations"],
+      "properties": {
+        "level": {
+          "enum": ["paper_governed", "configuration_anchored", "local_robustness", "smoke"]
+        },
+        "statement": {"type": "string", "minLength": 1},
+        "exact_reproduction_claim": {"const": false},
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "paper_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["citation_key", "scope", "reported_metrics"],
+      "properties": {
+        "citation_key": {"type": "string", "minLength": 1},
+        "scope": {"type": "string", "minLength": 1},
+        "reported_metrics": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/paper_metric"}
+        }
+      }
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "variant",
+        "repeats",
+        "seed_policy",
+        "preprocessing",
+        "algorithm",
+        "metric_definitions"
+      ],
+      "properties": {
+        "variant": {"$ref": "#/$defs/identifier"},
+        "repeats": {"type": "integer", "minimum": 1},
+        "seed_policy": {"type": "object"},
+        "preprocessing": {"type": "object"},
+        "algorithm": {"type": "object"},
+        "metric_definitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "unit", "direction", "definition", "source"],
+            "properties": {
+              "name": {"$ref": "#/$defs/identifier"},
+              "unit": {"type": "string", "minLength": 1},
+              "direction": {
+                "enum": ["lower_is_better", "higher_is_better", "descriptive"]
+              },
+              "definition": {"type": "string", "minLength": 1},
+              "source": {"const": "local_measurement"}
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository_commit_sha",
+        "dirty_worktree",
+        "implementation_profile",
+        "resources",
+        "deviations"
+      ],
+      "properties": {
+        "repository_commit_sha": {"pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+        "dirty_worktree": {"type": "boolean"},
+        "implementation_profile": {"type": "string", "minLength": 1},
+        "resources": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/resource_binding"}
+        },
+        "deviations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/artifact_binding"}
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "relative_path": {
+      "type": "string",
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "paper_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value",
+        "unit",
+        "source",
+        "semantics",
+        "paper_location",
+        "comparability"
+      ],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1},
+        "source": {"const": "paper_reference"},
+        "semantics": {"type": "string", "minLength": 1},
+        "paper_location": {"type": "string", "minLength": 1},
+        "comparability": {"const": "reference_only"}
+      }
+    },
+    "resource_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "relative_path", "sha256", "role"],
+      "properties": {
+        "artifact_id": {"$ref": "#/$defs/identifier"},
+        "relative_path": {"$ref": "#/$defs/relative_path"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "role": {"$ref": "#/$defs/identifier"},
+        "byte_count": {"type": "integer", "minimum": 0},
+        "media_type": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1}
+      }
+    },
+    "artifact_binding": {
+      "allOf": [
+        {"$ref": "#/$defs/resource_binding"},
+        {"required": ["byte_count"]}
+      ]
+    }
+  }
+}

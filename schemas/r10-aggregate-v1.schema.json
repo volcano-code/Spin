@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://make-it-stand.invalid/schemas/r10-aggregate-v1.schema.json",
+  "title": "Make-It-Stand R10 aggregate v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schema_version",
+    "canonicalization",
+    "experiment_id",
+    "manifest_sha256",
+    "claim_level",
+    "exact_reproduction_claim",
+    "comparison_semantics",
+    "repeat_count",
+    "successful_repeat_count",
+    "status_counts",
+    "run_record_sha256s",
+    "paper_reference_metrics",
+    "local_metric_aggregates",
+    "timing_aggregates"
+  ],
+  "properties": {
+    "schema": {"const": "make-it-stand-r10-aggregate-v1"},
+    "schema_version": {"const": 1},
+    "canonicalization": {"const": "utf8-json-sorted-keys-compact-v1"},
+    "experiment_id": {"$ref": "#/$defs/identifier"},
+    "manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "claim_level": {
+      "enum": ["paper_governed", "configuration_anchored", "local_robustness", "smoke"]
+    },
+    "exact_reproduction_claim": {"const": false},
+    "comparison_semantics": {
+      "const": {
+        "paper_values": "reference_only_not_pooled",
+        "local_values": "same-manifest_repeated_measurements",
+        "quantile_method": "linear_type_7"
+      }
+    },
+    "repeat_count": {"type": "integer", "minimum": 1},
+    "successful_repeat_count": {"type": "integer", "minimum": 0},
+    "status_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "succeeded": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "skipped": {"type": "integer", "minimum": 0},
+        "invalid": {"type": "integer", "minimum": 0}
+      }
+    },
+    "run_record_sha256s": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/sha256"}
+    },
+    "paper_reference_metrics": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/paper_metric"}
+    },
+    "local_metric_aggregates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/local_summary"}
+    },
+    "timing_aggregates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/timing_summary"}
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "paper_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name", "value", "unit", "source", "semantics",
+        "paper_location", "comparability"
+      ],
+      "properties": {
+        "name": {"$ref": "#/$defs/identifier"},
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1},
+        "source": {"const": "paper_reference"},
+        "semantics": {"type": "string", "minLength": 1},
+        "paper_location": {"type": "string", "minLength": 1},
+        "comparability": {"const": "reference_only"}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["sample_count", "median", "q1", "q3", "iqr", "minimum", "maximum"],
+      "properties": {
+        "sample_count": {"type": "integer", "minimum": 1},
+        "median": {"type": "number"},
+        "q1": {"type": "number"},
+        "q3": {"type": "number"},
+        "iqr": {"type": "number", "minimum": 0},
+        "minimum": {"type": "number"},
+        "maximum": {"type": "number"}
+      }
+    },
+    "local_summary": {
+      "allOf": [
+        {"$ref": "#/$defs/summary"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "unit", "source", "semantics"],
+          "properties": {
+            "sample_count": {},
+            "median": {},
+            "q1": {},
+            "q3": {},
+            "iqr": {},
+            "minimum": {},
+            "maximum": {},
+            "name": {"$ref": "#/$defs/identifier"},
+            "unit": {"type": "string", "minLength": 1},
+            "source": {"const": "local_measurement"},
+            "semantics": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    },
+    "timing_summary": {
+      "allOf": [
+        {"$ref": "#/$defs/summary"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "unit"],
+          "properties": {
+            "sample_count": {},
+            "median": {},
+            "q1": {},
+            "q3": {},
+            "iqr": {},
+            "minimum": {},
+            "maximum": {},
+            "name": {"$ref": "#/$defs/identifier"},
+            "unit": {"const": "seconds"}
+          }
+        }
+      ]
+    }
+  }
+}
