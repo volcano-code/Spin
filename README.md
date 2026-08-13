@@ -173,7 +173,10 @@ Remaining known non-conformances include:
 - R10 now supplies validated ablation switches, committed-event metrics,
   multi-standing API/configuration support, successful-return performance
   sidecars, canonical evidence records, a nine-case CC0 local matrix, and a
-  strict report layer. This is local `VERIFIED_REGRESSION` infrastructure;
+  strict report layer. The archived clean Release run completed all 45
+  measured executions; six of nine cases reached algorithm success and five
+  passed the software-manufacturing audit. This is local
+  `VERIFIED_REGRESSION` infrastructure and evidence;
   Table 1 official cases, Fig. 14 same-input alignment, broad object studies,
   and physical fabrication evidence remain incomplete;
 - `make_it_stand()` remains a placeholder API.

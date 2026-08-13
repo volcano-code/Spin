@@ -39,10 +39,15 @@ The final source gate is:
   report contract suites;
 - `git diff --check` passes.
 
-A durable clean Release matrix is generated only after the implementation and
-this acceptance boundary are committed, so that every manifest can truthfully
-bind a clean commit. Its aggregate and report are local robustness evidence,
-not paper parity.
+A durable clean Release matrix was generated after the implementation and this
+acceptance boundary were committed. Every manifest binds clean implementation
+commit `4b4303679bdca9091ca8ddcedd18095d5aec2de6`, Release flags
+`-O3 -DNDEBUG`, and the exact loaded native-extension SHA-256. All 45 measured
+protocol executions completed; six of nine case aggregates report algorithm
+success, and five of nine report sealed software-manufacturing readiness. The
+three algorithm-level failures (both deformation-only profiles and resolution
+20) and the additional resolution-12 manufacturing-audit failure remain
+visible in the report. These are local robustness outcomes, not paper parity.
 
 ## Paper-alignment ceiling
 
@@ -90,8 +95,8 @@ executed bytes independently but is not source-to-binary attestation.
 
 ## Verdict
 
-**Accepted:** R10 local experiment infrastructure and local robustness
-workflow, subject to a clean committed matrix run.
+**Accepted:** R10 local experiment infrastructure, clean Release matrix, and
+truthfully reported local robustness workflow.
 
 **Not accepted:** complete R10 paper experiment reproduction or physical
 fabrication reproduction.

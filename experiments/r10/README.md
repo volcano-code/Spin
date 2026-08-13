@@ -76,3 +76,11 @@ derived presentation files, not replacements for the canonical evidence. The
 event curve uses only the first completed repeat and its x-axis is the modern
 committed-event ordinal. `manufacturing_ready` is a sealed software geometry
 audit indicator, not evidence that an object was printed or physically stood.
+
+The archived `local-synthetic-release-v1` evidence binds clean implementation
+commit `4b4303679bdca9091ca8ddcedd18095d5aec2de6` and a Release native extension
+built with `-O3 -DNDEBUG`. Its 45/45 measured executions completed, while the
+independent scientific indicators report algorithm success for six of nine
+cases and manufacturing readiness for five of nine. See the checked-in
+`reports/local-synthetic-release-v1/summary.md`; execution completion must not
+be substituted for algorithm or manufacturing success.
