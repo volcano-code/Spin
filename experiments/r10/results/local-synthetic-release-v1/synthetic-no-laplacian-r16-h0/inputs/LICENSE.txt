@@ -1,0 +1,6 @@
+The file synthetic_overhang.obj is dedicated to the public domain under
+CC0 1.0 Universal. It was authored specifically for this repository and does
+not contain geometry copied from the Make It Stand beta archive or any other
+third-party model collection.
+
+CC0 legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode

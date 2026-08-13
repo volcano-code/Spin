@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="535" viewBox="0 0 1120 535">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#172033}.title{font-size:21px;font-weight:700}.subtitle{font-size:12px;fill:#526071}.head{font-size:12px;font-weight:700}.label{font-size:11px}.axis{stroke:#9aa6b2;stroke-width:1}.grid{stroke:#d9e0e7;stroke-width:1}.curve{fill:none;stroke-width:2}</style>
+<text class="title" x="30" y="34">R10 local synthetic evidence</text>
+<text class="subtitle" x="30" y="56">Validated local evidence from the modern implementation; not an exact paper reproduction.</text>
+<text class="head" x="30" y="88">Outcome rates among successfully executed records</text>
+<text class="head" x="650" y="88">First completed run: committed-event convergence</text>
+<text class="subtitle" x="650" y="105">log10(max(projected target energy, 1e-16)); local measurements only</text>
+<text class="head" x="30" y="106">Case</text>
+<text class="head" text-anchor="middle" x="334.0" y="106">Algorithm</text>
+<text class="head" text-anchor="middle" x="422.0" y="106">Targets</text>
+<text class="head" text-anchor="middle" x="510.0" y="106">Mfg.</text>
+<text class="label" x="30" y="134">synthetic-carving-only-r16-h0</text>
+<rect x="290" y="118" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="331.0" y="134">1.00</text>
+<rect x="378" y="118" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="419.0" y="134">1.00</text>
+<rect x="466" y="118" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="507.0" y="134">1.00</text>
+<text class="label" x="30" y="162">synthetic-deformation-only-no-lapla...</text>
+<rect x="290" y="146" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="331.0" y="162">0.00</text>
+<rect x="378" y="146" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="419.0" y="162">0.00</text>
+<rect x="466" y="146" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="507.0" y="162">0.00</text>
+<text class="label" x="30" y="190">synthetic-deformation-only-r16-h0</text>
+<rect x="290" y="174" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="331.0" y="190">0.00</text>
+<rect x="378" y="174" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="419.0" y="190">0.00</text>
+<rect x="466" y="174" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="507.0" y="190">0.00</text>
+<text class="label" x="30" y="218">synthetic-full-r12-h0</text>
+<rect x="290" y="202" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="331.0" y="218">1.00</text>
+<rect x="378" y="202" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="419.0" y="218">1.00</text>
+<rect x="466" y="202" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="507.0" y="218">0.00</text>
+<text class="label" x="30" y="246">synthetic-full-r16-h0</text>
+<rect x="290" y="230" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="331.0" y="246">1.00</text>
+<rect x="378" y="230" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="419.0" y="246">1.00</text>
+<rect x="466" y="230" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="507.0" y="246">1.00</text>
+<text class="label" x="30" y="274">synthetic-full-r16-h1</text>
+<rect x="290" y="258" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="331.0" y="274">1.00</text>
+<rect x="378" y="258" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="419.0" y="274">1.00</text>
+<rect x="466" y="258" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="507.0" y="274">1.00</text>
+<text class="label" x="30" y="302">synthetic-full-r20-h0</text>
+<rect x="290" y="286" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="331.0" y="302">0.00</text>
+<rect x="378" y="286" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="419.0" y="302">0.00</text>
+<rect x="466" y="286" width="82" height="22" rx="3" fill="#f8d7da"/>
+<text class="label" text-anchor="middle" x="507.0" y="302">0.00</text>
+<text class="label" x="30" y="330">synthetic-no-laplacian-r16-h0</text>
+<rect x="290" y="314" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="331.0" y="330">1.00</text>
+<rect x="378" y="314" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="419.0" y="330">1.00</text>
+<rect x="466" y="314" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="507.0" y="330">1.00</text>
+<text class="label" x="30" y="358">synthetic-suspension-r16-h0</text>
+<rect x="290" y="342" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="331.0" y="358">1.00</text>
+<rect x="378" y="342" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="419.0" y="358">1.00</text>
+<rect x="466" y="342" width="82" height="22" rx="3" fill="#d8f3e8"/>
+<text class="label" text-anchor="middle" x="507.0" y="358">1.00</text>
+<line class="axis" x1="650" y1="116" x2="650" y2="368"/>
+<line class="axis" x1="650" y1="368" x2="1080" y2="368"/>
+<line class="grid" x1="650" y1="368.00" x2="1080" y2="368.00"/>
+<text class="label" text-anchor="end" x="643" y="372.00">-16</text>
+<line class="grid" x1="650" y1="300.80" x2="1080" y2="300.80"/>
+<text class="label" text-anchor="end" x="643" y="304.80">-12</text>
+<line class="grid" x1="650" y1="233.60" x2="1080" y2="233.60"/>
+<text class="label" text-anchor="end" x="643" y="237.60">-8</text>
+<line class="grid" x1="650" y1="166.40" x2="1080" y2="166.40"/>
+<text class="label" text-anchor="end" x="643" y="170.40">-4</text>
+<text class="label" text-anchor="middle" x="865.0" y="396">Committed event ordinal</text>
+<polyline class="curve" stroke="#2563eb" points="650.00,169.36 667.92,368.00"/>
+<line x1="650" y1="416" x2="668" y2="416" stroke="#2563eb" stroke-width="2"/>
+<text class="label" x="674" y="420">synthetic-carving-only-r...</text>
+<polyline class="curve" stroke="#dc2626" points="650.00,169.36 667.92,179.87 685.83,190.35 703.75,200.80 721.67,211.25 739.58,221.69 757.50,232.12 775.42,242.56 793.33,253.00 811.25,263.43 829.17,273.87 847.08,284.30 865.00,294.74 882.92,305.17 900.83,315.61 918.75,326.04 936.67,336.48 954.58,346.91 972.50,357.35 990.42,367.78"/>
+<line x1="870" y1="416" x2="888" y2="416" stroke="#dc2626" stroke-width="2"/>
+<text class="label" x="894" y="420">synthetic-deformation-on...</text>
+<polyline class="curve" stroke="#059669" points="650.00,169.36 667.92,179.87 685.83,187.16 703.75,191.28 721.67,193.31 739.58,194.29 757.50,194.81 775.42,195.15 793.33,195.41 811.25,195.64 829.17,195.85 847.08,196.05 865.00,196.23 882.92,196.42 900.83,196.59 918.75,196.76 936.67,196.92 954.58,197.08 972.50,199.75 990.42,200.94 1008.33,204.89 1026.25,211.80 1044.17,215.48"/>
+<line x1="650" y1="433" x2="668" y2="433" stroke="#059669" stroke-width="2"/>
+<text class="label" x="674" y="437">synthetic-deformation-on...</text>
+<polyline class="curve" stroke="#9333ea" points="650.00,169.36 667.92,368.00"/>
+<line x1="870" y1="433" x2="888" y2="433" stroke="#9333ea" stroke-width="2"/>
+<text class="label" x="894" y="437">synthetic-full-r12-h0</text>
+<polyline class="curve" stroke="#ea580c" points="650.00,169.36 667.92,368.00"/>
+<line x1="650" y1="450" x2="668" y2="450" stroke="#ea580c" stroke-width="2"/>
+<text class="label" x="674" y="454">synthetic-full-r16-h0</text>
+<polyline class="curve" stroke="#0891b2" points="650.00,169.36 667.92,368.00"/>
+<line x1="870" y1="450" x2="888" y2="450" stroke="#0891b2" stroke-width="2"/>
+<text class="label" x="894" y="454">synthetic-full-r16-h1</text>
+<polyline class="curve" stroke="#4f46e5" points="650.00,169.36 667.92,264.92 685.83,264.92 703.75,275.07 721.67,282.11 739.58,286.13 757.50,288.12 775.42,289.08 793.33,289.60 811.25,289.93 829.17,290.19 847.08,290.41 865.00,290.61 882.92,290.80 900.83,290.98 918.75,291.16 936.67,291.33 954.58,291.49 972.50,291.65 990.42,291.79 1008.33,294.41 1026.25,295.60 1044.17,299.47 1062.08,306.25 1080.00,309.94"/>
+<line x1="650" y1="467" x2="668" y2="467" stroke="#4f46e5" stroke-width="2"/>
+<text class="label" x="674" y="471">synthetic-full-r20-h0</text>
+<polyline class="curve" stroke="#be123c" points="650.00,169.36 667.92,368.00"/>
+<line x1="870" y1="467" x2="888" y2="467" stroke="#be123c" stroke-width="2"/>
+<text class="label" x="894" y="471">synthetic-no-laplacian-r...</text>
+<polyline class="curve" stroke="#2563eb" points="650.00,122.75 667.92,127.58 685.83,127.58 703.75,129.69 721.67,131.62 739.58,133.34 757.50,134.86 775.42,136.18 793.33,137.30 811.25,138.24 829.17,139.01 847.08,139.65 865.00,140.17 882.92,141.22 900.83,142.10 918.75,142.83 936.67,144.25 954.58,145.47 972.50,146.51 990.42,147.39 1008.33,149.34 1026.25,151.10 1044.17,152.66"/>
+<line x1="650" y1="484" x2="668" y2="484" stroke="#2563eb" stroke-width="2"/>
+<text class="label" x="674" y="488">synthetic-suspension-r16-h0</text>
+<text class="subtitle" x="30" y="513">Paper-reference values are excluded from this figure. Rates are derived only from succeeded local run records.</text>
+</svg>
