@@ -132,3 +132,31 @@ scalability.
 R4 reproduces only paper Section 4 under a fixed outer surface. It does not
 claim deformation, alternation, final printability, physical balance or
 paper-result reproduction.
+
+## R5--R8 implementation overview
+
+| Phase | Principal files | Responsibility and accepted evidence |
+|---|---|---|
+| R5 | `include/deformation/{GridDeformationDomain,HandleSet,BoundedBiharmonicWeights,LinearBlendSkinning,DeformationSystem}.h` and matching sources/tests | Adds the bounded-BBW, handle, Eq. 9/10 LBS, trilinear-transfer and synchronized-geometry representation. Analytic and regression scope is recorded in `docs/r5_acceptance.md`. |
+| R6 | `include/deformation/{LaplacianEditingEnergy,DeformationObjective,DeformationOptimizer}.h`, `include/physics/SurfaceMassDifferential.h`, matching sources/tests | Adds the fixed-occupancy deformation objective, analytic mass/CoM derivatives, paper line search, and transactional optimizer. Accepted scope is recorded in `docs/r6_acceptance.md`. |
+| R7 | `include/optimization/AlternatingBalanceOptimizer.h`, `include/stability/BalanceTargetSchedule.h`, deformed carving/mass-field sources and regression tests | Adds the paper-governed carving/deformation controller, target refresh, full-solid refill and result snapshots. Accepted local-regression scope is recorded in `docs/r7_acceptance.md`. |
+| R8 | `include/manufacturing/` and `src/manufacturing/`, manufacturing/slicer/partition tests | Adds fail-closed boundary/manufacturing audit, sealed OBJ/STL export, pinned slicer validation, and external partition declarations. Accepted unit-contract scope and physical-evidence ceiling are recorded in `docs/r8_acceptance.md`. |
+
+These phases establish local unit and regression contracts, not equality to an
+official paper trajectory, asset, figure, table, or manufactured result.
+
+## R9 Python and pybind11 changes
+
+| Files | R9 change | Evidence / status |
+|---|---|---|
+| `include/api/BalanceModel.h`, `src/api/BalanceModel.cpp` | Adds one owning, thread-serialized C++ facade over the R3--R8 pipeline and immutable result snapshots. | C++ facade regression passes; no paper-experiment claim. |
+| `include/stability/SupportRegion.h`, `src/stability/SupportRegion.cpp` | Adds strict construction from an explicit support polygon for the public API. | Covered by facade/support failure and integration checks. |
+| `bindings/pybind_module.cpp` | Binds model/run configurations, owning models/results, copied Eigen/NumPy arrays and guarded exports. | Real native binding and lifetime tests pass. |
+| `python/make_it_stand/`, `python/*.py` | Adds strict schema-v1 configurations, batch execution, diagnostics evaluation, deterministic CSV/SVG visualization and generic comparison commands. | Python tool tests pass; comparison remains explicitly below R10. |
+| `pyproject.toml`, `CMakePresets.json`, `CMakeLists.txt` | Adds optional, Python-off-by-default extension builds, PEP 517 wheel/sdist metadata and R9 tests. | 3/3 focused and 103/103 complete Python-preset tests pass; direct and sdist-origin wheel builds pass. |
+| `tests/balance_model_regression.cpp`, `tests/python/` | Exercises ownership, invalid input, deterministic native execution, sealed exports, strict configuration and generic tooling. | The isolated wheel import, five installed CLIs, real native optimization, deterministic diagnostics and guarded exports pass. |
+| `docs/r9_acceptance.md` | Defines the R9/R10 boundary and records the completed installation gate. | `VERIFIED_REGRESSION`; this does not establish any paper experiment. |
+
+R9 supplies an experiment interface, not the experiments themselves. Official
+models, parameter sweeps, paper ablations, timing/convergence alignment,
+quantitative paper tables/figures and physical printing remain R10.

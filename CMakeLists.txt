@@ -17,6 +17,7 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(MAKE_IT_STAND_BUILD_VIEWER "Build the interactive GLFW viewer" ON)
+option(MAKE_IT_STAND_BUILD_PYTHON "Build the pybind11 Python extension" OFF)
 
 # Keep dependency resolution anchored to the git submodule. A different
 # checkout must be selected explicitly through MAKE_IT_STAND_LIBIGL_DIR.
@@ -50,6 +51,7 @@ set(
 find_package(LIBIGL REQUIRED QUIET)
 
 set(MAKE_IT_STAND_CORE_SOURCES
+    src/api/BalanceModel.cpp
     src/carving/CarvingDiagnostics.cpp
     src/carving/PlaneCarvingPolicy.cpp
     src/carving/CarvingSolver.cpp
@@ -84,6 +86,7 @@ set(MAKE_IT_STAND_CORE_SOURCES
 )
 
 set(MAKE_IT_STAND_CORE_HEADERS
+    include/api/BalanceModel.h
     include/carving/CarvingDiagnostics.h
     include/carving/PlaneCarvingPolicy.h
     include/carving/CarvingSolver.h
@@ -127,13 +130,71 @@ add_library(
 add_library(make_it_stand::core ALIAS make_it_stand_core)
 
 target_compile_features(make_it_stand_core PUBLIC cxx_std_17)
-set_target_properties(make_it_stand_core PROPERTIES CXX_EXTENSIONS OFF)
+set_target_properties(
+    make_it_stand_core
+    PROPERTIES
+        CXX_EXTENSIONS OFF
+        POSITION_INDEPENDENT_CODE ON
+)
 target_include_directories(
     make_it_stand_core
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
 target_link_libraries(make_it_stand_core PUBLIC igl::core)
+
+if(MAKE_IT_STAND_BUILD_PYTHON)
+    set(PYBIND11_FINDPYTHON ON)
+    find_package(
+        Python 3.10
+        COMPONENTS Interpreter Development.Module
+        REQUIRED
+    )
+
+    # Resolve pybind11 from the exact interpreter selected above. This never
+    # downloads dependencies and prevents mixing two CPython environments.
+    if(NOT pybind11_DIR)
+        execute_process(
+            COMMAND "${Python_EXECUTABLE}" -m pybind11 --cmakedir
+            RESULT_VARIABLE MAKE_IT_STAND_PYBIND11_QUERY_STATUS
+            OUTPUT_VARIABLE MAKE_IT_STAND_PYBIND11_CMAKE_DIR
+            ERROR_VARIABLE MAKE_IT_STAND_PYBIND11_QUERY_ERROR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if(NOT MAKE_IT_STAND_PYBIND11_QUERY_STATUS EQUAL 0)
+            message(FATAL_ERROR
+                "The selected Python interpreter has no usable pybind11: "
+                "${MAKE_IT_STAND_PYBIND11_QUERY_ERROR}"
+            )
+        endif()
+        set(pybind11_DIR "${MAKE_IT_STAND_PYBIND11_CMAKE_DIR}")
+    endif()
+
+    find_package(pybind11 3.0.1 EXACT CONFIG REQUIRED)
+    pybind11_add_module(
+        _make_it_stand
+        MODULE
+        bindings/pybind_module.cpp
+    )
+    target_compile_features(_make_it_stand PRIVATE cxx_std_17)
+    set_target_properties(
+        _make_it_stand
+        PROPERTIES
+            CXX_EXTENSIONS OFF
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python"
+    )
+    target_link_libraries(_make_it_stand PRIVATE make_it_stand::core)
+
+    install(
+        TARGETS _make_it_stand
+        LIBRARY DESTINATION make_it_stand
+    )
+    install(
+        DIRECTORY python/make_it_stand/
+        DESTINATION make_it_stand
+        FILES_MATCHING PATTERN "*.py"
+    )
+endif()
 
 if(MAKE_IT_STAND_BUILD_VIEWER)
     add_executable(make_it_stand_viewer main.cpp)
@@ -160,6 +221,58 @@ endif()
 include(CTest)
 
 if(BUILD_TESTING)
+    add_executable(
+        balance-model-regression
+        tests/balance_model_regression.cpp
+    )
+    target_compile_features(balance-model-regression PRIVATE cxx_std_17)
+    set_target_properties(
+        balance-model-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        balance-model-regression
+        PRIVATE make_it_stand::core
+    )
+    add_test(
+        NAME r9-balance-model-facade
+        COMMAND "$<TARGET_FILE:balance-model-regression>"
+    )
+    set_tests_properties(
+        r9-balance-model-facade
+        PROPERTIES
+            LABELS "r9;api;regression"
+            TIMEOUT 120
+    )
+
+    if(MAKE_IT_STAND_BUILD_PYTHON)
+        add_test(
+            NAME r9-python-bindings
+            COMMAND "${Python_EXECUTABLE}" -m unittest
+                discover
+                -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+                -p "test_bindings.py"
+                -v
+        )
+        add_test(
+            NAME r9-python-tools
+            COMMAND "${Python_EXECUTABLE}" -m unittest
+                discover
+                -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+                -p "test_python_tools.py"
+                -v
+        )
+        set_tests_properties(
+            r9-python-bindings
+            r9-python-tools
+            PROPERTIES
+                LABELS "r9;python"
+                TIMEOUT 180
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}/python"
+        )
+    endif()
+
     add_executable(
         mass-properties-regression
         tests/mass_properties_regression.cpp

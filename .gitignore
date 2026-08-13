@@ -34,8 +34,19 @@
 /build/
 /build-*/
 /cmake-build-*/
+/CMakeFiles/
 /out/
 /Testing/
 /compile_commands.json
 /CMakeUserPresets.json
 .vs/
+
+# Python build, cache, and packaging artifacts
+__pycache__/
+*.py[cod]
+/.pytest_cache/
+/.ruff_cache/
+/.venv/
+/dist/
+/wheelhouse/
+/*.egg-info/

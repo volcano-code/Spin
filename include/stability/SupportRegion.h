@@ -29,6 +29,16 @@ class SupportRegion
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+    /**
+     * Canonicalize a finite coplanar 3-D polygon in the plane orthogonal to
+     * gravity. Duplicate/interior points are removed and the retained convex
+     * hull is deterministic CCW when viewed along the gravity direction.
+     */
+    static SupportRegion fromPolygon(
+        const Eigen::MatrixXd& polygon,
+        const Eigen::Vector3d& gravityDirection
+    );
+
     static SupportRegion fromMesh(
         const Eigen::MatrixXd& vertices,
         const Eigen::Vector3d& gravityDirection,

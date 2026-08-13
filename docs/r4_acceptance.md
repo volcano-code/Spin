@@ -158,7 +158,7 @@ verify deterministic state and diagnostics.
 The step CSV is an audit trace, not a self-contained experiment manifest: the
 objective collection, grid resolution, `t_min`, and progress threshold must be
 recorded by the calling experiment configuration. Reproducible paper-case
-configuration and result artifacts remain R9 work.
+configuration and result artifacts remain R10 work.
 
 ## Status ceiling
 

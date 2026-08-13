@@ -29,6 +29,19 @@
         "MAKE_IT_STAND_BUILD_VIEWER": true,
         "BUILD_TESTING": false
       }
+    },
+    {
+      "name": "python",
+      "displayName": "Python extension and R9 integration tests",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/python",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "MAKE_IT_STAND_BUILD_VIEWER": false,
+        "MAKE_IT_STAND_BUILD_PYTHON": true,
+        "BUILD_TESTING": true
+      }
     }
   ],
   "buildPresets": [
@@ -39,12 +52,23 @@
     {
       "name": "viewer",
       "configurePreset": "viewer"
+    },
+    {
+      "name": "python",
+      "configurePreset": "python"
     }
   ],
   "testPresets": [
     {
       "name": "headless",
       "configurePreset": "headless",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "python",
+      "configurePreset": "python",
       "output": {
         "outputOnFailure": true
       }

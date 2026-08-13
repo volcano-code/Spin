@@ -16,7 +16,7 @@ Phase 8. It adds three deliberately separate contracts:
 Acceptance means that these interfaces and their constructed fixtures pass.
 It does **not** mean that an official paper case was reproduced, a real slicer
 was run, a model was printed, a structure carries load, or a physical object
-stands. Those claims require R9 artifacts and process-specific evidence.
+stands. Those claims require R10 artifacts and process-specific evidence.
 
 ## Final coherent boundary
 
@@ -145,5 +145,6 @@ Recursive clean-clone viewer configure/build           passed
 ```
 
 These commands establish deterministic local implementation contracts only.
-R9 remains responsible for official models, paper metrics/figures, performance
+R9 remains responsible for the Python/pybind11 experiment interface. R10
+remains responsible for official models, paper metrics/figures, performance
 alignment, real process profiles and physical outcomes.

@@ -668,6 +668,118 @@ SupportRegion::SupportRegion()
 }
 
 
+SupportRegion SupportRegion::fromPolygon(
+    const Eigen::MatrixXd& polygon,
+    const Eigen::Vector3d& gravityDirection
+)
+{
+    if (
+        polygon.cols() != 3 ||
+        polygon.rows() < 3 ||
+        !polygon.allFinite()
+    )
+    {
+        throw std::invalid_argument(
+            "support polygon must be a finite N-by-3 matrix with N >= 3"
+        );
+    }
+
+    SupportRegion result;
+    result.gravity_ = normalizedGravityDirection(gravityDirection);
+
+    const double scale = geometryScale(polygon);
+    if (!std::isfinite(scale) || !(scale > 0.0))
+    {
+        throw std::domain_error(
+            "support polygon has zero geometric extent"
+        );
+    }
+    result.geometryTolerance_ = coordinateTolerance(scale);
+
+    Eigen::Index leastAlignedAxis = 0;
+    result.gravity_.cwiseAbs().minCoeff(&leastAlignedAxis);
+    Eigen::Vector3d referenceAxis = Eigen::Vector3d::Zero();
+    referenceAxis(leastAlignedAxis) = 1.0;
+    result.basisU_ =
+        referenceAxis -
+        referenceAxis.dot(result.gravity_) * result.gravity_;
+    const double basisUNorm = result.basisU_.norm();
+    if (!std::isfinite(basisUNorm) || !(basisUNorm > 0.0))
+    {
+        throw std::domain_error(
+            "failed to construct the support-plane basis"
+        );
+    }
+    result.basisU_ /= basisUNorm;
+    result.basisV_ =
+        result.gravity_.cross(result.basisU_).normalized();
+
+    Eigen::VectorXd heights(polygon.rows());
+    for (Eigen::Index row = 0; row < polygon.rows(); ++row)
+    {
+        heights(row) = -result.gravity_.dot(
+            polygon.row(row).transpose()
+        );
+    }
+    const double minimumHeight = heights.minCoeff();
+    const double maximumHeight = heights.maxCoeff();
+    if (
+        !std::isfinite(minimumHeight) ||
+        !std::isfinite(maximumHeight) ||
+        maximumHeight - minimumHeight > result.geometryTolerance_
+    )
+    {
+        throw std::domain_error(
+            "support polygon must be coplanar in a plane orthogonal to gravity"
+        );
+    }
+
+    /*
+     * This origin is independent of point order and translation within the
+     * support plane. Together with the least-aligned-axis basis above, it
+     * makes the returned hull order deterministic.
+     */
+    result.supportHeight_ = minimumHeight;
+    result.contactThreshold_ = 0.0;
+    result.planeOrigin_ =
+        -result.supportHeight_ * result.gravity_;
+
+    std::vector<Eigen::Vector2d> projected;
+    projected.reserve(static_cast<std::size_t>(polygon.rows()));
+    for (Eigen::Index row = 0; row < polygon.rows(); ++row)
+    {
+        const Eigen::Vector3d displacement =
+            polygon.row(row).transpose() - result.planeOrigin_;
+        projected.emplace_back(
+            displacement.dot(result.basisU_),
+            displacement.dot(result.basisV_)
+        );
+    }
+
+    const std::vector<Eigen::Vector2d> hull = convexHull(
+        projected,
+        result.geometryTolerance_
+    );
+    if (hull.size() < 3)
+    {
+        throw std::domain_error(
+            "support polygon does not define a positive-area convex hull"
+        );
+    }
+    result.supportPolygon2D_ = pointsToMatrix(hull);
+
+    const std::vector<HalfPlane> halfPlanes = polygonHalfPlanes(
+        result.supportPolygon2D_,
+        result.geometryTolerance_
+    );
+    result.maximumInset_ = computeMaximumInset(
+        halfPlanes,
+        result.geometryTolerance_
+    ).first;
+    return result;
+}
+
+
 SupportRegion SupportRegion::fromMesh(
     const Eigen::MatrixXd& vertices,
     const Eigen::Vector3d& gravityDirection,

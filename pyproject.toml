@@ -1,0 +1,61 @@
+[build-system]
+requires = [
+  "scikit-build-core==0.11.6",
+  "pybind11==3.0.1",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "make-it-stand-reproduction"
+version = "0.1.0"
+description = "Auditable Python experiment layer for the Make It Stand reproduction"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+]
+license = { file = "LICENSE" }
+authors = [
+  { name = "Make It Stand reproduction contributors" },
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.scripts]
+make-it-stand-run = "make_it_stand.cli:run_balance_main"
+make-it-stand-batch = "make_it_stand.cli:batch_experiment_main"
+make-it-stand-evaluate = "make_it_stand.cli:evaluate_main"
+make-it-stand-visualize = "make_it_stand.cli:visualize_main"
+make-it-stand-compare = "make_it_stand.cli:compare_ablation_main"
+
+[tool.scikit-build]
+cmake.version = ">=3.16,<4"
+wheel.packages = ["python/make_it_stand"]
+cmake.args = [
+  "-DMAKE_IT_STAND_BUILD_PYTHON=ON",
+  "-DMAKE_IT_STAND_BUILD_VIEWER=OFF",
+  "-DBUILD_TESTING=OFF",
+]
+sdist.include = [
+  "/CMakeLists.txt",
+  "/cmake/**",
+  "/include/**",
+  "/src/**",
+  "/bindings/**",
+  "/python/*.py",
+  "/python/make_it_stand/*.py",
+  "/libigl/cmake/**",
+  "/libigl/include/**",
+  "/libigl/LICENSE.GPL",
+  "/libigl/LICENSE.MPL2",
+  "/libigl/README.md",
+]
+sdist.exclude = [
+  "**/__pycache__/**",
+  "**/*.py[cod]",
+]

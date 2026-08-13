@@ -170,8 +170,9 @@ Remaining known non-conformances include:
 
 - real process-specific slicing, printing, assembly and physical standing
   evidence are outside the local R8 unit-contract ceiling;
-- official paper cases, metrics, ablations and performance alignment remain
-  R9;
+- the R9 Python experiment layer exposes the verified local C++ pipeline and
+  generic diagnostics tools without promoting any result to paper equivalence;
+  official paper cases, metrics, ablations and performance alignment remain R10;
 - `make_it_stand()` remains a placeholder API.
 
 These limitations are intentional baseline facts, not accepted final behavior.
@@ -214,6 +215,98 @@ Configure, build and test the headless target:
 The first configuration may download the dependency revisions selected by the
 pinned libigl commit. Subsequent builds use those cached source trees.
 
+Build the optional R9 Python extension in an environment that provides the
+pinned pybind11 version and NumPy:
+
+```bash
+python -m pip install "pybind11==3.0.1" "numpy>=1.26"
+/usr/bin/cmake --preset python
+/usr/bin/cmake --build --preset python --parallel
+/usr/bin/ctest --preset python -L r9
+```
+
+The Python option is off by default. The checked-in preset contains no host
+paths: CMake selects Python from the active environment and asks that same
+interpreter for pybind11's CMake directory. To select a different interpreter,
+pass `-DPython_EXECUTABLE=/absolute/path/to/python`; pass `-Dpybind11_DIR=...`
+only when the selected interpreter cannot locate the pinned package. A built
+extension is specific to its CPython minor version and platform.
+
+The target owning API is available from either an installed wheel or the build
+tree. For the latter, set
+`PYTHONPATH="$PWD/python:$PWD/build/python/python"` before starting Python:
+
+```python
+from make_it_stand import BalanceModel
+
+model = BalanceModel("horse.obj")
+model.set_gravity((0.0, -1.0, 0.0))
+model.set_support_from_mesh(contact_threshold=0.0, gamma_radians=0.0)
+result = model.optimize()
+result.save_outer_mesh("outer.obj")
+result.save_inner_mesh("inner.obj")
+if result.manufacturing_ready:
+    result.save_printable_mesh("printable.stl")
+result.save_diagnostics("diagnostics.json")
+```
+
+The same run can be described by an exact, versioned JSON configuration:
+
+```json
+{
+  "schema": "make-it-stand-balance-config-v1",
+  "schema_version": 1,
+  "model": {"path": "horse.obj", "voxel_resolution": 50},
+  "gravity": [0.0, -1.0, 0.0],
+  "support": {
+    "kind": "mesh",
+    "contact_threshold": 0.0,
+    "gamma_radians": 0.0
+  },
+  "outputs": {
+    "diagnostics": "diagnostics.json",
+    "outer_mesh": "outer.obj",
+    "inner_mesh": "inner.obj",
+    "printable_mesh": "printable.stl"
+  }
+}
+```
+
+For a JSON configuration, a relative `model.path` is resolved against the
+configuration file's directory; direct `BalanceModel` construction follows
+normal process-relative path semantics. Output paths are constrained to the
+selected output directory and may not contain parent traversal. Existing
+symbolic links below that selected root are rejected; these checks guard normal
+experiment orchestration and are not a security sandbox against a process that
+concurrently mutates the filesystem.
+
+Five thin tools operate on validated configurations or existing diagnostics:
+
+```bash
+python python/run_balance.py config.json --output-directory results/run
+python python/batch_experiment.py batch.json --output-directory results/batch
+python python/evaluate.py results/run/diagnostics.json --output summary.json
+python python/visualize.py results/run/diagnostics.json --csv trace.csv --svg trace.svg
+python python/compare_ablation.py groups.json --output comparison.json
+```
+
+Installed wheels provide the equivalent commands `make-it-stand-run`,
+`make-it-stand-batch`, `make-it-stand-evaluate`, `make-it-stand-visualize`, and
+`make-it-stand-compare`. Build and inspect a wheel in an initialized recursive
+checkout as follows:
+
+```bash
+python -m pip wheel . --wheel-dir wheelhouse
+python -m pip install wheelhouse/make_it_stand_reproduction-*.whl
+python -c "from make_it_stand import BalanceModel; print(BalanceModel)"
+```
+
+These commands are generic orchestration and reporting only. Paper assets,
+paper-scale parameter sweeps, claimed ablations and figure/table reproduction
+belong exclusively to R10. The completed R9 verification evidence and the
+R9/R10 boundary are recorded in
+[`docs/r9_acceptance.md`](docs/r9_acceptance.md).
+
 Build the interactive viewer separately:
 
 ```bash
@@ -225,8 +318,10 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-The active headless suite registers 100 tests through R8. The 38 pre-R7 tests
-are:
+The active headless suite registers 101 tests through R9: the 100 accepted
+R0--R8 tests plus the owning C++ `BalanceModel` facade regression. The Python
+preset adds two binding/tool tests, for 103 registered tests in total. The 38
+pre-R7 tests are:
 
 ```text
 mass-surface-analytic
@@ -296,6 +391,9 @@ The triangle-chain extension is labelled `r6`; the remaining 16 comprise the
 R7 label. R8 adds 45 labelled tests: 26 geometry/export contracts, 18 pinned
 slicer-adapter contracts, and one external-partition-interface contract. The
 complete total is `38 + 1 + 16 + 45 = 100`.
+
+R9 adds one always-enabled C++ facade regression and two tests enabled only by
+`MAKE_IT_STAND_BUILD_PYTHON`, giving 101 headless or 103 Python-preset tests.
 
 They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
 eight-voxel deletion fixture, oblique/scaled gravity, state/count continuity,
@@ -382,6 +480,8 @@ data/
   inherited sample meshes; Bunny is used by the carving regressions
 docs/
   conformance, environment, provenance and staged acceptance records
+bindings/, python/
+  R9 pybind11 extension and generic experiment orchestration tools
 ```
 
 `list3d.h` is header-only; there is no `list3d.cpp`.

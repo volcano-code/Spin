@@ -1,6 +1,6 @@
 # Reproduction environment lock
 
-Last audited: 2026-08-11 (Asia/Shanghai)
+Last audited: 2026-08-13 (Asia/Shanghai)
 
 ## Reference host toolchain
 
@@ -13,6 +13,9 @@ Last audited: 2026-08-11 (Asia/Shanghai)
 | Generator | Ninja 1.13.0 |
 | C++ language mode | C++17, extensions disabled |
 | Build type | `RelWithDebInfo` |
+| Optional R9 CPython | `/usr/bin/python3` 3.12.3 |
+| Optional R9 pybind11 headers | 3.0.1 CMake package from the local Anaconda installation |
+| Optional R9 NumPy runtime | 2.4.3 on the audited CPython 3.12 host; package floor 1.26 |
 
 The project rejects CMake 4.x. The pinned libigl revision invokes legacy
 download subprojects whose old compatibility mode was removed in CMake 4.
@@ -51,10 +54,42 @@ git submodule update --init --recursive
 /usr/bin/ctest --preset headless
 /usr/bin/cmake --preset viewer
 /usr/bin/cmake --build --preset viewer --parallel
+/usr/bin/cmake --preset python
+/usr/bin/cmake --build --preset python --parallel
+/usr/bin/ctest --preset python -L r9
 ```
 
-The two presets intentionally use separate build trees. Headless testing does
-not enable OpenGL, GLFW or ImGui; the viewer build does not register tests.
+The presets intentionally use separate build trees. Headless testing does not
+enable OpenGL, GLFW or ImGui; the viewer build does not register tests. The
+third tree is also headless and enables only the optional CPython extension
+and R9 tests. The checked-in Python preset contains no host-specific path and
+normally resolves Python and pybind11 from the active environment. On the
+audited host, explicit command-line cache variables selected system CPython
+3.12 and pybind11 3.0.1 from the local package environment because the
+Anaconda 3.13 runtime carries a `libstdc++` older than the GCC 13 extension
+requires. The pybind11 package is header-only and may compile against the
+selected CPython development module. The extension is not
+stable-ABI (`abi3`) and must be rebuilt for each CPython minor version and
+platform. Python support is off in the other presets.
+
+PEP 517 wheel builds obtain scikit-build-core and pybind11 from the exact
+`pyproject.toml` build requirements, while NumPy is declared as a runtime
+dependency. A source distribution includes the tracked pinned libigl source
+tree needed by CMake but excludes all locally downloaded `libigl/external`
+trees and nested Git metadata; its first wheel build therefore resolves Eigen
+through the pinned libigl download machinery. Build source distributions only
+from an initialized recursive checkout and inspect their member list and size
+before release.
+
+The R9 acceptance audit built both a direct wheel and a source distribution,
+built a second wheel from that source distribution, and installed the wheel in
+an isolated environment outside the checkout with `PYTHONPATH` unset. Package
+and native-extension import, all five installed console commands, a real native
+optimization, deterministic diagnostics, and guarded mesh exports passed. The
+source archive audit found no downloaded external tree, cache, nested Git
+metadata, or host-local absolute path. See `docs/r9_acceptance.md` for the
+scope boundary: these checks verify the experiment interface, not R10 paper
+experiments.
 
 ## Clean-state checks
 

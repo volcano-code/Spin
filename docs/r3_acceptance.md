@@ -372,8 +372,9 @@ Specifically, R4 remains responsible for:
 
 R5--R7 remain responsible for freezing support voxels as deformation handles,
 BBW/LBS, Laplacian preservation, gradients, line search, and alternating
-carving/deformation. R8--R9 remain responsible for coherent output meshes,
-fabrication checks, and paper experiment reproduction.
+carving/deformation. R8 provides coherent output meshes and fabrication checks,
+R9 provides the Python experiment interface, and R10 remains responsible for
+paper experiment reproduction.
 
 Consequently, successful R3 unit tests may advance support construction,
 standing/suspension target construction, and Equation 5 CoM evaluation to at

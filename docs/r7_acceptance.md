@@ -53,9 +53,9 @@ Within this boundary R7 implements:
 
 R8 remains responsible for deformed minimum-wall verification, final mesh
 construction and repair, watertightness/connectivity validation, slicing, and
-manufacturing checks. R9 remains responsible for official case assets,
-paper-scale experiments, parameter sweeps, and paper-table or paper-figure
-comparison.
+manufacturing checks. R9 adds the Python/pybind11 experiment interface; R10
+remains responsible for official case assets, paper-scale experiments,
+parameter sweeps, and paper-table or paper-figure comparison.
 
 ## All-filled reset and per-step target schedule
 
@@ -306,7 +306,7 @@ These are `VERIFIED_UNIT` claims with one local integration fixture at
   faces, or topological defects;
 - final watertightness, slicer compatibility, structural strength,
   printability, or fabricated standing success; or
-- R9 experimental, robustness, resolution, timing, or official-asset claims.
+- R10 experimental, robustness, resolution, timing, or official-asset claims.
 
 ## Final local verification gate
 
