@@ -151,6 +151,15 @@ class SupportConfig:
 
 
 @dataclass(frozen=True)
+class StandingConstraintConfig:
+    kind: str
+    gravity: tuple[float, float, float]
+    gamma_radians: float
+    polygon: tuple[tuple[float, float, float], ...] = ()
+    contact_threshold: float | None = None
+
+
+@dataclass(frozen=True)
 class SuspensionConfig:
     attachment_point: tuple[float, float, float]
     allowed_deviation_radians: float
@@ -182,6 +191,9 @@ class RunConfig:
     reduction_ratio: float = 0.8
     required_relative_decrease: float = 0.01
     mu_decrement: float = 0.05
+    enable_carving: bool = field(default=True, kw_only=True)
+    enable_deformation: bool = field(default=True, kw_only=True)
+    enable_laplacian: bool = field(default=True, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -203,6 +215,12 @@ class BalanceConfig:
     outputs: OutputConfig = field(default_factory=OutputConfig)
     schema: str = CONFIG_SCHEMA
     schema_version: int = CONFIG_SCHEMA_VERSION
+    # R10 is keyword-only so every pre-R10 positional constructor keeps its
+    # exact field mapping.
+    standing_constraints: tuple[StandingConstraintConfig, ...] = field(
+        default_factory=tuple,
+        kw_only=True,
+    )
 
 
 _MODEL_FIELDS = {
@@ -222,7 +240,7 @@ def validate_config(value: Any) -> BalanceConfig:
         "config",
         allowed={
             "schema", "schema_version", "model", "gravity", "support",
-            "handles", "suspensions", "run", "outputs",
+            "standing_constraints", "handles", "suspensions", "run", "outputs",
         },
         required={"schema", "schema_version", "model", "gravity", "outputs"},
     )
@@ -307,6 +325,71 @@ def validate_config(value: Any) -> BalanceConfig:
         else:
             _fail("config.support.kind", "expected 'polygon' or 'mesh'")
 
+    standing_constraints: list[StandingConstraintConfig] = []
+    raw_standings = root.get("standing_constraints", [])
+    if not isinstance(raw_standings, list):
+        _fail("config.standing_constraints", "expected an array")
+    for index, item in enumerate(raw_standings):
+        path = f"config.standing_constraints[{index}]"
+        raw_standing = _mapping(item, path)
+        _keys(
+            raw_standing,
+            path,
+            allowed={
+                "kind", "gravity", "polygon", "contact_threshold",
+                "gamma_radians",
+            },
+            required={"kind", "gravity", "gamma_radians"},
+        )
+        kind = _string(raw_standing["kind"], f"{path}.kind")
+        constraint_gravity = _vector3(
+            raw_standing["gravity"], f"{path}.gravity"
+        )
+        _nonzero(constraint_gravity, f"{path}.gravity")
+        gamma = _number(
+            raw_standing["gamma_radians"],
+            f"{path}.gamma_radians",
+            minimum=0.0,
+        )
+        if gamma >= math.pi / 2.0:
+            _fail(f"{path}.gamma_radians", "must be less than pi/2")
+        if kind == "polygon":
+            if "contact_threshold" in raw_standing:
+                _fail(path, "contact_threshold is valid only for kind 'mesh'")
+            raw_polygon = raw_standing.get("polygon")
+            if not isinstance(raw_polygon, (list, tuple)) or len(raw_polygon) < 3:
+                _fail(f"{path}.polygon", "expected at least three 3D points")
+            polygon = tuple(
+                _vector3(point, f"{path}.polygon[{point_index}]")
+                for point_index, point in enumerate(raw_polygon)
+            )
+            standing_constraints.append(
+                StandingConstraintConfig(
+                    kind=kind,
+                    gravity=constraint_gravity,
+                    gamma_radians=gamma,
+                    polygon=polygon,
+                )
+            )
+        elif kind == "mesh":
+            if "polygon" in raw_standing:
+                _fail(path, "polygon is valid only for kind 'polygon'")
+            threshold = _number(
+                raw_standing.get("contact_threshold", 0.0),
+                f"{path}.contact_threshold",
+                minimum=0.0,
+            )
+            standing_constraints.append(
+                StandingConstraintConfig(
+                    kind=kind,
+                    gravity=constraint_gravity,
+                    gamma_radians=gamma,
+                    contact_threshold=threshold,
+                )
+            )
+        else:
+            _fail(f"{path}.kind", "expected 'polygon' or 'mesh'")
+
     handles: list[HandleConfig] = []
     raw_handles = root.get("handles", [])
     if not isinstance(raw_handles, list):
@@ -365,8 +448,11 @@ def validate_config(value: Any) -> BalanceConfig:
                 f"{path}.allowed_deviation_radians",
                 "must be less than pi/2",
             )
-    if support is None and not suspensions:
-        _fail("config", "at least one support or suspension constraint is required")
+    if support is None and not standing_constraints and not suspensions:
+        _fail(
+            "config",
+            "at least one support, standing, or suspension constraint is required",
+        )
 
     raw_run = _mapping(root.get("run", {}), "config.run")
     _keys(raw_run, "config.run", allowed=_RUN_FIELDS)
@@ -377,9 +463,16 @@ def validate_config(value: Any) -> BalanceConfig:
         "maximum_deformation_iterations_per_block",
         "minimum_carving_removals_to_continue",
     }
+    boolean_run_fields = {
+        "enable_carving",
+        "enable_deformation",
+        "enable_laplacian",
+    }
     for name in _RUN_FIELDS:
         raw = raw_run.get(name, getattr(run_defaults, name))
-        if name in integer_run_fields:
+        if name in boolean_run_fields:
+            run_values[name] = _bool(raw, f"config.run.{name}")
+        elif name in integer_run_fields:
             minimum = 0 if name == "minimum_carving_removals_to_continue" else 1
             run_values[name] = _integer(raw, f"config.run.{name}", minimum=minimum)
         else:
@@ -406,6 +499,11 @@ def validate_config(value: Any) -> BalanceConfig:
         _fail("config.run.required_relative_decrease", "must be less than one")
     if run_values["mu_decrement"] > 1.0:
         _fail("config.run.mu_decrement", "must not exceed one")
+    if not run_values["enable_carving"] and not run_values["enable_deformation"]:
+        _fail(
+            "config.run",
+            "enable_carving and enable_deformation must not both be false",
+        )
     run = RunConfig(**run_values)
 
     raw_outputs = _mapping(root["outputs"], "config.outputs")
@@ -453,6 +551,7 @@ def validate_config(value: Any) -> BalanceConfig:
         model=model,
         gravity=gravity,
         support=support,
+        standing_constraints=tuple(standing_constraints),
         handles=tuple(handles),
         suspensions=tuple(suspensions),
         run=run,
@@ -502,6 +601,29 @@ def validate_balance_config(value: Any) -> BalanceConfig:
                     "polygon is valid only for kind 'polygon'",
                 )
             support.pop("polygon", None)
+    raw_standings = raw.get("standing_constraints", [])
+    if not isinstance(raw_standings, (list, tuple)):
+        _fail("config.standing_constraints", "expected an array")
+    for index, standing in enumerate(raw_standings):
+        if not isinstance(standing, dict):
+            _fail(
+                f"config.standing_constraints[{index}]",
+                "expected an object",
+            )
+        if standing.get("kind") == "polygon":
+            if standing.get("contact_threshold") is not None:
+                _fail(
+                    "config.standing_constraints",
+                    "contact_threshold is valid only for kind 'mesh'",
+                )
+            standing.pop("contact_threshold", None)
+        elif standing.get("kind") == "mesh":
+            if standing.get("polygon"):
+                _fail(
+                    "config.standing_constraints",
+                    "polygon is valid only for kind 'polygon'",
+                )
+            standing.pop("polygon", None)
     return validate_config(raw)
 
 
@@ -658,6 +780,67 @@ class BalanceResult:
         return value
 
     @property
+    def performance_report(self) -> dict[str, Any]:
+        value = loads_json_strict(str(self._native.performance_report_json))
+        if not isinstance(value, dict):
+            raise DataFormatError(
+                "native performance_report_json must contain an object"
+            )
+        if set(value) != {
+            "schema", "schema_version", "clock", "scope", "phases",
+            "total_seconds",
+        }:
+            raise DataFormatError(
+                "native performance_report_json has an invalid field set"
+            )
+        if value.get("schema") != "make-it-stand-r10-performance-report-v1":
+            raise DataFormatError(
+                "native performance_report_json has unsupported schema"
+            )
+        if value.get("schema_version") != 1 or value.get("clock") != "steady_clock":
+            raise DataFormatError(
+                "native performance_report_json has unsupported version or clock"
+            )
+        if not isinstance(value.get("scope"), str) or not value["scope"]:
+            raise DataFormatError(
+                "native performance_report_json has invalid scope"
+            )
+        phases = value.get("phases")
+        required_phases = {
+            "input_snapshot_seconds",
+            "voxelization_seconds",
+            "domain_and_handles_seconds",
+            "deformation_system_and_bbw_seconds",
+            "target_and_optimizer_setup_seconds",
+            "optimization_seconds",
+            "manufacturing_audit_seconds",
+            "diagnostics_payload_setup_seconds",
+            "diagnostics_serialization_seconds",
+        }
+        if not isinstance(phases, dict) or set(phases) != required_phases:
+            raise DataFormatError(
+                "native performance_report_json has invalid phases"
+            )
+        numbers = tuple(phases.values()) + (value.get("total_seconds"),)
+        if any(
+            isinstance(item, bool)
+            or not isinstance(item, (int, float))
+            or not math.isfinite(float(item))
+            or float(item) < 0.0
+            for item in numbers
+        ):
+            raise DataFormatError(
+                "native performance_report_json contains invalid durations"
+            )
+        total = float(value["total_seconds"])
+        tolerance = max(1.0e-12, total * 1.0e-9)
+        if sum(float(item) for item in phases.values()) > total + tolerance:
+            raise DataFormatError(
+                "native performance_report_json phases exceed total duration"
+            )
+        return value
+
+    @property
     def native(self) -> Any:
         return self._native
 
@@ -739,6 +922,45 @@ class BalanceModel:
         self._native.set_support_from_mesh(threshold, gamma)
         return self
 
+    def add_standing_constraint_polygon(
+        self,
+        polygon: Sequence[Sequence[float]],
+        gravity_direction: Sequence[float],
+        gamma_radians: float,
+    ) -> "BalanceModel":
+        points = tuple(
+            _vector3(point, f"standing_polygon[{index}]")
+            for index, point in enumerate(polygon)
+        )
+        if len(points) < 3:
+            _fail("standing_polygon", "expected at least three points")
+        gravity = _vector3(gravity_direction, "gravity_direction")
+        _nonzero(gravity, "gravity_direction")
+        gamma = _number(gamma_radians, "gamma_radians", minimum=0.0)
+        if gamma >= math.pi / 2.0:
+            _fail("gamma_radians", "must be less than pi/2")
+        self._native.add_standing_constraint_polygon(points, gravity, gamma)
+        return self
+
+    def add_standing_constraint_from_mesh(
+        self,
+        gravity_direction: Sequence[float],
+        contact_threshold: float,
+        gamma_radians: float,
+    ) -> "BalanceModel":
+        gravity = _vector3(gravity_direction, "gravity_direction")
+        _nonzero(gravity, "gravity_direction")
+        threshold = _number(contact_threshold, "contact_threshold", minimum=0.0)
+        gamma = _number(gamma_radians, "gamma_radians", minimum=0.0)
+        if gamma >= math.pi / 2.0:
+            _fail("gamma_radians", "must be less than pi/2")
+        self._native.add_standing_constraint_from_mesh(
+            gravity,
+            threshold,
+            gamma,
+        )
+        return self
+
     def add_handle(
         self,
         rest_pivot: Sequence[float],
@@ -797,6 +1019,20 @@ def _build_model(config: BalanceConfig, *, native_module: Any | None = None) -> 
             model.set_support_from_mesh(
                 config.support.contact_threshold,
                 config.support.gamma_radians,
+            )
+    for standing in config.standing_constraints:
+        if standing.kind == "polygon":
+            model.add_standing_constraint_polygon(
+                standing.polygon,
+                standing.gravity,
+                standing.gamma_radians,
+            )
+        else:
+            assert standing.contact_threshold is not None
+            model.add_standing_constraint_from_mesh(
+                standing.gravity,
+                standing.contact_threshold,
+                standing.gamma_radians,
             )
     for suspension in config.suspensions:
         model.add_suspension_constraint(
@@ -872,6 +1108,7 @@ __all__ = [
     "BalanceRunConfig", "CONFIG_SCHEMA",
     "CONFIG_SCHEMA_VERSION", "ConfigurationError", "DIAGNOSTICS_SCHEMA",
     "HandleConfig", "ModelConfig", "OutputConfig", "RunConfig",
-    "SupportConfig", "SuspensionConfig", "build_model", "load_config",
+    "StandingConstraintConfig", "SupportConfig", "SuspensionConfig",
+    "build_model", "load_config",
     "run_config", "validate_balance_config", "validate_config",
 ]

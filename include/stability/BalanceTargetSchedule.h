@@ -7,6 +7,7 @@
 #include "stability/SupportRegion.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -98,6 +99,12 @@ struct BalanceTargetSnapshot
     BalanceObjectives objectives;
     std::vector<BalanceConstraintSnapshot> constraints;
 };
+
+
+/** Deterministic content hash for a complete ordered target snapshot. */
+std::uint64_t balanceTargetSnapshotContentHash(
+    const BalanceTargetSnapshot& snapshot
+) noexcept;
 
 
 /**

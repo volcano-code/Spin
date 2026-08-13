@@ -234,6 +234,39 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def(py::init<>())
         .def_readwrite("initial_mu", &api::BalanceRunConfig::initialMu)
         .def_property(
+            "enable_carving",
+            [](const api::BalanceRunConfig& config)
+            {
+                return config.optimizer.enableCarving;
+            },
+            [](api::BalanceRunConfig& config, bool value)
+            {
+                config.optimizer.enableCarving = value;
+            }
+        )
+        .def_property(
+            "enable_deformation",
+            [](const api::BalanceRunConfig& config)
+            {
+                return config.optimizer.enableDeformation;
+            },
+            [](api::BalanceRunConfig& config, bool value)
+            {
+                config.optimizer.enableDeformation = value;
+            }
+        )
+        .def_property(
+            "enable_laplacian",
+            [](const api::BalanceRunConfig& config)
+            {
+                return config.optimizer.enableLaplacian;
+            },
+            [](api::BalanceRunConfig& config, bool value)
+            {
+                config.optimizer.enableLaplacian = value;
+            }
+        )
+        .def_property(
             "maximum_carving_blocks",
             [](const api::BalanceRunConfig& config)
             {
@@ -432,6 +465,13 @@ PYBIND11_MODULE(_make_it_stand, module)
                 return std::string(result.diagnosticsJson());
             }
         )
+        .def_property_readonly(
+            "performance_report_json",
+            [](const api::BalanceResult& result)
+            {
+                return std::string(result.performanceReportJson());
+            }
+        )
         .def("save_outer_mesh", &api::BalanceResult::saveOuterMesh)
         .def("save_inner_mesh", &api::BalanceResult::saveInnerMesh)
         .def(
@@ -489,6 +529,20 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def(
             "set_support_from_mesh",
             &api::BalanceModel::setSupportFromMesh,
+            py::arg("contact_threshold"),
+            py::arg("gamma_radians")
+        )
+        .def(
+            "add_standing_constraint_polygon",
+            &api::BalanceModel::addStandingConstraintPolygon,
+            py::arg("polygon"),
+            py::arg("gravity_direction"),
+            py::arg("gamma_radians")
+        )
+        .def(
+            "add_standing_constraint_from_mesh",
+            &api::BalanceModel::addStandingConstraintFromMesh,
+            py::arg("gravity_direction"),
             py::arg("contact_threshold"),
             py::arg("gamma_radians")
         )

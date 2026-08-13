@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 
@@ -29,19 +30,61 @@ struct AlternatingBalanceOptimizerConfig
     double minimumPositiveMass = 0.0;
     double minimumPositiveCellMass = 0.0;
     int minimumCarvingRemovalsToContinue = 1;
+
+    /** R10 ablation switches; the paper profile keeps all three enabled. */
+    bool enableCarving = true;
+    bool enableDeformation = true;
+    bool enableLaplacian = true;
 };
 
 
 enum class AlternatingOptimizationStatus
 {
-    StableAfterCarving,
-    StableAfterDeformation,
-    NoDeformationDegreesOfFreedom,
-    MuExhaustedUnstable,
-    AlternatingStalled,
-    MaximumCarvingBlocks,
-    MaximumCarvingIterations,
-    MaximumDeformationIterations
+    StableAfterCarving = 0,
+    StableAfterDeformation = 1,
+    NoDeformationDegreesOfFreedom = 2,
+    MuExhaustedUnstable = 3,
+    AlternatingStalled = 4,
+    MaximumCarvingBlocks = 5,
+    MaximumCarvingIterations = 6,
+    MaximumDeformationIterations = 7,
+
+    /** R10 additions are appended so the pre-R10 enum ordinals stay stable. */
+    StableWithoutCarving = 8,
+    DeformationDisabledUnstable = 9,
+    DeformationConvergedUnstable = 10
+};
+
+
+/** Ordered committed-state events used by R10 convergence accounting. */
+enum class AlternatingEventKind
+{
+    Initial,
+    SolidRefill,
+    CarvingIteration,
+    AcceptedDeformation
+};
+
+
+struct AlternatingEventRecord
+{
+    int ordinal = 0;
+    AlternatingEventKind kind = AlternatingEventKind::Initial;
+    int block = -1;
+    int iteration = -1;
+    int geometryEpoch = 0;
+    bool geometryChanged = false;
+    bool hasStandingConstraints = false;
+    bool allStandingFeasible = false;
+    bool allTargetsReached = false;
+    double projectedTargetEnergy = 0.0;
+    std::size_t targetGeneration = 0;
+    std::uint64_t targetSnapshotHash = 0;
+    std::uint64_t alphaHash = 0;
+    std::uint64_t geometryHash = 0;
+    Eigen::VectorXd parameters;
+    MassProperties massProperties;
+    Eigen::Vector3d centerOfMass = Eigen::Vector3d::Zero();
 };
 
 
@@ -147,6 +190,10 @@ struct AlternatingDeformationRecord
 
 struct AlternatingBalanceOptimizationResult
 {
+    /** Immutable execution profile copied from the validated optimizer config. */
+    bool carvingEnabled = true;
+    bool deformationEnabled = true;
+    bool laplacianEnabled = true;
     AlternatingOptimizationStatus status =
         AlternatingOptimizationStatus::MaximumCarvingBlocks;
     Eigen::VectorXd parameters;
@@ -156,6 +203,40 @@ struct AlternatingBalanceOptimizationResult
     deformation::DeformedGeometry geometry;
     MassProperties massProperties;
     Eigen::Vector3d centerOfMass = Eigen::Vector3d::Zero();
+
+    /** R10 initial/final quantities use local paper-profile semantics. */
+    Eigen::Vector3i gridDimensions = Eigen::Vector3i::Zero();
+    Eigen::Vector3d voxelSize = Eigen::Vector3d::Zero();
+    int initialMaterialVoxelCount = 0;
+    int initialCarveableVoxelCount = 0;
+    int activeDeformationNodeCount = 0;
+    int fixedDeformationNodeCount = 0;
+    int userHandleCount = 0;
+    MassProperties initialMassProperties;
+    Eigen::Vector3d initialCenterOfMass = Eigen::Vector3d::Zero();
+    stability::BalanceTargetSnapshot initialTargets{
+        0,
+        false,
+        false,
+        BalanceObjectives(),
+        {}
+    };
+    double effectiveShapeScaleLambda = 0.0;
+    double finalProjectedTargetEnergy = 0.0;
+    double finalUnscaledShapeEnergy = 0.0;
+    double finalShapeEnergy = 0.0;
+    double finalTotalEnergy = 0.0;
+    double initialOuterVolume = 0.0;
+    double finalOuterVolume = 0.0;
+    double finalCavityVolume = 0.0;
+    double finalCavityVolumeFraction = 0.0;
+    double finalMaterialMassChangeFraction = 0.0;
+    double normalizedRmsVertexDisplacement = 0.0;
+    double normalizedMaximumVertexDisplacement = 0.0;
+    int firstStandingFeasibleEvent = -1;
+    int firstSafeEvent = -1;
+    double maximumUserHandleTranslation = 0.0;
+    double maximumUserHandleScaleDeviation = 0.0;
     /** Content hash of the returned outer/inner/lattice geometry snapshot. */
     std::uint64_t geometryHash = 0;
     /** True when a standing target used a positive, unapplied flatten band. */
@@ -171,6 +252,7 @@ struct AlternatingBalanceOptimizationResult
     std::vector<AlternatingCarvingRecord> carvingBlocks;
     std::vector<AlternatingCarvingIterationRecord> carvingIterations;
     std::vector<AlternatingDeformationRecord> deformationIterations;
+    std::vector<AlternatingEventRecord> events;
 };
 
 

@@ -170,9 +170,12 @@ Remaining known non-conformances include:
 
 - real process-specific slicing, printing, assembly and physical standing
   evidence are outside the local R8 unit-contract ceiling;
-- the R9 Python experiment layer exposes the verified local C++ pipeline and
-  generic diagnostics tools without promoting any result to paper equivalence;
-  official paper cases, metrics, ablations and performance alignment remain R10;
+- R10 now supplies validated ablation switches, committed-event metrics,
+  multi-standing API/configuration support, successful-return performance
+  sidecars, canonical evidence records, a nine-case CC0 local matrix, and a
+  strict report layer. This is local `VERIFIED_REGRESSION` infrastructure;
+  Table 1 official cases, Fig. 14 same-input alignment, broad object studies,
+  and physical fabrication evidence remain incomplete;
 - `make_it_stand()` remains a placeholder API.
 
 These limitations are intentional baseline facts, not accepted final behavior.
@@ -302,10 +305,24 @@ python -c "from make_it_stand import BalanceModel; print(BalanceModel)"
 ```
 
 These commands are generic orchestration and reporting only. Paper assets,
-paper-scale parameter sweeps, claimed ablations and figure/table reproduction
-belong exclusively to R10. The completed R9 verification evidence and the
-R9/R10 boundary are recorded in
-[`docs/r9_acceptance.md`](docs/r9_acceptance.md).
+paper-scale parameter sweeps and figure/table reproduction are not implied by
+the R10 local matrix. Run and report the local evidence with:
+
+```bash
+PYTHONPATH=python:build/python/python python3 python/r10_local_experiment.py \
+  --output-root /tmp/make-it-stand-r10 \
+  --repeats 5 --warmup-runs 1 \
+  --build-type RelWithDebInfo --compiler GNU --compiler-version 13.3.0 \
+  --build-flag=-O2 --build-flag=-g --build-flag=-DNDEBUG
+PYTHONPATH=python python3 python/r10_report.py \
+  --evidence-root /tmp/make-it-stand-r10 \
+  --output-directory /tmp/make-it-stand-r10-report
+```
+
+For publication timing, use an actual clean Release build and record its exact
+flags; CLI labels are provenance assertions and cannot inspect another build
+tree. See [`docs/r9_acceptance.md`](docs/r9_acceptance.md) and
+[`docs/r10_acceptance.md`](docs/r10_acceptance.md) for the claim boundaries.
 
 Build the interactive viewer separately:
 
@@ -318,9 +335,9 @@ Build the interactive viewer separately:
 The viewer build is a compile/regression checkpoint for the inherited GUI, not
 evidence that the full paper method has been reproduced.
 
-The active headless suite registers 101 tests through R9: the 100 accepted
-R0--R8 tests plus the owning C++ `BalanceModel` facade regression. The Python
-preset adds two binding/tool tests, for 103 registered tests in total. The 38
+The active headless suite registers 103 tests through local R10. The Python
+preset adds two R9 binding/tool tests and one R10 evidence test, for 106
+registered tests in total. The 38
 pre-R7 tests are:
 
 ```text
@@ -393,7 +410,8 @@ slicer-adapter contracts, and one external-partition-interface contract. The
 complete total is `38 + 1 + 16 + 45 = 100`.
 
 R9 adds one always-enabled C++ facade regression and two tests enabled only by
-`MAKE_IT_STAND_BUILD_PYTHON`, giving 101 headless or 103 Python-preset tests.
+`MAKE_IT_STAND_BUILD_PYTHON`. R10 adds two C++ tests and one Python evidence
+CTest, giving 103 headless or 106 Python-preset tests.
 
 They cover closed oriented surfaces, analytic boxes, all `8!` orders of an
 eight-voxel deletion fixture, oblique/scaled gravity, state/count continuity,
@@ -481,7 +499,7 @@ data/
 docs/
   conformance, environment, provenance and staged acceptance records
 bindings/, python/
-  R9 pybind11 extension and generic experiment orchestration tools
+  R9 pybind11 facade plus R10 canonical evidence and strict reporting tools
 ```
 
 `list3d.h` is header-only; there is no `list3d.cpp`.

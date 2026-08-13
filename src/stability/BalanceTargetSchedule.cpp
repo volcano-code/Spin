@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <limits>
 #include <stdexcept>
 
@@ -16,6 +18,25 @@ namespace
 
 constexpr double HALF_PI =
     1.57079632679489661923132169163975144;
+
+
+void mixSnapshotWord(std::uint64_t& hash, std::uint64_t word) noexcept
+{
+    for (int byte = 0; byte < 8; ++byte)
+    {
+        hash ^= (word >> (byte * 8)) & UINT64_C(0xff);
+        hash *= UINT64_C(1099511628211);
+    }
+}
+
+
+void mixSnapshotDouble(std::uint64_t& hash, double value) noexcept
+{
+    std::uint64_t bits = 0;
+    static_assert(sizeof(bits) == sizeof(value), "unexpected double size");
+    std::memcpy(&bits, &value, sizeof(bits));
+    mixSnapshotWord(hash, bits);
+}
 
 
 void validateAngle(
@@ -157,6 +178,60 @@ SuspensionState evaluateSuspension(
 
 
 } // namespace
+
+
+std::uint64_t balanceTargetSnapshotContentHash(
+    const BalanceTargetSnapshot& snapshot
+) noexcept
+{
+    std::uint64_t hash = UINT64_C(1469598103934665603);
+    mixSnapshotWord(hash, snapshot.generation);
+    mixSnapshotWord(hash, snapshot.contextChanged ? 1U : 0U);
+    mixSnapshotWord(hash, snapshot.allReached ? 1U : 0U);
+    mixSnapshotWord(hash, snapshot.objectives.size());
+    for (const BalanceObjective& objective : snapshot.objectives)
+    {
+        for (int axis = 0; axis < 3; ++axis)
+        {
+            mixSnapshotDouble(hash, objective.target()(axis));
+            mixSnapshotDouble(hash, objective.gravity()(axis));
+        }
+    }
+    mixSnapshotWord(hash, snapshot.constraints.size());
+    for (const BalanceConstraintSnapshot& constraint : snapshot.constraints)
+    {
+        mixSnapshotWord(hash, static_cast<std::uint64_t>(constraint.type));
+        mixSnapshotWord(hash, constraint.reached ? 1U : 0U);
+        mixSnapshotWord(
+            hash,
+            constraint.standingState.has_value()
+                ? 1U + static_cast<std::uint64_t>(*constraint.standingState)
+                : 0U
+        );
+        mixSnapshotWord(
+            hash,
+            constraint.requestedMarginAttainable.has_value()
+                ? (*constraint.requestedMarginAttainable ? 2U : 1U)
+                : 0U
+        );
+        if (constraint.suspensionDeviationRadians.has_value())
+        {
+            mixSnapshotWord(hash, 1U);
+            mixSnapshotDouble(hash, *constraint.suspensionDeviationRadians);
+        }
+        else
+        {
+            mixSnapshotWord(hash, 0U);
+        }
+        mixSnapshotWord(
+            hash,
+            constraint.suspensionDownstream.has_value()
+                ? (*constraint.suspensionDownstream ? 2U : 1U)
+                : 0U
+        );
+    }
+    return hash;
+}
 
 
 StandingTargetSpecification::StandingTargetSpecification(

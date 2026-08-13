@@ -262,11 +262,27 @@ if(BUILD_TESTING)
                 -p "test_python_tools.py"
                 -v
         )
+        add_test(
+            NAME r10-python-evidence
+            COMMAND "${Python_EXECUTABLE}" -m unittest
+                discover
+                -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+                -p "test_r10*.py"
+                -v
+        )
         set_tests_properties(
             r9-python-bindings
             r9-python-tools
             PROPERTIES
                 LABELS "r9;python"
+                TIMEOUT 180
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}/python"
+        )
+        set_tests_properties(
+            r10-python-evidence
+            PROPERTIES
+                LABELS "r10;python;evidence"
                 TIMEOUT 180
                 ENVIRONMENT
                     "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}/python"
@@ -857,6 +873,14 @@ if(BUILD_TESTING)
     add_manufacturing_geometry_test(
         r8-source-bound-deformation-terminal
         source-bound-deformation-terminal
+    )
+    add_manufacturing_geometry_test(
+        r10-source-bound-no-carving-terminal
+        source-bound-no-carving-terminal
+    )
+    set_tests_properties(
+        r10-source-bound-no-carving-terminal
+        PROPERTIES LABELS "r8;r10;manufacturing;geometry;ablation"
     )
     add_manufacturing_geometry_test(
         r8-source-bound-carving-after-deformation

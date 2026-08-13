@@ -508,6 +508,7 @@ def _validate_timing(value: Any, path: str) -> None:
     _integer(timing["warmup_runs"], f"{path}.warmup_runs")
     phases = _sequence(timing["phases"], f"{path}.phases")
     names: set[str] = set()
+    phase_total = 0.0
     for index, raw_phase in enumerate(phases):
         phase_path = f"{path}.phases[{index}]"
         phase = _mapping(raw_phase, phase_path)
@@ -516,8 +517,19 @@ def _validate_timing(value: Any, path: str) -> None:
         if name in names:
             _fail(f"{phase_path}.name", "duplicate timing phase")
         names.add(name)
-        _number(phase["seconds"], f"{phase_path}.seconds", minimum=0.0)
-    _number(timing["total_seconds"], f"{path}.total_seconds", minimum=0.0)
+        phase_total += _number(
+            phase["seconds"],
+            f"{phase_path}.seconds",
+            minimum=0.0,
+        )
+    total = _number(
+        timing["total_seconds"],
+        f"{path}.total_seconds",
+        minimum=0.0,
+    )
+    tolerance = max(1.0e-12, total * 1.0e-9)
+    if phase_total > total + tolerance:
+        _fail(f"{path}.phases", "phase durations exceed total duration")
 
 
 def validate_run_record(

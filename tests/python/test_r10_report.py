@@ -86,10 +86,10 @@ def _make_case(evidence_root: Path, *, paper_metric: bool = True) -> Path:
             "source": "local_measurement",
         },
         {
-            "name": "removed_volume_fraction",
+            "name": "final_cavity_volume_fraction",
             "unit": "fraction",
-            "direction": "higher_is_better",
-            "definition": "Final removed volume fraction.",
+            "direction": "descriptive",
+            "definition": "Final cavity volume divided by final outer-envelope volume.",
             "source": "local_measurement",
         },
         {
@@ -188,7 +188,7 @@ def _make_case(evidence_root: Path, *, paper_metric: bool = True) -> Path:
             sum(range(10))
         measurements = {
             "projected_target_energy": energy,
-            "removed_volume_fraction": 0.2 + 0.1 * index,
+            "final_cavity_volume_fraction": 0.2 + 0.1 * index,
             "normalized_rms_displacement": 0.01 + 0.01 * index,
             "algorithm_success": 1.0,
             "targets_reached": 1.0,

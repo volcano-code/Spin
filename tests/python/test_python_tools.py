@@ -70,6 +70,9 @@ def _valid_config_dict() -> dict[str, object]:
             "maximum_deformation_iterations_per_block": 4,
             "gradient_tolerance": 1.0e-8,
             "shape_scale_lambda": 1.0,
+            "enable_carving": True,
+            "enable_deformation": True,
+            "enable_laplacian": True,
             "density": 1.0,
             "minimum_positive_mass": 0.0,
             "minimum_positive_cell_mass": 0.0,
@@ -155,6 +158,84 @@ class ConfigSchemaTests(unittest.TestCase):
         self.assertEqual(first.outputs.diagnostics, "diagnostics.json")
         self.assertEqual(first.support.contact_threshold, 0.0)
 
+    def test_r10_standing_field_preserves_legacy_positional_constructor(self) -> None:
+        normalized = self.api.validate_config(_valid_config_dict())
+        legacy = self.api.BalanceConfig(
+            normalized.model,
+            normalized.gravity,
+            normalized.support,
+            normalized.handles,
+            normalized.suspensions,
+            normalized.run,
+            normalized.outputs,
+            normalized.schema,
+            normalized.schema_version,
+        )
+        self.assertEqual(legacy.run, normalized.run)
+        self.assertEqual(legacy.outputs, normalized.outputs)
+        self.assertEqual(legacy.standing_constraints, ())
+
+        legacy_run = self.api.RunConfig(
+            0.3,
+            4,
+            5,
+            1.0e-7,
+            2.0,
+            1.2,
+            0.01,
+            0.02,
+            3,
+            0.8,
+            0.2,
+            0.7,
+            0.03,
+            0.04,
+        )
+        self.assertEqual(legacy_run.density, 1.2)
+        self.assertEqual(legacy_run.minimum_positive_mass, 0.01)
+        self.assertEqual(legacy_run.mu_decrement, 0.04)
+        self.assertTrue(legacy_run.enable_carving)
+
+    def test_multiple_standings_validate_and_preserve_declared_order(self) -> None:
+        raw = _valid_config_dict()
+        raw["support"] = None
+        raw["suspensions"] = []
+        raw["standing_constraints"] = [
+            {
+                "kind": "polygon",
+                "gravity": [0.0, -1.0, 0.0],
+                "gamma_radians": 0.1,
+                "polygon": [
+                    [0.0, 0.0, 0.0],
+                    [1.0, 0.0, 0.0],
+                    [0.0, 0.0, 1.0],
+                ],
+            },
+            {
+                "kind": "mesh",
+                "gravity": [-1.0, 0.0, 0.0],
+                "gamma_radians": 0.2,
+                "contact_threshold": 0.03,
+            },
+        ]
+        config = self.api.validate_config(raw)
+        self.assertEqual(
+            tuple(item.gravity for item in config.standing_constraints),
+            ((0.0, -1.0, 0.0), (-1.0, 0.0, 0.0)),
+        )
+        native = _fake_native_module()
+        self.api.build_model(config, native_module=native)
+        calls = native.state.models[0].calls
+        self.assertEqual(calls[0][0], "set_gravity")
+        self.assertEqual(calls[1][0], "add_standing_constraint_polygon")
+        self.assertEqual(calls[1][2], (0.0, -1.0, 0.0))
+        self.assertEqual(calls[2], (
+            "add_standing_constraint_from_mesh",
+            (-1.0, 0.0, 0.0),
+            0.03,
+            0.2,
+        ))
+
     def test_unknown_keys_are_rejected_at_every_schema_object(self) -> None:
         paths = (
             (),
@@ -215,6 +296,7 @@ class ConfigSchemaTests(unittest.TestCase):
             (("suspensions", 0, "allowed_deviation_radians"), "0.2"),
             (("run", "maximum_carving_blocks"), 2.0),
             (("run", "density"), True),
+            (("run", "enable_carving"), 1),
             (("outputs",), []),
             (("outputs", "diagnostics"), 4),
         )
@@ -333,6 +415,17 @@ class ConfigSchemaTests(unittest.TestCase):
                 dataclasses.replace(config, run=invalid_run),
                 native_module=native,
             )
+        for invalid_standings in (None, ("bad",)):
+            with self.subTest(invalid_standings=invalid_standings), self.assertRaises(
+                self.api.ConfigurationError
+            ):
+                self.api.build_model(
+                    dataclasses.replace(
+                        config,
+                        standing_constraints=invalid_standings,
+                    ),
+                    native_module=native,
+                )
         with self.assertRaisesRegex(self.api.ConfigurationError, "at least 3"):
             self.api.BalanceModel(
                 "model.obj",
@@ -348,7 +441,10 @@ class ConfigSchemaTests(unittest.TestCase):
         raw = _valid_config_dict()
         raw["support"] = None
         raw["suspensions"] = []
-        with self.assertRaisesRegex(self.api.ConfigurationError, "support or suspension"):
+        with self.assertRaisesRegex(
+            self.api.ConfigurationError,
+            "support, standing, or suspension",
+        ):
             self.api.validate_config(raw)
 
     def test_load_config_uses_strict_json_and_rejects_duplicate_or_nonfinite_tokens(self) -> None:
@@ -604,6 +700,12 @@ def _fake_native_module() -> types.SimpleNamespace:
 
         def set_support_from_mesh(self, threshold: object, gamma: object) -> None:
             self.calls.append(("set_support_from_mesh", threshold, gamma))
+
+        def add_standing_constraint_polygon(self, *arguments: object) -> None:
+            self.calls.append(("add_standing_constraint_polygon", *arguments))
+
+        def add_standing_constraint_from_mesh(self, *arguments: object) -> None:
+            self.calls.append(("add_standing_constraint_from_mesh", *arguments))
 
         def add_handle(self, *arguments: object) -> None:
             self.calls.append(("add_handle", *arguments))

@@ -13,9 +13,9 @@ Last audited: 2026-08-13 (Asia/Shanghai)
 | Generator | Ninja 1.13.0 |
 | C++ language mode | C++17, extensions disabled |
 | Build type | `RelWithDebInfo` |
-| Optional R9 CPython | `/usr/bin/python3` 3.12.3 |
-| Optional R9 pybind11 headers | 3.0.1 CMake package from the local Anaconda installation |
-| Optional R9 NumPy runtime | 2.4.3 on the audited CPython 3.12 host; package floor 1.26 |
+| Optional R9/R10 CPython | `/usr/bin/python3` 3.12.3 |
+| Optional R9/R10 pybind11 headers | 3.0.1 CMake package from the local Anaconda installation |
+| Optional R9/R10 NumPy runtime | 2.4.3 on the audited CPython 3.12 host; package floor 1.26 |
 
 The project rejects CMake 4.x. The pinned libigl revision invokes legacy
 download subprojects whose old compatibility mode was removed in CMake 4.
@@ -56,13 +56,13 @@ git submodule update --init --recursive
 /usr/bin/cmake --build --preset viewer --parallel
 /usr/bin/cmake --preset python
 /usr/bin/cmake --build --preset python --parallel
-/usr/bin/ctest --preset python -L r9
+/usr/bin/ctest --preset python
 ```
 
 The presets intentionally use separate build trees. Headless testing does not
 enable OpenGL, GLFW or ImGui; the viewer build does not register tests. The
 third tree is also headless and enables only the optional CPython extension
-and R9 tests. The checked-in Python preset contains no host-specific path and
+and R9/R10 tests. The checked-in Python preset contains no host-specific path and
 normally resolves Python and pybind11 from the active environment. On the
 audited host, explicit command-line cache variables selected system CPython
 3.12 and pybind11 3.0.1 from the local package environment because the
@@ -90,6 +90,13 @@ source archive audit found no downloaded external tree, cache, nested Git
 metadata, or host-local absolute path. See `docs/r9_acceptance.md` for the
 scope boundary: these checks verify the experiment interface, not R10 paper
 experiments.
+
+The active local R10 driver defaults to one discarded warm-up and five
+measured repeats per case, fixes OMP/BLAS thread-count variables to one, and
+records uncontrolled CPU affinity/governor policies in each manifest. The
+checked-in presets remain `RelWithDebInfo`; a publication timing study must use
+an explicitly configured clean Release tree and report its actual flags rather
+than merely passing a `Release` label to the driver.
 
 ## Clean-state checks
 

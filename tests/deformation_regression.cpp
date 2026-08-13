@@ -604,9 +604,37 @@ int runDomainTrilinear(const std::string& scenario)
     Eigen::MatrixXd outsideQuery(1, 3);
     outsideQuery.row(0) = outside.transpose();
 
+    Eigen::MatrixXd toleranceWeights = nodeWeights;
+    toleranceWeights(nodes[7], 0) = -5.0e-9;
+    toleranceWeights(nodes[7], 1) = 1.0 + 5.0e-9;
+    const Eigen::MatrixXd projected =
+        domain.interpolateWeights(query, toleranceWeights);
+
+    Eigen::MatrixXd materialNegative = nodeWeights;
+    materialNegative(nodes[7], 0) = -2.0e-8;
+    materialNegative(nodes[7], 1) = 1.0 + 2.0e-8;
+    Eigen::MatrixXd badSum = nodeWeights;
+    badSum(nodes[7], 0) = 0.1;
+    badSum(nodes[7], 1) = 1.0;
+    Eigen::MatrixXd nonfinite = nodeWeights;
+    nonfinite(nodes[7], 0) =
+        std::numeric_limits<double>::quiet_NaN();
+
     if (
         !approximatelyEqual(transferred(0, 0), expected, 1.0e-11) ||
         !approximatelyEqual(transferred.row(0).sum(), 1.0, 1.0e-12) ||
+        projected.minCoeff() < 0.0 ||
+        projected.maxCoeff() > 1.0 ||
+        !approximatelyEqual(projected.row(0).sum(), 1.0, 1.0e-12) ||
+        !throwsInvalidArgument([&]() {
+            domain.interpolateWeights(query, materialNegative);
+        }) ||
+        !throwsInvalidArgument([&]() {
+            domain.interpolateWeights(query, badSum);
+        }) ||
+        !throwsInvalidArgument([&]() {
+            domain.interpolateWeights(query, nonfinite);
+        }) ||
         !throwsOutOfRange(
             [&]() { domain.interpolateWeights(outsideQuery, nodeWeights); }
         )

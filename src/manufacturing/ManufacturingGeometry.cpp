@@ -3380,7 +3380,9 @@ ManufacturingGeometry prepareManufacturingGeometry(
         source.status ==
             optimization::AlternatingOptimizationStatus::StableAfterCarving ||
         source.status ==
-            optimization::AlternatingOptimizationStatus::StableAfterDeformation;
+            optimization::AlternatingOptimizationStatus::StableAfterDeformation ||
+        source.status ==
+            optimization::AlternatingOptimizationStatus::StableWithoutCarving;
     const bool targetSnapshotValid =
         !source.targets.objectives.empty() &&
         !source.targets.constraints.empty() &&
@@ -3435,8 +3437,60 @@ ManufacturingGeometry prepareManufacturingGeometry(
             (centerOfMass - source.centerOfMass).norm() <=
                 sourceTraceTolerance;
     };
+    const bool noCarvingProfileConsistent =
+        source.status !=
+            optimization::AlternatingOptimizationStatus::StableWithoutCarving ||
+        (
+            !source.carvingEnabled &&
+            source.deformationEnabled &&
+            source.carvingBlocks.empty() &&
+            source.carvingIterations.empty() &&
+            std::none_of(
+                source.events.begin(),
+                source.events.end(),
+                [](const optimization::AlternatingEventRecord& event)
+                {
+                    return
+                        event.kind ==
+                            optimization::AlternatingEventKind::SolidRefill ||
+                        event.kind ==
+                            optimization::AlternatingEventKind::CarvingIteration;
+                }
+            )
+        );
     bool terminalTraceConsistent = false;
     if (
+        source.status ==
+            optimization::AlternatingOptimizationStatus::StableWithoutCarving &&
+        source.events.size() == 1U &&
+        source.deformationIterations.empty()
+    )
+    {
+        const optimization::AlternatingEventRecord& terminal =
+            source.events.back();
+        terminalTraceConsistent =
+            noCarvingProfileConsistent &&
+            terminal.ordinal == 0 &&
+            terminal.kind == optimization::AlternatingEventKind::Initial &&
+            terminal.block == -1 &&
+            terminal.iteration == -1 &&
+            !terminal.geometryChanged &&
+            terminal.allTargetsReached &&
+            terminal.geometryEpoch == 0 &&
+            source.geometryEpoch == 0 &&
+            terminal.targetGeneration == source.targets.generation &&
+            terminal.targetSnapshotHash ==
+                stability::balanceTargetSnapshotContentHash(source.targets) &&
+            terminal.alphaHash == report.occupancyHash &&
+            terminal.geometryHash == report.geometryHash &&
+            terminal.parameters.size() == source.parameters.size() &&
+            terminal.parameters.isApprox(source.parameters, 0.0) &&
+            traceStateMatches(
+                terminal.massProperties,
+                terminal.centerOfMass
+            );
+    }
+    else if (
         source.status ==
             optimization::AlternatingOptimizationStatus::StableAfterCarving &&
         !source.carvingBlocks.empty()
@@ -3456,21 +3510,67 @@ ManufacturingGeometry prepareManufacturingGeometry(
             );
     }
     else if (
-        source.status ==
-            optimization::AlternatingOptimizationStatus::StableAfterDeformation &&
+        noCarvingProfileConsistent &&
+        (
+            source.status ==
+                optimization::AlternatingOptimizationStatus::StableAfterDeformation ||
+            source.status ==
+                optimization::AlternatingOptimizationStatus::StableWithoutCarving
+        ) &&
         !source.deformationIterations.empty()
     )
     {
         const optimization::AlternatingDeformationRecord& terminal =
             source.deformationIterations.back();
+        const optimization::AlternatingEventRecord* event =
+            source.events.empty() ? nullptr : &source.events.back();
+        const bool ledgerStartsAtInitial =
+            source.events.size() >= 2U &&
+            source.events.front().ordinal == 0 &&
+            source.events.front().kind ==
+                optimization::AlternatingEventKind::Initial &&
+            source.events.front().block == -1 &&
+            source.events.front().iteration == -1 &&
+            source.events.front().geometryEpoch == 0 &&
+            !source.events.front().geometryChanged;
+        bool ledgerOrdered = ledgerStartsAtInitial;
+        for (std::size_t index = 0;
+             ledgerOrdered && index < source.events.size();
+             ++index)
+        {
+            ledgerOrdered =
+                source.events[index].ordinal == static_cast<int>(index) &&
+                source.events[index].geometryEpoch >= 0 &&
+                (
+                    index == 0U ||
+                    source.events[index].geometryEpoch >=
+                        source.events[index - 1U].geometryEpoch
+                );
+        }
         terminalTraceConsistent =
+            ledgerOrdered &&
             terminal.accepted && !terminal.rolledBack &&
             terminal.allTargetsReached &&
             terminal.geometryEpochAfter == source.geometryEpoch &&
             terminal.alphaHashAfter == report.occupancyHash &&
             terminal.geometryHashAfter == report.geometryHash &&
             terminal.targetGenerationAfter == source.targets.generation &&
+            terminal.parametersAfter.size() == source.parameters.size() &&
             terminal.parametersAfter.isApprox(source.parameters, 0.0) &&
+            event != nullptr &&
+            event->ordinal == static_cast<int>(source.events.size() - 1U) &&
+            event->kind ==
+                optimization::AlternatingEventKind::AcceptedDeformation &&
+            event->block == terminal.block &&
+            event->iteration == terminal.iteration &&
+            event->geometryEpoch == terminal.geometryEpochAfter &&
+            event->targetGeneration == terminal.targetGenerationAfter &&
+            event->targetSnapshotHash ==
+                stability::balanceTargetSnapshotContentHash(source.targets) &&
+            event->alphaHash == terminal.alphaHashAfter &&
+            event->geometryHash == terminal.geometryHashAfter &&
+            event->parameters.size() == terminal.parametersAfter.size() &&
+            event->parameters.isApprox(terminal.parametersAfter, 0.0) &&
             traceStateMatches(
                 terminal.massPropertiesAfter,
                 terminal.centerOfMassAfter
@@ -3497,6 +3597,17 @@ ManufacturingGeometry prepareManufacturingGeometry(
         tracedHash = source.deformationIterations.back().alphaHashAfter;
         tracedEpoch =
             source.deformationIterations.back().geometryEpochAfter;
+        hasTraceHash = true;
+    }
+    if (
+        !hasTraceHash &&
+        source.status ==
+            optimization::AlternatingOptimizationStatus::StableWithoutCarving &&
+        source.events.size() == 1U
+    )
+    {
+        tracedHash = source.events.back().alphaHash;
+        tracedEpoch = source.events.back().geometryEpoch;
         hasTraceHash = true;
     }
     report.sourceTraceHashConsistent =

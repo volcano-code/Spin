@@ -68,6 +68,8 @@ class NativeBindingSmokeTests(unittest.TestCase):
             "set_gravity",
             "set_support_polygon",
             "set_support_from_mesh",
+            "add_standing_constraint_polygon",
+            "add_standing_constraint_from_mesh",
             "add_handle",
             "add_suspension_constraint",
             "clear_handles",
@@ -90,6 +92,7 @@ class NativeBindingSmokeTests(unittest.TestCase):
             "manufacturing_failures",
             "manufacturing_report_json",
             "diagnostics_json",
+            "performance_report_json",
         )
         required_methods = (
             "save_outer_mesh",
@@ -122,6 +125,9 @@ class NativeBindingSmokeTests(unittest.TestCase):
             "maximum_deformation_iterations_per_block",
             "gradient_tolerance",
             "shape_scale_lambda",
+            "enable_carving",
+            "enable_deformation",
+            "enable_laplacian",
             "density",
             "minimum_positive_mass",
             "minimum_positive_cell_mass",
@@ -136,9 +142,12 @@ class NativeBindingSmokeTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue(hasattr(config, name), name)
                 value = getattr(config, name)
-                self.assertIsInstance(value, (int, float))
-                self.assertNotIsInstance(value, bool)
-                self.assertTrue(math.isfinite(value), name)
+                if name.startswith("enable_"):
+                    self.assertIsInstance(value, bool)
+                else:
+                    self.assertIsInstance(value, (int, float))
+                    self.assertNotIsInstance(value, bool)
+                    self.assertTrue(math.isfinite(value), name)
 
     @classmethod
     def _box_mesh(cls):
@@ -279,6 +288,28 @@ class NativeBindingSmokeTests(unittest.TestCase):
         self.assertTrue(diagnostic["succeeded"])
         self.assertGreater(diagnostic["mass_properties"]["mass"], 0.0)
         self.assertEqual(len(diagnostic["center_of_mass"]), 3)
+        self.assertIn("r10_metrics", diagnostic)
+        self.assertIn("r10_events", diagnostic)
+        self.assertEqual(diagnostic["r10_events"][0]["kind"], "initial")
+        self.assertEqual(diagnostic["r10_metrics"]["first_safe_event"], 0)
+        self.assertGreaterEqual(
+            diagnostic["r10_metrics"]["final_cavity_volume_fraction"],
+            0.0,
+        )
+        self.assertGreaterEqual(
+            diagnostic["r10_metrics"]["maximum_user_handle_scale_deviation"],
+            0.0,
+        )
+        performance = json.loads(first.performance_report_json)
+        self.assertEqual(
+            performance["schema"],
+            "make-it-stand-r10-performance-report-v1",
+        )
+        self.assertEqual(performance["clock"], "steady_clock")
+        self.assertGreaterEqual(performance["total_seconds"], 0.0)
+        for value in performance["phases"].values():
+            self.assertTrue(math.isfinite(value))
+            self.assertGreaterEqual(value, 0.0)
         del first_model, second_model
 
     def test_result_owns_state_and_arrays_are_copies(self) -> None:
@@ -319,6 +350,34 @@ class NativeBindingSmokeTests(unittest.TestCase):
         model.set_support_from_mesh(0.0, 0.0)
         with self.assertRaises((ValueError, RuntimeError)):
             model.set_gravity(self.np.asarray([1.0, 0.0, 0.0]))
+
+    def test_multiple_standing_poses_are_exposed_and_auditable(self) -> None:
+        vertices, faces = self._box_mesh()
+        model_config = self.native.BalanceModelConfig()
+        model_config.voxel_resolution = 8
+        model = self.native.BalanceModel(vertices, faces, model_config)
+        model.add_standing_constraint_from_mesh(
+            self.np.asarray([0.0, -1.0, 0.0]),
+            0.0,
+            0.0,
+        )
+        model.add_standing_constraint_from_mesh(
+            self.np.asarray([-1.0, 0.0, 0.0]),
+            0.0,
+            0.0,
+        )
+        run_config = self.native.BalanceRunConfig()
+        run_config.maximum_carving_blocks = 2
+        run_config.maximum_deformation_iterations_per_block = 2
+        result = model.optimize(run_config)
+        diagnostic = json.loads(result.diagnostics_json)
+        self.assertEqual(len(diagnostic["problem"]["standing_constraints"]), 2)
+        self.assertIsNone(diagnostic["problem"]["standing_constraint"])
+        self.assertEqual(len(diagnostic["targets"]["constraints"]), 2)
+        metrics = diagnostic["r10_metrics"]
+        self.assertGreater(metrics["active_deformation_nodes"], 0)
+        self.assertGreater(metrics["fixed_deformation_nodes"], 0)
+        self.assertGreater(metrics["fixed_deformation_node_fraction"], 0.0)
 
 
 if __name__ == "__main__":

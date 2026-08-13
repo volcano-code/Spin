@@ -32,7 +32,7 @@ from make_it_stand.r10 import (
 
 
 REPORT_SCOPE = (
-    "Local synthetic evidence from the modern implementation; not an exact "
+    "Validated local evidence from the modern implementation; not an exact "
     "paper reproduction."
 )
 
@@ -107,7 +107,7 @@ def _read_convergence_curve(
     case_root: Path,
     records: Sequence[Mapping[str, Any]],
 ) -> tuple[tuple[int, float], ...]:
-    """Read the first successful record's bound diagnostic event ledger."""
+    """Read the first completed record's bound diagnostic event ledger."""
 
     for record in sorted(records, key=lambda item: int(item["repeat_index"])):
         if record["status"] != "succeeded":
@@ -295,14 +295,14 @@ def _summary_markdown(cases: Sequence[Mapping[str, Any]]) -> str:
         "",
         "## Integrity",
         "",
-        f"Validated {len(cases)} case(s), their canonical manifests, complete run-record sets, canonical aggregates, and SHA-256-bound artifacts.",
+        f"Validated the integrity of {len(cases)} evidence case(s), their canonical manifests, complete run-record sets, canonical aggregates, and SHA-256-bound artifacts; this check does not establish scientific correctness.",
         "",
         "## Local measurements",
         "",
         "All rows below are `local_measurement` values from repository-defined synthetic or local protocols.",
         "",
-        "| Case | Variant | Runs | Algorithm success | Targets reached | Manufacturing ready | Target energy | Removed volume | RMS displacement | Total time (s) |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Case | Variant | Executed | Algorithm success | Targets reached | Manufacturing ready | Target energy | Final cavity fraction | Material mass change | RMS displacement | Total time (s) |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for case in cases:
         manifest = case["manifest"]
@@ -329,7 +329,8 @@ def _summary_markdown(cases: Sequence[Mapping[str, Any]]) -> str:
                     rate("targets_reached"),
                     rate("manufacturing_ready"),
                     median("projected_target_energy"),
-                    median("removed_volume_fraction"),
+                    median("final_cavity_volume_fraction"),
+                    median("material_mass_change_fraction"),
                     median("normalized_rms_displacement"),
                     median("total", timing=True),
                 )
@@ -374,7 +375,7 @@ def _summary_markdown(cases: Sequence[Mapping[str, Any]]) -> str:
             "",
             "## Interpretation boundary",
             "",
-            "This report supports implementation regression, ablation, and local robustness analysis only. It does not establish exact reproduction, object-class generality, or physical-print validation.",
+            "This report summarizes the supplied local regression, ablation, and robustness evidence only. `manufacturing_ready` denotes a sealed software geometry audit, not printing success. The report does not establish exact reproduction, object-class generality, or physical-print validation.",
             "",
         )
     )
@@ -403,8 +404,8 @@ def _summary_svg(cases: Sequence[Mapping[str, Any]]) -> str:
         '<style>text{font-family:Arial,Helvetica,sans-serif;fill:#172033}.title{font-size:21px;font-weight:700}.subtitle{font-size:12px;fill:#526071}.head{font-size:12px;font-weight:700}.label{font-size:11px}.axis{stroke:#9aa6b2;stroke-width:1}.grid{stroke:#d9e0e7;stroke-width:1}.curve{fill:none;stroke-width:2}</style>',
         '<text class="title" x="30" y="34">R10 local synthetic evidence</text>',
         f'<text class="subtitle" x="30" y="56">{xml_escape(REPORT_SCOPE)}</text>',
-        '<text class="head" x="30" y="88">Outcome rates across successful executions</text>',
-        '<text class="head" x="650" y="88">First successful run: committed-event convergence</text>',
+        '<text class="head" x="30" y="88">Outcome rates among successfully executed records</text>',
+        '<text class="head" x="650" y="88">First completed run: committed-event convergence</text>',
         '<text class="subtitle" x="650" y="105">log10(max(projected target energy, 1e-16)); local measurements only</text>',
         f'<text class="head" x="{left_x}" y="{top - 10}">Case</text>',
     ]

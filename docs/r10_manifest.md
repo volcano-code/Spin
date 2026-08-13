@@ -95,6 +95,11 @@ Run-record timing uses a monotonic performance counter.  Its `scope` must say
 what the wall-clock interval contains.  For publishable timing, the experiment
 manifest should additionally fix Release mode, thread count, CPU policy,
 warm-up count, and repeat count; the record captures hardware and build values.
+The local driver defaults to five repeats and one discarded warm-up per repeat,
+fixes OMP/BLAS thread-count variables to one, and discloses that affinity and
+CPU-governor state are uncontrolled. Native phase timing is a separately
+SHA-256-bound, successful-return-only sidecar; it is not inserted into the
+outer non-nested phase list.
 
 Aggregate a complete repeat set with:
 
@@ -114,3 +119,20 @@ No third-party beta asset, external absolute path, or unverified paper result
 belongs in a committed manifest.  Such assets can be selected through a local,
 untracked evidence root and represented only by logical relative name and
 SHA-256 when their license permits the intended use.
+
+## Report layer
+
+`python/r10_report.py` strictly revalidates an evidence tree and writes
+`summary.csv`, `summary.md`, and `summary.svg`. Paper-reference rows remain
+`reference_only` and never enter local aggregates or plots. The Markdown table
+separates protocol execution from `algorithm_success`, `targets_reached`, and
+the sealed software `manufacturing_ready` indicator. The convergence panel is
+the first completed repeat's committed-event ledger, not a repeated-run
+aggregate and not the paper/beta iteration unit. Report files are derived
+presentation artifacts; the manifests, records, aggregates, and bound outputs
+remain the evidence of record.
+
+Two material quantities must not be conflated: `final_cavity_volume_fraction`
+is cavity volume divided by the final outer envelope and is emitted only for a
+strictly audited boundary; `material_mass_change_fraction` compares initial
+and final material mass and may be negative after deformation.

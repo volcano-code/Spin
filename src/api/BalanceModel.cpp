@@ -16,6 +16,7 @@
 #include <atomic>
 #include <cctype>
 #include <cerrno>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <filesystem>
@@ -49,6 +50,7 @@ struct DiagnosticsStanding
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     Eigen::MatrixXd polygon;
+    Eigen::Vector3d gravity = Eigen::Vector3d(0.0, -1.0, 0.0);
     double gammaRadians = 0.0;
 };
 
@@ -77,10 +79,83 @@ using DiagnosticsSuspensions = std::vector<
 >;
 
 
+using DiagnosticsStandings = std::vector<
+    DiagnosticsStanding,
+    Eigen::aligned_allocator<DiagnosticsStanding>
+>;
+
+
 using DiagnosticsHandles = std::vector<
     DiagnosticsHandle,
     Eigen::aligned_allocator<DiagnosticsHandle>
 >;
+
+
+void appendNumber(std::ostream& output, double value);
+
+
+struct PerformanceDurations
+{
+    double inputSnapshot = 0.0;
+    double voxelization = 0.0;
+    double domainAndHandles = 0.0;
+    double deformationSystemAndBbw = 0.0;
+    double targetAndOptimizerSetup = 0.0;
+    double optimization = 0.0;
+    double manufacturingAudit = 0.0;
+    double diagnosticsPayloadSetup = 0.0;
+    double diagnosticsSerialization = 0.0;
+    double total = 0.0;
+};
+
+
+using PerformanceClock = std::chrono::steady_clock;
+
+
+double elapsedSeconds(
+    const PerformanceClock::time_point& start,
+    const PerformanceClock::time_point& end
+)
+{
+    return std::chrono::duration<double>(end - start).count();
+}
+
+
+std::string buildPerformanceReportJson(
+    const PerformanceDurations& durations
+)
+{
+    std::ostringstream output;
+    output.imbue(std::locale::classic());
+    output << "{\n"
+           << "  \"schema\": \"make-it-stand-r10-performance-report-v1\",\n"
+           << "  \"schema_version\": 1,\n"
+           << "  \"clock\": \"steady_clock\",\n"
+           << "  \"scope\": \"BalanceModel.optimize_after_config_validation_successful_return_only\",\n"
+           << "  \"phases\": {\n"
+           << "    \"input_snapshot_seconds\": ";
+    appendNumber(output, durations.inputSnapshot);
+    output << ",\n    \"voxelization_seconds\": ";
+    appendNumber(output, durations.voxelization);
+    output << ",\n    \"domain_and_handles_seconds\": ";
+    appendNumber(output, durations.domainAndHandles);
+    output << ",\n    \"deformation_system_and_bbw_seconds\": ";
+    appendNumber(output, durations.deformationSystemAndBbw);
+    output << ",\n    \"target_and_optimizer_setup_seconds\": ";
+    appendNumber(output, durations.targetAndOptimizerSetup);
+    output << ",\n    \"optimization_seconds\": ";
+    appendNumber(output, durations.optimization);
+    output << ",\n    \"manufacturing_audit_seconds\": ";
+    appendNumber(output, durations.manufacturingAudit);
+    output << ",\n    \"diagnostics_payload_setup_seconds\": ";
+    appendNumber(output, durations.diagnosticsPayloadSetup);
+    output << ",\n    \"diagnostics_serialization_seconds\": ";
+    appendNumber(output, durations.diagnosticsSerialization);
+    output << "\n  },\n  \"total_seconds\": ";
+    appendNumber(output, durations.total);
+    output << "\n}\n";
+    return output.str();
+}
 
 
 void validateModelConfig(const BalanceModelConfig& config)
@@ -136,7 +211,8 @@ void validateRunConfig(const BalanceRunConfig& run)
         line.requiredRelativeDecrease < 0.0 ||
         line.requiredRelativeDecrease >= 1.0 ||
         line.muDecrement <= 0.0 ||
-        line.muDecrement > 1.0
+        line.muDecrement > 1.0 ||
+        (!config.enableCarving && !config.enableDeformation)
     )
     {
         throw std::invalid_argument(
@@ -221,6 +297,128 @@ double matchingTolerance(const Eigen::MatrixXd& vertices)
 }
 
 
+struct StandingConstruction
+{
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    stability::SupportRegion support;
+    double gammaRadians = 0.0;
+    Eigen::MatrixXd fixedPoints;
+};
+
+
+StandingConstruction constructStandingFromPolygon(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXd& polygon,
+    const Eigen::Vector3d& gravityDirection,
+    double gammaRadians
+)
+{
+    const Eigen::Vector3d gravity =
+        normalizedGravityDirection(gravityDirection);
+    const stability::SupportRegion support =
+        stability::SupportRegion::fromPolygon(polygon, gravity);
+    static_cast<void>(stability::StandingTargetSpecification(
+        support,
+        gammaRadians
+    ));
+
+    const double tolerance = matchingTolerance(vertices);
+    Eigen::VectorXd sourceHeights(vertices.rows());
+    for (Eigen::Index row = 0; row < vertices.rows(); ++row)
+    {
+        sourceHeights(row) = -gravity.dot(vertices.row(row).transpose());
+    }
+    const double trueMinimum = sourceHeights.minCoeff();
+    if (std::abs(support.supportHeight() - trueMinimum) > tolerance)
+    {
+        throw std::domain_error(
+            "support polygon plane does not coincide with the true mesh floor"
+        );
+    }
+    if ((sourceHeights.array() < support.supportHeight() - tolerance).any())
+    {
+        throw std::domain_error(
+            "a source-mesh vertex lies below the support polygon plane"
+        );
+    }
+    for (Eigen::Index point = 0; point < polygon.rows(); ++point)
+    {
+        bool matchedLowestVertex = false;
+        for (Eigen::Index vertex = 0; vertex < vertices.rows(); ++vertex)
+        {
+            if (
+                std::abs(sourceHeights(vertex) - trueMinimum) <= tolerance &&
+                (
+                    vertices.row(vertex).transpose() -
+                    polygon.row(point).transpose()
+                ).norm() <= tolerance
+            )
+            {
+                matchedLowestVertex = true;
+                break;
+            }
+        }
+        if (!matchedLowestVertex)
+        {
+            throw std::domain_error(
+                "every support polygon point must match a lowest source-mesh vertex"
+            );
+        }
+    }
+
+    Eigen::MatrixXd fixedPoints(support.supportPolygon2D().rows(), 3);
+    for (Eigen::Index row = 0; row < fixedPoints.rows(); ++row)
+    {
+        fixedPoints.row(row) = support.fromPlaneCoordinates(
+            support.supportPolygon2D().row(row).transpose()
+        ).transpose();
+    }
+    return StandingConstruction{
+        support,
+        gammaRadians,
+        std::move(fixedPoints)
+    };
+}
+
+
+StandingConstruction constructStandingFromMesh(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::Vector3d& gravityDirection,
+    double contactThreshold,
+    double gammaRadians
+)
+{
+    const Eigen::Vector3d gravity =
+        normalizedGravityDirection(gravityDirection);
+    const stability::SupportRegion support = stability::SupportRegion::fromMesh(
+        vertices,
+        gravity,
+        contactThreshold
+    );
+    static_cast<void>(stability::StandingTargetSpecification(
+        support,
+        gammaRadians
+    ));
+    Eigen::MatrixXd fixedPoints(
+        static_cast<Eigen::Index>(support.contactVertexIndices().size()),
+        3
+    );
+    for (std::size_t index = 0;
+         index < support.contactVertexIndices().size();
+         ++index)
+    {
+        fixedPoints.row(static_cast<Eigen::Index>(index)) =
+            vertices.row(support.contactVertexIndices()[index]);
+    }
+    return StandingConstruction{
+        support,
+        gammaRadians,
+        std::move(fixedPoints)
+    };
+}
+
+
 std::string statusToken(
     optimization::AlternatingOptimizationStatus status
 )
@@ -232,8 +430,14 @@ std::string statusToken(
             return "stable_after_carving";
         case Status::StableAfterDeformation:
             return "stable_after_deformation";
+        case Status::StableWithoutCarving:
+            return "stable_without_carving";
         case Status::NoDeformationDegreesOfFreedom:
             return "no_deformation_degrees_of_freedom";
+        case Status::DeformationDisabledUnstable:
+            return "deformation_disabled_unstable";
+        case Status::DeformationConvergedUnstable:
+            return "deformation_converged_unstable";
         case Status::MuExhaustedUnstable:
             return "mu_exhausted_unstable";
         case Status::AlternatingStalled:
@@ -258,8 +462,29 @@ bool optimizationSucceeded(
         result.targets.allReached &&
         (
             result.status == Status::StableAfterCarving ||
-            result.status == Status::StableAfterDeformation
+            result.status == Status::StableAfterDeformation ||
+            result.status == Status::StableWithoutCarving
         );
+}
+
+
+const char* eventKindToken(
+    optimization::AlternatingEventKind kind
+)
+{
+    using Kind = optimization::AlternatingEventKind;
+    switch (kind)
+    {
+        case Kind::Initial:
+            return "initial";
+        case Kind::SolidRefill:
+            return "solid_refill";
+        case Kind::CarvingIteration:
+            return "carving_iteration";
+        case Kind::AcceptedDeformation:
+            return "accepted_deformation";
+    }
+    return "unknown";
 }
 
 
@@ -427,7 +652,7 @@ std::string buildDiagnosticsJson(
     int sourceVertexCount,
     int sourceFaceCount,
     const Eigen::Vector3d& gravity,
-    const std::optional<DiagnosticsStanding>& standing,
+    const DiagnosticsStandings& standings,
     const DiagnosticsSuspensions& suspensions,
     const DiagnosticsHandles& handles,
     const optimization::AlternatingBalanceOptimizationResult& result,
@@ -466,6 +691,14 @@ std::string buildDiagnosticsJson(
     appendNumber(output, config.gradientTolerance);
     output << ",\n    \"shape_scale_lambda\": ";
     appendNumber(output, config.shapeScaleLambda);
+    output << ",\n    \"effective_shape_scale_lambda\": ";
+    appendNumber(output, result.effectiveShapeScaleLambda);
+    output << ",\n    \"enable_carving\": "
+           << jsonBoolean(config.enableCarving);
+    output << ",\n    \"enable_deformation\": "
+           << jsonBoolean(config.enableDeformation);
+    output << ",\n    \"enable_laplacian\": "
+           << jsonBoolean(config.enableLaplacian);
     output << ",\n    \"density\": ";
     appendNumber(output, config.density);
     output << ",\n    \"minimum_positive_mass\": ";
@@ -487,20 +720,35 @@ std::string buildDiagnosticsJson(
     output << "}\n  },\n";
     output << "  \"problem\": {\"gravity\":";
     appendVector3(output, gravity);
+    output << ",\"gravity_scope\":\"legacy_default_for_support_and_suspension_constructors\"";
     output << ",\"standing_constraint\":";
-    if (standing.has_value())
+    if (standings.size() == 1U)
     {
         output << "{\"gamma_radians\":";
-        appendNumber(output, standing->gammaRadians);
+        appendNumber(output, standings.front().gammaRadians);
+        output << ",\"gravity\":";
+        appendVector3(output, standings.front().gravity);
         output << ",\"support_polygon\":";
-        appendPointMatrix(output, standing->polygon);
+        appendPointMatrix(output, standings.front().polygon);
         output << '}';
     }
     else
     {
         output << "null";
     }
-    output << ",\"suspension_constraints\":[";
+    output << ",\"standing_constraints\":[";
+    for (std::size_t index = 0; index < standings.size(); ++index)
+    {
+        if (index != 0U) output << ',';
+        output << "{\"gravity\":";
+        appendVector3(output, standings[index].gravity);
+        output << ",\"gamma_radians\":";
+        appendNumber(output, standings[index].gammaRadians);
+        output << ",\"support_polygon\":";
+        appendPointMatrix(output, standings[index].polygon);
+        output << '}';
+    }
+    output << "],\"suspension_constraints\":[";
     for (std::size_t index = 0; index < suspensions.size(); ++index)
     {
         if (index != 0U) output << ',';
@@ -521,6 +769,72 @@ std::string buildDiagnosticsJson(
         output << '}';
     }
     output << "]},\n";
+    output << "  \"r10_metrics\": {\n";
+    output << "    \"semantics\": "
+           << "\"paper_profile_committed_events_not_beta2013_iterations\",\n";
+    output << "    \"grid_dimensions\": ["
+           << result.gridDimensions(0) << ','
+           << result.gridDimensions(1) << ','
+           << result.gridDimensions(2) << "],\n";
+    output << "    \"voxel_size\": ";
+    appendVector3(output, result.voxelSize);
+    output << ",\n    \"initial_material_voxels\": "
+           << result.initialMaterialVoxelCount;
+    output << ",\n    \"initial_carveable_voxels\": "
+           << result.initialCarveableVoxelCount;
+    output << ",\n    \"active_deformation_nodes\": "
+           << result.activeDeformationNodeCount;
+    output << ",\n    \"fixed_deformation_nodes\": "
+           << result.fixedDeformationNodeCount;
+    output << ",\n    \"fixed_deformation_node_fraction\": ";
+    if (result.activeDeformationNodeCount > 0)
+    {
+        appendNumber(
+            output,
+            static_cast<double>(result.fixedDeformationNodeCount) /
+                static_cast<double>(result.activeDeformationNodeCount)
+        );
+    }
+    else
+    {
+        output << "null";
+    }
+    output << ",\n    \"user_handles\": " << result.userHandleCount;
+    output << ",\n    \"initial_mass_properties\": ";
+    appendMassProperties(output, result.initialMassProperties);
+    output << ",\n    \"initial_center_of_mass\": ";
+    appendVector3(output, result.initialCenterOfMass);
+    output << ",\n    \"final_projected_target_energy\": ";
+    appendNumber(output, result.finalProjectedTargetEnergy);
+    output << ",\n    \"final_unscaled_shape_energy\": ";
+    appendNumber(output, result.finalUnscaledShapeEnergy);
+    output << ",\n    \"final_shape_energy\": ";
+    appendNumber(output, result.finalShapeEnergy);
+    output << ",\n    \"final_total_energy\": ";
+    appendNumber(output, result.finalTotalEnergy);
+    output << ",\n    \"normalized_rms_vertex_displacement\": ";
+    appendNumber(output, result.normalizedRmsVertexDisplacement);
+    output << ",\n    \"normalized_maximum_vertex_displacement\": ";
+    appendNumber(output, result.normalizedMaximumVertexDisplacement);
+    output << ",\n    \"maximum_user_handle_translation\": ";
+    appendNumber(output, result.maximumUserHandleTranslation);
+    output << ",\n    \"maximum_user_handle_scale_deviation\": ";
+    appendNumber(output, result.maximumUserHandleScaleDeviation);
+    output << ",\n    \"initial_outer_volume\": ";
+    appendNumber(output, result.initialOuterVolume);
+    output << ",\n    \"final_outer_volume\": ";
+    appendNumber(output, result.finalOuterVolume);
+    output << ",\n    \"final_cavity_volume\": ";
+    appendNumber(output, result.finalCavityVolume);
+    output << ",\n    \"final_cavity_volume_fraction\": ";
+    appendNumber(output, result.finalCavityVolumeFraction);
+    output << ",\n    \"material_mass_change_fraction\": ";
+    appendNumber(output, result.finalMaterialMassChangeFraction);
+    output << ",\n    \"first_standing_feasible_event\": "
+           << result.firstStandingFeasibleEvent;
+    output << ",\n    \"first_safe_event\": " << result.firstSafeEvent;
+    output << ",\n    \"committed_event_count\": "
+           << result.events.size() << "\n  },\n";
     output << "  \"geometry_hash\": \"" << result.geometryHash << "\",\n";
     output << "  \"geometry_epoch\": " << result.geometryEpoch << ",\n";
     output << "  \"mass_properties\": ";
@@ -707,6 +1021,41 @@ std::string buildDiagnosticsJson(
         appendMassProperties(output, record.massPropertiesAfter);
         output << ",\"center_of_mass_after\":";
         appendVector3(output, record.centerOfMassAfter);
+        output << '}';
+    }
+    output << "],\n";
+    output << "  \"r10_events\": [";
+    for (std::size_t index = 0; index < result.events.size(); ++index)
+    {
+        if (index != 0U) output << ',';
+        const auto& record = result.events[index];
+        output << "{\"ordinal\":" << record.ordinal
+               << ",\"kind\":\"" << eventKindToken(record.kind) << "\""
+               << ",\"block\":" << record.block
+               << ",\"iteration\":" << record.iteration
+               << ",\"geometry_epoch\":" << record.geometryEpoch
+               << ",\"geometry_changed\":"
+               << jsonBoolean(record.geometryChanged)
+               << ",\"has_standing_constraints\":"
+               << jsonBoolean(record.hasStandingConstraints)
+               << ",\"all_standing_feasible\":"
+               << jsonBoolean(record.allStandingFeasible)
+               << ",\"all_targets_reached\":"
+               << jsonBoolean(record.allTargetsReached)
+               << ",\"target_generation\":" << record.targetGeneration
+               << ",\"target_snapshot_hash\":\""
+               << record.targetSnapshotHash << "\""
+               << ",\"alpha_hash\":\"" << record.alphaHash << "\""
+               << ",\"geometry_hash\":\"" << record.geometryHash << "\""
+               << ",\"parameters\":";
+        appendVector(output, record.parameters);
+        output
+               << ",\"projected_target_energy\":";
+        appendNumber(output, record.projectedTargetEnergy);
+        output << ",\"mass_properties\":";
+        appendMassProperties(output, record.massProperties);
+        output << ",\"center_of_mass\":";
+        appendVector3(output, record.centerOfMass);
         output << '}';
     }
     output << "],\n";
@@ -982,16 +1331,19 @@ struct BalanceResult::Storage
     optimization::AlternatingBalanceOptimizationResult result;
     manufacturing::ManufacturingGeometry manufacturing;
     std::string diagnostics;
+    std::string performanceReport;
 
     Storage(
         optimization::AlternatingBalanceOptimizationResult resultValue,
         manufacturing::ManufacturingGeometry manufacturingValue,
-        std::string diagnosticsValue
+        std::string diagnosticsValue,
+        std::string performanceReportValue
     )
         :
         result(std::move(resultValue)),
         manufacturing(std::move(manufacturingValue)),
-        diagnostics(std::move(diagnosticsValue))
+        diagnostics(std::move(diagnosticsValue)),
+        performanceReport(std::move(performanceReportValue))
     {
     }
 };
@@ -1005,6 +1357,11 @@ struct BalanceModel::Impl
         double gammaRadians = 0.0;
         Eigen::MatrixXd fixedPoints;
     };
+
+    using Standings = std::vector<
+        Standing,
+        Eigen::aligned_allocator<Standing>
+    >;
 
     struct Suspension
     {
@@ -1024,7 +1381,7 @@ struct BalanceModel::Impl
         Eigen::MatrixXi faces;
         BalanceModelConfig config;
         Eigen::Vector3d gravity;
-        std::optional<Standing> standing;
+        Standings standings;
         std::vector<Suspension, Eigen::aligned_allocator<Suspension>>
             suspensions;
         std::vector<UserHandle, Eigen::aligned_allocator<UserHandle>>
@@ -1036,7 +1393,7 @@ struct BalanceModel::Impl
     Eigen::MatrixXi faces;
     BalanceModelConfig config;
     Eigen::Vector3d gravity = Eigen::Vector3d(0.0, -1.0, 0.0);
-    std::optional<Standing> standing;
+    Standings standings;
     std::vector<Suspension, Eigen::aligned_allocator<Suspension>> suspensions;
     std::vector<UserHandle, Eigen::aligned_allocator<UserHandle>> userHandles;
 };
@@ -1127,6 +1484,12 @@ std::string BalanceResult::manufacturingReportJson() const
 const std::string& BalanceResult::diagnosticsJson() const
 {
     return storage_->diagnostics;
+}
+
+
+const std::string& BalanceResult::performanceReportJson() const
+{
+    return storage_->performanceReport;
 }
 
 
@@ -1250,7 +1613,7 @@ void BalanceModel::setGravity(const Eigen::Vector3d& gravityDirection)
     const Eigen::Vector3d normalized =
         normalizedGravityDirection(gravityDirection);
     std::lock_guard<std::mutex> lock(impl_->mutex);
-    if (impl_->standing.has_value() || !impl_->suspensions.empty())
+    if (!impl_->standings.empty() || !impl_->suspensions.empty())
     {
         throw std::logic_error(
             "gravity cannot change after balance targets have been added"
@@ -1266,73 +1629,18 @@ void BalanceModel::setSupportPolygon(
 )
 {
     std::lock_guard<std::mutex> lock(impl_->mutex);
-    const stability::SupportRegion support =
-        stability::SupportRegion::fromPolygon(polygon, impl_->gravity);
-    static_cast<void>(stability::StandingTargetSpecification(
-        support,
+    StandingConstruction standing = constructStandingFromPolygon(
+        impl_->vertices,
+        polygon,
+        impl_->gravity,
         gammaRadians
-    ));
-
-    const double tolerance = matchingTolerance(impl_->vertices);
-    Eigen::VectorXd sourceHeights(impl_->vertices.rows());
-    for (Eigen::Index row = 0; row < impl_->vertices.rows(); ++row)
-    {
-        sourceHeights(row) = -impl_->gravity.dot(
-            impl_->vertices.row(row).transpose()
-        );
-    }
-    const double trueMinimum = sourceHeights.minCoeff();
-    if (std::abs(support.supportHeight() - trueMinimum) > tolerance)
-    {
-        throw std::domain_error(
-            "support polygon plane does not coincide with the true mesh floor"
-        );
-    }
-    if ((sourceHeights.array() < support.supportHeight() - tolerance).any())
-    {
-        throw std::domain_error(
-            "a source-mesh vertex lies below the support polygon plane"
-        );
-    }
-    for (Eigen::Index point = 0; point < polygon.rows(); ++point)
-    {
-        bool matchedLowestVertex = false;
-        for (Eigen::Index vertex = 0;
-             vertex < impl_->vertices.rows();
-             ++vertex)
-        {
-            if (
-                std::abs(sourceHeights(vertex) - trueMinimum) <= tolerance &&
-                (
-                    impl_->vertices.row(vertex).transpose() -
-                    polygon.row(point).transpose()
-                ).norm() <= tolerance
-            )
-            {
-                matchedLowestVertex = true;
-                break;
-            }
-        }
-        if (!matchedLowestVertex)
-        {
-            throw std::domain_error(
-                "every support polygon point must match a lowest source-mesh vertex"
-            );
-        }
-    }
-
-    Eigen::MatrixXd fixedPoints(support.supportPolygon2D().rows(), 3);
-    for (Eigen::Index row = 0; row < fixedPoints.rows(); ++row)
-    {
-        fixedPoints.row(row) = support.fromPlaneCoordinates(
-            support.supportPolygon2D().row(row).transpose()
-        ).transpose();
-    }
-    impl_->standing = Impl::Standing{
-        support,
-        gammaRadians,
-        std::move(fixedPoints)
-    };
+    );
+    impl_->standings.clear();
+    impl_->standings.push_back(Impl::Standing{
+        std::move(standing.support),
+        standing.gammaRadians,
+        std::move(standing.fixedPoints)
+    });
 }
 
 
@@ -1342,31 +1650,60 @@ void BalanceModel::setSupportFromMesh(
 )
 {
     std::lock_guard<std::mutex> lock(impl_->mutex);
-    const stability::SupportRegion support = stability::SupportRegion::fromMesh(
+    StandingConstruction standing = constructStandingFromMesh(
         impl_->vertices,
         impl_->gravity,
-        contactThreshold
-    );
-    static_cast<void>(stability::StandingTargetSpecification(
-        support,
+        contactThreshold,
         gammaRadians
-    ));
-    Eigen::MatrixXd fixedPoints(
-        static_cast<Eigen::Index>(support.contactVertexIndices().size()),
-        3
     );
-    for (std::size_t index = 0;
-         index < support.contactVertexIndices().size();
-         ++index)
-    {
-        fixedPoints.row(static_cast<Eigen::Index>(index)) =
-            impl_->vertices.row(support.contactVertexIndices()[index]);
-    }
-    impl_->standing = Impl::Standing{
-        support,
-        gammaRadians,
-        std::move(fixedPoints)
-    };
+    impl_->standings.clear();
+    impl_->standings.push_back(Impl::Standing{
+        std::move(standing.support),
+        standing.gammaRadians,
+        std::move(standing.fixedPoints)
+    });
+}
+
+
+void BalanceModel::addStandingConstraintPolygon(
+    const Eigen::MatrixXd& polygon,
+    const Eigen::Vector3d& gravityDirection,
+    double gammaRadians
+)
+{
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    StandingConstruction standing = constructStandingFromPolygon(
+        impl_->vertices,
+        polygon,
+        gravityDirection,
+        gammaRadians
+    );
+    impl_->standings.push_back(Impl::Standing{
+        std::move(standing.support),
+        standing.gammaRadians,
+        std::move(standing.fixedPoints)
+    });
+}
+
+
+void BalanceModel::addStandingConstraintFromMesh(
+    const Eigen::Vector3d& gravityDirection,
+    double contactThreshold,
+    double gammaRadians
+)
+{
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    StandingConstruction standing = constructStandingFromMesh(
+        impl_->vertices,
+        gravityDirection,
+        contactThreshold,
+        gammaRadians
+    );
+    impl_->standings.push_back(Impl::Standing{
+        std::move(standing.support),
+        standing.gammaRadians,
+        std::move(standing.fixedPoints)
+    });
 }
 
 
@@ -1437,7 +1774,7 @@ void BalanceModel::clearHandles()
 void BalanceModel::clearConstraints()
 {
     std::lock_guard<std::mutex> lock(impl_->mutex);
-    impl_->standing.reset();
+    impl_->standings.clear();
     impl_->suspensions.clear();
 }
 
@@ -1445,6 +1782,9 @@ void BalanceModel::clearConstraints()
 BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
 {
     validateRunConfig(runConfig);
+    const PerformanceClock::time_point totalStart = PerformanceClock::now();
+    PerformanceDurations durations;
+    PerformanceClock::time_point phaseStart = totalStart;
     Impl::Snapshot snapshot;
     {
         std::lock_guard<std::mutex> lock(impl_->mutex);
@@ -1452,41 +1792,52 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
         snapshot.faces = impl_->faces;
         snapshot.config = impl_->config;
         snapshot.gravity = impl_->gravity;
-        snapshot.standing = impl_->standing;
+        snapshot.standings = impl_->standings;
         snapshot.suspensions = impl_->suspensions;
         snapshot.userHandles = impl_->userHandles;
     }
-    if (!snapshot.standing.has_value() && snapshot.suspensions.empty())
+    durations.inputSnapshot = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
+    if (snapshot.standings.empty() && snapshot.suspensions.empty())
     {
         throw std::logic_error(
             "at least one standing or suspension target is required"
         );
     }
 
+    phaseStart = PerformanceClock::now();
     VoxelGrid grid(
         snapshot.vertices,
         snapshot.faces,
         snapshot.config.minimumWallThickness,
         snapshot.config.voxelResolution
     );
+    durations.voxelization = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
+
+    phaseStart = PerformanceClock::now();
     const deformation::GridDeformationDomain domain =
         deformation::GridDeformationDomain::fromVoxelGrid(grid);
 
     Eigen::Index fixedPointCount =
         static_cast<Eigen::Index>(snapshot.suspensions.size());
-    if (snapshot.standing.has_value())
+    for (const auto& standing : snapshot.standings)
     {
-        fixedPointCount += snapshot.standing->fixedPoints.rows();
+        fixedPointCount += standing.fixedPoints.rows();
     }
     Eigen::MatrixXd fixedPoints(fixedPointCount, 3);
     Eigen::Index destination = 0;
-    if (snapshot.standing.has_value())
+    for (const auto& standing : snapshot.standings)
     {
         fixedPoints.middleRows(
             destination,
-            snapshot.standing->fixedPoints.rows()
-        ) = snapshot.standing->fixedPoints;
-        destination += snapshot.standing->fixedPoints.rows();
+            standing.fixedPoints.rows()
+        ) = standing.fixedPoints;
+        destination += standing.fixedPoints.rows();
     }
     for (const auto& suspension : snapshot.suspensions)
     {
@@ -1521,6 +1872,12 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
         handles.push_back(std::move(handle));
     }
     const deformation::HandleSet binding(std::move(handles));
+    durations.domainAndHandles = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
+
+    phaseStart = PerformanceClock::now();
     const deformation::DeformationSystem deformationSystem(
         grid,
         snapshot.vertices,
@@ -1528,17 +1885,22 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
         binding,
         snapshot.config.bbw
     );
+    durations.deformationSystemAndBbw = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
 
+    phaseStart = PerformanceClock::now();
     stability::BalanceTargetSpecifications targets;
     targets.reserve(
         snapshot.suspensions.size() +
-        (snapshot.standing.has_value() ? 1U : 0U)
+        snapshot.standings.size()
     );
-    if (snapshot.standing.has_value())
+    for (const auto& standing : snapshot.standings)
     {
         targets.emplace_back(stability::StandingTargetSpecification(
-            snapshot.standing->support,
-            snapshot.standing->gammaRadians
+            standing.support,
+            standing.gammaRadians
         ));
     }
     for (const auto& suspension : snapshot.suspensions)
@@ -1556,12 +1918,22 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
         schedule,
         runConfig.optimizer
     );
+    durations.targetAndOptimizerSetup = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
+    phaseStart = PerformanceClock::now();
     optimization::AlternatingBalanceOptimizationResult result =
         optimizer.optimize(
             binding.optimizationParameters(),
             runConfig.initialMu
         );
+    durations.optimization = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
 
+    phaseStart = PerformanceClock::now();
     manufacturing::ManufacturingOptions manufacturingOptions;
     manufacturingOptions.density = runConfig.optimizer.density;
     manufacturing::ManufacturingGeometry manufacturing =
@@ -1569,13 +1941,20 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
             result,
             manufacturingOptions
         );
-    std::optional<DiagnosticsStanding> diagnosticsStanding;
-    if (snapshot.standing.has_value())
+    durations.manufacturingAudit = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
+    phaseStart = PerformanceClock::now();
+    DiagnosticsStandings diagnosticsStandings;
+    diagnosticsStandings.reserve(snapshot.standings.size());
+    for (const auto& standing : snapshot.standings)
     {
-        diagnosticsStanding = DiagnosticsStanding{
-            snapshot.standing->fixedPoints,
-            snapshot.standing->gammaRadians
-        };
+        diagnosticsStandings.push_back(DiagnosticsStanding{
+            standing.fixedPoints,
+            standing.support.gravity(),
+            standing.gammaRadians
+        });
     }
     DiagnosticsSuspensions diagnosticsSuspensions;
     diagnosticsSuspensions.reserve(snapshot.suspensions.size());
@@ -1595,22 +1974,35 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
             handle.rotation
         });
     }
+    durations.diagnosticsPayloadSetup = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
+    phaseStart = PerformanceClock::now();
     const std::string diagnostics = buildDiagnosticsJson(
         snapshot.config,
         runConfig,
         static_cast<int>(snapshot.vertices.rows()),
         static_cast<int>(snapshot.faces.rows()),
         snapshot.gravity,
-        diagnosticsStanding,
+        diagnosticsStandings,
         diagnosticsSuspensions,
         diagnosticsHandles,
         result,
         manufacturing
     );
+    durations.diagnosticsSerialization = elapsedSeconds(
+        phaseStart,
+        PerformanceClock::now()
+    );
+    durations.total = elapsedSeconds(totalStart, PerformanceClock::now());
+    const std::string performanceReport =
+        buildPerformanceReportJson(durations);
     return BalanceResult(std::make_shared<const BalanceResult::Storage>(
         std::move(result),
         std::move(manufacturing),
-        diagnostics
+        diagnostics,
+        performanceReport
     ));
 }
 

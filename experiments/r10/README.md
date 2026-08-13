@@ -13,10 +13,13 @@ the canonical aggregate produced by `python/r10_aggregate.py`.
 ## License-safe local matrix
 
 `python/r10_local_experiment.py` runs a repository-authored CC0 overhang across
-the full, carving-only, deformation-only, and no-Laplacian variants.  The fixed
-matrix also varies voxel resolution and handle placement and includes a
-suspension case.  It writes each manifest before native model loading, records
-only measurements actually returned by diagnostics, and does not read the
+five fixed profiles: full, carving-only, deformation-only, no-Laplacian, and
+no-carving/no-Laplacian. The nine-case matrix also varies voxel resolution and
+one deterministic handle placement and includes a suspension case. Multiple
+bases are covered by the API/invariant regressions but are not a quantitative
+axis of this matrix; the handle case is not described as a noise distribution.
+The driver writes each manifest before native model loading, records only
+measurements actually returned by diagnostics, and does not read the
 third-party beta archive.
 
 Example (write evidence outside the source tree):
@@ -24,7 +27,8 @@ Example (write evidence outside the source tree):
 ```text
 PYTHONPATH=python:build/python/python python3.12 python/r10_local_experiment.py \
   --output-root /tmp/make-it-stand-r10 \
-  --repeats 3 \
+  --repeats 5 \
+  --warmup-runs 1 \
   --build-type Release \
   --compiler GNU \
   --compiler-version 13.3.0 \
@@ -32,7 +36,10 @@ PYTHONPATH=python:build/python/python python3.12 python/r10_local_experiment.py 
   --build-flag=-DNDEBUG
 ```
 
-The output root is operational input and is never serialized.  A failed native
+The CLI defaults to five measured repeats with one discarded warm-up per
+repeat. It fixes the OMP/OpenBLAS/MKL thread-count environment to one; CPU
+affinity and governor remain uncontrolled and are disclosed in each manifest.
+The output root is operational input and is never serialized. A failed native
 run produces a `failed` record with no invented metrics, allowing the remaining
 matrix to finish while preserving an auditable failure count.  The matrix is
 local robustness evidence; it is not an exact paper-reproduction claim.
@@ -40,3 +47,23 @@ Run-record status describes whether the protocol executed and exported its
 artifacts; `algorithm_success`, `targets_reached`, and `manufacturing_ready`
 remain separate measured indicators, so an unstable native result cannot be
 silently promoted to a successful optimization result.
+
+The native `performance.json` sidecar is available only after a successful
+native return and is SHA-256-bound to its run. The outer run timer covers model
+setup through SHA-bound artifact registration. Neither timing unit is the
+paper's beta iteration count.
+
+Render a deterministic presentation report after all cases are complete:
+
+```text
+PYTHONPATH=python python3 python/r10_report.py \
+  --evidence-root /tmp/make-it-stand-r10 \
+  --output-directory /tmp/make-it-stand-r10-report
+```
+
+The command revalidates canonical manifests, records, aggregates, and bound
+artifacts, then emits `summary.csv`, `summary.md`, and `summary.svg`. These are
+derived presentation files, not replacements for the canonical evidence. The
+event curve uses only the first completed repeat and its x-axis is the modern
+committed-event ordinal. `manufacturing_ready` is a sealed software geometry
+audit indicator, not evidence that an object was printed or physically stood.

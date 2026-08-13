@@ -1075,6 +1075,28 @@ Eigen::MatrixXd GridDeformationDomain::interpolateWeights(
                     embedding.nodes[static_cast<std::size_t>(bit)]
                 );
         }
+
+        // Each interpolated row is a convex combination mathematically, but
+        // BBW values and trilinear coefficients can leave roundoff-sized
+        // excursions outside [0,1].  Project only values already accepted by
+        // validatePartitionWeights() and renormalize before the strict LBS
+        // contract sees them.  Material excursions still fail closed above.
+        for (Eigen::Index column = 0; column < result.cols(); ++column)
+        {
+            result(row, column) = std::clamp(
+                result(row, column),
+                0.0,
+                1.0
+            );
+        }
+        const double rowSum = result.row(row).sum();
+        if (!(rowSum > 0.0) || !std::isfinite(rowSum))
+        {
+            throw std::logic_error(
+                "interpolated weight row has no positive finite mass"
+            );
+        }
+        result.row(row) /= rowSum;
     }
 
     validatePartitionWeights(result, points.rows());

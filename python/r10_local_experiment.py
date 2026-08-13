@@ -42,6 +42,7 @@ class ExperimentCase:
     enable_deformation: bool
     enable_laplacian: bool
     constraint: str = "standing"
+    minimum_wall_thickness: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -59,10 +60,17 @@ METRIC_DEFINITIONS: tuple[dict[str, str], ...] = (
         "source": "local_measurement",
     },
     {
-        "name": "removed_mass_fraction",
+        "name": "final_cavity_volume_fraction",
         "unit": "fraction",
-        "direction": "higher_is_better",
-        "definition": "Initial mass minus final mass, divided by initial mass.",
+        "direction": "descriptive",
+        "definition": "Final inward cavity volume divided by final outer-envelope volume; reported only for an empty or strictly valid inner boundary.",
+        "source": "local_measurement",
+    },
+    {
+        "name": "material_mass_change_fraction",
+        "unit": "fraction",
+        "direction": "descriptive",
+        "definition": "Initial material mass minus final material mass, divided by initial material mass; deformation can make this value negative.",
         "source": "local_measurement",
     },
     {
@@ -76,14 +84,21 @@ METRIC_DEFINITIONS: tuple[dict[str, str], ...] = (
         "name": "normalized_rms_displacement",
         "unit": "normalized_length",
         "direction": "lower_is_better",
-        "definition": "RMS source-vertex displacement divided by source bounding-box diagonal.",
+        "definition": "RMS source-vertex displacement divided by the maximum source bounding-box extent.",
         "source": "local_measurement",
     },
     {
         "name": "normalized_maximum_displacement",
         "unit": "normalized_length",
         "direction": "lower_is_better",
-        "definition": "Maximum source-vertex displacement divided by source bounding-box diagonal.",
+        "definition": "Maximum source-vertex displacement divided by the maximum source bounding-box extent.",
+        "source": "local_measurement",
+    },
+    {
+        "name": "maximum_handle_scale_deviation",
+        "unit": "fraction",
+        "direction": "lower_is_better",
+        "definition": "Maximum absolute deviation of a user-handle uniform scale from one.",
         "source": "local_measurement",
     },
     {
@@ -174,6 +189,15 @@ def default_cases() -> tuple[ExperimentCase, ...]:
             True,
             False,
         ),
+        ExperimentCase(
+            "synthetic-deformation-only-no-laplacian-r16-h0",
+            "no-carving-no-laplacian",
+            16,
+            "low",
+            False,
+            True,
+            False,
+        ),
         ExperimentCase("synthetic-full-r12-h0", "resolution-r12", 12, "low", True, True, True),
         ExperimentCase("synthetic-full-r20-h0", "resolution-r20", 20, "low", True, True, True),
         ExperimentCase("synthetic-full-r16-h1", "handle-high", 16, "high", True, True, True),
@@ -241,6 +265,7 @@ def build_manifest(
     repository: Path,
     provenance: RepositoryState,
     repeats: int,
+    warmup_runs: int = 0,
 ) -> dict[str, Any]:
     """Materialize and validate a manifest before native execution."""
 
@@ -277,9 +302,9 @@ def build_manifest(
             },
             "preprocessing": {
                 "fixture": "synthetic-overhang-v1",
-                "normalization": "native facade normalization",
+                "normalization": "none; fixture coordinates are passed unchanged to the native facade",
                 "voxel_resolution": case.resolution,
-                "minimum_wall_thickness_model_units": 0.06,
+                "minimum_wall_thickness_model_units": case.minimum_wall_thickness,
             },
             "algorithm": {
                 "carving": case.enable_carving,
@@ -290,13 +315,17 @@ def build_manifest(
                 "shape_scale_lambda": 1.0,
                 "maximum_carving_blocks": 8,
                 "maximum_deformation_iterations_per_block": 200,
+                "warmup_runs_per_measured_repeat": warmup_runs,
+                "thread_policy": "OMP/BLAS thread-count environment fixed to one",
+                "cpu_affinity_policy": "not_pinned",
+                "cpu_governor_policy": "recorded_environment_not_controlled",
             },
             "metric_definitions": list(METRIC_DEFINITIONS),
         },
         "provenance": {
             "repository_commit_sha": provenance.commit_sha,
             "dirty_worktree": provenance.dirty_worktree,
-            "implementation_profile": "release-headless-r10-synthetic-v1",
+            "implementation_profile": "native-headless-r10-synthetic-v1",
             "resources": [license_binding],
             "deviations": [
                 "The fixture is repository-authored rather than a model from the paper.",
@@ -352,10 +381,10 @@ def extract_metrics(result: Any, diagnostics: Mapping[str, Any]) -> list[tuple[s
     manufacturing = diagnostics["manufacturing"]
     metrics = [
         ("projected_target_energy", _number(r10["final_projected_target_energy"], "final_projected_target_energy")),
-        ("removed_mass_fraction", _number(r10["removed_mass_fraction"], "removed_mass_fraction")),
         ("deformation_energy", _number(r10["final_unscaled_shape_energy"], "final_unscaled_shape_energy")),
         ("normalized_rms_displacement", _number(r10["normalized_rms_vertex_displacement"], "normalized_rms_vertex_displacement")),
         ("normalized_maximum_displacement", _number(r10["normalized_maximum_vertex_displacement"], "normalized_maximum_vertex_displacement")),
+        ("maximum_handle_scale_deviation", _number(r10["maximum_user_handle_scale_deviation"], "maximum_user_handle_scale_deviation")),
         ("committed_event_count", _number(r10["committed_event_count"], "committed_event_count")),
         ("carving_iteration_count", float(len(diagnostics["carving_iterations"]))),
         ("deformation_iteration_count", float(len(diagnostics["deformation_iterations"]))),
@@ -363,6 +392,75 @@ def extract_metrics(result: Any, diagnostics: Mapping[str, Any]) -> list[tuple[s
         ("targets_reached", 1.0 if targets["all_reached"] else 0.0),
         ("manufacturing_ready", 1.0 if result.manufacturing_ready else 0.0),
     ]
+    cavity_fraction = r10.get("final_cavity_volume_fraction")
+    cavity_volume = r10.get("final_cavity_volume")
+    outer_volume = r10.get("final_outer_volume")
+    inner = manufacturing.get("inner_boundary", {})
+    outer = manufacturing.get("outer_boundary", {})
+    strict_fields = (
+        "matrix_shape_valid",
+        "finite_vertices",
+        "face_indices_valid",
+        "nondegenerate_faces",
+        "edge_manifold",
+        "vertex_manifold",
+        "closed",
+        "consistently_oriented",
+        "component_orientations_valid",
+        "self_intersection_completed",
+        "self_intersection_free",
+    )
+    outer_strict = outer.get("empty") is False and all(
+        outer.get(name) is True for name in strict_fields
+    ) and outer.get("unreferenced_vertices") == 0
+    inner_empty = inner.get("empty") is True
+    inner_strict = inner.get("empty") is False and all(
+        inner.get(name) is True for name in strict_fields
+    ) and inner.get("unreferenced_vertices") == 0
+    cavity_audit_valid = outer_strict and (inner_empty or inner_strict)
+    if cavity_audit_valid and (
+        cavity_fraction is None or cavity_volume is None or outer_volume is None
+    ):
+        raise ValueError("audited cavity metrics are missing")
+    if cavity_audit_valid:
+        value = _number(cavity_fraction, "final_cavity_volume_fraction")
+        measured_cavity = _number(cavity_volume, "final_cavity_volume")
+        measured_outer = _number(outer_volume, "final_outer_volume")
+        signed_outer = _number(outer.get("signed_volume"), "outer_boundary.signed_volume")
+        if value < 0.0 or value > 1.0 + 1.0e-10:
+            raise ValueError("diagnostics field 'final_cavity_volume_fraction' is outside [0,1]")
+        volume_tolerance = 1.0e-10 * max(
+            1.0,
+            abs(measured_outer),
+            abs(measured_cavity),
+            abs(signed_outer),
+        )
+        fraction_tolerance = 1.0e-10 * max(1.0, abs(value))
+        if measured_outer <= 0.0 or signed_outer <= 0.0:
+            raise ValueError("audited outer volume is not positive")
+        if abs(measured_outer - signed_outer) > volume_tolerance:
+            raise ValueError("final outer volume disagrees with audited signed volume")
+        if inner_empty:
+            if abs(value) > fraction_tolerance or abs(measured_cavity) > volume_tolerance:
+                raise ValueError("empty inner boundary has non-zero cavity measurement")
+        else:
+            signed_volume = _number(inner.get("signed_volume"), "inner_boundary.signed_volume")
+            if measured_cavity < 0.0 or signed_volume >= 0.0:
+                raise ValueError("inner cavity orientation or volume is invalid")
+            if abs(measured_cavity + signed_volume) > volume_tolerance:
+                raise ValueError("cavity volume disagrees with inner signed volume")
+            if abs(value - measured_cavity / measured_outer) > fraction_tolerance:
+                raise ValueError("cavity fraction disagrees with audited volumes")
+        metrics.append(("final_cavity_volume_fraction", value))
+    metrics.append(
+        (
+            "material_mass_change_fraction",
+            _number(
+                r10["material_mass_change_fraction"],
+                "material_mass_change_fraction",
+            ),
+        )
+    )
     wall = manufacturing.get("wall_clearance", {})
     clearance = wall.get("measured_minimum_clearance")
     if clearance is not None:
@@ -378,6 +476,7 @@ def run_case(
     provenance: RepositoryState,
     repeats: int,
     build: Mapping[str, Any],
+    warmup_runs: int = 0,
     model_factory: Callable[..., Any] = BalanceModel,
 ) -> dict[str, Any]:
     """Run one case and return its canonical aggregate document."""
@@ -389,20 +488,46 @@ def run_case(
         repository=repository,
         provenance=provenance,
         repeats=repeats,
+        warmup_runs=warmup_runs,
     )
     records: list[dict[str, Any]] = []
     for repeat_index in range(repeats):
         run_id = f"{case.experiment_id}-r{repeat_index:02d}"
+        run_config = RunConfig(
+            maximum_carving_blocks=8,
+            maximum_deformation_iterations_per_block=200,
+            shape_scale_lambda=1.0,
+            enable_carving=case.enable_carving,
+            enable_deformation=case.enable_deformation,
+            enable_laplacian=case.enable_laplacian,
+        )
+        warmup_error: Exception | None = None
+        try:
+            for _ in range(warmup_runs):
+                warmup_model = model_factory(
+                    os.fspath(experiment_root / "inputs" / "synthetic_overhang.obj"),
+                    config=ModelConfig(
+                        path=os.fspath(experiment_root / "inputs" / "synthetic_overhang.obj"),
+                        voxel_resolution=case.resolution,
+                        minimum_wall_thickness=case.minimum_wall_thickness,
+                    ),
+                )
+                _configure_model(warmup_model, case)
+                warmup_model.optimize(run_config)
+        except Exception as error:
+            warmup_error = error
         recorder = RunRecorder(
             manifest,
             run_id=run_id,
             repeat_index=repeat_index,
             seed=41000 + repeat_index,
             build=build,
-            timing_scope="model-load-through-artifact-export",
-            warmup_runs=0,
+            timing_scope="model_setup-through-SHA-bound-artifact-registration",
+            warmup_runs=warmup_runs,
         )
         try:
+            if warmup_error is not None:
+                raise RuntimeError("declared warm-up run failed") from warmup_error
             model_path = experiment_root / "inputs" / "synthetic_overhang.obj"
             with recorder.phase("model_setup"):
                 model = model_factory(
@@ -410,19 +535,11 @@ def run_case(
                     config=ModelConfig(
                         path=os.fspath(model_path),
                         voxel_resolution=case.resolution,
-                        minimum_wall_thickness=0.06,
+                        minimum_wall_thickness=case.minimum_wall_thickness,
                     ),
                 )
                 _configure_model(model, case)
-            run_config = RunConfig(
-                maximum_carving_blocks=8,
-                maximum_deformation_iterations_per_block=200,
-                shape_scale_lambda=1.0,
-                enable_carving=case.enable_carving,
-                enable_deformation=case.enable_deformation,
-                enable_laplacian=case.enable_laplacian,
-            )
-            with recorder.phase("optimization"):
+            with recorder.phase("native_optimize_call"):
                 result = model.optimize(run_config)
             diagnostics = result.diagnostics
             for name, value in extract_metrics(result, diagnostics):
@@ -432,11 +549,16 @@ def run_case(
             run_root.mkdir(parents=True, exist_ok=True)
             with recorder.phase("artifact_export"):
                 result.save_diagnostics(run_root / "diagnostics.json")
+                write_canonical_json(
+                    run_root / "performance.json",
+                    result.performance_report,
+                )
                 result.save_outer_mesh(run_root / "outer.obj")
                 if result.manufacturing_ready:
                     result.save_printable_mesh(run_root / "printable.stl")
             for relative, artifact_id, role, media_type in (
                 (f"runs/r{repeat_index:02d}/diagnostics.json", f"diagnostics-r{repeat_index:02d}", "diagnostics", "application/json"),
+                (f"runs/r{repeat_index:02d}/performance.json", f"performance-r{repeat_index:02d}", "performance_sidecar", "application/json"),
                 (f"runs/r{repeat_index:02d}/outer.obj", f"outer-r{repeat_index:02d}", "result_mesh", "model/obj"),
             ):
                 recorder.add_artifact(
@@ -477,7 +599,8 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-root", required=True, type=Path)
     parser.add_argument("--case", action="append", default=[], help="experiment_id to run; repeatable")
-    parser.add_argument("--repeats", type=int, default=1)
+    parser.add_argument("--repeats", type=int, default=5)
+    parser.add_argument("--warmup-runs", type=int, default=1)
     parser.add_argument("--build-type", required=True)
     parser.add_argument("--compiler", required=True)
     parser.add_argument("--compiler-version", required=True)
@@ -489,6 +612,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = _parser().parse_args(argv)
     if arguments.repeats < 1:
         raise SystemExit("--repeats must be at least one")
+    if arguments.warmup_runs < 0:
+        raise SystemExit("--warmup-runs must be non-negative")
+    for variable in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        os.environ[variable] = "1"
     repository = Path(__file__).resolve().parents[1]
     # A build-tree extension normally lives beside this script's package root
     # (for example build/python/python).  Make explicit PYTHONPATH entries work
@@ -524,6 +651,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             provenance=provenance,
             repeats=arguments.repeats,
             build=build,
+            warmup_runs=arguments.warmup_runs,
         )
         summaries.append(
             {

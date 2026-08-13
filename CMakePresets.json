@@ -32,7 +32,7 @@
     },
     {
       "name": "python",
-      "displayName": "Python extension and R9 integration tests",
+      "displayName": "Python extension and R9/R10 evidence tests",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/python",
       "cacheVariables": {

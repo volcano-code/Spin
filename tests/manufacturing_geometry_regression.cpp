@@ -1111,6 +1111,80 @@ int runSourceBoundCavity()
 }
 
 
+int runSourceBoundNoCarvingTerminal()
+{
+    const std::string scenario = "source-bound-no-carving-terminal";
+    optimization::AlternatingBalanceOptimizationResult source =
+        sourceResultFixture();
+    source.status =
+        optimization::AlternatingOptimizationStatus::StableWithoutCarving;
+    source.carvingEnabled = false;
+    source.deformationEnabled = true;
+    source.carvingBlocks.clear();
+    source.carvingIterations.clear();
+    source.geometryEpoch = 0;
+    optimization::AlternatingEventRecord event;
+    event.ordinal = 0;
+    event.kind = optimization::AlternatingEventKind::Initial;
+    event.geometryEpoch = source.geometryEpoch;
+    event.allTargetsReached = true;
+    event.targetGeneration = source.targets.generation;
+    event.targetSnapshotHash =
+        stability::balanceTargetSnapshotContentHash(source.targets);
+    event.alphaHash = testOccupancyHash(source.voxelFill);
+    event.geometryHash = source.geometryHash;
+    event.parameters = source.parameters;
+    event.massProperties = source.massProperties;
+    event.centerOfMass = source.centerOfMass;
+    source.events.push_back(event);
+
+    const ManufacturingGeometry prepared =
+        manufacturing::prepareManufacturingGeometry(source);
+    if (
+        !prepared.report.ready ||
+        !prepared.report.sourceEpochTraceConsistent ||
+        !prepared.report.sourceTraceHashConsistent ||
+        !prepared.report.failures.empty()
+    )
+    {
+        return fail(
+            scenario,
+            "stable deformation-only terminal did not bind and seal"
+        );
+    }
+
+    std::vector<optimization::AlternatingBalanceOptimizationResult> forged;
+    forged.push_back(source);
+    ++forged.back().events.front().alphaHash;
+    forged.push_back(source);
+    forged.back().events.front().kind =
+        optimization::AlternatingEventKind::CarvingIteration;
+    forged.push_back(source);
+    ++forged.back().events.front().targetGeneration;
+    forged.push_back(source);
+    forged.back().targets.objectives.front() = BalanceObjective(
+        Eigen::Vector3d(0.4, 0.0, 0.5),
+        Eigen::Vector3d(0.0, -1.0, 0.0)
+    );
+    forged.push_back(source);
+    forged.back().events.front().parameters = Eigen::VectorXd::Ones(1);
+    forged.push_back(source);
+    forged.back().carvingEnabled = true;
+    forged.push_back(source);
+    forged.back().geometryEpoch = 1;
+    for (const auto& candidate : forged)
+    {
+        const ManufacturingGeometry rejected =
+            manufacturing::prepareManufacturingGeometry(candidate);
+        if (rejected.report.ready)
+        {
+            return fail(scenario, "forged no-carving event escaped the seal");
+        }
+    }
+    return pass(scenario);
+}
+
+
 int runSourceBoundDeformationTerminal()
 {
     const std::string scenario = "source-bound-deformation-terminal";
@@ -1131,6 +1205,39 @@ int runSourceBoundDeformationTerminal()
     record.massPropertiesAfter = source.massProperties;
     record.centerOfMassAfter = source.centerOfMass;
     source.deformationIterations.push_back(record);
+    optimization::AlternatingEventRecord initialEvent;
+    initialEvent.ordinal = 0;
+    initialEvent.kind = optimization::AlternatingEventKind::Initial;
+    initialEvent.block = -1;
+    initialEvent.iteration = -1;
+    initialEvent.geometryEpoch = 0;
+    initialEvent.geometryChanged = false;
+    initialEvent.targetGeneration = source.targets.generation;
+    initialEvent.targetSnapshotHash =
+        stability::balanceTargetSnapshotContentHash(source.targets);
+    initialEvent.alphaHash = record.alphaHashBefore;
+    initialEvent.geometryHash = record.geometryHashBefore;
+    initialEvent.parameters = source.parameters;
+    initialEvent.massProperties = source.massProperties;
+    initialEvent.centerOfMass = source.centerOfMass;
+    source.events.push_back(initialEvent);
+    optimization::AlternatingEventRecord event;
+    event.ordinal = 1;
+    event.kind = optimization::AlternatingEventKind::AcceptedDeformation;
+    event.block = record.block;
+    event.iteration = record.iteration;
+    event.geometryEpoch = record.geometryEpochAfter;
+    event.geometryChanged = true;
+    event.allTargetsReached = true;
+    event.targetGeneration = source.targets.generation;
+    event.targetSnapshotHash =
+        stability::balanceTargetSnapshotContentHash(source.targets);
+    event.alphaHash = record.alphaHashAfter;
+    event.geometryHash = record.geometryHashAfter;
+    event.parameters = record.parametersAfter;
+    event.massProperties = record.massPropertiesAfter;
+    event.centerOfMass = record.centerOfMassAfter;
+    source.events.push_back(event);
     source.geometryEpoch = record.geometryEpochAfter;
     source.status =
         optimization::AlternatingOptimizationStatus::StableAfterDeformation;
@@ -1685,6 +1792,7 @@ int main(int argc, char** argv)
             << "cell-collapse|cell-swap|material-components|containment|"
             << "wall-threshold|source-bound|export-roundtrip|"
             << "source-bound-cavity|source-bound-deformation-terminal|"
+            << "source-bound-no-carving-terminal|"
             << "source-bound-carving-after-deformation|"
             << "export-transaction|export-seal|source-rejection|"
             << "raw-substitution|bound-substitution|scale-translation>\n";
@@ -1709,6 +1817,10 @@ int main(int argc, char** argv)
     if (scenario == "wall-threshold") return runWallThreshold();
     if (scenario == "source-bound") return runSourceBound();
     if (scenario == "source-bound-cavity") return runSourceBoundCavity();
+    if (scenario == "source-bound-no-carving-terminal")
+    {
+        return runSourceBoundNoCarvingTerminal();
+    }
     if (scenario == "source-bound-deformation-terminal")
     {
         return runSourceBoundDeformationTerminal();

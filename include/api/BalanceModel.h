@@ -66,6 +66,16 @@ public:
     /** Stable schema, deliberately excluding paths and timestamps. */
     const std::string& diagnosticsJson() const;
 
+    /**
+     * Non-deterministic wall-clock sidecar for R10 performance studies.
+     *
+     * Timing is deliberately excluded from diagnosticsJson() so repeated R9
+     * runs retain byte-identical scientific diagnostics.  The sidecar uses a
+     * monotonic clock and reports only phase durations, never host identity,
+     * paths, or timestamps.
+     */
+    const std::string& performanceReportJson() const;
+
     /** Diagnostic OBJ exports; these are not fabrication certification. */
     void saveOuterMesh(const std::string& filename) const;
     void saveInnerMesh(const std::string& filename) const;
@@ -138,6 +148,23 @@ public:
 
     /** Infer the standing support from source-mesh vertices near its floor. */
     void setSupportFromMesh(
+        double contactThreshold,
+        double gammaRadians
+    );
+
+    /**
+     * Add an independent standing pose without replacing prior constraints.
+     * Each pose owns its gravity direction; this is the paper's multi-base
+     * all-of problem, not multiple contact patches in one pose.
+     */
+    void addStandingConstraintPolygon(
+        const Eigen::MatrixXd& polygon,
+        const Eigen::Vector3d& gravityDirection,
+        double gammaRadians
+    );
+
+    void addStandingConstraintFromMesh(
+        const Eigen::Vector3d& gravityDirection,
         double contactThreshold,
         double gammaRadians
     );

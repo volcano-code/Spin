@@ -79,10 +79,10 @@ def _manifest(*, repeats: int = 2) -> dict[str, object]:
                     "source": "local_measurement",
                 },
                 {
-                    "name": "removed_volume_fraction",
+                    "name": "final_cavity_volume_fraction",
                     "unit": "fraction",
-                    "direction": "higher_is_better",
-                    "definition": "Removed initial material volume divided by initial volume.",
+                    "direction": "descriptive",
+                    "definition": "Final cavity volume divided by final outer-envelope volume.",
                     "source": "local_measurement",
                 },
             ],
@@ -162,11 +162,11 @@ def _run_record(api: object, manifest: dict[str, object], index: int, value: flo
                 "semantics": "Maximum final normalized signed support violation.",
             },
             {
-                "name": "removed_volume_fraction",
+                "name": "final_cavity_volume_fraction",
                 "value": 0.4 + value,
                 "unit": "fraction",
                 "source": "local_measurement",
-                "semantics": "Removed initial material volume divided by initial volume.",
+                "semantics": "Final cavity volume divided by final outer-envelope volume.",
             },
         ],
         "artifacts": [
@@ -379,6 +379,17 @@ class R10EvidenceTests(unittest.TestCase):
                 pass
         with self.assertRaisesRegex(self.api.R10RecordError, "finalized"):
             recorder.finish(status="succeeded")
+
+    def test_timing_phases_cannot_exceed_the_recorded_total(self) -> None:
+        manifest = _manifest()
+        record = _run_record(self.api, manifest, 0, 0.1)
+        record["execution"]["timing"]["phases"] = [
+            {"name": "first", "seconds": 1.0},
+            {"name": "second", "seconds": 1.0},
+        ]
+        record["execution"]["timing"]["total_seconds"] = 1.5
+        with self.assertRaisesRegex(self.api.R10RecordError, "exceed"):
+            self.api.validate_run_record(record, manifest=manifest)
 
     def test_aggregate_uses_type7_median_iqr_min_max_and_does_not_pool_paper(self) -> None:
         manifest = _manifest(repeats=4)

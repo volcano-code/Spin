@@ -29,15 +29,36 @@ class _FakeResult:
         self.diagnostics = {
             "r10_metrics": {
                 "final_projected_target_energy": 0.125,
-                "removed_mass_fraction": 0.25,
+                "final_cavity_volume": 0.0,
+                "final_cavity_volume_fraction": 0.0,
+                "final_outer_volume": 2.0,
+                "material_mass_change_fraction": 0.2,
                 "final_unscaled_shape_energy": 0.75,
                 "normalized_rms_vertex_displacement": 0.02,
                 "normalized_maximum_vertex_displacement": 0.04,
+                "maximum_user_handle_scale_deviation": 0.03,
                 "committed_event_count": 3,
             },
             "targets": {"all_reached": True},
             "manufacturing": {
-                "wall_clearance": {"measured_minimum_clearance": None}
+                "outer_boundary": {
+                    "empty": False,
+                    "matrix_shape_valid": True,
+                    "finite_vertices": True,
+                    "face_indices_valid": True,
+                    "nondegenerate_faces": True,
+                    "unreferenced_vertices": 0,
+                    "edge_manifold": True,
+                    "vertex_manifold": True,
+                    "closed": True,
+                    "consistently_oriented": True,
+                    "component_orientations_valid": True,
+                    "self_intersection_completed": True,
+                    "self_intersection_free": True,
+                    "signed_volume": 2.0,
+                },
+                "inner_boundary": {"empty": True},
+                "wall_clearance": {"measured_minimum_clearance": None},
             },
             "carving_iterations": [{}, {}],
             "deformation_iterations": [{}],
@@ -53,6 +74,14 @@ class R10LocalExperimentContractTests(unittest.TestCase):
         self.assertTrue(any(case.enable_carving and not case.enable_deformation for case in cases))
         self.assertTrue(any(not case.enable_carving and case.enable_deformation for case in cases))
         self.assertTrue(any(not case.enable_laplacian for case in cases))
+        self.assertTrue(
+            any(
+                not case.enable_carving
+                and case.enable_deformation
+                and not case.enable_laplacian
+                for case in cases
+            )
+        )
         self.assertGreaterEqual(len({case.resolution for case in cases}), 3)
         self.assertGreaterEqual(len({case.handle_layout for case in cases}), 2)
         self.assertTrue(any(case.constraint == "suspension" for case in cases))
@@ -83,7 +112,8 @@ class R10LocalExperimentContractTests(unittest.TestCase):
     def test_metric_extraction_never_invents_absent_wall_measurement(self) -> None:
         metrics = dict(DRIVER.extract_metrics(_FakeResult(), _FakeResult().diagnostics))
         self.assertEqual(metrics["projected_target_energy"], 0.125)
-        self.assertEqual(metrics["removed_mass_fraction"], 0.25)
+        self.assertEqual(metrics["final_cavity_volume_fraction"], 0.0)
+        self.assertEqual(metrics["material_mass_change_fraction"], 0.2)
         self.assertEqual(metrics["carving_iteration_count"], 2.0)
         self.assertEqual(metrics["deformation_iteration_count"], 1.0)
         self.assertEqual(metrics["algorithm_success"], 1.0)
@@ -91,8 +121,52 @@ class R10LocalExperimentContractTests(unittest.TestCase):
 
     def test_invalid_or_null_diagnostic_measurements_fail_closed(self) -> None:
         result = _FakeResult()
-        result.diagnostics["r10_metrics"]["removed_mass_fraction"] = None
+        result.diagnostics["r10_metrics"]["material_mass_change_fraction"] = None
         with self.assertRaisesRegex(ValueError, "not numeric"):
+            DRIVER.extract_metrics(result, result.diagnostics)
+
+    def test_empty_inner_boundary_rejects_nonzero_cavity(self) -> None:
+        result = _FakeResult()
+        result.diagnostics["r10_metrics"]["final_cavity_volume"] = 0.5
+        result.diagnostics["r10_metrics"]["final_cavity_volume_fraction"] = 0.25
+        with self.assertRaisesRegex(ValueError, "empty inner boundary"):
+            DRIVER.extract_metrics(result, result.diagnostics)
+
+    def test_valid_boundary_rejects_missing_cavity_metrics(self) -> None:
+        result = _FakeResult()
+        result.diagnostics["r10_metrics"]["final_cavity_volume_fraction"] = None
+        with self.assertRaisesRegex(ValueError, "cavity metrics are missing"):
+            DRIVER.extract_metrics(result, result.diagnostics)
+
+    def test_nonempty_boundary_requires_strict_audit_and_consistent_volume(self) -> None:
+        result = _FakeResult()
+        result.diagnostics["r10_metrics"].update(
+            final_cavity_volume=0.5,
+            final_cavity_volume_fraction=0.25,
+            final_outer_volume=2.0,
+        )
+        result.diagnostics["manufacturing"]["inner_boundary"] = {
+            "empty": False,
+            "matrix_shape_valid": True,
+            "finite_vertices": True,
+            "face_indices_valid": True,
+            "nondegenerate_faces": True,
+            "unreferenced_vertices": 1,
+            "edge_manifold": True,
+            "vertex_manifold": True,
+            "closed": True,
+            "consistently_oriented": True,
+            "component_orientations_valid": True,
+            "self_intersection_completed": True,
+            "self_intersection_free": True,
+            "signed_volume": -0.5,
+        }
+        metrics = dict(DRIVER.extract_metrics(result, result.diagnostics))
+        self.assertNotIn("final_cavity_volume_fraction", metrics)
+
+        result.diagnostics["manufacturing"]["inner_boundary"]["unreferenced_vertices"] = 0
+        result.diagnostics["manufacturing"]["inner_boundary"]["signed_volume"] = -0.4
+        with self.assertRaisesRegex(ValueError, "signed volume"):
             DRIVER.extract_metrics(result, result.diagnostics)
 
 
