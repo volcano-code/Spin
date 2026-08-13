@@ -574,6 +574,10 @@ CarvingBlockOutcome runCarvingBlock(
             field,
             targets.objectives
         );
+        const deformation::HandleSet handles = makeHandles(
+            system,
+            parameters
+        );
         solver.setMinimumRemovalsToContinue(
             config.minimumCarvingRemovalsToContinue
         );
@@ -602,6 +606,18 @@ CarvingBlockOutcome runCarvingBlock(
             {
                 ++geometryEpoch;
             }
+
+            /*
+             * A committed event is a complete state snapshot.  Carving owns
+             * alpha while the block's deformation parameters stay frozen, so
+             * rebuild the extracted inner boundary before hashing the event.
+             * Otherwise alpha/mass/CoM would describe the post-carve state
+             * while geometryHash still described the block-start solid.
+             */
+            outcome.state.geometry = system.evaluate(
+                handles,
+                outcome.state.voxelFill
+            );
 
             targets = schedule.refresh(solver.currentCenterOfMass());
 
@@ -687,7 +703,6 @@ CarvingBlockOutcome runCarvingBlock(
         outcome.maximumIterationsReached =
             !outcome.stable &&
             outcome.stopReason == CarvingStopReason::MaximumIterationsReached;
-        const deformation::HandleSet handles = makeHandles(system, parameters);
         outcome.state.geometry = system.evaluate(
             handles,
             outcome.state.voxelFill

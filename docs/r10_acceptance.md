@@ -17,7 +17,8 @@ The accepted surface comprises:
   all-of target scheduling;
 - successful-return-only native phase timing plus an outer monotonic run timer;
 - fail-closed canonical manifests, run records, aggregates, SHA-256 artifact
-  binding, portable paths, paper/local metric separation, and strict reports;
+  binding (including the actually loaded native extension bytes), portable
+  paths, paper/local metric separation, and strict reports;
 - a nine-case, repository-authored CC0 local matrix covering algorithmic
   profiles, three resolutions, two deterministic handle placements, standing,
   and suspension.
@@ -74,16 +75,18 @@ reason to substitute the CC0 matrix for official-paper evidence.
 ## Timing interpretation
 
 The native sidecar covers a normal return from `BalanceModel.optimize()` after
-configuration validation, using `steady_clock`. It does not measure exceptions
-or timeouts. The outer timer covers model setup through SHA-bound artifact
-registration. The local CLI defaults to one discarded warm-up and five
+configuration validation through diagnostics serialization, using
+`steady_clock`. It does not measure exceptions or timeouts. The outer timer
+covers model setup through run-record field finalization, including SHA-bound
+artifact registration. The local CLI defaults to one discarded warm-up and five
 measured repeats per case and fixes OMP/BLAS thread-count variables to one;
 affinity and CPU-governor state remain uncontrolled and are disclosed.
 
 The checked-in presets are `RelWithDebInfo`. Publishable timing requires a
 separate clean Release build with actual compiler flags recorded. A CLI
 `--build-type` string is provenance supplied by the caller, not automatic
-binary introspection.
+binary introspection. The copied native-extension SHA-256 identifies the
+executed bytes independently but is not source-to-binary attestation.
 
 ## Verdict
 

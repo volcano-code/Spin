@@ -316,12 +316,14 @@ PYTHONPATH=python:build/python/python python3 python/r10_local_experiment.py \
   --build-flag=-O2 --build-flag=-g --build-flag=-DNDEBUG
 PYTHONPATH=python python3 python/r10_report.py \
   --evidence-root /tmp/make-it-stand-r10 \
-  --output-directory /tmp/make-it-stand-r10-report
+  --output-dir /tmp/make-it-stand-r10-report
 ```
 
 For publication timing, use an actual clean Release build and record its exact
 flags; CLI labels are provenance assertions and cannot inspect another build
-tree. See [`docs/r9_acceptance.md`](docs/r9_acceptance.md) and
+tree. The R10 driver independently SHA-256-binds the exact native extension it
+loads, but that byte identity is not source-to-binary attestation. See
+[`docs/r9_acceptance.md`](docs/r9_acceptance.md) and
 [`docs/r10_acceptance.md`](docs/r10_acceptance.md) for the claim boundaries.
 
 Build the interactive viewer separately:

@@ -47,6 +47,12 @@ caller-selected evidence root.  Absolute paths, parent traversal, symlinks,
 hostnames, and working directories are rejected.  The root is used only while
 hashing and is never serialized.  Input/output artifact entries include a
 lowercase SHA-256 and byte count; provenance resources also require SHA-256.
+The protocol names exactly one `native_extension` provenance resource, with a
+byte count, and every run record copies that binding exactly. The local driver
+populates it from the ordinary, non-symlink `_make_it_stand` extension file it
+passes to the model wrapper. This binds the executed binary's bytes but is not
+a cryptographic source-to-binary attestation: the declared commit, compiler,
+and flags still depend on the recorded build provenance.
 
 ## Recording a repeat
 
@@ -66,6 +72,7 @@ recorder = RunRecorder(
         "dirty_worktree": False,
         "flags": ["-O3"],
     },
+    timing_scope="model_setup_start-through_run_record_finalization",
     warmup_runs=1,
 )
 with recorder.phase("optimization"):
@@ -91,15 +98,22 @@ write_canonical_json(
 )
 ```
 
-Run-record timing uses a monotonic performance counter.  Its `scope` must say
-what the wall-clock interval contains.  For publishable timing, the experiment
-manifest should additionally fix Release mode, thread count, CPU policy,
-warm-up count, and repeat count; the record captures hardware and build values.
+Run-record timing uses a monotonic performance counter and the fixed scope
+token `model_setup_start-through_run_record_finalization`: timing starts just
+before model setup and ends when the run-record fields are finalized. For
+publishable timing, the experiment manifest should additionally fix Release
+mode, thread count, CPU policy, warm-up count, and repeat count; the record
+captures hardware and build values.
 The local driver defaults to five repeats and one discarded warm-up per repeat,
 fixes OMP/BLAS thread-count variables to one, and discloses that affinity and
 CPU-governor state are uncontrolled. Native phase timing is a separately
 SHA-256-bound, successful-return-only sidecar; it is not inserted into the
 outer non-nested phase list.
+
+When a run record is checked against its manifest, its build commit and dirty
+state must exactly match manifest provenance, its warm-up count must match
+`protocol.algorithm.warmup_runs_per_measured_repeat`, and every local metric's
+unit and semantics must exactly match the declared metric definition.
 
 Aggregate a complete repeat set with:
 

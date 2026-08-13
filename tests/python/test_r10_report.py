@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+from contextlib import redirect_stderr
 import importlib.util
 import io
 import json
@@ -63,6 +64,9 @@ def _make_case(evidence_root: Path, *, paper_metric: bool = True) -> Path:
     )
     (case_root / "provenance" / "protocol.txt").write_text(
         "repository-defined synthetic protocol\n", encoding="utf-8"
+    )
+    (case_root / "provenance" / "native_extension.bin").write_bytes(
+        b"test native extension bytes"
     )
     references = []
     if paper_metric:
@@ -132,7 +136,13 @@ def _make_case(evidence_root: Path, *, paper_metric: bool = True) -> Path:
             "repeats": 2,
             "seed_policy": {"kind": "fixed_sequence", "first_seed": 1},
             "preprocessing": {"fixture": "synthetic"},
-            "algorithm": {"carving": True, "deformation": True, "laplacian": True},
+            "algorithm": {
+                "carving": True,
+                "deformation": True,
+                "laplacian": True,
+                "warmup_runs_per_measured_repeat": 0,
+                "native_extension_artifact_id": "native-extension",
+            },
             "metric_definitions": definitions,
         },
         "provenance": {
@@ -146,6 +156,13 @@ def _make_case(evidence_root: Path, *, paper_metric: bool = True) -> Path:
                     artifact_id="protocol",
                     role="protocol_reference",
                     media_type="text/plain",
+                ),
+                bind_artifact(
+                    case_root,
+                    "provenance/native_extension.bin",
+                    artifact_id="native-extension",
+                    role="native_extension",
+                    media_type="application/x-sharedlib",
                 )
             ],
             "deviations": ["The fixture and grid are local rather than paper-identical."],
@@ -182,7 +199,7 @@ def _make_case(evidence_root: Path, *, paper_metric: bool = True) -> Path:
             seed=index + 1,
             build=_build(),
             hardware=_hardware(),
-            timing_scope="synthetic-test",
+            timing_scope="model_setup_start-through_run_record_finalization",
         )
         with recorder.phase("optimization"):
             sum(range(10))
@@ -214,6 +231,16 @@ def _make_case(evidence_root: Path, *, paper_metric: bool = True) -> Path:
 
 
 class R10ReportTests(unittest.TestCase):
+    def test_cli_uses_output_dir_option(self) -> None:
+        arguments = REPORT._parser().parse_args(
+            ["--evidence-root", "evidence", "--output-dir", "report"]
+        )
+        self.assertEqual(arguments.output_dir, Path("report"))
+        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            REPORT._parser().parse_args(
+                ["--evidence-root", "evidence", "--output-directory", "report"]
+            )
+
     def test_report_is_deterministic_portable_and_keeps_sources_separate(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary) / "evidence"
@@ -274,6 +301,16 @@ class R10ReportTests(unittest.TestCase):
             case_root = _make_case(root, paper_metric=False)
             (case_root / "runs" / "r00" / "diagnostics.json").write_text(
                 '{"r10_events":[]}', encoding="utf-8"
+            )
+            with self.assertRaisesRegex(REPORT.R10ReportError, "SHA-256 mismatch"):
+                REPORT.generate_report(root, Path(temporary) / "report")
+
+    def test_tampered_native_extension_is_rejected_before_reporting(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "evidence"
+            case_root = _make_case(root, paper_metric=False)
+            (case_root / "provenance" / "native_extension.bin").write_bytes(
+                b"tampered native extension"
             )
             with self.assertRaisesRegex(REPORT.R10ReportError, "SHA-256 mismatch"):
                 REPORT.generate_report(root, Path(temporary) / "report")

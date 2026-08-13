@@ -283,6 +283,17 @@ bool validateEventLedger(
             reason = "a geometry-changing event did not advance its epoch";
             return false;
         }
+        if (
+            index > 0U &&
+            event.kind ==
+                optimization::AlternatingEventKind::CarvingIteration &&
+            event.geometryChanged &&
+            event.geometryHash == result.events[index - 1U].geometryHash
+        )
+        {
+            reason = "a committed carve retained the preceding geometry hash";
+            return false;
+        }
         previousEpoch = event.geometryEpoch;
         if (earliestFeasible < 0 && event.allStandingFeasible)
         {
@@ -300,6 +311,16 @@ bool validateEventLedger(
     )
     {
         reason = "first feasible/safe event indices disagree with the ledger";
+        return false;
+    }
+    const optimization::AlternatingEventRecord& terminal =
+        result.events.back();
+    if (
+        terminal.geometryHash != result.geometryHash ||
+        terminal.geometryEpoch != result.geometryEpoch
+    )
+    {
+        reason = "terminal event does not bind the returned geometry state";
         return false;
     }
     return true;

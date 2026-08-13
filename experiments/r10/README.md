@@ -49,16 +49,25 @@ remain separate measured indicators, so an unstable native result cannot be
 silently promoted to a successful optimization result.
 
 The native `performance.json` sidecar is available only after a successful
-native return and is SHA-256-bound to its run. The outer run timer covers model
-setup through SHA-bound artifact registration. Neither timing unit is the
-paper's beta iteration count.
+native return and is SHA-256-bound to its run. The outer run timer begins at
+model setup and ends at run-record field finalization, including SHA-bound
+artifact registration. Neither timing unit is the paper's beta iteration
+count.
+
+Each case also copies the ordinary, non-symlink `_make_it_stand` extension file
+actually selected by the driver into `provenance/native_extension.bin`. Its
+SHA-256/byte-count binding is declared by the manifest and copied into every
+run record, so report validation fails if that binary is missing or changed.
+This identifies the executed binary bytes; it does not cryptographically prove
+that those bytes were built from the repository commit or compiler flags named
+by the caller.
 
 Render a deterministic presentation report after all cases are complete:
 
 ```text
 PYTHONPATH=python python3 python/r10_report.py \
   --evidence-root /tmp/make-it-stand-r10 \
-  --output-directory /tmp/make-it-stand-r10-report
+  --output-dir /tmp/make-it-stand-r10-report
 ```
 
 The command revalidates canonical manifests, records, aggregates, and bound

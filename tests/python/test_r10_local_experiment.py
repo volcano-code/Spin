@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 
@@ -66,6 +68,41 @@ class _FakeResult:
 
 
 class R10LocalExperimentContractTests(unittest.TestCase):
+    def test_repository_state_marks_tracked_and_untracked_changes_dirty(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
+
+            def git(*arguments: str) -> None:
+                subprocess.run(
+                    ["git", *arguments],
+                    cwd=repository,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+
+            git("init", "--quiet")
+            tracked = repository / "tracked.txt"
+            tracked.write_text("initial\n", encoding="utf-8")
+            git("add", "tracked.txt")
+            git(
+                "-c", "user.name=R10 Test",
+                "-c", "user.email=r10@example.invalid",
+                "commit", "--quiet", "-m", "initial",
+            )
+
+            clean = DRIVER.repository_state(repository)
+            self.assertFalse(clean.dirty_worktree)
+            self.assertRegex(clean.commit_sha, r"^[0-9a-f]{40}$")
+
+            tracked.write_text("modified\n", encoding="utf-8")
+            self.assertTrue(DRIVER.repository_state(repository).dirty_worktree)
+
+            tracked.write_text("initial\n", encoding="utf-8")
+            self.assertFalse(DRIVER.repository_state(repository).dirty_worktree)
+            (repository / "untracked.txt").write_text("new\n", encoding="utf-8")
+            self.assertTrue(DRIVER.repository_state(repository).dirty_worktree)
+
     def test_matrix_covers_required_algorithm_and_robustness_axes(self) -> None:
         cases = DRIVER.default_cases()
         identifiers = {case.experiment_id for case in cases}
@@ -92,13 +129,18 @@ class R10LocalExperimentContractTests(unittest.TestCase):
         provenance = DRIVER.RepositoryState("a" * 40, False)
         case = DRIVER.default_cases()[0]
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary) / "evidence" / case.experiment_id
+            temporary_root = Path(temporary)
+            native_source = temporary_root / "_make_it_stand.so"
+            native_source.write_bytes(b"loaded native extension fixture")
+            native_module = SimpleNamespace(__file__=native_source)
+            root = temporary_root / "evidence" / case.experiment_id
             manifest = DRIVER.build_manifest(
                 case,
                 experiment_root=root,
                 repository=REPOSITORY,
                 provenance=provenance,
                 repeats=2,
+                native_module=native_module,
             )
             validate_manifest(manifest)
             self.assertEqual(read_canonical_json(root / "manifest.json"), manifest)
@@ -108,6 +150,33 @@ class R10LocalExperimentContractTests(unittest.TestCase):
             self.assertFalse(manifest["claim"]["exact_reproduction_claim"])
             self.assertEqual(manifest["paper_reference"]["reported_metrics"], [])
             self.assertTrue((root / "inputs" / "LICENSE.txt").is_file())
+            native_binding = next(
+                resource
+                for resource in manifest["provenance"]["resources"]
+                if resource["role"] == "native_extension"
+            )
+            self.assertEqual(
+                native_binding["artifact_id"],
+                manifest["protocol"]["algorithm"][
+                    "native_extension_artifact_id"
+                ],
+            )
+            self.assertEqual(
+                (root / native_binding["relative_path"]).read_bytes(),
+                native_source.read_bytes(),
+            )
+            self.assertNotIn(str(native_source), serialized)
+
+    @unittest.skipUnless(hasattr(Path, "symlink_to"), "symbolic links unavailable")
+    def test_native_extension_source_must_be_an_ordinary_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "_make_it_stand.so"
+            source.write_bytes(b"native extension")
+            link = root / "linked_make_it_stand.so"
+            link.symlink_to(source)
+            with self.assertRaisesRegex(ValueError, "non-symlink"):
+                DRIVER.native_extension_path(SimpleNamespace(__file__=link))
 
     def test_metric_extraction_never_invents_absent_wall_measurement(self) -> None:
         metrics = dict(DRIVER.extract_metrics(_FakeResult(), _FakeResult().diagnostics))

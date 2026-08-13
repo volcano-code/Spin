@@ -156,7 +156,7 @@
       "required": ["clock", "scope", "warmup_runs", "phases", "total_seconds"],
       "properties": {
         "clock": {"const": "monotonic_performance_counter"},
-        "scope": {"type": "string", "minLength": 1},
+        "scope": {"const": "model_setup_start-through_run_record_finalization"},
         "warmup_runs": {"type": "integer", "minimum": 0},
         "phases": {
           "type": "array",

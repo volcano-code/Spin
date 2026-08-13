@@ -131,7 +131,8 @@ std::string buildPerformanceReportJson(
            << "  \"schema\": \"make-it-stand-r10-performance-report-v1\",\n"
            << "  \"schema_version\": 1,\n"
            << "  \"clock\": \"steady_clock\",\n"
-           << "  \"scope\": \"BalanceModel.optimize_after_config_validation_successful_return_only\",\n"
+           << "  \"scope\": \"BalanceModel.optimize_after_config_validation_"
+              "through_diagnostics_serialization\",\n"
            << "  \"phases\": {\n"
            << "    \"input_snapshot_seconds\": ";
     appendNumber(output, durations.inputSnapshot);

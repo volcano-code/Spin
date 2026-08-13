@@ -94,6 +94,9 @@ experiments.
 The active local R10 driver defaults to one discarded warm-up and five
 measured repeats per case, fixes OMP/BLAS thread-count variables to one, and
 records uncontrolled CPU affinity/governor policies in each manifest. The
+driver also binds the exact loaded native-extension bytes into every case;
+declared commit/compiler/flags remain caller-supplied build provenance rather
+than cryptographic source-to-binary attestation. The
 checked-in presets remain `RelWithDebInfo`; a publication timing study must use
 an explicitly configured clean Release tree and report its actual flags rather
 than merely passing a `Release` label to the driver.

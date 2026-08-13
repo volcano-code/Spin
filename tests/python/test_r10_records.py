@@ -69,6 +69,8 @@ def _manifest(*, repeats: int = 2) -> dict[str, object]:
                 "deformation": True,
                 "laplacian": True,
                 "initial_step": 1.0,
+                "warmup_runs_per_measured_repeat": 1,
+                "native_extension_artifact_id": "native-extension",
             },
             "metric_definitions": [
                 {
@@ -98,6 +100,14 @@ def _manifest(*, repeats: int = 2) -> dict[str, object]:
                     "sha256": "2" * 64,
                     "role": "protocol_reference",
                     "media_type": "text/plain",
+                },
+                {
+                    "artifact_id": "native-extension",
+                    "relative_path": "provenance/native_extension.bin",
+                    "sha256": "9" * 64,
+                    "byte_count": 4096,
+                    "role": "native_extension",
+                    "media_type": "application/x-sharedlib",
                 }
             ],
             "deviations": [
@@ -146,7 +156,7 @@ def _run_record(api: object, manifest: dict[str, object], index: int, value: flo
             "build": _build(),
             "timing": {
                 "clock": "monotonic_performance_counter",
-                "scope": "optimization-only",
+                "scope": "model_setup_start-through_run_record_finalization",
                 "warmup_runs": 1,
                 "phases": [{"name": "optimization", "seconds": 1.0 + index}],
                 "total_seconds": 1.5 + index,
@@ -170,6 +180,7 @@ def _run_record(api: object, manifest: dict[str, object], index: int, value: flo
             },
         ],
         "artifacts": [
+            copy.deepcopy(manifest["provenance"]["resources"][1]),
             {
                 "artifact_id": f"diagnostics-r{index:02d}",
                 "relative_path": f"runs/r{index:02d}/diagnostics.json",
@@ -216,6 +227,30 @@ class R10EvidenceTests(unittest.TestCase):
         value["inputs"] = []
         with self.assertRaisesRegex(self.api.R10RecordError, "SHA-256-bound input"):
             self.api.validate_manifest(value)
+
+    def test_manifest_requires_one_byte_bound_declared_native_extension(self) -> None:
+        value = _manifest()
+        value["provenance"]["resources"].pop()
+        with self.assertRaisesRegex(self.api.R10RecordError, "native extension"):
+            self.api.validate_manifest(value)
+
+        value = _manifest()
+        value["provenance"]["resources"][1]["role"] = "protocol_reference"
+        with self.assertRaisesRegex(self.api.R10RecordError, "native_extension"):
+            self.api.validate_manifest(value)
+
+        value = _manifest()
+        del value["provenance"]["resources"][1]["byte_count"]
+        with self.assertRaisesRegex(self.api.R10RecordError, "byte_count"):
+            self.api.validate_manifest(value)
+
+        for invalid in (-1, True):
+            value = _manifest()
+            value["protocol"]["algorithm"][
+                "warmup_runs_per_measured_repeat"
+            ] = invalid
+            with self.assertRaisesRegex(self.api.R10RecordError, "warmup_runs"):
+                self.api.validate_manifest(value)
 
     def test_paper_and_local_metric_semantics_cannot_be_swapped(self) -> None:
         value = _manifest()
@@ -349,6 +384,30 @@ class R10EvidenceTests(unittest.TestCase):
         bad["local_metrics"][0]["unit"] = "millimeters"
         with self.assertRaisesRegex(self.api.R10RecordError, "unit"):
             self.api.validate_run_record(bad, manifest=manifest)
+        bad = copy.deepcopy(record)
+        bad["local_metrics"][0]["semantics"] = "A different measurement definition."
+        with self.assertRaisesRegex(self.api.R10RecordError, "semantics"):
+            self.api.validate_run_record(bad, manifest=manifest)
+        bad = copy.deepcopy(record)
+        bad["execution"]["build"]["commit_sha"] = "b" * 40
+        with self.assertRaisesRegex(self.api.R10RecordError, "commit_sha"):
+            self.api.validate_run_record(bad, manifest=manifest)
+        bad = copy.deepcopy(record)
+        bad["execution"]["build"]["dirty_worktree"] = True
+        with self.assertRaisesRegex(self.api.R10RecordError, "dirty_worktree"):
+            self.api.validate_run_record(bad, manifest=manifest)
+        bad = copy.deepcopy(record)
+        bad["execution"]["timing"]["warmup_runs"] = 2
+        with self.assertRaisesRegex(self.api.R10RecordError, "warmup_runs"):
+            self.api.validate_run_record(bad, manifest=manifest)
+        bad = copy.deepcopy(record)
+        bad["artifacts"][0]["sha256"] = "8" * 64
+        with self.assertRaisesRegex(self.api.R10RecordError, "native extension"):
+            self.api.validate_run_record(bad, manifest=manifest)
+        bad = copy.deepcopy(record)
+        bad["artifacts"].pop(0)
+        with self.assertRaisesRegex(self.api.R10RecordError, "native extension"):
+            self.api.validate_run_record(bad, manifest=manifest)
 
     def test_run_recorder_collects_explicit_build_hardware_timing_and_metrics(self) -> None:
         manifest = _manifest(repeats=1)
@@ -359,7 +418,7 @@ class R10EvidenceTests(unittest.TestCase):
             seed=31000,
             build=_build(),
             hardware=_hardware(),
-            timing_scope="optimization-only",
+            timing_scope="model_setup_start-through_run_record_finalization",
             warmup_runs=1,
         )
         with recorder.phase("optimization"):
@@ -370,6 +429,10 @@ class R10EvidenceTests(unittest.TestCase):
             semantics="Maximum final normalized signed support violation.",
         )
         record = recorder.finish(status="succeeded")
+        self.assertEqual(
+            record["artifacts"][0],
+            manifest["provenance"]["resources"][1],
+        )
         self.api.validate_run_record(record, manifest=manifest)
         self.assertEqual(record["execution"]["hardware"], _hardware())
         self.assertEqual(record["execution"]["build"], _build())
@@ -389,6 +452,10 @@ class R10EvidenceTests(unittest.TestCase):
         ]
         record["execution"]["timing"]["total_seconds"] = 1.5
         with self.assertRaisesRegex(self.api.R10RecordError, "exceed"):
+            self.api.validate_run_record(record, manifest=manifest)
+        record = _run_record(self.api, manifest, 0, 0.1)
+        record["execution"]["timing"]["scope"] = "optimization-only"
+        with self.assertRaisesRegex(self.api.R10RecordError, "scope"):
             self.api.validate_run_record(record, manifest=manifest)
 
     def test_aggregate_uses_type7_median_iqr_min_max_and_does_not_pool_paper(self) -> None:

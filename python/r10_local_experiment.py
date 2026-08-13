@@ -11,16 +11,19 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+import hashlib
+import importlib.machinery
 import json
 import math
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 from typing import Any, Callable, Mapping, Sequence
 
-from make_it_stand.model import BalanceModel, ModelConfig, RunConfig
+from make_it_stand.model import BalanceModel, ModelConfig, RunConfig, _load_native
 from make_it_stand.r10 import (
     CANONICALIZATION,
     MANIFEST_SCHEMA,
@@ -225,13 +228,67 @@ def repository_state(repository: Path) -> RepositoryState:
         text=True,
     ).stdout.strip()
     status = subprocess.run(
-        ["git", "status", "--porcelain", "--untracked-files=no"],
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
         cwd=repository,
         check=True,
         capture_output=True,
         text=True,
     ).stdout
     return RepositoryState(commit, bool(status.strip()))
+
+
+def native_extension_path(native_module: Any) -> Path:
+    """Return the ordinary extension file that implements *native_module*."""
+
+    raw_path = getattr(native_module, "__file__", None)
+    if not isinstance(raw_path, (str, os.PathLike)) or not os.fspath(raw_path):
+        raise ValueError("native extension module does not expose a file path")
+    candidate = Path(raw_path)
+    try:
+        metadata = os.lstat(candidate)
+    except OSError as error:
+        raise ValueError("native extension file is unavailable") from error
+    if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
+        raise ValueError("native extension must be an ordinary non-symlink file")
+    if not any(
+        candidate.name.endswith(suffix)
+        for suffix in importlib.machinery.EXTENSION_SUFFIXES
+    ):
+        raise ValueError("native module file is not a Python extension binary")
+    return candidate.resolve(strict=True)
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _copy_native_extension(
+    native_module: Any,
+    experiment_root: Path,
+) -> dict[str, Any]:
+    """Copy and bind the exact extension file selected for native execution."""
+
+    source = native_extension_path(native_module)
+    relative = "provenance/native_extension.bin"
+    destination = experiment_root / relative
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    source_digest = _file_sha256(source)
+    shutil.copyfile(source, destination)
+    binding = bind_artifact(
+        experiment_root,
+        relative,
+        artifact_id="native-extension",
+        role="native_extension",
+        media_type="application/x-sharedlib",
+        description="Exact loaded _make_it_stand extension binary for this case.",
+    )
+    if binding["sha256"] != source_digest:
+        raise RuntimeError("native extension changed while it was being bound")
+    return binding
 
 
 def _copy_fixture(repository: Path, experiment_root: Path) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -265,11 +322,13 @@ def build_manifest(
     repository: Path,
     provenance: RepositoryState,
     repeats: int,
+    native_module: Any,
     warmup_runs: int = 0,
 ) -> dict[str, Any]:
     """Materialize and validate a manifest before native execution."""
 
     model_binding, license_binding = _copy_fixture(repository, experiment_root)
+    native_binding = _copy_native_extension(native_module, experiment_root)
     manifest: dict[str, Any] = {
         "schema": MANIFEST_SCHEMA,
         "schema_version": 1,
@@ -316,6 +375,7 @@ def build_manifest(
                 "maximum_carving_blocks": 8,
                 "maximum_deformation_iterations_per_block": 200,
                 "warmup_runs_per_measured_repeat": warmup_runs,
+                "native_extension_artifact_id": native_binding["artifact_id"],
                 "thread_policy": "OMP/BLAS thread-count environment fixed to one",
                 "cpu_affinity_policy": "not_pinned",
                 "cpu_governor_policy": "recorded_environment_not_controlled",
@@ -326,7 +386,7 @@ def build_manifest(
             "repository_commit_sha": provenance.commit_sha,
             "dirty_worktree": provenance.dirty_worktree,
             "implementation_profile": "native-headless-r10-synthetic-v1",
-            "resources": [license_binding],
+            "resources": [license_binding, native_binding],
             "deviations": [
                 "The fixture is repository-authored rather than a model from the paper.",
                 "The adaptive local voxel grid differs from the publication fixed cubic grid.",
@@ -476,6 +536,7 @@ def run_case(
     provenance: RepositoryState,
     repeats: int,
     build: Mapping[str, Any],
+    native_module: Any,
     warmup_runs: int = 0,
     model_factory: Callable[..., Any] = BalanceModel,
 ) -> dict[str, Any]:
@@ -488,6 +549,7 @@ def run_case(
         repository=repository,
         provenance=provenance,
         repeats=repeats,
+        native_module=native_module,
         warmup_runs=warmup_runs,
     )
     records: list[dict[str, Any]] = []
@@ -511,6 +573,7 @@ def run_case(
                         voxel_resolution=case.resolution,
                         minimum_wall_thickness=case.minimum_wall_thickness,
                     ),
+                    native_module=native_module,
                 )
                 _configure_model(warmup_model, case)
                 warmup_model.optimize(run_config)
@@ -522,7 +585,7 @@ def run_case(
             repeat_index=repeat_index,
             seed=41000 + repeat_index,
             build=build,
-            timing_scope="model_setup-through-SHA-bound-artifact-registration",
+            timing_scope="model_setup_start-through_run_record_finalization",
             warmup_runs=warmup_runs,
         )
         try:
@@ -537,6 +600,7 @@ def run_case(
                         voxel_resolution=case.resolution,
                         minimum_wall_thickness=case.minimum_wall_thickness,
                     ),
+                    native_module=native_module,
                 )
                 _configure_model(model, case)
             with recorder.phase("native_optimize_call"):
@@ -629,6 +693,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if text not in make_it_stand.__path__:
                 make_it_stand.__path__.append(text)
     provenance = repository_state(repository)
+    native_module = _load_native()
     selected = set(arguments.case)
     cases = tuple(case for case in default_cases() if not selected or case.experiment_id in selected)
     unknown = selected - {case.experiment_id for case in cases}
@@ -651,6 +716,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             provenance=provenance,
             repeats=arguments.repeats,
             build=build,
+            native_module=native_module,
             warmup_runs=arguments.warmup_runs,
         )
         summaries.append(

@@ -801,7 +801,10 @@ class BalanceResult:
             raise DataFormatError(
                 "native performance_report_json has unsupported version or clock"
             )
-        if not isinstance(value.get("scope"), str) or not value["scope"]:
+        if value.get("scope") != (
+            "BalanceModel.optimize_after_config_validation_"
+            "through_diagnostics_serialization"
+        ):
             raise DataFormatError(
                 "native performance_report_json has invalid scope"
             )

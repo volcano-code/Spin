@@ -35,6 +35,7 @@ RUN_RECORD_SCHEMA = "make-it-stand-r10-run-record-v1"
 AGGREGATE_SCHEMA = "make-it-stand-r10-aggregate-v1"
 SCHEMA_VERSION = 1
 CANONICALIZATION = "utf8-json-sorted-keys-compact-v1"
+OUTER_TIMING_SCOPE = "model_setup_start-through_run_record_finalization"
 
 CLAIM_LEVELS = frozenset(
     {"paper_governed", "configuration_anchored", "local_robustness", "smoke"}
@@ -396,7 +397,27 @@ def validate_manifest(value: Any) -> Mapping[str, Any]:
     _integer(protocol["repeats"], "manifest.protocol.repeats", minimum=1)
     _mapping(protocol["seed_policy"], "manifest.protocol.seed_policy")
     _mapping(protocol["preprocessing"], "manifest.protocol.preprocessing")
-    _mapping(protocol["algorithm"], "manifest.protocol.algorithm")
+    algorithm = _mapping(protocol["algorithm"], "manifest.protocol.algorithm")
+    if "warmup_runs_per_measured_repeat" not in algorithm:
+        _fail(
+            "manifest.protocol.algorithm.warmup_runs_per_measured_repeat",
+            "is required",
+        )
+    _integer(
+        algorithm["warmup_runs_per_measured_repeat"],
+        "manifest.protocol.algorithm.warmup_runs_per_measured_repeat",
+        minimum=0,
+    )
+    if "native_extension_artifact_id" not in algorithm:
+        _fail(
+            "manifest.protocol.algorithm.native_extension_artifact_id",
+            "is required",
+        )
+    native_extension_artifact_id = _string(
+        algorithm["native_extension_artifact_id"],
+        "manifest.protocol.algorithm.native_extension_artifact_id",
+        identifier=True,
+    )
     definitions = _sequence(
         protocol["metric_definitions"], "manifest.protocol.metric_definitions"
     )
@@ -440,6 +461,36 @@ def validate_manifest(value: Any) -> Mapping[str, Any]:
     resources = _sequence(provenance["resources"], "manifest.provenance.resources")
     for index, resource in enumerate(resources):
         _validate_binding(resource, f"manifest.provenance.resources[{index}]", require_bytes=False)
+    native_extensions = tuple(
+        resource
+        for resource in resources
+        if resource.get("artifact_id") == native_extension_artifact_id
+    )
+    if len(native_extensions) != 1:
+        _fail(
+            "manifest.provenance.resources",
+            "must contain exactly one declared native extension artifact",
+        )
+    native_extension = native_extensions[0]
+    _validate_binding(
+        native_extension,
+        "manifest.provenance.resources[native_extension]",
+        require_bytes=True,
+    )
+    if native_extension.get("role") != "native_extension":
+        _fail(
+            "manifest.provenance.resources[native_extension].role",
+            "must be 'native_extension'",
+        )
+    if any(
+        resource.get("role") == "native_extension" and
+        resource.get("artifact_id") != native_extension_artifact_id
+        for resource in resources
+    ):
+        _fail(
+            "manifest.provenance.resources",
+            "contains an undeclared native extension artifact",
+        )
     deviations = _sequence(provenance["deviations"], "manifest.provenance.deviations")
     if not deviations:
         _fail("manifest.provenance.deviations", "at least one known deviation is required")
@@ -504,7 +555,8 @@ def _validate_timing(value: Any, path: str) -> None:
     )
     if timing["clock"] != "monotonic_performance_counter":
         _fail(f"{path}.clock", "expected 'monotonic_performance_counter'")
-    _string(timing["scope"], f"{path}.scope")
+    if timing["scope"] != OUTER_TIMING_SCOPE:
+        _fail(f"{path}.scope", f"expected {OUTER_TIMING_SCOPE!r}")
     _integer(timing["warmup_runs"], f"{path}.warmup_runs")
     phases = _sequence(timing["phases"], f"{path}.phases")
     names: set[str] = set()
@@ -600,6 +652,35 @@ def validate_run_record(
             _fail("run_record.experiment_id", "does not match the supplied manifest")
         if root["claim_level"] != checked_manifest["claim"]["level"]:
             _fail("run_record.claim_level", "does not match the supplied manifest")
+        build = root["execution"]["build"]
+        provenance = checked_manifest["provenance"]
+        if build["commit_sha"] != provenance["repository_commit_sha"]:
+            _fail(
+                "run_record.execution.build.commit_sha",
+                "does not match manifest provenance",
+            )
+        if build["dirty_worktree"] != provenance["dirty_worktree"]:
+            _fail(
+                "run_record.execution.build.dirty_worktree",
+                "does not match manifest provenance",
+            )
+        algorithm = checked_manifest["protocol"]["algorithm"]
+        declared_warmups = algorithm.get("warmup_runs_per_measured_repeat")
+        if declared_warmups is None:
+            _fail(
+                "manifest.protocol.algorithm.warmup_runs_per_measured_repeat",
+                "is required to bind run-record timing",
+            )
+        _integer(
+            declared_warmups,
+            "manifest.protocol.algorithm.warmup_runs_per_measured_repeat",
+            minimum=0,
+        )
+        if root["execution"]["timing"]["warmup_runs"] != declared_warmups:
+            _fail(
+                "run_record.execution.timing.warmup_runs",
+                "does not match manifest protocol",
+            )
         if list(root["paper_reference_metrics"]) != list(
             checked_manifest["paper_reference"]["reported_metrics"]
         ):
@@ -623,6 +704,36 @@ def validate_run_record(
                     f"run_record.local_metrics[{index}].unit",
                     "does not match the manifest metric definition",
                 )
+            if metric["semantics"] != definition["definition"]:
+                _fail(
+                    f"run_record.local_metrics[{index}].semantics",
+                    "does not match the manifest metric definition",
+                )
+        native_id = algorithm["native_extension_artifact_id"]
+        manifest_native = next(
+            resource
+            for resource in provenance["resources"]
+            if resource["artifact_id"] == native_id
+        )
+        record_native = tuple(
+            artifact
+            for artifact in root["artifacts"]
+            if artifact.get("artifact_id") == native_id
+        )
+        if len(record_native) != 1 or record_native[0] != manifest_native:
+            _fail(
+                "run_record.artifacts",
+                "must copy the manifest native extension binding exactly",
+            )
+        if any(
+            artifact.get("role") == "native_extension" and
+            artifact.get("artifact_id") != native_id
+            for artifact in root["artifacts"]
+        ):
+            _fail(
+                "run_record.artifacts",
+                "contains an undeclared native extension artifact",
+            )
 
     canonical_json_bytes(root)
     return root
@@ -733,7 +844,7 @@ class RunRecorder:
         seed: int,
         build: Mapping[str, Any],
         hardware: Mapping[str, Any] | None = None,
-        timing_scope: str = "load-through-artifact-export",
+        timing_scope: str = OUTER_TIMING_SCOPE,
         warmup_runs: int = 0,
     ) -> None:
         self._manifest = dict(validate_manifest(manifest))
@@ -749,7 +860,15 @@ class RunRecorder:
         self._phases: list[_PhaseMeasurement] = []
         self._active_phase: str | None = None
         self._metrics: list[dict[str, Any]] = []
-        self._artifacts: list[dict[str, Any]] = []
+        native_id = self._manifest["protocol"]["algorithm"][
+            "native_extension_artifact_id"
+        ]
+        native_binding = next(
+            resource
+            for resource in self._manifest["provenance"]["resources"]
+            if resource["artifact_id"] == native_id
+        )
+        self._artifacts: list[dict[str, Any]] = [dict(native_binding)]
         self._notes: list[str] = []
         self._start = time.perf_counter()
         self._finished = False
@@ -816,7 +935,6 @@ class RunRecorder:
             raise R10RecordError("run: cannot finish while a timing phase is active")
         if status not in RUN_STATUSES:
             _fail("status", f"expected one of {sorted(RUN_STATUSES)}")
-        total = max(0.0, time.perf_counter() - self._start)
         record: dict[str, Any] = {
             "schema": RUN_RECORD_SCHEMA,
             "schema_version": SCHEMA_VERSION,
@@ -839,7 +957,10 @@ class RunRecorder:
                         {"name": phase.name, "seconds": phase.seconds}
                         for phase in self._phases
                     ],
-                    "total_seconds": total,
+                    # Finalized below, after all other record fields have been
+                    # assembled, so the declared outer scope reaches the
+                    # run-record finalization boundary.
+                    "total_seconds": 0.0,
                 },
             },
             "paper_reference_metrics": list(
@@ -849,6 +970,9 @@ class RunRecorder:
             "artifacts": list(self._artifacts),
             "notes": list(self._notes),
         }
+        record["execution"]["timing"]["total_seconds"] = max(
+            0.0, time.perf_counter() - self._start
+        )
         validate_run_record(record, manifest=self._manifest)
         self._finished = True
         return record
@@ -1086,6 +1210,7 @@ __all__ = [
     "CLAIM_LEVELS",
     "MANIFEST_SCHEMA",
     "METRIC_SOURCES",
+    "OUTER_TIMING_SCOPE",
     "R10RecordError",
     "RUN_RECORD_SCHEMA",
     "RUN_STATUSES",

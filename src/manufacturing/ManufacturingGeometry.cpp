@@ -3437,26 +3437,39 @@ ManufacturingGeometry prepareManufacturingGeometry(
             (centerOfMass - source.centerOfMass).norm() <=
                 sourceTraceTolerance;
     };
-    const bool noCarvingProfileConsistent =
-        source.status !=
-            optimization::AlternatingOptimizationStatus::StableWithoutCarving ||
+    const bool noCarvingTraceConsistent =
+        source.carvingBlocks.empty() &&
+        source.carvingIterations.empty() &&
+        std::none_of(
+            source.events.begin(),
+            source.events.end(),
+            [](const optimization::AlternatingEventRecord& event)
+            {
+                return
+                    event.kind ==
+                        optimization::AlternatingEventKind::SolidRefill ||
+                    event.kind ==
+                        optimization::AlternatingEventKind::CarvingIteration;
+            }
+        );
+    const bool stableProfileConsistent =
         (
+            source.status ==
+                optimization::AlternatingOptimizationStatus::StableAfterCarving &&
+            source.carvingEnabled
+        ) ||
+        (
+            source.status ==
+                optimization::AlternatingOptimizationStatus::StableAfterDeformation &&
+            source.carvingEnabled &&
+            source.deformationEnabled
+        ) ||
+        (
+            source.status ==
+                optimization::AlternatingOptimizationStatus::StableWithoutCarving &&
             !source.carvingEnabled &&
             source.deformationEnabled &&
-            source.carvingBlocks.empty() &&
-            source.carvingIterations.empty() &&
-            std::none_of(
-                source.events.begin(),
-                source.events.end(),
-                [](const optimization::AlternatingEventRecord& event)
-                {
-                    return
-                        event.kind ==
-                            optimization::AlternatingEventKind::SolidRefill ||
-                        event.kind ==
-                            optimization::AlternatingEventKind::CarvingIteration;
-                }
-            )
+            noCarvingTraceConsistent
         );
     bool terminalTraceConsistent = false;
     if (
@@ -3469,7 +3482,7 @@ ManufacturingGeometry prepareManufacturingGeometry(
         const optimization::AlternatingEventRecord& terminal =
             source.events.back();
         terminalTraceConsistent =
-            noCarvingProfileConsistent &&
+            stableProfileConsistent &&
             terminal.ordinal == 0 &&
             terminal.kind == optimization::AlternatingEventKind::Initial &&
             terminal.block == -1 &&
@@ -3499,6 +3512,7 @@ ManufacturingGeometry prepareManufacturingGeometry(
         const optimization::AlternatingCarvingRecord& terminal =
             source.carvingBlocks.back();
         terminalTraceConsistent =
+            stableProfileConsistent &&
             terminal.allTargetsReached &&
             terminal.geometryEpoch == source.geometryEpoch &&
             terminal.alphaHash == report.occupancyHash &&
@@ -3510,7 +3524,7 @@ ManufacturingGeometry prepareManufacturingGeometry(
             );
     }
     else if (
-        noCarvingProfileConsistent &&
+        stableProfileConsistent &&
         (
             source.status ==
                 optimization::AlternatingOptimizationStatus::StableAfterDeformation ||

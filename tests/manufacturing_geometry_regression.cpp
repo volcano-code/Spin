@@ -1171,6 +1171,8 @@ int runSourceBoundNoCarvingTerminal()
     forged.push_back(source);
     forged.back().carvingEnabled = true;
     forged.push_back(source);
+    forged.back().deformationEnabled = false;
+    forged.push_back(source);
     forged.back().geometryEpoch = 1;
     for (const auto& candidate : forged)
     {
@@ -1259,6 +1261,21 @@ int runSourceBoundDeformationTerminal()
             "accepted deformation terminal did not bind latest epoch"
         );
     }
+    std::vector<optimization::AlternatingBalanceOptimizationResult> forged;
+    forged.push_back(source);
+    forged.back().deformationEnabled = false;
+    forged.push_back(source);
+    forged.back().carvingEnabled = false;
+    for (const auto& candidate : forged)
+    {
+        if (manufacturing::prepareManufacturingGeometry(candidate).report.ready)
+        {
+            return fail(
+                scenario,
+                "forged deformation profile escaped the manufacturing seal"
+            );
+        }
+    }
     return pass(scenario);
 }
 
@@ -1288,6 +1305,15 @@ int runSourceBoundCarvingAfterDeformation()
         return fail(
             scenario,
             "final carving trace lost precedence over prior deformation"
+        );
+    }
+    optimization::AlternatingBalanceOptimizationResult forged = source;
+    forged.carvingEnabled = false;
+    if (manufacturing::prepareManufacturingGeometry(forged).report.ready)
+    {
+        return fail(
+            scenario,
+            "forged carving profile escaped the manufacturing seal"
         );
     }
     return pass(scenario);

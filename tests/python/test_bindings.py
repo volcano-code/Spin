@@ -306,6 +306,11 @@ class NativeBindingSmokeTests(unittest.TestCase):
             "make-it-stand-r10-performance-report-v1",
         )
         self.assertEqual(performance["clock"], "steady_clock")
+        self.assertEqual(
+            performance["scope"],
+            "BalanceModel.optimize_after_config_validation_"
+            "through_diagnostics_serialization",
+        )
         self.assertGreaterEqual(performance["total_seconds"], 0.0)
         for value in performance["phases"].values():
             self.assertTrue(math.isfinite(value))
