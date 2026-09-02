@@ -209,6 +209,9 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         src/spin2014/AdaptiveVoxelSpinSolver.cpp
         src/spin2014/DualMaterialSpinSolver.cpp
         src/api/SpinIt2014.cpp
+        src/spin2014/SurfaceRawMomentDifferential.cpp
+        src/spin2014/CageSpinDeformation.cpp
+        src/spin2014/CageSpinDeformationSolver.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
         include/spin2014/AdaptiveVoxelDomain.h
@@ -218,6 +221,9 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         include/spin2014/AdaptiveVoxelSpinSolver.h
         include/spin2014/DualMaterialSpinSolver.h
         include/api/SpinIt2014.h
+        include/spin2014/SurfaceRawMomentDifferential.h
+        include/spin2014/CageSpinDeformation.h
+        include/spin2014/CageSpinDeformationSolver.h
     )
 endif()
 
@@ -524,6 +530,78 @@ if(BUILD_TESTING)
         set_tests_properties(
             spin-it-2014-api
             PROPERTIES LABELS "spin-it;spin-it-2014;api;regression"
+        )
+
+        add_executable(
+            spin-it-2014-surface-differential-regression
+            tests/spin_it_2014_surface_differential_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-surface-differential-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-surface-differential-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-surface-differential-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-surface-differential
+            COMMAND "$<TARGET_FILE:spin-it-2014-surface-differential-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-surface-differential
+            PROPERTIES LABELS "spin-it;spin-it-2014;deformation;regression"
+        )
+
+        add_executable(
+            spin-it-2014-cage-functional-regression
+            tests/spin_it_2014_cage_functional_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-cage-functional-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-cage-functional-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-cage-functional-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-cage-functional
+            COMMAND "$<TARGET_FILE:spin-it-2014-cage-functional-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-cage-functional
+            PROPERTIES LABELS "spin-it;spin-it-2014;deformation;regression"
+        )
+
+        add_executable(
+            spin-it-2014-cage-solver-regression
+            tests/spin_it_2014_cage_solver_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-cage-solver-regression PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-cage-solver-regression PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-cage-solver-regression PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-cage-solver
+            COMMAND "$<TARGET_FILE:spin-it-2014-cage-solver-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-cage-solver
+            PROPERTIES LABELS "spin-it;spin-it-2014;deformation;solver;regression"
         )
 
         if(MAKE_IT_STAND_BUILD_PYTHON)
