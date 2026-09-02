@@ -187,12 +187,14 @@ spin::SpinMomentEvaluation package(
         static_cast<Eigen::Index>(constraints.size()),
         dimension
     );
+    result.constraintHessians.reserve(constraints.size());
     for (std::size_t row = 0; row < constraints.size(); ++row)
     {
         result.constraints(static_cast<Eigen::Index>(row)) =
             constraints[row].value;
         result.constraintJacobian.row(static_cast<Eigen::Index>(row)) =
             constraints[row].gradient.transpose();
+        result.constraintHessians.push_back(constraints[row].hessian);
     }
     return result;
 }

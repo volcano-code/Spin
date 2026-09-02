@@ -62,6 +62,10 @@ bool derivativesAgree(
         analytic.constraints.size(),
         10
     );
+    std::vector<Eigen::Matrix<double, 10, 10>> numericConstraintHessians(
+        static_cast<std::size_t>(analytic.constraints.size()),
+        Eigen::Matrix<double, 10, 10>::Zero()
+    );
     for (int column = 0; column < 10; ++column)
     {
         Vector10 plus = r;
@@ -90,6 +94,19 @@ bool derivativesAgree(
             (problem.evaluate(plus).objectiveGradient -
              problem.evaluate(minus).objectiveGradient) /
             (2.0 * hessianStep);
+        const spin::SpinMomentEvaluation plusConstraintEvaluation =
+            problem.evaluate(plus);
+        const spin::SpinMomentEvaluation minusConstraintEvaluation =
+            problem.evaluate(minus);
+        for (Eigen::Index row = 0; row < analytic.constraints.size(); ++row)
+        {
+            numericConstraintHessians[static_cast<std::size_t>(row)].col(
+                column
+            ) = (
+                plusConstraintEvaluation.constraintJacobian.row(row) -
+                minusConstraintEvaluation.constraintJacobian.row(row)
+            ).transpose() / (2.0 * hessianStep);
+        }
     }
     if (!analytic.objectiveGradient.isApprox(numericGradient, 2e-7))
     {
@@ -105,6 +122,23 @@ bool derivativesAgree(
     {
         *diagnostic = "constraint Jacobian finite-difference mismatch";
         return false;
+    }
+    if (analytic.constraintHessians.size() !=
+        numericConstraintHessians.size())
+    {
+        *diagnostic = "constraint Hessian count mismatch";
+        return false;
+    }
+    for (std::size_t row = 0; row < analytic.constraintHessians.size(); ++row)
+    {
+        if (!analytic.constraintHessians[row].isApprox(
+                numericConstraintHessians[row],
+                2e-6
+            ))
+        {
+            *diagnostic = "constraint Hessian finite-difference mismatch";
+            return false;
+        }
     }
     return true;
 }

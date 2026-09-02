@@ -4,6 +4,8 @@
 
 #include <Eigen/Core>
 
+#include <vector>
+
 
 namespace spin
 {
@@ -18,6 +20,7 @@ struct SpinMomentEvaluation
         Eigen::Matrix<double, 10, 10>::Zero();
     Eigen::VectorXd constraints;
     Eigen::MatrixXd constraintJacobian;
+    std::vector<Eigen::Matrix<double, 10, 10>> constraintHessians;
 };
 
 

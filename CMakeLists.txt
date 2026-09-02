@@ -172,6 +172,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES
         src/spin/QuadricCoefficients.cpp
         src/spin/QuadricMomentEvaluator.cpp
+        src/spin/QuadricHollowingSolver.cpp
         src/spin/QuadricTriangulator.cpp
         src/spin/SpinDesignRequest.cpp
         src/spin/SpinMomentProblem.cpp
@@ -179,6 +180,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
         include/spin/QuadricCoefficients.h
         include/spin/QuadricMomentEvaluator.h
+        include/spin/QuadricHollowingSolver.h
         include/spin/QuadricTriangulator.h
         include/spin/SpinDesignRequest.h
         include/spin/SpinMomentProblem.h
@@ -490,6 +492,31 @@ if(BUILD_TESTING)
         set_tests_properties(
             spin-faster-quadric-moments
             PROPERTIES LABELS "spin-it;spin-it-faster;geometry;regression"
+        )
+
+        add_executable(
+            quadric-hollowing-solver-regression
+            tests/quadric_hollowing_solver_regression.cpp
+        )
+        target_compile_features(
+            quadric-hollowing-solver-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            quadric-hollowing-solver-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            quadric-hollowing-solver-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-newton
+            COMMAND "$<TARGET_FILE:quadric-hollowing-solver-regression>"
+        )
+        set_tests_properties(
+            spin-faster-newton
+            PROPERTIES LABELS "spin-it;spin-it-faster;solver;regression"
         )
     endif()
 

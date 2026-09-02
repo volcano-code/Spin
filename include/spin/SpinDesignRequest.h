@@ -115,7 +115,9 @@ struct SpinIterationTrace
     double objective = 0.0;
     double multiplierMu = 0.0;
     double acceptedGeodesicStep = 0.0;
+    std::string quadricHash;
     std::string materialGeometryHash;
+    std::string materialTopologyHash;
 };
 
 
