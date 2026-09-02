@@ -95,10 +95,21 @@ std::string diagnostics(
 {
     std::ostringstream output;
     output.imbue(std::locale::classic());
-    const Eigen::Vector3d center = result.finalMoments.centerOfMass();
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen(
-        result.finalMoments.inertiaAboutCenter()
-    );
+    const bool massPropertiesAvailable =
+        result.finalMoments.isFinite() && result.finalMoments.mass() > 0.0;
+    Eigen::Vector3d center = Eigen::Vector3d::Zero();
+    Eigen::Matrix3d principalAxes = Eigen::Matrix3d::Identity();
+    if (massPropertiesAvailable)
+    {
+        center = result.finalMoments.centerOfMass();
+        const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen(
+            result.finalMoments.inertiaAboutCenter()
+        );
+        if (eigen.info() == Eigen::Success)
+        {
+            principalAxes = eigen.eigenvectors();
+        }
+    }
     output << "{\n  \"schema\": \"spin-it-2014-artifact-v1\",\n"
            << "  \"schema_version\": 1,\n"
            << "  \"evidence\": \""
@@ -114,13 +125,17 @@ std::string diagnostics(
            << "  \"output_hash\": \"" << result.outputHash << "\",\n"
            << "  \"binary_constraint_infinity_norm\": "
            << std::setprecision(17) << result.binaryConstraintInfinityNorm
+           << ",\n  \"mass_properties_available\": "
+           << (massPropertiesAvailable ? "true" : "false")
            << ",\n  \"center_of_mass_model\": ";
-    vectorJson(output, center);
+    if (massPropertiesAvailable) vectorJson(output, center);
+    else output << "null";
     output << ",\n  \"target_origin_model\": [0,0,0],\n"
            << "  \"target_axes_model\": ";
     matrixJson(output, Eigen::Matrix3d::Identity());
     output << ",\n  \"principal_axes_model\": ";
-    matrixJson(output, eigen.eigenvectors());
+    if (massPropertiesAvailable) matrixJson(output, principalAxes);
+    else output << "null";
     output << ",\n  \"final_raw_moments\": ";
     vectorJson(output, result.finalMoments.values());
     output << ",\n  \"adaptive_passes\": [";

@@ -23,12 +23,15 @@ def _sha256(path: Path) -> str:
 
 
 def _fixture(mode: str) -> SpinIt2014Request:
-    side = 16
+    # Keep the cross-mode oracle deliberately small: it is a deterministic
+    # formula/geometry contract, not a performance benchmark.  The separate
+    # viewer-smoke fixture uses 16^3 cells for visual inspection.
+    side = 4
     material = [1] * (side**3)
     carveable = [0] * (side**3)
-    for z in range(2, side - 2):
-        for y in range(2, side - 2):
-            for x in range(2, side - 2):
+    for z in range(1, side - 1):
+        for y in range(1, side - 1):
+            for x in range(1, side - 1):
                 carveable[x + side * (y + side * z)] = 1
     minimum = (-1.0, -1.0, -1.0) if mode == "YO_YO" else (-1.0, -1.0, 0.0)
     maximum = (1.0, 1.0, 1.0) if mode == "YO_YO" else (1.0, 1.0, 2.0)
@@ -40,9 +43,9 @@ def _fixture(mode: str) -> SpinIt2014Request:
         carveable_mask=tuple(carveable),
         mode=mode,
         evidence="RECONSTRUCTED_ASSET",
-        initial_level=2,
-        maximum_level=4,
-        maximum_adaptive_passes=5,
+        initial_level=1,
+        maximum_level=2,
+        maximum_adaptive_passes=3,
         initial_fill=0.5,
         fractional_epsilon=0.05,
         laplacian_weight=1e-3,
