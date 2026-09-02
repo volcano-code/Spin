@@ -19,6 +19,7 @@
 #include "include/inner_void_mesh.h"
 #include "include/physics/MassProperties.h"
 #include "include/stability/SupportRegion.h"
+#include "include/viewer/ResultView.h"
 
 
 #define PI 3.14159265
@@ -48,10 +49,15 @@ const Eigen::RowVector3d yellow(1.0,0.9,0.2);
 const Eigen::RowVector3d blue(0.2,0.3,0.8);
 const Eigen::RowVector3d green(0.2,0.6,0.3);
 const Eigen::RowVector3d black(0.0,0.0,0.0);
+const Eigen::RowVector4d resultShellColor(0.78, 0.84, 0.95, 0.24);
+const Eigen::RowVector4d resultVoidColor(0.90, 0.10, 0.08, 0.94);
+const Eigen::RowVector4d resultGroundColor(0.50, 0.66, 0.36, 0.70);
 
 // GUI objects
 igl::opengl::glfw::Viewer viewer;
 igl::opengl::glfw::imgui::ImGuiMenu menu;
+bool resultViewMode = false;
+std::string resultWindowTitle = "Make It Stand — sealed result";
 
 // Undeformed objects
 Eigen::MatrixXd origV;
@@ -212,6 +218,54 @@ bool findLowestPointIdx(const Eigen::MatrixXd &V, int &lowestIdx)
 // Note: nothing related to the viewer yet
 void initState(int argc, char *argv[])
 {
+	const result_view::ResultViewArguments resultArguments =
+		result_view::parseResultViewArguments(argc, argv);
+	if (resultArguments.enabled)
+	{
+		Eigen::MatrixXd outerV;
+		Eigen::MatrixXi outerF;
+		Eigen::MatrixXd innerV;
+		Eigen::MatrixXi innerF;
+		if (!igl::read_triangle_mesh(resultArguments.outerPath, outerV, outerF))
+		{
+			throw std::runtime_error(
+				"Failed to load sealed outer mesh: " + resultArguments.outerPath
+			);
+		}
+		if (!igl::read_triangle_mesh(resultArguments.innerPath, innerV, innerF))
+		{
+			throw std::runtime_error(
+				"Failed to load sealed cavity mesh: " + resultArguments.innerPath
+			);
+		}
+		const result_view::ResultViewGeometry geometry =
+			result_view::prepareResultViewGeometry(outerV, outerF, innerV, innerF);
+		origV = geometry.outerVertices;
+		origF = geometry.outerFaces;
+		state.V = geometry.outerVertices;
+		state.F = geometry.outerFaces;
+		state.innerV = geometry.innerVertices;
+		state.innerF = geometry.innerFaces;
+		state.planeV = geometry.groundVertices;
+		state.planeF = geometry.groundFaces;
+		state.planeCenter = state.planeV.colwise().mean();
+		state.gravity = DEFAULT_GRAVITY;
+		state.yaw = DEFAULT_GRAVITY_YAW;
+		state.pitch = DEFAULT_GRAVITY_PITCH;
+		state.roll = DEFAULT_GRAVITY_ROLL;
+		state.contactThreshold = DEFAULT_CONTACT_THRESHOLD;
+		state.topplingAngle = DEFAULT_TOPPLING_ANGLE;
+		state.minimumWallThickness = DEFAULT_MINIMUM_WALL_THICKNESS;
+		state.stabilityMessage = "Read-only sealed result";
+		if (!findLowestPointIdx(state.V, state.balancePointIdx))
+		{
+			throw std::runtime_error("Sealed outer mesh has no lowest point");
+		}
+		resultViewMode = true;
+		resultWindowTitle = resultArguments.title;
+		return;
+	}
+
 	// Load object
   	igl::read_triangle_mesh(argc > 1 ? argv[1] : DEFAULT_MESH_FILE, origV, origF);
 
@@ -254,6 +308,27 @@ void initState(int argc, char *argv[])
 		std::cerr << "Failed to find index of lowest mesh point";
 		exit(-1);
 	}
+}
+
+void draw_result_window()
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(330, 170), ImGuiCond_FirstUseEver);
+	ImGui::Begin(
+		"Sealed carving result",
+		nullptr,
+		ImGuiWindowFlags_NoSavedSettings
+	);
+	ImGui::TextWrapped("%s", resultWindowTitle.c_str());
+	ImGui::Separator();
+	ImGui::TextColored(ImVec4(0.90f, 0.10f, 0.08f, 1.0f),
+		"Red: removed internal material / cavity");
+	ImGui::TextColored(ImVec4(0.78f, 0.84f, 0.95f, 1.0f),
+		"Gray: retained outer shell");
+	ImGui::TextColored(ImVec4(0.50f, 0.66f, 0.36f, 1.0f),
+		"Green: support plane");
+	ImGui::TextWrapped("Read-only result; experiment posture is preserved.");
+	ImGui::End();
 }
 
 // == Callback Functions ==
@@ -507,7 +582,47 @@ void draw_workflow_control_window()
 
 int main(int argc, char *argv[])
 {
-	initState(argc, argv);
+	try
+	{
+		initState(argc, argv);
+	}
+	catch (const std::exception& exception)
+	{
+		std::cerr << "make-it-stand viewer: " << exception.what() << '\n';
+		return EXIT_FAILURE;
+	}
+
+	if (resultViewMode)
+	{
+		viewer.plugins.push_back(&menu);
+		menu.callback_draw_viewer_menu = draw_viewer_menu;
+		menu.callback_draw_custom_window = draw_result_window;
+
+		// Draw back-to-front so the opaque cavity remains visible through the
+		// translucent, coordinate-preserving sealed outer shell.
+		plane_data_id = viewer.data().id;
+		viewer.data(plane_data_id).set_mesh(state.planeV, state.planeF);
+		viewer.data(plane_data_id).set_colors(resultGroundColor);
+		viewer.data(plane_data_id).show_lines = false;
+
+		viewer.append_mesh();
+		inner_data_mesh_id = viewer.data().id;
+		viewer.data(inner_data_mesh_id).set_mesh(state.innerV, state.innerF);
+		viewer.data(inner_data_mesh_id).set_colors(resultVoidColor);
+		viewer.data(inner_data_mesh_id).show_faces = true;
+		viewer.data(inner_data_mesh_id).show_lines = false;
+
+		viewer.append_mesh();
+		mesh_data_id = viewer.data().id;
+		viewer.data(mesh_data_id).set_mesh(state.V, state.F);
+		viewer.data(mesh_data_id).set_colors(resultShellColor);
+		viewer.data(mesh_data_id).show_faces = true;
+		viewer.data(mesh_data_id).show_lines = true;
+
+		viewer.selected_data_index = viewer.mesh_index(mesh_data_id);
+		viewer.core().align_camera_center(state.V, state.F);
+		return viewer.launch(true, false, resultWindowTitle, 1280, 800);
+	}
 
 	// == GUI ==
 	// menu

@@ -1,3 +1,4 @@
+#include "deformation/GridDeformationDomain.h"
 #include "physics/MassProperties.h"
 #include "voxel/VoxelGrid.h"
 #include "voxel/VoxelTopology.h"
@@ -192,6 +193,238 @@ int runWall()
         << "[PASS] scenario=" << scenario
         << " coarse=" << coarseCount
         << " fine=" << fineCount << '\n';
+    return EXIT_SUCCESS;
+}
+
+
+int runUnitCube()
+{
+    const std::string scenario = "unit-cube";
+    Eigen::MatrixXd vertices;
+    Eigen::MatrixXi faces;
+    makeBox(vertices, faces);
+    vertices.col(0) =
+        (0.025 + 0.95 * vertices.col(0).array()).matrix();
+    vertices.col(1) =
+        (0.15 + 0.70 * vertices.col(1).array()).matrix();
+    vertices.col(2) =
+        (0.25 + 0.50 * vertices.col(2).array()).matrix();
+
+    constexpr int resolution = 7;
+    const VoxelGrid modern(vertices, faces, 0.0, resolution);
+    const VoxelGrid beta(vertices, faces, 0.0, resolution, true);
+    const deformation::GridDeformationDomain domain =
+        deformation::GridDeformationDomain::fromVoxelGrid(beta);
+    const double spacing = 1.0 / static_cast<double>(resolution);
+    const Eigen::Vector3d expectedSize = Eigen::Vector3d::Constant(spacing);
+    const Eigen::RowVector3d minimum = beta.corners().colwise().minCoeff();
+    const Eigen::RowVector3d maximum = beta.corners().colwise().maxCoeff();
+    const double tolerance = 1.0e-14;
+
+    bool cellCoordinatesValid = true;
+    for (int x = 0; x < resolution && cellCoordinatesValid; ++x)
+    {
+        for (int y = 0; y < resolution && cellCoordinatesValid; ++y)
+        {
+            for (int z = 0; z < resolution; ++z)
+            {
+                const Voxel& voxel = beta(x, y, z);
+                const int linear = domain.cellLinearIndex(x, y, z);
+                const Eigen::Vector3d expectedCenter(
+                    (static_cast<double>(x) + 0.5) * spacing,
+                    (static_cast<double>(y) + 0.5) * spacing,
+                    (static_cast<double>(z) + 0.5) * spacing
+                );
+                if (
+                    !voxel.center.isApprox(expectedCenter, tolerance) ||
+                    domain.cellCoordinates(linear) != Eigen::Vector3i(x, y, z) ||
+                    voxel.cornerIndices.size() != 8U
+                )
+                {
+                    cellCoordinatesValid = false;
+                    break;
+                }
+                for (const int corner : voxel.cornerIndices)
+                {
+                    if (corner < 0 || corner >= beta.corners().rows())
+                    {
+                        cellCoordinatesValid = false;
+                        break;
+                    }
+                    const Eigen::RowVector3d point = beta.corners().row(corner);
+                    const bool xValid =
+                        std::abs(point(0) - x * spacing) <= tolerance ||
+                        std::abs(point(0) - (x + 1) * spacing) <= tolerance;
+                    const bool yValid =
+                        std::abs(point(1) - y * spacing) <= tolerance ||
+                        std::abs(point(1) - (y + 1) * spacing) <= tolerance;
+                    const bool zValid =
+                        std::abs(point(2) - z * spacing) <= tolerance ||
+                        std::abs(point(2) - (z + 1) * spacing) <= tolerance;
+                    if (!xValid || !yValid || !zValid)
+                    {
+                        cellCoordinatesValid = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    bool outsideRejected = false;
+    bool failedBuildPreservedState = false;
+    VoxelGrid retained(vertices, faces, 0.0, resolution, true);
+    const Eigen::MatrixXd retainedCorners = retained.corners();
+    try
+    {
+        Eigen::MatrixXd outside = vertices;
+        outside(0, 0) = -1.0e-3;
+        retained.build(outside, faces, 0.0, resolution, true);
+    }
+    catch (const std::invalid_argument&)
+    {
+        outsideRejected = true;
+        failedBuildPreservedState =
+            retained.usesFixedUnitCubeDomain() &&
+            retained.dimensions() == Eigen::Vector3i::Constant(resolution) &&
+            retained.voxelSize().isApprox(expectedSize, tolerance) &&
+            retained.corners().isApprox(retainedCorners, 0.0);
+    }
+
+    bool overflowRejectedBeforeAllocation = false;
+    try
+    {
+        static_cast<void>(VoxelGrid(vertices, faces, 0.0, 1290, true));
+    }
+    catch (const std::overflow_error&)
+    {
+        overflowRejectedBeforeAllocation = true;
+    }
+
+    if (
+        modern.usesFixedUnitCubeDomain() ||
+        modern.dimensions() == Eigen::Vector3i::Constant(resolution) ||
+        !beta.usesFixedUnitCubeDomain() ||
+        beta.dimensions() != Eigen::Vector3i::Constant(resolution) ||
+        !beta.voxelSize().isApprox(expectedSize, tolerance) ||
+        beta.corners().rows() != 512 ||
+        !minimum.isApprox(Eigen::RowVector3d::Zero(), 0.0) ||
+        !maximum.isApprox(Eigen::RowVector3d::Ones(), 0.0) ||
+        !beta(0, 0, 0).center.isApprox(
+            Eigen::Vector3d::Constant(0.5 * spacing),
+            tolerance
+        ) ||
+        !beta(6, 6, 6).center.isApprox(
+            Eigen::Vector3d::Constant(6.5 * spacing),
+            tolerance
+        ) ||
+        !cellCoordinatesValid ||
+        !outsideRejected ||
+        !failedBuildPreservedState ||
+        !overflowRejectedBeforeAllocation
+    )
+    {
+        return fail(
+            scenario,
+            "fixed [0,1]^3 N^3 lattice contract failed"
+        );
+    }
+
+    std::cout
+        << "[PASS] scenario=" << scenario
+        << " dimensions=" << beta.dimensions().transpose()
+        << " voxel_size=" << beta.voxelSize().transpose()
+        << " corner_range=[" << minimum << ";" << maximum << "]\n";
+    return EXIT_SUCCESS;
+}
+
+
+int runReleasedBetaCache()
+{
+    const std::string scenario = "beta-cache";
+    constexpr int resolution = 5;
+    std::vector<int> ids(
+        static_cast<std::size_t>(resolution * resolution * resolution),
+        -1
+    );
+    int next = 0;
+    for (int x = 0; x < resolution; ++x)
+    {
+        for (int y = 0; y < resolution; ++y)
+        {
+            for (int z = 0; z < resolution; ++z)
+            {
+                ids[static_cast<std::size_t>(
+                    (x * resolution + y) * resolution + z
+                )] = next++;
+            }
+        }
+    }
+
+    const VoxelGrid grid = VoxelGrid::fromReleasedBetaOccupancy(
+        resolution,
+        ids,
+        1
+    );
+    const deformation::GridDeformationDomain domain =
+        deformation::GridDeformationDomain::fromVoxelGrid(grid);
+    if (
+        !grid.usesFixedUnitCubeDomain() ||
+        grid.dimensions() != Eigen::Vector3i::Constant(resolution) ||
+        domain.activeCellCount() != resolution * resolution * resolution ||
+        domain.nodeCount() !=
+            (resolution + 1) * (resolution + 1) * (resolution + 1) ||
+        !grid(2, 2, 2).isInner ||
+        grid(1, 2, 2).isInner ||
+        !(grid(2, 2, 2).distanceToMesh < 0.0)
+    )
+    {
+        return fail(scenario, "beta depth or active-lattice contract failed");
+    }
+
+    std::vector<int> singleton(
+        static_cast<std::size_t>(resolution * resolution * resolution),
+        -1
+    );
+    singleton[static_cast<std::size_t>(
+        (1 * resolution + 2) * resolution + 3
+    )] = 0;
+    const VoxelGrid ordered = VoxelGrid::fromReleasedBetaOccupancy(
+        resolution,
+        singleton,
+        2
+    );
+    if (
+        !(ordered(1, 2, 3).distanceToMesh < 0.0) ||
+        !(ordered(3, 2, 1).distanceToMesh > 0.0)
+    )
+    {
+        return fail(scenario, "z-fast coordinate import was transposed");
+    }
+
+    bool duplicateRejected = false;
+    try
+    {
+        ids[0] = ids[1];
+        static_cast<void>(VoxelGrid::fromReleasedBetaOccupancy(
+            resolution,
+            ids,
+            1
+        ));
+    }
+    catch (const std::invalid_argument&)
+    {
+        duplicateRejected = true;
+    }
+    if (!duplicateRejected)
+    {
+        return fail(scenario, "duplicate occupied IDs were accepted");
+    }
+
+    std::cout
+        << "[PASS] scenario=" << scenario
+        << " active_cells=" << domain.activeCellCount()
+        << " active_nodes=" << domain.nodeCount() << '\n';
     return EXIT_SUCCESS;
 }
 
@@ -398,6 +631,14 @@ int main(int argc, char** argv)
     if (scenario == "topology")
     {
         return runTopology();
+    }
+    if (scenario == "unit-cube")
+    {
+        return runUnitCube();
+    }
+    if (scenario == "beta-cache")
+    {
+        return runReleasedBetaCache();
     }
 
     return fail(scenario, "unknown scenario");

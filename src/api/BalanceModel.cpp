@@ -6,6 +6,8 @@
 #include "physics/BalanceEnergy.h"
 #include "stability/BalanceTargetSchedule.h"
 #include "stability/SupportRegion.h"
+#include "voxel/MaterialOccupancy.h"
+#include "voxel/VoxelDomain.h"
 #include "voxel/VoxelGrid.h"
 
 #include <igl/read_triangle_mesh.h>
@@ -267,6 +269,347 @@ void validateSourceMesh(
 }
 
 
+void validateReleasedBetaSourceMesh(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXi& faces
+)
+{
+    if (
+        vertices.rows() == 0 ||
+        vertices.cols() != 3 ||
+        !vertices.allFinite() ||
+        faces.rows() == 0 ||
+        faces.cols() != 3
+    )
+    {
+        throw std::invalid_argument(
+            "released-beta source must contain finite normalized vertices and triangles"
+        );
+    }
+    if (faces.minCoeff() < 0 || faces.maxCoeff() >= vertices.rows())
+    {
+        throw std::invalid_argument(
+            "released-beta source face indices are out of range"
+        );
+    }
+    constexpr double unitCubeTolerance = 2.0e-10;
+    if (
+        (vertices.array() < -unitCubeTolerance).any() ||
+        (vertices.array() > 1.0 + unitCubeTolerance).any()
+    )
+    {
+        throw std::invalid_argument(
+            "released-beta source vertices must use normalized [0,1]^3 coordinates"
+        );
+    }
+
+    /*
+     * Boundary predicates now treat indexed shared-edge/shared-vertex contact
+     * explicitly, so no enlarged compatibility tolerance is necessary.  The
+     * normal scale-derived tolerance accepts the archived decimal sphere
+     * facets while retaining the horse preset's genuine non-adjacent crossing.
+     */
+    const manufacturing::BoundaryAudit audit =
+        manufacturing::auditTriangleBoundary(
+            vertices,
+            faces,
+            manufacturing::BoundaryOrientation::OutwardPositive,
+            false,
+            0.0
+        );
+    if (
+        !audit.strictBoundaryValid() ||
+        audit.faceComponentCount != 1 ||
+        audit.unreferencedVertexCount != 0
+    )
+    {
+        throw std::domain_error(
+            "released-beta source failed the compatibility boundary gate; "
+            "true or non-adjacent intersections are never waived"
+        );
+    }
+}
+
+
+Eigen::MatrixXd normalizeAndCoordinateMapReleasedBetaWeights(
+    const ReleasedBetaArchiveData& archive
+)
+{
+    const int resolution = archive.voxelResolution;
+    if (resolution < 3 || archive.hullDepth < 0)
+    {
+        throw std::invalid_argument(
+            "released-beta archive has an invalid resolution or hull depth"
+        );
+    }
+    const long long maximumIndex =
+        static_cast<long long>(std::numeric_limits<int>::max());
+    const auto checkedCubeCount = [maximumIndex](
+        long long side,
+        const char* label
+    )
+    {
+        if (
+            side <= 0LL ||
+            side > maximumIndex / side ||
+            side * side > maximumIndex / side
+        )
+        {
+            throw std::overflow_error(
+                std::string("released-beta ") + label +
+                " exceeds integer indexing"
+            );
+        }
+        return side * side * side;
+    };
+    const long long cellCount64 = checkedCubeCount(
+        static_cast<long long>(resolution),
+        "cell grid"
+    );
+    const long long nodeSide64 = static_cast<long long>(resolution) + 1LL;
+    const long long nodeCount64 = checkedCubeCount(nodeSide64, "node grid");
+    if (
+        archive.cellIdsZFast.size() !=
+            static_cast<std::size_t>(cellCount64)
+    )
+    {
+        throw std::invalid_argument(
+            "released-beta .vox cache must contain exactly N^3 entries"
+        );
+    }
+
+    std::size_t occupiedCount = 0U;
+    for (const int id : archive.cellIdsZFast)
+    {
+        if (id < -1)
+        {
+            throw std::invalid_argument(
+                "released-beta .vox entries must be -1 or nonnegative IDs"
+            );
+        }
+        occupiedCount += id >= 0 ? 1U : 0U;
+    }
+    if (occupiedCount == 0U)
+    {
+        throw std::invalid_argument(
+            "released-beta .vox cache contains no occupied cells"
+        );
+    }
+    std::vector<unsigned char> seen(occupiedCount, 0U);
+    for (const int id : archive.cellIdsZFast)
+    {
+        if (id < 0)
+        {
+            continue;
+        }
+        if (
+            static_cast<std::size_t>(id) >= occupiedCount ||
+            seen[static_cast<std::size_t>(id)] != 0U
+        )
+        {
+            throw std::invalid_argument(
+                "released-beta occupied IDs must be unique and contiguous"
+            );
+        }
+        seen[static_cast<std::size_t>(id)] = 1U;
+    }
+
+    const int nodeSide = resolution + 1;
+    const auto betaCellIndex = [resolution](int x, int y, int z)
+    {
+        return static_cast<std::size_t>(
+            (x * resolution + y) * resolution + z
+        );
+    };
+    const auto betaNodeCoordinateIndex = [nodeSide](int x, int y, int z)
+    {
+        return static_cast<std::size_t>(
+            (x * nodeSide + y) * nodeSide + z
+        );
+    };
+    const auto currentGlobalCorner = [nodeSide](int x, int y, int z)
+    {
+        return x + nodeSide * (y + nodeSide * z);
+    };
+
+    std::vector<unsigned char> active(
+        static_cast<std::size_t>(nodeCount64),
+        0U
+    );
+    for (int x = 0; x < resolution; ++x)
+    {
+        for (int y = 0; y < resolution; ++y)
+        {
+            for (int z = 0; z < resolution; ++z)
+            {
+                if (archive.cellIdsZFast[betaCellIndex(x, y, z)] < 0)
+                {
+                    continue;
+                }
+                for (int dx = 0; dx <= 1; ++dx)
+                {
+                    for (int dy = 0; dy <= 1; ++dy)
+                    {
+                        for (int dz = 0; dz <= 1; ++dz)
+                        {
+                            active[betaNodeCoordinateIndex(
+                                x + dx,
+                                y + dy,
+                                z + dz
+                            )] = 1U;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    const Eigen::Index activeNodeCount = static_cast<Eigen::Index>(
+        std::count(active.begin(), active.end(), 1U)
+    );
+    const Eigen::MatrixXd& raw = archive.betaNodeWeightsZFast;
+    if (
+        raw.rows() != activeNodeCount ||
+        raw.cols() <= 0 ||
+        !raw.allFinite()
+    )
+    {
+        throw std::invalid_argument(
+            "released-beta .bbw shape must be active-node by handle and finite"
+        );
+    }
+
+    std::vector<int> betaRowByCoordinate(
+        static_cast<std::size_t>(nodeCount64),
+        -1
+    );
+    int betaRow = 0;
+    for (int x = 0; x < nodeSide; ++x)
+    {
+        for (int y = 0; y < nodeSide; ++y)
+        {
+            for (int z = 0; z < nodeSide; ++z)
+            {
+                const std::size_t coordinate =
+                    betaNodeCoordinateIndex(x, y, z);
+                if (active[coordinate] != 0U)
+                {
+                    betaRowByCoordinate[coordinate] = betaRow++;
+                }
+            }
+        }
+    }
+
+    Eigen::MatrixXd betaNormalized(raw.rows(), raw.cols());
+    for (Eigen::Index row = 0; row < raw.rows(); ++row)
+    {
+        double sum = 0.0;
+        for (Eigen::Index column = 0; column < raw.cols(); ++column)
+        {
+            const double value = raw(row, column);
+            if (value < 0.0)
+            {
+                throw std::invalid_argument(
+                    "released-beta .bbw weights must be nonnegative"
+                );
+            }
+            sum += value;
+        }
+        if (!std::isfinite(sum) || !(sum > 0.0))
+        {
+            throw std::invalid_argument(
+                "released-beta .bbw rows must have a positive finite sum"
+            );
+        }
+        betaNormalized.row(row) = raw.row(row) / sum;
+    }
+
+    Eigen::MatrixXd mapped(activeNodeCount, raw.cols());
+    Eigen::Index destination = 0;
+    for (int z = 0; z < nodeSide; ++z)
+    {
+        for (int y = 0; y < nodeSide; ++y)
+        {
+            for (int x = 0; x < nodeSide; ++x)
+            {
+                const std::size_t coordinate =
+                    betaNodeCoordinateIndex(x, y, z);
+                if (active[coordinate] == 0U)
+                {
+                    continue;
+                }
+                const int source = betaRowByCoordinate[coordinate];
+                if (source < 0 || currentGlobalCorner(x, y, z) < 0)
+                {
+                    throw std::logic_error(
+                        "released-beta active-node coordinate map is inconsistent"
+                    );
+                }
+                mapped.row(destination++) = betaNormalized.row(source);
+            }
+        }
+    }
+    if (destination != activeNodeCount)
+    {
+        throw std::logic_error(
+            "released-beta active-node coordinate map has the wrong size"
+        );
+    }
+    return mapped;
+}
+
+
+int releasedBetaClosestActiveNode(
+    const deformation::GridDeformationDomain& domain,
+    const Eigen::Vector3d& point
+)
+{
+    if (!point.allFinite())
+    {
+        throw std::invalid_argument(
+            "released-beta handle point must be finite"
+        );
+    }
+    const Eigen::Vector3i dimensions = domain.dimensions();
+    if (
+        dimensions(0) != dimensions(1) ||
+        dimensions(1) != dimensions(2)
+    )
+    {
+        throw std::logic_error(
+            "released-beta handle binding requires a cubic lattice"
+        );
+    }
+    const int resolution = dimensions(0);
+    Eigen::Vector3i coordinate;
+    for (int axis = 0; axis < 3; ++axis)
+    {
+        const double scaled = point(axis) * static_cast<double>(resolution);
+        const int cell = static_cast<int>(std::floor(scaled));
+        if (cell < 0 || cell >= resolution)
+        {
+            throw std::domain_error(
+                "released-beta handle point lies outside the voxel domain"
+            );
+        }
+        const double fraction = scaled - static_cast<double>(cell);
+        coordinate(axis) = cell + (fraction <= 0.5 ? 0 : 1);
+    }
+
+    const int side = resolution + 1;
+    const int global =
+        coordinate(0) + side * (coordinate(1) + side * coordinate(2));
+    const int local = domain.globalToLocalCorner(global);
+    if (local < 0)
+    {
+        throw std::domain_error(
+            "released-beta handle maps to an inactive lattice node"
+        );
+    }
+    return local;
+}
+
+
 bool isProperRotation(const Eigen::Matrix3d& rotation)
 {
     constexpr double tolerance = 1.0e-10;
@@ -387,7 +730,9 @@ StandingConstruction constructStandingFromMesh(
     const Eigen::MatrixXd& vertices,
     const Eigen::Vector3d& gravityDirection,
     double contactThreshold,
-    double gammaRadians
+    double gammaRadians,
+    double minimumStabilityInset = 0.0,
+    bool supportPlaneAtBandTop = false
 )
 {
     const Eigen::Vector3d gravity =
@@ -395,7 +740,9 @@ StandingConstruction constructStandingFromMesh(
     const stability::SupportRegion support = stability::SupportRegion::fromMesh(
         vertices,
         gravity,
-        contactThreshold
+        contactThreshold,
+        minimumStabilityInset,
+        supportPlaneAtBandTop
     );
     static_cast<void>(stability::StandingTargetSpecification(
         support,
@@ -650,6 +997,7 @@ void appendOptionalNumber(
 std::string buildDiagnosticsJson(
     const BalanceModelConfig& modelConfig,
     const BalanceRunConfig& runConfig,
+    bool releasedBetaArchiveImport,
     int sourceVertexCount,
     int sourceFaceCount,
     const Eigen::Vector3d& gravity,
@@ -676,6 +1024,12 @@ std::string buildDiagnosticsJson(
            << ",\"faces\":" << sourceFaceCount << "},\n";
     output << "  \"configuration\": {\n";
     output << "    \"voxel_resolution\": " << modelConfig.voxelResolution << ",\n";
+    output << "    \"fixed_unit_cube_voxel_grid\": "
+           << jsonBoolean(modelConfig.fixedUnitCubeVoxelGrid) << ",\n";
+    if (releasedBetaArchiveImport)
+    {
+        output << "    \"released_beta_archive_import\": true,\n";
+    }
     output << "    \"minimum_wall_thickness\": ";
     appendNumber(output, modelConfig.minimumWallThickness);
     output << ",\n    \"bbw_max_iterations\": "
@@ -700,6 +1054,10 @@ std::string buildDiagnosticsJson(
            << jsonBoolean(config.enableDeformation);
     output << ",\n    \"enable_laplacian\": "
            << jsonBoolean(config.enableLaplacian);
+    output << ",\n    \"freeze_targets_after_initial_refresh\": "
+           << jsonBoolean(config.freezeTargetsAfterInitialRefresh);
+    output << ",\n    \"released_beta_outer_loop\": "
+           << jsonBoolean(config.releasedBetaOuterLoop);
     output << ",\n    \"density\": ";
     appendNumber(output, config.density);
     output << ",\n    \"minimum_positive_mass\": ";
@@ -718,6 +1076,8 @@ std::string buildDiagnosticsJson(
     appendNumber(output, line.requiredRelativeDecrease);
     output << ",\"mu_decrement\":";
     appendNumber(output, line.muDecrement);
+    output << ",\"released_beta_semantics\":"
+           << jsonBoolean(line.releasedBetaSemantics);
     output << "}\n  },\n";
     output << "  \"problem\": {\"gravity\":";
     appendVector3(output, gravity);
@@ -813,6 +1173,16 @@ std::string buildDiagnosticsJson(
     appendNumber(output, result.finalShapeEnergy);
     output << ",\n    \"final_total_energy\": ";
     appendNumber(output, result.finalTotalEnergy);
+    output << ",\n    \"mass_moment_source\": "
+              "\"outer_surface_minus_deformed_carved_cells\"";
+    output << ",\n    \"final_mass_moment_mass\": ";
+    appendNumber(output, result.finalMassMoments.mass);
+    output << ",\n    \"final_mass_moment_first\": ";
+    appendVector3(output, result.finalMassMoments.firstMoment);
+    output << ",\n    \"final_raw_second_moment\": ";
+    appendMatrix3(output, result.finalMassMoments.secondMoment);
+    output << ",\n    \"final_inertia_tensor_about_center\": ";
+    appendMatrix3(output, result.finalInertiaTensorAboutCenter);
     output << ",\n    \"normalized_rms_vertex_displacement\": ";
     appendNumber(output, result.normalizedRmsVertexDisplacement);
     output << ",\n    \"normalized_maximum_vertex_displacement\": ";
@@ -997,6 +1367,22 @@ std::string buildDiagnosticsJson(
         appendNumber(output, record.stateAfter.step);
         output << ",\"objective_reweighted\":"
                << jsonBoolean(record.objectiveReweighted)
+               << ",\"released_beta_outer_loop\":"
+               << jsonBoolean(record.releasedBetaOuterLoop)
+               << ",\"refill_calls\":" << record.refillCalls
+               << ",\"carving_calls\":" << record.carvingCalls
+               << ",\"trial_balance_calls\":"
+               << record.trialBalanceCalls
+               << ",\"rollback_balance_calls\":"
+               << record.rollbackBalanceCalls
+               << ",\"trial_carving_iterations\":"
+               << record.trialCarvingIterations
+               << ",\"trial_carved_voxels\":"
+               << record.trialCarvedVoxelCount
+               << ",\"rollback_carving_iterations\":"
+               << record.rollbackCarvingIterations
+               << ",\"rollback_carved_voxels\":"
+               << record.rollbackCarvedVoxelCount
                << ",\"geometry_epoch_before\":"
                << record.geometryEpochBefore
                << ",\"geometry_epoch_after\":"
@@ -1011,7 +1397,10 @@ std::string buildDiagnosticsJson(
                << jsonBoolean(record.allTargetsReached)
                << ",\"alpha_hash_before\":\""
                << record.alphaHashBefore << "\",\"alpha_hash_after\":\""
-               << record.alphaHashAfter << "\",\"geometry_hash_before\":\""
+               << record.alphaHashAfter << "\",\"trial_alpha_hash\":\""
+               << record.trialAlphaHash << "\",\"rollback_alpha_hash\":\""
+               << record.rollbackAlphaHash
+               << "\",\"geometry_hash_before\":\""
                << record.geometryHashBefore
                << "\",\"geometry_hash_after\":\""
                << record.geometryHashAfter << "\",\"parameters_before\":";
@@ -1327,6 +1716,23 @@ manufacturing::ManufacturingMeshFormat formatFromFilename(
 } // namespace
 
 
+BalanceRunConfig releasedBetaRunConfig()
+{
+    BalanceRunConfig config;
+    config.initialMu = 0.75;
+    config.optimizer.shapeScaleLambda = 20.0;
+    config.optimizer.lineSearch.initialStep = 1.0;
+    config.optimizer.lineSearch.reductionRatio = 0.8;
+    config.optimizer.lineSearch.minimumStep = 0.4;
+    config.optimizer.lineSearch.requiredRelativeDecrease = 0.03;
+    config.optimizer.lineSearch.muDecrement = 0.05;
+    config.optimizer.lineSearch.releasedBetaSemantics = true;
+    config.optimizer.freezeTargetsAfterInitialRefresh = true;
+    config.optimizer.releasedBetaOuterLoop = true;
+    return config;
+}
+
+
 struct BalanceResult::Storage
 {
     optimization::AlternatingBalanceOptimizationResult result;
@@ -1352,6 +1758,20 @@ struct BalanceResult::Storage
 
 struct BalanceModel::Impl
 {
+    struct ReleasedBetaCache
+    {
+        int voxelResolution = 0;
+        int hullDepth = 2;
+        std::vector<int> cellIdsZFast;
+        Eigen::MatrixXd coordinateMappedNodeWeights;
+    };
+
+    struct MaterialOccupancyCache
+    {
+        std::shared_ptr<const voxel::VoxelDomain> domain;
+        int protectedBoundaryLayers = 1;
+    };
+
     struct Standing
     {
         stability::SupportRegion support;
@@ -1387,6 +1807,8 @@ struct BalanceModel::Impl
             suspensions;
         std::vector<UserHandle, Eigen::aligned_allocator<UserHandle>>
             userHandles;
+        std::shared_ptr<const ReleasedBetaCache> releasedBetaCache;
+        std::shared_ptr<const MaterialOccupancyCache> materialOccupancyCache;
     };
 
     mutable std::mutex mutex;
@@ -1397,6 +1819,8 @@ struct BalanceModel::Impl
     Standings standings;
     std::vector<Suspension, Eigen::aligned_allocator<Suspension>> suspensions;
     std::vector<UserHandle, Eigen::aligned_allocator<UserHandle>> userHandles;
+    std::shared_ptr<const ReleasedBetaCache> releasedBetaCache;
+    std::shared_ptr<const MaterialOccupancyCache> materialOccupancyCache;
 };
 
 
@@ -1539,6 +1963,12 @@ void BalanceResult::saveDiagnostics(const std::string& filename) const
 }
 
 
+BalanceModel::BalanceModel()
+    : impl_(std::make_unique<Impl>())
+{
+}
+
+
 BalanceModel::BalanceModel(
     const std::string& meshPath,
     const BalanceModelConfig& config
@@ -1575,6 +2005,117 @@ BalanceModel::BalanceModel(
     impl_->vertices = vertices;
     impl_->faces = faces;
     impl_->config = config;
+}
+
+
+std::unique_ptr<BalanceModel> BalanceModel::fromMaterialOccupancy(
+    const MaterialOccupancyData& occupancy,
+    const BalanceModelConfig& config
+)
+{
+    validateModelConfig(config);
+    if (occupancy.protectedBoundaryLayers < 0)
+    {
+        throw std::invalid_argument(
+            "material occupancy protectedBoundaryLayers must be nonnegative"
+        );
+    }
+    if (config.voxelResolution != occupancy.dimensions.maxCoeff())
+    {
+        throw std::invalid_argument(
+            "material occupancy dimensions must match config.voxelResolution"
+        );
+    }
+
+    voxel::GridSpec specification;
+    specification.dimensions = occupancy.dimensions;
+    specification.minimum = occupancy.minimum;
+    specification.maximum = occupancy.maximum;
+    const std::shared_ptr<const voxel::VoxelDomain> domain =
+        voxel::VoxelDomain::create(
+            specification,
+            occupancy.materialMaskXFast
+        );
+    const voxel::MaterialBoundaryMesh boundaries =
+        voxel::extractMaterialBoundaries(domain);
+    if (boundaries.materialComponentCount != 1)
+    {
+        throw std::domain_error(
+            "material occupancy must contain one six-connected component"
+        );
+    }
+    const manufacturing::BoundaryAudit outer =
+        manufacturing::auditTriangleBoundary(
+            boundaries.outerVertices,
+            boundaries.outerFaces,
+            manufacturing::BoundaryOrientation::OutwardPositive
+        );
+    const manufacturing::BoundaryAudit inner =
+        manufacturing::auditTriangleBoundary(
+            boundaries.innerVertices,
+            boundaries.innerFaces,
+            manufacturing::BoundaryOrientation::InwardNegative,
+            true
+        );
+    if (
+        !outer.strictBoundaryValid() ||
+        outer.faceComponentCount != 1 ||
+        (!inner.empty && !inner.strictBoundaryValid())
+    )
+    {
+        throw std::domain_error(
+            "material occupancy boundary reconstruction failed strict audit"
+        );
+    }
+
+    auto cache = std::make_shared<Impl::MaterialOccupancyCache>();
+    cache->domain = domain;
+    cache->protectedBoundaryLayers = occupancy.protectedBoundaryLayers;
+
+    std::unique_ptr<BalanceModel> model(new BalanceModel());
+    model->impl_->vertices = boundaries.outerVertices;
+    model->impl_->faces = boundaries.outerFaces;
+    model->impl_->config = config;
+    model->impl_->materialOccupancyCache = std::move(cache);
+    return model;
+}
+
+
+std::unique_ptr<BalanceModel> BalanceModel::fromReleasedBetaArchive(
+    const Eigen::MatrixXd& normalizedVertices,
+    const Eigen::MatrixXi& faces,
+    const ReleasedBetaArchiveData& archive,
+    const BalanceModelConfig& config
+)
+{
+    validateModelConfig(config);
+    if (
+        !config.fixedUnitCubeVoxelGrid ||
+        config.minimumWallThickness != 0.0 ||
+        config.voxelResolution != archive.voxelResolution
+    )
+    {
+        throw std::invalid_argument(
+            "released-beta archive import requires a matching fixed unit-cube "
+            "configuration with zero modern wall thickness"
+        );
+    }
+    validateReleasedBetaSourceMesh(normalizedVertices, faces);
+    Eigen::MatrixXd mappedWeights =
+        normalizeAndCoordinateMapReleasedBetaWeights(archive);
+
+    auto cache = std::make_shared<Impl::ReleasedBetaCache>();
+    cache->voxelResolution = archive.voxelResolution;
+    cache->hullDepth = archive.hullDepth;
+    cache->cellIdsZFast = archive.cellIdsZFast;
+    cache->coordinateMappedNodeWeights = std::move(mappedWeights);
+
+    std::unique_ptr<BalanceModel> model(new BalanceModel());
+    model->impl_->vertices = normalizedVertices;
+    model->impl_->faces = faces;
+    model->impl_->config = config;
+    model->impl_->releasedBetaCache = std::move(cache);
+    return model;
 }
 
 
@@ -1647,7 +2188,9 @@ void BalanceModel::setSupportPolygon(
 
 void BalanceModel::setSupportFromMesh(
     double contactThreshold,
-    double gammaRadians
+    double gammaRadians,
+    double minimumStabilityInset,
+    bool supportPlaneAtBandTop
 )
 {
     std::lock_guard<std::mutex> lock(impl_->mutex);
@@ -1655,7 +2198,45 @@ void BalanceModel::setSupportFromMesh(
         impl_->vertices,
         impl_->gravity,
         contactThreshold,
-        gammaRadians
+        gammaRadians,
+        minimumStabilityInset,
+        supportPlaneAtBandTop
+    );
+    impl_->standings.clear();
+    impl_->standings.push_back(Impl::Standing{
+        std::move(standing.support),
+        standing.gammaRadians,
+        std::move(standing.fixedPoints)
+    });
+}
+
+
+void BalanceModel::setSupportFromReferenceMesh(
+    const Eigen::MatrixXd& referenceVertices,
+    double contactThreshold,
+    double gammaRadians,
+    double minimumStabilityInset,
+    bool supportPlaneAtBandTop
+)
+{
+    if (
+        referenceVertices.rows() == 0 ||
+        referenceVertices.cols() != 3 ||
+        !referenceVertices.allFinite()
+    )
+    {
+        throw std::invalid_argument(
+            "reference support vertices must be a nonempty finite N-by-3 matrix"
+        );
+    }
+    std::lock_guard<std::mutex> lock(impl_->mutex);
+    StandingConstruction standing = constructStandingFromMesh(
+        referenceVertices,
+        impl_->gravity,
+        contactThreshold,
+        gammaRadians,
+        minimumStabilityInset,
+        supportPlaneAtBandTop
     );
     impl_->standings.clear();
     impl_->standings.push_back(Impl::Standing{
@@ -1690,7 +2271,9 @@ void BalanceModel::addStandingConstraintPolygon(
 void BalanceModel::addStandingConstraintFromMesh(
     const Eigen::Vector3d& gravityDirection,
     double contactThreshold,
-    double gammaRadians
+    double gammaRadians,
+    double minimumStabilityInset,
+    bool supportPlaneAtBandTop
 )
 {
     std::lock_guard<std::mutex> lock(impl_->mutex);
@@ -1698,7 +2281,9 @@ void BalanceModel::addStandingConstraintFromMesh(
         impl_->vertices,
         gravityDirection,
         contactThreshold,
-        gammaRadians
+        gammaRadians,
+        minimumStabilityInset,
+        supportPlaneAtBandTop
     );
     impl_->standings.push_back(Impl::Standing{
         std::move(standing.support),
@@ -1796,6 +2381,8 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
         snapshot.standings = impl_->standings;
         snapshot.suspensions = impl_->suspensions;
         snapshot.userHandles = impl_->userHandles;
+        snapshot.releasedBetaCache = impl_->releasedBetaCache;
+        snapshot.materialOccupancyCache = impl_->materialOccupancyCache;
     }
     durations.inputSnapshot = elapsedSeconds(
         phaseStart,
@@ -1809,12 +2396,33 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
     }
 
     phaseStart = PerformanceClock::now();
-    VoxelGrid grid(
-        snapshot.vertices,
-        snapshot.faces,
-        snapshot.config.minimumWallThickness,
-        snapshot.config.voxelResolution
-    );
+    VoxelGrid grid;
+    if (snapshot.releasedBetaCache)
+    {
+        grid = VoxelGrid::fromReleasedBetaOccupancy(
+            snapshot.releasedBetaCache->voxelResolution,
+            snapshot.releasedBetaCache->cellIdsZFast,
+            snapshot.releasedBetaCache->hullDepth
+        );
+    }
+    else if (snapshot.materialOccupancyCache)
+    {
+        grid = VoxelGrid::fromMaterialOccupancy(
+            snapshot.materialOccupancyCache->domain,
+            snapshot.config.minimumWallThickness,
+            snapshot.materialOccupancyCache->protectedBoundaryLayers
+        );
+    }
+    else
+    {
+        grid = VoxelGrid(
+            snapshot.vertices,
+            snapshot.faces,
+            snapshot.config.minimumWallThickness,
+            snapshot.config.voxelResolution,
+            snapshot.config.fixedUnitCubeVoxelGrid
+        );
+    }
     durations.voxelization = elapsedSeconds(
         phaseStart,
         PerformanceClock::now()
@@ -1845,8 +2453,27 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
         fixedPoints.row(destination++) = suspension.attachment.transpose();
     }
 
-    deformation::Handle fixed =
-        deformation::makeFixedSupportHandle(domain, fixedPoints);
+    deformation::Handle fixed;
+    if (snapshot.releasedBetaCache)
+    {
+        fixed.restPivot = fixedPoints.colwise().mean().transpose();
+        fixed.role = deformation::HandleRole::Support;
+        fixed.locked = true;
+        fixed.constrainedNodes.reserve(
+            static_cast<std::size_t>(fixedPoints.rows())
+        );
+        for (Eigen::Index row = 0; row < fixedPoints.rows(); ++row)
+        {
+            fixed.constrainedNodes.push_back(releasedBetaClosestActiveNode(
+                domain,
+                fixedPoints.row(row).transpose()
+            ));
+        }
+    }
+    else
+    {
+        fixed = deformation::makeFixedSupportHandle(domain, fixedPoints);
+    }
     std::set<int> occupiedNodes(
         fixed.constrainedNodes.begin(),
         fixed.constrainedNodes.end()
@@ -1856,8 +2483,13 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
     handles.push_back(std::move(fixed));
     for (const auto& specification : snapshot.userHandles)
     {
-        static_cast<void>(domain.embed(specification.pivot));
-        const int node = domain.nearestActiveNode(specification.pivot);
+        const int node = snapshot.releasedBetaCache
+            ? releasedBetaClosestActiveNode(domain, specification.pivot)
+            : domain.nearestActiveNode(specification.pivot);
+        if (!snapshot.releasedBetaCache)
+        {
+            static_cast<void>(domain.embed(specification.pivot));
+        }
         if (!occupiedNodes.insert(node).second)
         {
             throw std::domain_error(
@@ -1865,7 +2497,9 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
             );
         }
         deformation::Handle handle;
-        handle.restPivot = specification.pivot;
+        handle.restPivot = snapshot.releasedBetaCache
+            ? domain.restNodes().row(node).transpose()
+            : specification.pivot;
         handle.fixedRotation = specification.rotation;
         handle.role = deformation::HandleRole::User;
         handle.locked = false;
@@ -1879,13 +2513,37 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
     );
 
     phaseStart = PerformanceClock::now();
-    const deformation::DeformationSystem deformationSystem(
-        grid,
-        snapshot.vertices,
-        snapshot.faces,
-        binding,
-        snapshot.config.bbw
-    );
+    std::unique_ptr<deformation::DeformationSystem> deformationSystem;
+    if (snapshot.releasedBetaCache)
+    {
+        if (
+            snapshot.releasedBetaCache->coordinateMappedNodeWeights.cols() !=
+            static_cast<Eigen::Index>(binding.size())
+        )
+        {
+            throw std::invalid_argument(
+                "released-beta .bbw column count does not match support/user handles"
+            );
+        }
+        deformationSystem = std::make_unique<deformation::DeformationSystem>(
+            grid,
+            snapshot.vertices,
+            snapshot.faces,
+            binding,
+            snapshot.releasedBetaCache->coordinateMappedNodeWeights,
+            true
+        );
+    }
+    else
+    {
+        deformationSystem = std::make_unique<deformation::DeformationSystem>(
+            grid,
+            snapshot.vertices,
+            snapshot.faces,
+            binding,
+            snapshot.config.bbw
+        );
+    }
     durations.deformationSystemAndBbw = elapsedSeconds(
         phaseStart,
         PerformanceClock::now()
@@ -1912,9 +2570,12 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
             suspension.angleRadians
         ));
     }
-    const stability::BalanceTargetSchedule schedule(targets);
+    const stability::BalanceTargetSchedule schedule(
+        targets,
+        runConfig.optimizer.freezeTargetsAfterInitialRefresh
+    );
     const optimization::AlternatingBalanceOptimizer optimizer(
-        deformationSystem,
+        *deformationSystem,
         grid,
         schedule,
         runConfig.optimizer
@@ -1983,6 +2644,7 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
     const std::string diagnostics = buildDiagnosticsJson(
         snapshot.config,
         runConfig,
+        static_cast<bool>(snapshot.releasedBetaCache),
         static_cast<int>(snapshot.vertices.rows()),
         static_cast<int>(snapshot.faces.rows()),
         snapshot.gravity,

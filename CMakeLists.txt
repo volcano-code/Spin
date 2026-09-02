@@ -18,6 +18,22 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 option(MAKE_IT_STAND_BUILD_VIEWER "Build the interactive GLFW viewer" ON)
 option(MAKE_IT_STAND_BUILD_PYTHON "Build the pybind11 Python extension" OFF)
+option(
+    MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS
+    "Run pure-Python paper/beta compatibility contract tests"
+    OFF
+)
+option(
+    MAKE_IT_STAND_ENABLE_PYBULLET_TESTS
+    "Run optional PyBullet/trimesh simulation contract tests"
+    OFF
+)
+set(
+    MAKE_IT_STAND_RELEASED_BETA_ROOT
+    ""
+    CACHE PATH
+    "Optional root of the read-only released Make-It-Stand beta archive"
+)
 
 # Keep dependency resolution anchored to the git submodule. A different
 # checkout must be selected explicitly through MAKE_IT_STAND_LIBIGL_DIR.
@@ -80,9 +96,12 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/stability/SupportRegion.cpp
     src/stability/BalanceTargetSchedule.cpp
     src/voxel/Voxel.cpp
+    src/voxel/VoxelDomain.cpp
     src/voxel/VoxelGrid.cpp
+    src/voxel/MaterialOccupancy.cpp
     src/voxel/VoxelSurface.cpp
     src/voxel/VoxelTopology.cpp
+    src/viewer/ResultView.cpp
 )
 
 set(MAKE_IT_STAND_CORE_HEADERS
@@ -105,6 +124,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/inner_void_mesh.h
     include/list3d.h
     include/make_it_stand.h
+    include/viewer/ResultView.h
     include/manufacturing/ManufacturingGeometry.h
     include/manufacturing/PartitionManifest.h
     include/manufacturing/SlicerValidation.h
@@ -116,7 +136,9 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/stability/SupportRegion.h
     include/stability/BalanceTargetSchedule.h
     include/voxel/Voxel.h
+    include/voxel/VoxelDomain.h
     include/voxel/VoxelGrid.h
+    include/voxel/MaterialOccupancy.h
     include/voxel/VoxelSurface.h
     include/voxel/VoxelTopology.h
 )
@@ -150,6 +172,24 @@ if(MAKE_IT_STAND_BUILD_PYTHON)
         COMPONENTS Interpreter Development.Module
         REQUIRED
     )
+    find_package(Python3 3.10 COMPONENTS Interpreter REQUIRED)
+    get_filename_component(
+        MAKE_IT_STAND_PYTHON_EXECUTABLE_REAL
+        "${Python_EXECUTABLE}"
+        REALPATH
+    )
+    get_filename_component(
+        MAKE_IT_STAND_PYTHON3_EXECUTABLE_REAL
+        "${Python3_EXECUTABLE}"
+        REALPATH
+    )
+    if(NOT MAKE_IT_STAND_PYTHON_EXECUTABLE_REAL STREQUAL
+       MAKE_IT_STAND_PYTHON3_EXECUTABLE_REAL)
+        message(FATAL_ERROR
+            "Python and Python3 resolved to different interpreters: "
+            "${Python_EXECUTABLE} versus ${Python3_EXECUTABLE}"
+        )
+    endif()
 
     # Resolve pybind11 from the exact interpreter selected above. This never
     # downloads dependencies and prevents mixing two CPython environments.
@@ -184,6 +224,26 @@ if(MAKE_IT_STAND_BUILD_PYTHON)
             LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python"
     )
     target_link_libraries(_make_it_stand PRIVATE make_it_stand::core)
+
+    # Conda may preload an older libstdc++ before importing this GCC-built
+    # extension.  Ask the selected compiler for its matching runtime and use
+    # it only for extension-backed CTest processes.
+    set(MAKE_IT_STAND_PYTHON_TEST_ENV
+        "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+    )
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        execute_process(
+            COMMAND "${CMAKE_CXX_COMPILER}" -print-file-name=libstdc++.so.6
+            OUTPUT_VARIABLE MAKE_IT_STAND_COMPILER_LIBSTDCXX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        if(IS_ABSOLUTE "${MAKE_IT_STAND_COMPILER_LIBSTDCXX}"
+           AND EXISTS "${MAKE_IT_STAND_COMPILER_LIBSTDCXX}")
+            list(APPEND MAKE_IT_STAND_PYTHON_TEST_ENV
+                "LD_PRELOAD=${MAKE_IT_STAND_COMPILER_LIBSTDCXX}"
+            )
+        endif()
+    endif()
 
     install(
         TARGETS _make_it_stand
@@ -222,6 +282,220 @@ include(CTest)
 
 if(BUILD_TESTING)
     add_executable(
+        result-view-regression
+        tests/result_view_regression.cpp
+    )
+    target_compile_features(result-view-regression PRIVATE cxx_std_17)
+    set_target_properties(
+        result-view-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        result-view-regression
+        PRIVATE make_it_stand::core
+    )
+    add_test(
+        NAME result-view-preserves-sealed-posture
+        COMMAND "$<TARGET_FILE:result-view-regression>"
+    )
+    set_tests_properties(
+        result-view-preserves-sealed-posture
+        PROPERTIES
+            LABELS "viewer;result;regression"
+            TIMEOUT 15
+    )
+
+    add_executable(
+        released-beta-archive-regression
+        tests/released_beta_archive_regression.cpp
+    )
+    target_compile_features(
+        released-beta-archive-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        released-beta-archive-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        released-beta-archive-regression
+        PRIVATE make_it_stand::core
+    )
+    add_test(
+        NAME released-beta-archive-contract
+        COMMAND "$<TARGET_FILE:released-beta-archive-regression>"
+    )
+    set_tests_properties(
+        released-beta-archive-contract
+        PROPERTIES
+            LABELS "paper;released-beta;archive;regression"
+            TIMEOUT 60
+    )
+
+    add_test(
+        NAME ctest-registration-contract
+        COMMAND "${CMAKE_COMMAND}"
+            "-DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}"
+            "-DCTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_ctest_commands.cmake"
+    )
+    set_tests_properties(
+        ctest-registration-contract
+        PROPERTIES
+            LABELS "build-system;registration"
+            TIMEOUT 30
+    )
+
+    if(MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS)
+        find_package(Python3 3.10 COMPONENTS Interpreter REQUIRED)
+        execute_process(
+            COMMAND "${Python3_EXECUTABLE}" -c "import numpy"
+            RESULT_VARIABLE MAKE_IT_STAND_NUMPY_IMPORT_STATUS
+            ERROR_VARIABLE MAKE_IT_STAND_NUMPY_IMPORT_ERROR
+        )
+        if(NOT MAKE_IT_STAND_NUMPY_IMPORT_STATUS EQUAL 0)
+            message(FATAL_ERROR
+                "Paper Python tests require numpy in ${Python3_EXECUTABLE}: "
+                "${MAKE_IT_STAND_NUMPY_IMPORT_ERROR}"
+            )
+        endif()
+        add_test(
+            NAME paper-python-contracts
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_official_beta.ReleasedBetaParserTests
+                test_paper_compat.PaperTransformTests
+                test_paper_evidence.PaperEvidenceTests
+                test_paper_trace.PaperTraceTests
+                test_experiment_drivers.ExperimentDriverTests
+                test_stability_oracle.StabilityOracleTests
+                -v
+        )
+        set_tests_properties(
+            paper-python-contracts
+            PROPERTIES
+                LABELS "paper;python;released-beta;compatibility"
+                TIMEOUT 60
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+        )
+
+        if(MAKE_IT_STAND_BUILD_PYTHON)
+            add_test(
+                NAME paper-native-pipeline-contract
+                COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_paper_compat.PaperCompatibilityPipelineTests.test_normalized_optimization_restores_and_flattens_output
+                test_paper_compat.PaperCompatibilityPipelineTests.test_sealed_artifact_recomputes_moments_after_support_flattening
+                test_paper_compat.PaperCompatibilityPipelineTests.test_invalid_flattened_boundary_cannot_feed_pybullet
+                test_paper_compat.PaperCompatibilityPipelineTests.test_sealed_artifact_compacts_unreferenced_cavity_grid_vertices
+                -v
+            )
+            set_tests_properties(
+                paper-native-pipeline-contract
+                PROPERTIES
+                    LABELS "paper;python;native;compatibility"
+                    TIMEOUT 180
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+            )
+
+            if(NOT MAKE_IT_STAND_RELEASED_BETA_ROOT)
+                set(MAKE_IT_STAND_RELEASED_BETA_ROOT_CANDIDATE
+                    "${CMAKE_CURRENT_SOURCE_DIR}/../reference-only/make-it-stand/beta-extracted/make-it-stand_src_beta"
+                )
+                if(IS_DIRECTORY "${MAKE_IT_STAND_RELEASED_BETA_ROOT_CANDIDATE}")
+                    set(MAKE_IT_STAND_RELEASED_BETA_ROOT
+                        "${MAKE_IT_STAND_RELEASED_BETA_ROOT_CANDIDATE}"
+                    )
+                endif()
+            endif()
+            if(MAKE_IT_STAND_RELEASED_BETA_ROOT)
+                if(NOT IS_DIRECTORY "${MAKE_IT_STAND_RELEASED_BETA_ROOT}")
+                    message(FATAL_ERROR
+                        "MAKE_IT_STAND_RELEASED_BETA_ROOT is not a directory: "
+                        "${MAKE_IT_STAND_RELEASED_BETA_ROOT}"
+                    )
+                endif()
+                add_test(
+                    NAME released-beta-native-archive-contracts
+                    COMMAND "${Python3_EXECUTABLE}" -m unittest
+                        test_official_beta.OfficialArchiveGateTests.test_spheres_cache_contract_and_explicit_gate
+                        test_official_beta.OfficialArchiveGateTests.test_horse_true_crossing_remains_fail_closed
+                        test_official_beta.OfficialArchiveGateTests.test_horse_occupancy_reconstruction_is_explicit_and_buildable
+                        test_official_beta.OfficialArchiveGateTests.test_official_complete_archive_build_matrix
+                        -v
+                )
+                set_tests_properties(
+                    released-beta-native-archive-contracts
+                    PROPERTIES
+                        LABELS "paper;python;native;released-beta;official-assets"
+                        TIMEOUT 600
+                        ENVIRONMENT
+                            "${MAKE_IT_STAND_PYTHON_TEST_ENV};MAKE_IT_STAND_BETA_ROOT=${MAKE_IT_STAND_RELEASED_BETA_ROOT}"
+                )
+            else()
+                message(STATUS
+                    "Released-beta archive not found; official asset tests are not registered"
+                )
+            endif()
+        endif()
+    endif()
+
+    if(MAKE_IT_STAND_ENABLE_PYBULLET_TESTS)
+        find_package(Python3 3.10 COMPONENTS Interpreter REQUIRED)
+        execute_process(
+            COMMAND "${Python3_EXECUTABLE}" -c "import pybullet, trimesh"
+            RESULT_VARIABLE MAKE_IT_STAND_PYBULLET_IMPORT_STATUS
+            ERROR_VARIABLE MAKE_IT_STAND_PYBULLET_IMPORT_ERROR
+        )
+        if(NOT MAKE_IT_STAND_PYBULLET_IMPORT_STATUS EQUAL 0)
+            message(FATAL_ERROR
+                "PyBullet tests require pybullet and trimesh: "
+                "${MAKE_IT_STAND_PYBULLET_IMPORT_ERROR}"
+            )
+        endif()
+        add_test(
+            NAME pybullet-material-contracts
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_pybullet_runner.PyBulletMaterialContractTests
+                -v
+        )
+        set_tests_properties(
+            pybullet-material-contracts
+            PROPERTIES
+                LABELS "simulation;python;pybullet;material-contract"
+                TIMEOUT 60
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+        )
+    endif()
+
+    add_executable(
+        voxel-domain-regression
+        tests/voxel_domain_regression.cpp
+    )
+    target_compile_features(voxel-domain-regression PRIVATE cxx_std_17)
+    set_target_properties(
+        voxel-domain-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        voxel-domain-regression
+        PRIVATE make_it_stand::core
+    )
+    foreach(voxel_domain_scenario IN ITEMS domain boundary invalid model)
+        add_test(
+            NAME "voxel-domain-${voxel_domain_scenario}"
+            COMMAND "$<TARGET_FILE:voxel-domain-regression>"
+                "${voxel_domain_scenario}"
+        )
+        set_tests_properties(
+            "voxel-domain-${voxel_domain_scenario}"
+            PROPERTIES
+                LABELS "voxel-domain;occupancy;scaling"
+                TIMEOUT 60
+        )
+    endforeach()
+
+    add_executable(
         balance-model-regression
         tests/balance_model_regression.cpp
     )
@@ -248,7 +522,7 @@ if(BUILD_TESTING)
     if(MAKE_IT_STAND_BUILD_PYTHON)
         add_test(
             NAME r9-python-bindings
-            COMMAND "${Python_EXECUTABLE}" -m unittest
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
                 discover
                 -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
                 -p "test_bindings.py"
@@ -256,7 +530,7 @@ if(BUILD_TESTING)
         )
         add_test(
             NAME r9-python-tools
-            COMMAND "${Python_EXECUTABLE}" -m unittest
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
                 discover
                 -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
                 -p "test_python_tools.py"
@@ -264,7 +538,7 @@ if(BUILD_TESTING)
         )
         add_test(
             NAME r10-python-evidence
-            COMMAND "${Python_EXECUTABLE}" -m unittest
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
                 discover
                 -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
                 -p "test_r10*.py"
@@ -276,16 +550,14 @@ if(BUILD_TESTING)
             PROPERTIES
                 LABELS "r9;python"
                 TIMEOUT 180
-                ENVIRONMENT
-                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}/python"
+                ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
         )
         set_tests_properties(
             r10-python-evidence
             PROPERTIES
                 LABELS "r10;python;evidence"
                 TIMEOUT 180
-                ENVIRONMENT
-                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_BINARY_DIR}/python"
+                ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
         )
     endif()
 
@@ -667,6 +939,10 @@ if(BUILD_TESTING)
         alternating-multi-target-terminal
         multi
     )
+    add_balance_target_schedule_test(
+        released-beta-frozen-target
+        frozen
+    )
 
     add_executable(
         alternating-block-semantics-regression
@@ -755,6 +1031,14 @@ if(BUILD_TESTING)
         alternating-controller-end-to-end
         e2e
     )
+    add_alternating_balance_optimizer_test(
+        released-beta-outer-loop
+        beta-outer
+    )
+    add_alternating_balance_optimizer_test(
+        alternating-invalid-outer-boundary-gate
+        invalid-outer
+    )
 
     add_executable(
         r10-ablation-regression
@@ -805,6 +1089,22 @@ if(BUILD_TESTING)
         NAME voxel-topology-report
         COMMAND "$<TARGET_FILE:voxel-constraints-regression>" topology
     )
+    add_test(
+        NAME released-beta-unit-cube-voxel-grid
+        COMMAND "$<TARGET_FILE:voxel-constraints-regression>" unit-cube
+    )
+    add_test(
+        NAME released-beta-archive-voxel-cache
+        COMMAND "$<TARGET_FILE:voxel-constraints-regression>" beta-cache
+    )
+    set_tests_properties(
+        released-beta-unit-cube-voxel-grid
+        released-beta-archive-voxel-cache
+        PROPERTIES
+            LABELS "r4;carving;manufacturing;paper-compat"
+            TIMEOUT 30
+    )
+
     set_tests_properties(
         minimum-wall-thickness-analytic
         voxel-topology-report
@@ -853,6 +1153,14 @@ if(BUILD_TESTING)
     add_manufacturing_geometry_test(
         r8-boundary-self-intersection
         self-intersection
+    )
+    add_manufacturing_geometry_test(
+        r8-boundary-rounded-sphere-adjacency
+        rounded-sphere-adjacency
+    )
+    add_manufacturing_geometry_test(
+        r8-boundary-coplanar-shared-vertex
+        coplanar-shared-vertex
     )
     add_manufacturing_geometry_test(r8-prepare-empty prepare-empty)
     add_manufacturing_geometry_test(r8-prepare-cavity prepare-cavity)

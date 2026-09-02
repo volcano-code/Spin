@@ -58,6 +58,25 @@ bool approximatelyEqual(
 }
 
 
+bool approximatelyEqual(
+    const Eigen::Matrix3d& actual,
+    const Eigen::Matrix3d& expected
+)
+{
+    for (int row = 0; row < 3; ++row)
+    {
+        for (int column = 0; column < 3; ++column)
+        {
+            if (!approximatelyEqual(actual(row, column), expected(row, column)))
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
 int fail(
     const std::string& scenario,
     const std::string& message
@@ -273,6 +292,32 @@ int runSurfaceScenario()
             cuboidFaces,
             1.0
         );
+
+    const MassMoments cuboidMoments = computeSurfaceMassMoments(
+        cuboidVertices,
+        cuboidFaces,
+        1.0
+    );
+    Eigen::Matrix3d expectedCuboidInertia = Eigen::Matrix3d::Zero();
+    expectedCuboidInertia.diagonal() << 50.0, 40.0, 26.0;
+
+    if (
+        !approximatelyEqual(cuboidMoments.mass, 24.0) ||
+        !approximatelyEqual(
+            cuboidMoments.firstMoment,
+            Eigen::Vector3d(24.0, 12.0, 144.0)
+        ) ||
+        !approximatelyEqual(
+            cuboidMoments.inertiaAboutCenter(),
+            expectedCuboidInertia
+        )
+    )
+    {
+        return fail(
+            scenario,
+            "second moments or center inertia disagree for translated cuboid"
+        );
+    }
 
     if (
         !checkProperties(

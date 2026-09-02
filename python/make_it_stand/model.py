@@ -140,6 +140,7 @@ class ModelConfig:
     minimum_wall_thickness: float = 0.0
     bbw_max_iterations: int = 200
     bbw_tolerance: float = 1.0e-8
+    fixed_unit_cube_voxel_grid: bool = field(default=False, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -194,6 +195,9 @@ class RunConfig:
     enable_carving: bool = field(default=True, kw_only=True)
     enable_deformation: bool = field(default=True, kw_only=True)
     enable_laplacian: bool = field(default=True, kw_only=True)
+    freeze_targets_after_initial_refresh: bool = field(default=False, kw_only=True)
+    released_beta_semantics: bool = field(default=False, kw_only=True)
+    released_beta_outer_loop: bool = field(default=False, kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -225,7 +229,7 @@ class BalanceConfig:
 
 _MODEL_FIELDS = {
     "path", "voxel_resolution", "minimum_wall_thickness",
-    "bbw_max_iterations", "bbw_tolerance",
+    "bbw_max_iterations", "bbw_tolerance", "fixed_unit_cube_voxel_grid",
 }
 _RUN_FIELDS = set(RunConfig.__dataclass_fields__)
 _OUTPUT_FIELDS = {"diagnostics", "outer_mesh", "inner_mesh", "printable_mesh"}
@@ -274,6 +278,10 @@ def validate_config(value: Any) -> BalanceConfig:
             raw_model.get("bbw_tolerance", 1.0e-8),
             "config.model.bbw_tolerance",
             strictly_positive=True,
+        ),
+        fixed_unit_cube_voxel_grid=_bool(
+            raw_model.get("fixed_unit_cube_voxel_grid", False),
+            "config.model.fixed_unit_cube_voxel_grid",
         ),
     )
 
@@ -467,6 +475,9 @@ def validate_config(value: Any) -> BalanceConfig:
         "enable_carving",
         "enable_deformation",
         "enable_laplacian",
+        "freeze_targets_after_initial_refresh",
+        "released_beta_semantics",
+        "released_beta_outer_loop",
     }
     for name in _RUN_FIELDS:
         raw = raw_run.get(name, getattr(run_defaults, name))
@@ -503,6 +514,16 @@ def validate_config(value: Any) -> BalanceConfig:
         _fail(
             "config.run",
             "enable_carving and enable_deformation must not both be false",
+        )
+    if run_values["released_beta_outer_loop"] and not (
+        run_values["enable_carving"] and
+        run_values["enable_deformation"] and
+        run_values["freeze_targets_after_initial_refresh"] and
+        run_values["released_beta_semantics"]
+    ):
+        _fail(
+            "config.run.released_beta_outer_loop",
+            "requires carving, deformation, frozen targets, and beta line search",
         )
     run = RunConfig(**run_values)
 
@@ -696,7 +717,7 @@ def _native_model_config(native: Any, config: ModelConfig) -> Any:
     result = native.BalanceModelConfig()
     for name in (
         "voxel_resolution", "minimum_wall_thickness",
-        "bbw_max_iterations", "bbw_tolerance",
+        "bbw_max_iterations", "bbw_tolerance", "fixed_unit_cube_voxel_grid",
     ):
         setattr(result, name, getattr(config, name))
     return result
@@ -917,12 +938,26 @@ class BalanceModel:
         self,
         contact_threshold: float,
         gamma_radians: float,
+        minimum_stability_inset: float = 0.0,
+        support_plane_at_band_top: bool = False,
     ) -> "BalanceModel":
         threshold = _number(contact_threshold, "contact_threshold", minimum=0.0)
         gamma = _number(gamma_radians, "gamma_radians", minimum=0.0)
+        inset = _number(
+            minimum_stability_inset,
+            "minimum_stability_inset",
+            minimum=0.0,
+        )
+        if not isinstance(support_plane_at_band_top, bool):
+            _fail("support_plane_at_band_top", "expected a boolean")
         if gamma >= math.pi / 2.0:
             _fail("gamma_radians", "must be less than pi/2")
-        self._native.set_support_from_mesh(threshold, gamma)
+        self._native.set_support_from_mesh(
+            threshold,
+            gamma,
+            inset,
+            support_plane_at_band_top,
+        )
         return self
 
     def add_standing_constraint_polygon(
@@ -950,17 +985,28 @@ class BalanceModel:
         gravity_direction: Sequence[float],
         contact_threshold: float,
         gamma_radians: float,
+        minimum_stability_inset: float = 0.0,
+        support_plane_at_band_top: bool = False,
     ) -> "BalanceModel":
         gravity = _vector3(gravity_direction, "gravity_direction")
         _nonzero(gravity, "gravity_direction")
         threshold = _number(contact_threshold, "contact_threshold", minimum=0.0)
         gamma = _number(gamma_radians, "gamma_radians", minimum=0.0)
+        inset = _number(
+            minimum_stability_inset,
+            "minimum_stability_inset",
+            minimum=0.0,
+        )
+        if not isinstance(support_plane_at_band_top, bool):
+            _fail("support_plane_at_band_top", "expected a boolean")
         if gamma >= math.pi / 2.0:
             _fail("gamma_radians", "must be less than pi/2")
         self._native.add_standing_constraint_from_mesh(
             gravity,
             threshold,
             gamma,
+            inset,
+            support_plane_at_band_top,
         )
         return self
 

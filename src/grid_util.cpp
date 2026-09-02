@@ -7,6 +7,7 @@
 #include <igl/rotation_matrix_from_directions.h>
 
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 void createAlignedBox(const Eigen::MatrixXd &V, Eigen::AlignedBox3d &box) {
@@ -101,6 +102,81 @@ void createVoxelGrid(
 	Eigen::Vector3d outTRC = centersBox.corner(centersBox.TopRightCeil) + (voxelSize / 2.0);
 	Eigen::AlignedBox3d outBox(outBLF, outTRC);
 	transformVertices(defaultGrid, outBox, corners);
+}
+
+void createUnitCubeVoxelGrid(
+	Eigen::MatrixXd& centers,
+	Eigen::MatrixXd& corners,
+	Eigen::Vector3i& dimensions,
+	Eigen::Vector3d& voxelSize,
+	int resolution
+) {
+	if (resolution < 3) {
+		throw std::invalid_argument("voxel resolution must be at least three");
+	}
+
+	const long long cornerResolution =
+		static_cast<long long>(resolution) + 1LL;
+	const long long maximumCount =
+		static_cast<long long>(std::numeric_limits<int>::max());
+	auto checkedCubeCount = [maximumCount](long long side) {
+		if (
+			side <= 0 ||
+			side > maximumCount / side ||
+			side * side > maximumCount / side
+		) {
+			throw std::overflow_error(
+				"unit-cube voxel grid exceeds integer indexing"
+			);
+		}
+		return side * side * side;
+	};
+	const long long cellCount = checkedCubeCount(resolution);
+	const long long cornerCount = checkedCubeCount(cornerResolution);
+	if (cornerResolution > static_cast<long long>(std::numeric_limits<int>::max())) {
+		throw std::overflow_error("unit-cube voxel grid exceeds integer indexing");
+	}
+
+	dimensions = Eigen::Vector3i::Constant(resolution);
+	voxelSize = Eigen::Vector3d::Constant(
+		1.0 / static_cast<double>(resolution)
+	);
+	centers.resize(static_cast<Eigen::Index>(cellCount), 3);
+	for (int z = 0; z < resolution; ++z) {
+		for (int y = 0; y < resolution; ++y) {
+			for (int x = 0; x < resolution; ++x) {
+				const Eigen::Index row = static_cast<Eigen::Index>(
+					x + resolution * (y + resolution * z)
+				);
+				centers.row(row) <<
+					(static_cast<double>(x) + 0.5) * voxelSize(0),
+					(static_cast<double>(y) + 0.5) * voxelSize(1),
+					(static_cast<double>(z) + 0.5) * voxelSize(2);
+			}
+		}
+	}
+
+	const int nodes = resolution + 1;
+	corners.resize(static_cast<Eigen::Index>(cornerCount), 3);
+	for (int z = 0; z < nodes; ++z) {
+		for (int y = 0; y < nodes; ++y) {
+			for (int x = 0; x < nodes; ++x) {
+				const Eigen::Index row = static_cast<Eigen::Index>(
+					x + nodes * (y + nodes * z)
+				);
+				corners.row(row) <<
+					(x == resolution
+						? 1.0
+						: static_cast<double>(x) * voxelSize(0)),
+					(y == resolution
+						? 1.0
+						: static_cast<double>(y) * voxelSize(1)),
+					(z == resolution
+						? 1.0
+						: static_cast<double>(z) * voxelSize(2));
+			}
+		}
+	}
 }
 
 void alignToAxis(const Eigen::MatrixXd& V, Eigen::MatrixXd& alignedV) {

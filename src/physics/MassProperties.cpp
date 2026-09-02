@@ -176,6 +176,174 @@ MassProperties operator-(
 }
 
 
+MassMoments::MassMoments()
+    :
+    mass(0.0),
+    firstMoment(Eigen::Vector3d::Zero()),
+    secondMoment(Eigen::Matrix3d::Zero())
+{
+}
+
+
+bool MassMoments::isFinite() const
+{
+    return
+        std::isfinite(mass) &&
+        firstMoment.allFinite() &&
+        secondMoment.allFinite();
+}
+
+
+bool MassMoments::tryCenterOfMass(
+    Eigen::Vector3d& centerOfMass,
+    double minimumAbsoluteMass
+) const
+{
+    if (
+        !isFinite() ||
+        !std::isfinite(minimumAbsoluteMass) ||
+        minimumAbsoluteMass < 0.0 ||
+        std::abs(mass) <= minimumAbsoluteMass
+    )
+    {
+        return false;
+    }
+    centerOfMass = firstMoment / mass;
+    return centerOfMass.allFinite();
+}
+
+
+Eigen::Matrix3d MassMoments::inertiaAboutCenter(
+    double minimumPositiveMass
+) const
+{
+    Eigen::Vector3d center = Eigen::Vector3d::Zero();
+    if (
+        !std::isfinite(minimumPositiveMass) ||
+        minimumPositiveMass < 0.0 ||
+        !(mass > minimumPositiveMass) ||
+        !tryCenterOfMass(center, minimumPositiveMass)
+    )
+    {
+        throw std::domain_error(
+            "center inertia requires finite positive mass moments"
+        );
+    }
+
+    const Eigen::Matrix3d inertiaAtOrigin =
+        secondMoment.trace() * Eigen::Matrix3d::Identity() - secondMoment;
+    const Eigen::Matrix3d parallelAxis = mass * (
+        center.squaredNorm() * Eigen::Matrix3d::Identity() -
+        center * center.transpose()
+    );
+    return inertiaAtOrigin - parallelAxis;
+}
+
+
+MassMoments& MassMoments::operator+=(const MassMoments& other)
+{
+    mass += other.mass;
+    firstMoment += other.firstMoment;
+    secondMoment += other.secondMoment;
+    return *this;
+}
+
+
+MassMoments& MassMoments::operator-=(const MassMoments& other)
+{
+    mass -= other.mass;
+    firstMoment -= other.firstMoment;
+    secondMoment -= other.secondMoment;
+    return *this;
+}
+
+
+MassMoments operator+(MassMoments first, const MassMoments& second)
+{
+    first += second;
+    return first;
+}
+
+
+MassMoments operator-(MassMoments first, const MassMoments& second)
+{
+    first -= second;
+    return first;
+}
+
+
+MassMoments computeSurfaceMassMoments(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXi& faces,
+    double density
+)
+{
+    requirePositiveFiniteDensity(density);
+    if (vertices.cols() != 3 || faces.cols() != 3)
+    {
+        throw std::invalid_argument(
+            "mass moments require 3D vertices and triangle faces"
+        );
+    }
+    if (!vertices.allFinite())
+    {
+        throw std::invalid_argument("mass-moment vertices must be finite");
+    }
+
+    MassMoments moments;
+    if (vertices.rows() == 0 || faces.rows() == 0)
+    {
+        return moments;
+    }
+
+    const Eigen::Vector3d reference =
+        vertices.colwise().mean().transpose();
+    for (Eigen::Index row = 0; row < faces.rows(); ++row)
+    {
+        const int indices[3] =
+        {
+            faces(row, 0), faces(row, 1), faces(row, 2)
+        };
+        for (const int index : indices)
+        {
+            if (index < 0 || index >= vertices.rows())
+            {
+                throw std::out_of_range(
+                    "mass-moment face index is outside the vertex array"
+                );
+            }
+        }
+
+        const Eigen::Vector3d verticesWorld[4] =
+        {
+            reference,
+            vertices.row(indices[0]).transpose(),
+            vertices.row(indices[1]).transpose(),
+            vertices.row(indices[2]).transpose()
+        };
+        const Eigen::Vector3d first = verticesWorld[1] - reference;
+        const Eigen::Vector3d second = verticesWorld[2] - reference;
+        const Eigen::Vector3d third = verticesWorld[3] - reference;
+        const double signedMass =
+            density * first.dot(second.cross(third)) / 6.0;
+
+        Eigen::Vector3d sum = Eigen::Vector3d::Zero();
+        Eigen::Matrix3d selfOuter = Eigen::Matrix3d::Zero();
+        for (const Eigen::Vector3d& vertex : verticesWorld)
+        {
+            sum += vertex;
+            selfOuter += vertex * vertex.transpose();
+        }
+
+        moments.mass += signedMass;
+        moments.firstMoment += signedMass * sum / 4.0;
+        moments.secondMoment +=
+            signedMass * (sum * sum.transpose() + selfOuter) / 20.0;
+    }
+    return moments;
+}
+
+
 MassProperties computeSurfaceMassProperties(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,

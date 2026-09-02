@@ -982,6 +982,135 @@ bool pointBelongsToSharedSimplex(
 }
 
 
+double cross2d(
+    const Eigen::Vector2d& first,
+    const Eigen::Vector2d& second
+)
+{
+    return first.x() * second.y() - first.y() * second.x();
+}
+
+
+bool coplanarTriangleInteriorsOverlap(
+    const Triangle& first,
+    const Triangle& second,
+    const Eigen::Vector3d& normal,
+    double tolerance
+)
+{
+    int droppedAxis = 0;
+    normal.cwiseAbs().maxCoeff(&droppedAxis);
+    const auto project = [droppedAxis](const Eigen::Vector3d& point)
+    {
+        if (droppedAxis == 0)
+        {
+            return Eigen::Vector2d(point.y(), point.z());
+        }
+        if (droppedAxis == 1)
+        {
+            return Eigen::Vector2d(point.x(), point.z());
+        }
+        return Eigen::Vector2d(point.x(), point.y());
+    };
+
+    std::vector<Eigen::Vector2d> subject;
+    std::array<Eigen::Vector2d, 3> clip;
+    subject.reserve(6U);
+    for (int corner = 0; corner < 3; ++corner)
+    {
+        subject.push_back(project(first.points[static_cast<std::size_t>(corner)]));
+        clip[static_cast<std::size_t>(corner)] =
+            project(second.points[static_cast<std::size_t>(corner)]);
+    }
+    const auto signedArea = [](const auto& polygon)
+    {
+        double twiceArea = 0.0;
+        for (std::size_t index = 0; index < polygon.size(); ++index)
+        {
+            twiceArea += cross2d(
+                polygon[index],
+                polygon[(index + 1U) % polygon.size()]
+            );
+        }
+        return 0.5 * twiceArea;
+    };
+    if (signedArea(subject) < 0.0)
+    {
+        std::reverse(subject.begin(), subject.end());
+    }
+    if (signedArea(clip) < 0.0)
+    {
+        std::reverse(clip.begin(), clip.end());
+    }
+
+    double projectedScale = 0.0;
+    for (const Eigen::Vector2d& point : subject)
+    {
+        projectedScale = std::max(projectedScale, point.norm());
+    }
+    for (const Eigen::Vector2d& point : clip)
+    {
+        projectedScale = std::max(projectedScale, point.norm());
+    }
+    projectedScale = std::max(projectedScale, tolerance);
+    const double sideTolerance = tolerance * projectedScale;
+
+    for (int clipEdge = 0; clipEdge < 3 && !subject.empty(); ++clipEdge)
+    {
+        const Eigen::Vector2d start =
+            clip[static_cast<std::size_t>(clipEdge)];
+        const Eigen::Vector2d end =
+            clip[static_cast<std::size_t>((clipEdge + 1) % 3)];
+        const Eigen::Vector2d edge = end - start;
+        std::vector<Eigen::Vector2d> output;
+        output.reserve(subject.size() + 1U);
+        Eigen::Vector2d previous = subject.back();
+        double previousSide = cross2d(edge, previous - start);
+        bool previousInside = previousSide >= -sideTolerance;
+        for (const Eigen::Vector2d& current : subject)
+        {
+            const double currentSide = cross2d(edge, current - start);
+            const bool currentInside = currentSide >= -sideTolerance;
+            if (currentInside != previousInside)
+            {
+                const double denominator = previousSide - currentSide;
+                if (denominator != 0.0)
+                {
+                    const double parameter = std::clamp(
+                        previousSide / denominator,
+                        0.0,
+                        1.0
+                    );
+                    output.push_back(
+                        previous + parameter * (current - previous)
+                    );
+                }
+            }
+            if (currentInside)
+            {
+                output.push_back(current);
+            }
+            previous = current;
+            previousSide = currentSide;
+            previousInside = currentInside;
+        }
+        subject = std::move(output);
+    }
+
+    if (subject.size() < 3U)
+    {
+        return false;
+    }
+    const double overlapArea = std::abs(signedArea(subject));
+    const double areaTolerance = std::max(
+        8.0 * tolerance * projectedScale,
+        4096.0 * std::numeric_limits<double>::epsilon() *
+            projectedScale * projectedScale
+    );
+    return overlapArea > areaTolerance;
+}
+
+
 bool trianglesHaveDisallowedSelfIntersection(
     const Triangle& first,
     const Triangle& second,
@@ -1002,6 +1131,189 @@ bool trianglesHaveDisallowedSelfIntersection(
     if (sharedVertices.size() >= 3U)
     {
         return true;
+    }
+
+    if (sharedVertices.size() == 2U)
+    {
+        /*
+         * Two consistently indexed manifold facets meet along one complete
+         * edge.  When their planes differ, their only possible intersection
+         * is that shared line segment and it is always allowed.  Feeding an
+         * almost-coplanar pair through the generic segment/triangle routine
+         * is numerically unstable for decimal OBJ coordinates: the computed
+         * point can drift a few ulps outside the shared segment and turn every
+         * smooth UV-sphere edge into a false self intersection.
+         *
+         * A genuinely coplanar pair still needs an overlap test.  Projecting
+         * the two unshared vertices onto the signed side of the common edge
+         * distinguishes a valid diagonal (opposite sides) from overlapping
+         * facets (same side), without constructing an intersection point.
+         */
+        const Eigen::Vector3d firstNormal =
+            (first.points[1] - first.points[0]).cross(
+                first.points[2] - first.points[0]
+            );
+        const Eigen::Vector3d secondNormal =
+            (second.points[1] - second.points[0]).cross(
+                second.points[2] - second.points[0]
+            );
+        const double firstNorm = firstNormal.norm();
+        const double secondNorm = secondNormal.norm();
+        const double angularTolerance =
+            4096.0 * std::numeric_limits<double>::epsilon();
+        const bool normalsParallel =
+            firstNormal.cross(secondNormal).norm() <=
+            angularTolerance * firstNorm * secondNorm;
+
+        const int sharedA = sharedVertices[0];
+        const int sharedB = sharedVertices[1];
+        const auto pointForIndex = [](const Triangle& triangle, int index)
+        {
+            const auto iterator = std::find(
+                triangle.vertices.begin(),
+                triangle.vertices.end(),
+                index
+            );
+            return triangle.points[static_cast<std::size_t>(
+                std::distance(triangle.vertices.begin(), iterator)
+            )];
+        };
+        const auto unsharedPoint = [](
+            const Triangle& triangle,
+            const std::vector<int>& shared
+        )
+        {
+            for (int index = 0; index < 3; ++index)
+            {
+                if (std::find(
+                        shared.begin(),
+                        shared.end(),
+                        triangle.vertices[static_cast<std::size_t>(index)]
+                    ) == shared.end())
+                {
+                    return triangle.points[static_cast<std::size_t>(index)];
+                }
+            }
+            return triangle.points[0];
+        };
+        const Eigen::Vector3d edgeStart = pointForIndex(first, sharedA);
+        const Eigen::Vector3d edgeEnd = pointForIndex(first, sharedB);
+        const Eigen::Vector3d firstThird =
+            unsharedPoint(first, sharedVertices);
+        const Eigen::Vector3d secondThird =
+            unsharedPoint(second, sharedVertices);
+        const bool planesCoincident = normalsParallel &&
+            std::abs(firstNormal.dot(secondThird - edgeStart)) <=
+                tolerance * firstNorm &&
+            std::abs(secondNormal.dot(firstThird - edgeStart)) <=
+                tolerance * secondNorm;
+        if (!planesCoincident)
+        {
+            return false;
+        }
+
+        const Eigen::Vector3d edge = edgeEnd - edgeStart;
+        const double firstSide = firstNormal.dot(
+            edge.cross(firstThird - edgeStart)
+        );
+        const double secondSide = firstNormal.dot(
+            edge.cross(secondThird - edgeStart)
+        );
+        const double sideTolerance =
+            tolerance * firstNorm * edge.norm();
+        return
+            (firstSide > sideTolerance && secondSide > sideTolerance) ||
+            (firstSide < -sideTolerance && secondSide < -sideTolerance);
+    }
+
+    if (sharedVertices.size() == 1U)
+    {
+        /*
+         * Non-edge-neighbor facets in a valid vertex fan are allowed to meet
+         * at their indexed vertex.  Robust segment/triangle predicates can
+         * otherwise report that endpoint as a tiny outgoing intersection for
+         * decimal, nearly coplanar sphere facets.  Remove a 1e-6 barycentric
+         * neighborhood of the shared vertex from each triangle and test the
+         * remaining interiors.  A crossing that actually leaves the common
+         * vertex is preserved; endpoint-only contact is not.
+         */
+        const Eigen::Vector3d firstNormal =
+            (first.points[1] - first.points[0]).cross(
+                first.points[2] - first.points[0]
+            );
+        const Eigen::Vector3d secondNormal =
+            (second.points[1] - second.points[0]).cross(
+                second.points[2] - second.points[0]
+            );
+        const double firstNorm = firstNormal.norm();
+        const double secondNorm = secondNormal.norm();
+        const double angularTolerance =
+            4096.0 * std::numeric_limits<double>::epsilon();
+        const bool normalsParallel =
+            firstNormal.cross(secondNormal).norm() <=
+            angularTolerance * firstNorm * secondNorm;
+        const auto sharedIterator = std::find(
+            first.vertices.begin(),
+            first.vertices.end(),
+            sharedVertices[0]
+        );
+        const Eigen::Vector3d sharedPoint = first.points[
+            static_cast<std::size_t>(
+                std::distance(first.vertices.begin(), sharedIterator)
+            )
+        ];
+        const bool planesCoincident = normalsParallel &&
+            std::all_of(
+                second.points.begin(),
+                second.points.end(),
+                [&](const Eigen::Vector3d& point)
+                {
+                    return std::abs(firstNormal.dot(point - sharedPoint)) <=
+                        tolerance * firstNorm;
+                }
+            );
+        if (planesCoincident)
+        {
+            return coplanarTriangleInteriorsOverlap(
+                first,
+                second,
+                firstNormal,
+                tolerance
+            );
+        }
+
+        const auto shrinkSharedCorner = [sharedVertices](Triangle triangle)
+        {
+            constexpr double fraction = 1.0e-6;
+            int sharedCorner = -1;
+            for (int corner = 0; corner < 3; ++corner)
+            {
+                if (
+                    triangle.vertices[static_cast<std::size_t>(corner)] ==
+                    sharedVertices[0]
+                )
+                {
+                    sharedCorner = corner;
+                    break;
+                }
+            }
+            const int next = (sharedCorner + 1) % 3;
+            const int previous = (sharedCorner + 2) % 3;
+            triangle.points[static_cast<std::size_t>(sharedCorner)] =
+                (1.0 - fraction) *
+                    triangle.points[static_cast<std::size_t>(sharedCorner)] +
+                0.5 * fraction *
+                    triangle.points[static_cast<std::size_t>(next)] +
+                0.5 * fraction *
+                    triangle.points[static_cast<std::size_t>(previous)];
+            triangle.bounds = triangleBounds(triangle.points);
+            return triangle;
+        };
+        return trianglesIntersect(
+            shrinkSharedCorner(first),
+            shrinkSharedCorner(second),
+            tolerance
+        );
     }
 
     for (int edge = 0; edge < 3; ++edge)
@@ -2992,6 +3304,75 @@ BoundaryAudit auditTriangleBoundary(
             tolerance
         );
     }
+    return result;
+}
+
+
+MaterialShellAudit auditMaterialShells(
+    const Eigen::MatrixXd& outerVertices,
+    const Eigen::MatrixXi& outerFaces,
+    const Eigen::MatrixXd& innerVertices,
+    const Eigen::MatrixXi& innerFaces,
+    double requestedThickness,
+    double geometricTolerance
+)
+{
+    if (
+        !std::isfinite(requestedThickness) ||
+        requestedThickness < 0.0 ||
+        !std::isfinite(geometricTolerance) ||
+        geometricTolerance < 0.0
+    )
+    {
+        throw std::invalid_argument(
+            "material shell audit tolerances must be finite and nonnegative"
+        );
+    }
+    if (
+        outerVertices.cols() != 3 || outerFaces.cols() != 3 ||
+        innerVertices.cols() != 3 || innerFaces.cols() != 3 ||
+        outerVertices.rows() == 0 || outerFaces.rows() == 0 ||
+        innerVertices.rows() == 0 || innerFaces.rows() == 0
+    )
+    {
+        throw std::invalid_argument(
+            "material shell audit requires nonempty triangle boundaries"
+        );
+    }
+    Eigen::MatrixXd combined(
+        outerVertices.rows() + innerVertices.rows(),
+        3
+    );
+    combined.topRows(outerVertices.rows()) = outerVertices;
+    combined.bottomRows(innerVertices.rows()) = innerVertices;
+    const double tolerance = resolvedTolerance(
+        translatedVertices(combined, localOrigin(combined)),
+        geometricTolerance
+    );
+    const BoundaryAudit innerAudit = auditTriangleBoundary(
+        innerVertices,
+        innerFaces,
+        BoundaryOrientation::InwardNegative,
+        false,
+        tolerance
+    );
+    MaterialShellAudit result;
+    result.wallClearance = auditWallClearance(
+        outerVertices,
+        outerFaces,
+        innerVertices,
+        innerFaces,
+        requestedThickness,
+        tolerance
+    );
+    result.containment = auditContainment(
+        outerVertices,
+        outerFaces,
+        innerVertices,
+        innerFaces,
+        innerAudit,
+        result.wallClearance.intersectionFree
+    );
     return result;
 }
 

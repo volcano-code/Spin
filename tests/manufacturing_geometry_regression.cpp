@@ -91,6 +91,64 @@ TriangleMesh makeBox(
 }
 
 
+TriangleMesh makeRoundedUvSphere()
+{
+    constexpr int latitudeCount = 8;
+    constexpr int longitudeCount = 16;
+    constexpr double pi = 3.14159265358979323846264338327950288;
+    TriangleMesh result;
+    result.vertices.resize(2 + (latitudeCount - 1) * longitudeCount, 3);
+    result.vertices.row(0) = Eigen::RowVector3d(0.0, 0.0, 1.0);
+    int vertex = 1;
+    for (int latitude = 1; latitude < latitudeCount; ++latitude)
+    {
+        const double phi = pi * latitude / latitudeCount;
+        for (int longitude = 0; longitude < longitudeCount; ++longitude)
+        {
+            const double theta = 2.0 * pi * longitude / longitudeCount;
+            const Eigen::RowVector3d point(
+                std::sin(phi) * std::cos(theta),
+                std::sin(phi) * std::sin(theta),
+                std::cos(phi)
+            );
+            result.vertices.row(vertex++) = (
+                point.array() * 1.0e6
+            ).round() / 1.0e6;
+        }
+    }
+    const int bottom = vertex;
+    result.vertices.row(vertex++) = Eigen::RowVector3d(0.0, 0.0, -1.0);
+
+    result.faces.resize(2 * longitudeCount * (latitudeCount - 1), 3);
+    int face = 0;
+    for (int longitude = 0; longitude < longitudeCount; ++longitude)
+    {
+        const int next = (longitude + 1) % longitudeCount;
+        result.faces.row(face++) << 0, 1 + longitude, 1 + next;
+    }
+    for (int latitude = 0; latitude < latitudeCount - 2; ++latitude)
+    {
+        const int first = 1 + latitude * longitudeCount;
+        const int second = first + longitudeCount;
+        for (int longitude = 0; longitude < longitudeCount; ++longitude)
+        {
+            const int next = (longitude + 1) % longitudeCount;
+            result.faces.row(face++) <<
+                first + longitude, second + next, first + next;
+            result.faces.row(face++) <<
+                first + longitude, second + longitude, second + next;
+        }
+    }
+    const int lastRing = 1 + (latitudeCount - 2) * longitudeCount;
+    for (int longitude = 0; longitude < longitudeCount; ++longitude)
+    {
+        const int next = (longitude + 1) % longitudeCount;
+        result.faces.row(face++) << bottom, lastRing + next, lastRing + longitude;
+    }
+    return result;
+}
+
+
 TriangleMesh join(const TriangleMesh& first, const TriangleMesh& second)
 {
     TriangleMesh result;
@@ -1804,6 +1862,94 @@ int runSelfIntersection()
 }
 
 
+int runRoundedSphereAdjacency()
+{
+    const std::string scenario = "rounded-sphere-adjacency";
+    const BoundaryAudit audit = auditOutward(makeRoundedUvSphere());
+    if (
+        !audit.strictBoundaryValid() ||
+        !audit.selfIntersections.intersectionFree ||
+        audit.selfIntersections.intersectingPairCount != 0
+    )
+    {
+        return fail(
+            scenario,
+            "rounded adjacent sphere facets were misclassified as intersections; "
+            "first=" + std::to_string(audit.selfIntersections.firstFace) +
+            ",second=" + std::to_string(audit.selfIntersections.secondFace) +
+            ",count=" + std::to_string(
+                audit.selfIntersections.intersectingPairCount
+            )
+        );
+    }
+    return pass(scenario);
+}
+
+
+int runCoplanarSharedVertex()
+{
+    const std::string scenario = "coplanar-shared-vertex";
+    Eigen::MatrixXd vertices(7, 3);
+    vertices <<
+        0.56147501918576503, 0.21095749967863109, 0.41817485361073092,
+        0.56237374203010992, 0.21095749967863109, 0.41794314249723524,
+        0.56242464198434472, 0.21095749967863109, 0.41793748983581369,
+        0.56205527570809155, 0.21095749967863109, 0.41798271048934399,
+        0.56230211454184453, 0.21095749967863109, 0.41793184511979847,
+        0.0, 0.0, 0.0,
+        1.0, 1.0, 1.0;
+    Eigen::MatrixXi faces(2, 3);
+    faces << 0, 1, 2, 0, 3, 4;
+    const BoundaryAudit fan = auditTriangleBoundary(
+        vertices,
+        faces,
+        BoundaryOrientation::AnyNonzero,
+        false,
+        0.0
+    );
+    if (
+        !fan.selfIntersections.completed ||
+        !fan.selfIntersections.intersectionFree ||
+        fan.selfIntersections.intersectingPairCount != 0
+    )
+    {
+        return fail(
+            scenario,
+            "non-overlapping coplanar vertex fan was reported as intersecting"
+        );
+    }
+
+    vertices.resize(7, 3);
+    vertices <<
+        0.0, 0.0, 0.0,
+        2.0, 0.0, 0.0,
+        0.0, 2.0, 0.0,
+        1.0, 0.2, 0.0,
+        0.2, 1.0, 0.0,
+        0.0, 0.0, -1.0,
+        2.0, 2.0, 1.0;
+    const BoundaryAudit overlap = auditTriangleBoundary(
+        vertices,
+        faces,
+        BoundaryOrientation::AnyNonzero,
+        false,
+        0.0
+    );
+    if (
+        !overlap.selfIntersections.completed ||
+        overlap.selfIntersections.intersectionFree ||
+        overlap.selfIntersections.intersectingPairCount != 1
+    )
+    {
+        return fail(
+            scenario,
+            "true coplanar shared-vertex overlap escaped the audit"
+        );
+    }
+    return pass(scenario);
+}
+
+
 } // namespace
 
 
@@ -1814,7 +1960,9 @@ int main(int argc, char** argv)
         std::cerr
             << "usage: manufacturing-geometry-regression "
             << "<cube|missing|reversed|duplicate|degenerate|double-outer|"
-            << "self-intersection|prepare-empty|prepare-cavity|stale-inner|"
+            << "self-intersection|rounded-sphere-adjacency|"
+            << "coplanar-shared-vertex|prepare-empty|"
+            << "prepare-cavity|stale-inner|"
             << "cell-collapse|cell-swap|material-components|containment|"
             << "wall-threshold|source-bound|export-roundtrip|"
             << "source-bound-cavity|source-bound-deformation-terminal|"
@@ -1833,6 +1981,14 @@ int main(int argc, char** argv)
     if (scenario == "degenerate") return runDegenerate();
     if (scenario == "double-outer") return runDoubleOuter();
     if (scenario == "self-intersection") return runSelfIntersection();
+    if (scenario == "rounded-sphere-adjacency")
+    {
+        return runRoundedSphereAdjacency();
+    }
+    if (scenario == "coplanar-shared-vertex")
+    {
+        return runCoplanarSharedVertex();
+    }
     if (scenario == "prepare-empty") return runPrepareEmpty();
     if (scenario == "prepare-cavity") return runPrepareCavity();
     if (scenario == "stale-inner") return runStaleInner();

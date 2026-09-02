@@ -110,16 +110,19 @@ std::uint64_t balanceTargetSnapshotContentHash(
 /**
  * Fixed-support target schedule for the R7 alternating optimizer.
  *
- * Standing supports and suspension attachments never move.  A refresh only
- * projects the current center of mass onto each standing safe region and
- * evaluates every constraint.  Objective order is identical to specification
- * order, and terminal success uses all-of semantics.
+ * Standing supports and suspension attachments never move. By default, a
+ * refresh projects the current center of mass onto each standing safe region
+ * and evaluates every constraint. The opt-in released-beta mode keeps the
+ * first objective targets but still refreshes every terminal constraint.
+ * Objective order is identical to specification order, and terminal success
+ * uses all-of semantics.
  */
 class BalanceTargetSchedule
 {
 public:
     explicit BalanceTargetSchedule(
-        const BalanceTargetSpecifications& specifications
+        const BalanceTargetSpecifications& specifications,
+        bool freezeObjectivesAfterInitialRefresh = false
     );
 
     BalanceTargetSnapshot refresh(
@@ -131,12 +134,14 @@ public:
     std::size_t generation() const;
 
     const BalanceTargetSpecifications& specifications() const;
+    bool freezesObjectivesAfterInitialRefresh() const;
 
 private:
     BalanceTargetSpecifications specifications_;
     BalanceTargetSnapshot snapshot_;
     bool hasSnapshot_;
     std::size_t generation_;
+    bool freezeObjectivesAfterInitialRefresh_;
 };
 
 

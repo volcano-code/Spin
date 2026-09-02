@@ -1,6 +1,6 @@
 # Reproduction environment lock
 
-Last audited: 2026-08-13 (Asia/Shanghai)
+Last audited: 2026-09-01 (Asia/Shanghai)
 
 ## Reference host toolchain
 
@@ -13,9 +13,10 @@ Last audited: 2026-08-13 (Asia/Shanghai)
 | Generator | Ninja 1.13.0 |
 | C++ language mode | C++17, extensions disabled |
 | Build type | `RelWithDebInfo` |
-| Optional R9/R10 CPython | `/usr/bin/python3` 3.12.3 |
-| Optional R9/R10 pybind11 headers | 3.0.1 CMake package from the local Anaconda installation |
-| Optional R9/R10 NumPy runtime | 2.4.3 on the audited CPython 3.12 host; package floor 1.26 |
+| Paper/Python CPython | `/home/lin/anaconda3/bin/python3` 3.13.5 |
+| pybind11 headers | 3.0.1 |
+| NumPy runtime | 2.1.3 |
+| Optional simulation | PyBullet build 2026-03-16; trimesh 4.9.0 |
 
 The project rejects CMake 4.x. The pinned libigl revision invokes legacy
 download subprojects whose old compatibility mode was removed in CMake 4.
@@ -57,18 +58,32 @@ git submodule update --init --recursive
 /usr/bin/cmake --preset python
 /usr/bin/cmake --build --preset python --parallel
 /usr/bin/ctest --preset python
+/usr/bin/cmake --preset paper-python
+/usr/bin/cmake --build --preset paper-python --parallel
+/usr/bin/ctest --preset paper-python
+/usr/bin/cmake --preset physics-python
+/usr/bin/cmake --build --preset physics-python --parallel
+/usr/bin/ctest --preset physics-python
 ```
+
+Run the four CTest presets sequentially.  Some native regression executables
+write atomic-diagnostics fixtures at fixed paths in the system temporary
+directory.  Concurrent preset invocations use separate build trees but can
+still race on those fixtures and produce a false corruption failure.  The
+release gate deliberately invokes the presets one at a time.
 
 The presets intentionally use separate build trees. Headless testing does not
 enable OpenGL, GLFW or ImGui; the viewer build does not register tests. The
 third tree is also headless and enables only the optional CPython extension
 and R9/R10 tests. The checked-in Python preset contains no host-specific path and
 normally resolves Python and pybind11 from the active environment. On the
-audited host, explicit command-line cache variables selected system CPython
-3.12 and pybind11 3.0.1 from the local package environment because the
-Anaconda 3.13 runtime carries a `libstdc++` older than the GCC 13 extension
-requires. The pybind11 package is header-only and may compile against the
-selected CPython development module. The extension is not
+audited host, the preset selected Anaconda CPython 3.13 and pybind11 3.0.1.
+Because that
+Anaconda runtime carries a `libstdc++` older than the GCC 13 extension
+requires, CMake asks the selected C++ compiler for its matching
+`libstdc++.so.6` and applies it only to extension-backed CTest processes.
+The pybind11 package is header-only and compiles against the selected CPython
+development module. The extension is not
 stable-ABI (`abi3`) and must be rebuilt for each CPython minor version and
 platform. Python support is off in the other presets.
 

@@ -55,6 +55,19 @@ void createVoxelGrid(
 );
 
 //
+// Creates the released-beta lattice: exactly N^3 equal cells over [0,1]^3.
+// Inputs:
+//   resolution  number of cells on every axis; must be at least three
+// Outputs use the same ordering/meaning as createVoxelGrid().
+void createUnitCubeVoxelGrid(
+	Eigen::MatrixXd& centers,
+	Eigen::MatrixXd& corners,
+	Eigen::Vector3i& dimensions,
+	Eigen::Vector3d& voxelSize,
+	int resolution
+);
+
+//
 // Aligns given mesh to the axis planes. Keeps the size the same
 //
 // Inputs:

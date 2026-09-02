@@ -178,11 +178,218 @@ Eigen::MatrixXi facesFromPython(const py::handle& value)
 }
 
 
+std::vector<int> cellIdsFromPython(const py::handle& value)
+{
+    const py::array original = requireArray(value, "cell_ids_z_fast");
+    if (original.ndim() != 1)
+    {
+        throw py::value_error("cell_ids_z_fast must have shape (N^3,)");
+    }
+    const char kind = original.dtype().kind();
+    if (kind != 'i' && kind != 'u')
+    {
+        throw py::type_error("cell_ids_z_fast must use an integer dtype");
+    }
+    using IntegerArray = py::array_t<
+        long long,
+        py::array::c_style | py::array::forcecast
+    >;
+    IntegerArray converted = IntegerArray::ensure(original);
+    if (!converted)
+    {
+        throw py::type_error(
+            "cell_ids_z_fast cannot be represented as signed integers"
+        );
+    }
+    const auto input = converted.unchecked<1>();
+    std::vector<int> result(static_cast<std::size_t>(input.shape(0)));
+    for (py::ssize_t index = 0; index < input.shape(0); ++index)
+    {
+        const long long item = input(index);
+        if (
+            item < static_cast<long long>(std::numeric_limits<int>::min()) ||
+            item > static_cast<long long>(std::numeric_limits<int>::max())
+        )
+        {
+            throw py::value_error(
+                "each cell ID must be representable as a C++ int"
+            );
+        }
+        result[static_cast<std::size_t>(index)] = static_cast<int>(item);
+    }
+    return result;
+}
+
+
+Eigen::MatrixXd weightsFromPython(const py::handle& value)
+{
+    const py::array original = requireArray(value, "beta_node_weights_z_fast");
+    if (original.ndim() != 2 || original.shape(1) <= 0)
+    {
+        throw py::value_error(
+            "beta_node_weights_z_fast must have shape (nodes, handles)"
+        );
+    }
+    const char kind = original.dtype().kind();
+    if (kind != 'f' && kind != 'i' && kind != 'u')
+    {
+        throw py::type_error(
+            "beta_node_weights_z_fast must use a real numeric dtype"
+        );
+    }
+    using DoubleArray = py::array_t<
+        double,
+        py::array::c_style | py::array::forcecast
+    >;
+    DoubleArray converted = DoubleArray::ensure(original);
+    if (!converted)
+    {
+        throw py::type_error(
+            "beta_node_weights_z_fast cannot be represented as float64"
+        );
+    }
+    const auto input = converted.unchecked<2>();
+    Eigen::MatrixXd result(
+        static_cast<Eigen::Index>(input.shape(0)),
+        static_cast<Eigen::Index>(input.shape(1))
+    );
+    for (py::ssize_t row = 0; row < input.shape(0); ++row)
+    {
+        for (py::ssize_t column = 0; column < input.shape(1); ++column)
+        {
+            result(
+                static_cast<Eigen::Index>(row),
+                static_cast<Eigen::Index>(column)
+            ) = input(row, column);
+        }
+    }
+    return result;
+}
+
+
 } // namespace
 
 
 PYBIND11_MODULE(_make_it_stand, module)
 {
+    module.def(
+        "audit_triangle_boundary",
+        [](
+            const py::object& vertices,
+            const py::object& faces,
+            double geometricTolerance
+        )
+        {
+            const manufacturing::BoundaryAudit audit =
+                manufacturing::auditTriangleBoundary(
+                    verticesFromPython(vertices),
+                    facesFromPython(faces),
+                    manufacturing::BoundaryOrientation::OutwardPositive,
+                    false,
+                    geometricTolerance
+                );
+            py::dict result;
+            result["strict_boundary_valid"] = audit.strictBoundaryValid();
+            result["vertex_count"] = audit.vertexCount;
+            result["face_count"] = audit.faceCount;
+            result["unreferenced_vertex_count"] = audit.unreferencedVertexCount;
+            result["degenerate_face_count"] = audit.degenerateFaceCount;
+            result["boundary_edge_count"] = audit.boundaryEdgeCount;
+            result["non_manifold_edge_count"] = audit.nonManifoldEdgeCount;
+            result["inconsistent_edge_count"] = audit.inconsistentEdgeCount;
+            result["non_manifold_vertex_count"] = audit.nonManifoldVertexCount;
+            result["face_component_count"] = audit.faceComponentCount;
+            result["signed_volume"] = audit.signedVolume;
+            result["edge_manifold"] = audit.edgeManifold;
+            result["vertex_manifold"] = audit.vertexManifold;
+            result["closed"] = audit.closed;
+            result["consistently_oriented"] = audit.consistentlyOriented;
+            result["component_orientations_valid"] =
+                audit.componentOrientationsValid;
+            result["self_intersection_completed"] =
+                audit.selfIntersections.completed;
+            result["self_intersection_free"] =
+                audit.selfIntersections.intersectionFree;
+            result["self_intersection_pair_count"] =
+                audit.selfIntersections.intersectingPairCount;
+            result["first_self_intersection_faces"] = py::make_tuple(
+                audit.selfIntersections.firstFace,
+                audit.selfIntersections.secondFace
+            );
+            return result;
+        },
+        py::arg("vertices"),
+        py::arg("faces"),
+        py::arg("geometric_tolerance") = 0.0
+    );
+
+    module.def(
+        "audit_material_shells",
+        [](
+            const py::object& outerVertices,
+            const py::object& outerFaces,
+            const py::object& innerVertices,
+            const py::object& innerFaces,
+            double requestedThickness,
+            double geometricTolerance
+        )
+        {
+            const manufacturing::MaterialShellAudit audit =
+                manufacturing::auditMaterialShells(
+                    verticesFromPython(outerVertices),
+                    facesFromPython(outerFaces),
+                    verticesFromPython(innerVertices),
+                    facesFromPython(innerFaces),
+                    requestedThickness,
+                    geometricTolerance
+                );
+            py::dict clearance;
+            clearance["applicable"] = audit.wallClearance.applicable;
+            clearance["completed"] = audit.wallClearance.completed;
+            clearance["intersection_free"] =
+                audit.wallClearance.intersectionFree;
+            clearance["meets_requested_thickness"] =
+                audit.wallClearance.meetsRequestedThickness;
+            clearance["requested_thickness"] =
+                audit.wallClearance.requestedThickness;
+            clearance["measured_minimum_clearance"] =
+                audit.wallClearance.measuredMinimumClearance;
+            clearance["witness_outer_face"] = audit.wallClearance.outerFace;
+            clearance["witness_inner_face"] = audit.wallClearance.innerFace;
+            clearance["broad_phase_pair_count"] =
+                audit.wallClearance.broadPhasePairCount;
+            clearance["narrow_phase_pair_count"] =
+                audit.wallClearance.narrowPhasePairCount;
+            py::dict containment;
+            containment["applicable"] = audit.containment.applicable;
+            containment["completed"] = audit.containment.completed;
+            containment["all_cavities_inside_outer"] =
+                audit.containment.allCavitiesInsideOuter;
+            containment["tested_component_count"] =
+                audit.containment.testedComponentCount;
+            containment["failed_component"] =
+                audit.containment.failedComponent;
+            containment["failed_winding_number"] =
+                audit.containment.failedWindingNumber;
+            containment["nested_cavity_pair_count"] =
+                audit.containment.nestedCavityPairCount;
+            containment["first_containing_component"] =
+                audit.containment.firstContainingComponent;
+            containment["first_nested_component"] =
+                audit.containment.firstNestedComponent;
+            py::dict result;
+            result["wall_clearance"] = clearance;
+            result["containment"] = containment;
+            return result;
+        },
+        py::arg("outer_vertices"),
+        py::arg("outer_faces"),
+        py::arg("inner_vertices"),
+        py::arg("inner_faces"),
+        py::arg("requested_thickness") = 0.0,
+        py::arg("geometric_tolerance") = 0.0
+    );
+
     module.doc() =
         "Owning Python bindings for the audited Make It Stand pipeline";
 
@@ -206,6 +413,10 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_readwrite(
             "minimum_wall_thickness",
             &api::BalanceModelConfig::minimumWallThickness
+        )
+        .def_readwrite(
+            "fixed_unit_cube_voxel_grid",
+            &api::BalanceModelConfig::fixedUnitCubeVoxelGrid
         )
         .def_property(
             "bbw_max_iterations",
@@ -264,6 +475,28 @@ PYBIND11_MODULE(_make_it_stand, module)
             [](api::BalanceRunConfig& config, bool value)
             {
                 config.optimizer.enableLaplacian = value;
+            }
+        )
+        .def_property(
+            "freeze_targets_after_initial_refresh",
+            [](const api::BalanceRunConfig& config)
+            {
+                return config.optimizer.freezeTargetsAfterInitialRefresh;
+            },
+            [](api::BalanceRunConfig& config, bool value)
+            {
+                config.optimizer.freezeTargetsAfterInitialRefresh = value;
+            }
+        )
+        .def_property(
+            "released_beta_outer_loop",
+            [](const api::BalanceRunConfig& config)
+            {
+                return config.optimizer.releasedBetaOuterLoop;
+            },
+            [](api::BalanceRunConfig& config, bool value)
+            {
+                config.optimizer.releasedBetaOuterLoop = value;
             }
         )
         .def_property(
@@ -408,6 +641,17 @@ PYBIND11_MODULE(_make_it_stand, module)
             {
                 config.optimizer.lineSearch.muDecrement = value;
             }
+        )
+        .def_property(
+            "released_beta_semantics",
+            [](const api::BalanceRunConfig& config)
+            {
+                return config.optimizer.lineSearch.releasedBetaSemantics;
+            },
+            [](api::BalanceRunConfig& config, bool value)
+            {
+                config.optimizer.lineSearch.releasedBetaSemantics = value;
+            }
         );
 
     py::class_<api::BalanceResult>(module, "BalanceResult")
@@ -515,6 +759,39 @@ PYBIND11_MODULE(_make_it_stand, module)
             py::arg("faces"),
             py::arg("config") = api::BalanceModelConfig()
         )
+        .def_static(
+            "from_released_beta_archive",
+            [](
+                const py::object& normalizedVertices,
+                const py::object& faces,
+                int voxelResolution,
+                const py::object& cellIdsZFast,
+                const py::object& betaNodeWeightsZFast,
+                int hullDepth,
+                const api::BalanceModelConfig& config
+            )
+            {
+                api::ReleasedBetaArchiveData archive;
+                archive.voxelResolution = voxelResolution;
+                archive.hullDepth = hullDepth;
+                archive.cellIdsZFast = cellIdsFromPython(cellIdsZFast);
+                archive.betaNodeWeightsZFast =
+                    weightsFromPython(betaNodeWeightsZFast);
+                return api::BalanceModel::fromReleasedBetaArchive(
+                    verticesFromPython(normalizedVertices),
+                    facesFromPython(faces),
+                    archive,
+                    config
+                );
+            },
+            py::arg("normalized_vertices"),
+            py::arg("faces"),
+            py::arg("voxel_resolution"),
+            py::arg("cell_ids_z_fast"),
+            py::arg("beta_node_weights_z_fast"),
+            py::arg("hull_depth") = 2,
+            py::arg("config") = api::BalanceModelConfig()
+        )
         .def_property_readonly("vertices", &api::BalanceModel::vertices)
         .def_property_readonly("faces", &api::BalanceModel::faces)
         .def_property_readonly("gravity", &api::BalanceModel::gravity)
@@ -530,7 +807,18 @@ PYBIND11_MODULE(_make_it_stand, module)
             "set_support_from_mesh",
             &api::BalanceModel::setSupportFromMesh,
             py::arg("contact_threshold"),
-            py::arg("gamma_radians")
+            py::arg("gamma_radians"),
+            py::arg("minimum_stability_inset") = 0.0,
+            py::arg("support_plane_at_band_top") = false
+        )
+        .def(
+            "set_support_from_reference_mesh",
+            &api::BalanceModel::setSupportFromReferenceMesh,
+            py::arg("reference_vertices"),
+            py::arg("contact_threshold"),
+            py::arg("gamma_radians"),
+            py::arg("minimum_stability_inset") = 0.0,
+            py::arg("support_plane_at_band_top") = false
         )
         .def(
             "add_standing_constraint_polygon",
@@ -544,7 +832,9 @@ PYBIND11_MODULE(_make_it_stand, module)
             &api::BalanceModel::addStandingConstraintFromMesh,
             py::arg("gravity_direction"),
             py::arg("contact_threshold"),
-            py::arg("gamma_radians")
+            py::arg("gamma_radians"),
+            py::arg("minimum_stability_inset") = 0.0,
+            py::arg("support_plane_at_band_top") = false
         )
         .def(
             "add_handle",

@@ -3,6 +3,7 @@
 #include "carving/CarvingSolver.h"
 #include "deformation/DeformedVoxelMassField.h"
 #include "deformation/DeformationObjective.h"
+#include "manufacturing/ManufacturingGeometry.h"
 #include "physics/BalanceObjective.h"
 #include "physics/MassProperties.h"
 #include "voxel/VoxelTopology.h"
@@ -11,6 +12,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
@@ -73,7 +75,16 @@ void validateConfig(
         line.requiredRelativeDecrease >= 1.0 ||
         line.muDecrement <= 0.0 ||
         line.muDecrement > 1.0 ||
-        (!config.enableCarving && !config.enableDeformation)
+        (!config.enableCarving && !config.enableDeformation) ||
+        (
+            config.releasedBetaOuterLoop &&
+            (
+                !config.enableCarving ||
+                !config.enableDeformation ||
+                !config.freezeTargetsAfterInitialRefresh ||
+                !line.releasedBetaSemantics
+            )
+        )
     )
     {
         throw std::invalid_argument(
@@ -185,6 +196,60 @@ void finalizeMetrics(
     result.finalUnscaledShapeEnergy = evaluation.unscaledShapeEnergy;
     result.finalShapeEnergy = evaluation.shapeEnergy;
     result.finalTotalEnergy = evaluation.totalEnergy;
+
+    result.finalMassMoments = computeSurfaceMassMoments(
+        result.geometry.outerVertices,
+        result.geometry.outerFaces,
+        density
+    );
+    const deformation::DeformedVoxelMassField finalCellMoments(
+        system.domain(),
+        result.geometry.gridCorners,
+        density,
+        0.0
+    );
+    const Eigen::Vector3i finalDimensions = result.voxelFill.dimensions();
+    for (int x = 0; x < finalDimensions(0); ++x)
+    {
+        for (int y = 0; y < finalDimensions(1); ++y)
+        {
+            for (int z = 0; z < finalDimensions(2); ++z)
+            {
+                const int linear = system.domain().cellLinearIndex(x, y, z);
+                if (
+                    finalCellMoments.contains(linear) &&
+                    result.voxelFill(x, y, z).isInner &&
+                    !result.voxelFill(x, y, z).isFilled
+                )
+                {
+                    result.finalMassMoments -=
+                        finalCellMoments.massMoments(linear);
+                }
+            }
+        }
+    }
+    const double momentTolerance =
+        1.0e-9 * std::max(1.0, std::abs(result.massProperties.mass));
+    if (
+        std::abs(
+            result.finalMassMoments.mass - result.massProperties.mass
+        ) > momentTolerance ||
+        (
+            result.finalMassMoments.firstMoment -
+            result.massProperties.firstMoment
+        ).norm() > momentTolerance
+    )
+    {
+        throw std::logic_error(
+            "occupancy-bound mass moments disagree with final material mass"
+        );
+    }
+    result.finalInertiaTensorAboutCenter =
+        result.finalMassMoments.inertiaAboutCenter(minimumPositiveMass);
+    result.finalInertiaTensorAboutCenter = 0.5 * (
+        result.finalInertiaTensorAboutCenter +
+        result.finalInertiaTensorAboutCenter.transpose()
+    );
 
     const MassProperties finalOuter = computeSurfaceMassProperties(
         result.geometry.outerVertices,
@@ -407,6 +472,21 @@ MaterialSnapshot evaluateFixedAlphaState(
     const deformation::HandleSet handles = makeHandles(system, parameters);
     snapshot.geometry = system.evaluate(handles, snapshot.voxelFill);
 
+    const manufacturing::BoundaryAudit outerAudit =
+        manufacturing::auditTriangleBoundary(
+            snapshot.geometry.outerVertices,
+            snapshot.geometry.outerFaces,
+            manufacturing::BoundaryOrientation::OutwardPositive,
+            false,
+            0.0
+        );
+    if (!outerAudit.strictBoundaryValid())
+    {
+        throw deformation::InfeasibleDeformationState(
+            "deformation produced an invalid outer boundary"
+        );
+    }
+
     try
     {
         static_cast<void>(deformation::DeformedVoxelMassField(
@@ -472,6 +552,15 @@ struct CarvingBlockOutcome
     CarvingStopReason stopReason = CarvingStopReason::None;
     bool stable = false;
     bool maximumIterationsReached = false;
+};
+
+
+struct ReleasedBetaBalanceOutcome
+{
+    MaterialSnapshot state;
+    int carvingIterations = 0;
+    int carvedVoxelCount = 0;
+    CarvingStopReason stopReason = CarvingStopReason::None;
 };
 
 
@@ -574,6 +663,10 @@ CarvingBlockOutcome runCarvingBlock(
             field,
             targets.objectives
         );
+        if (config.releasedBetaOuterLoop)
+        {
+            solver.setUseDeformedCornerAverageCandidatePositions(true);
+        }
         const deformation::HandleSet handles = makeHandles(
             system,
             parameters
@@ -689,6 +782,18 @@ CarvingBlockOutcome runCarvingBlock(
                 break;
             }
 
+            /*
+             * The released beta's balanceByPlaneCarving() performs one
+             * candidate sort and one best-prefix commit.  It is called once
+             * when plane-carving mode is selected and once after every
+             * deformation trial.  Do not turn that call into the paper
+             * profile's repeated carving block.
+             */
+            if (config.releasedBetaOuterLoop)
+            {
+                break;
+            }
+
             if (solver.isOptimized())
             {
                 break;
@@ -775,6 +880,111 @@ CarvingBlockOutcome runCarvingBlock(
 }
 
 
+ReleasedBetaBalanceOutcome runReleasedBetaBalance(
+    const deformation::DeformationSystem& system,
+    const VoxelGrid& restGrid,
+    const Eigen::VectorXd& parameters,
+    const BalanceObjectives& frozenObjectives,
+    const AlternatingBalanceOptimizerConfig& config
+)
+{
+    ReleasedBetaBalanceOutcome outcome;
+    outcome.state = evaluateSolidState(
+        system,
+        restGrid,
+        parameters,
+        config.density,
+        config.minimumPositiveMass,
+        config.minimumPositiveCellMass
+    );
+
+    try
+    {
+        const deformation::DeformedVoxelMassField field(
+            system.domain(),
+            outcome.state.geometry.gridCorners,
+            config.density,
+            config.minimumPositiveCellMass
+        );
+        CarvingSolver solver(
+            outcome.state.voxelFill,
+            outcome.state.massProperties,
+            field,
+            frozenObjectives
+        );
+        solver.setUseDeformedCornerAverageCandidatePositions(true);
+        solver.setMinimumRemovalsToContinue(
+            config.minimumCarvingRemovalsToContinue
+        );
+        if (!solver.isOptimized())
+        {
+            Eigen::MatrixXd temporaryPlaneVertices;
+            Eigen::MatrixXi temporaryPlaneFaces;
+            Eigen::Vector3d temporaryCenterOfMass;
+            solver.carveStep(
+                temporaryPlaneVertices,
+                temporaryPlaneFaces,
+                temporaryCenterOfMass
+            );
+        }
+        outcome.carvingIterations = solver.iterationCount();
+        outcome.carvedVoxelCount = solver.carvedVoxelCount();
+        outcome.stopReason = solver.stopReason();
+        if (outcome.stopReason == CarvingStopReason::MaximumIterationsReached)
+        {
+            throw deformation::InfeasibleDeformationState(
+                "released-beta balance hit the local carving iteration guard"
+            );
+        }
+
+        const deformation::HandleSet handles = makeHandles(system, parameters);
+        outcome.state.geometry = system.evaluate(
+            handles,
+            outcome.state.voxelFill
+        );
+        outcome.state.massProperties = solver.currentMassProperties();
+        outcome.state.centerOfMass = solver.currentCenterOfMass();
+
+        const MassProperties surfaceOracle =
+            computeSurfaceMassProperties(
+                outcome.state.geometry.outerVertices,
+                outcome.state.geometry.outerFaces,
+                config.density
+            ) +
+            computeSurfaceMassProperties(
+                outcome.state.geometry.innerVertices,
+                outcome.state.geometry.innerFaces,
+                config.density
+            );
+        const double scale = std::max({
+            1.0,
+            surfaceOracle.mass,
+            outcome.state.massProperties.mass,
+            surfaceOracle.firstMoment.norm(),
+            outcome.state.massProperties.firstMoment.norm()
+        });
+        const double tolerance =
+            4096.0 * std::numeric_limits<double>::epsilon() * scale;
+        if (
+            std::abs(surfaceOracle.mass - outcome.state.massProperties.mass) >
+                tolerance ||
+            (surfaceOracle.firstMoment -
+             outcome.state.massProperties.firstMoment).norm() > tolerance
+        )
+        {
+            throw std::logic_error(
+                "released-beta recarving mass disagrees with cavity surface"
+            );
+        }
+        return outcome;
+    }
+    catch (const deformation::InfeasibleDeformedVoxel& error)
+    {
+        throw deformation::InfeasibleDeformationState(error.what());
+    }
+}
+
+
 void copyStateToResult(
     const MaterialSnapshot& state,
     AlternatingBalanceOptimizationResult& result
@@ -846,6 +1056,7 @@ AlternatingBalanceOptimizer::optimize(
     result.carvingEnabled = config_.enableCarving;
     result.deformationEnabled = config_.enableDeformation;
     result.laplacianEnabled = config_.enableLaplacian;
+    result.releasedBetaOuterLoopEnabled = config_.releasedBetaOuterLoop;
     result.parameters = initialParameters;
     result.mu = initialMu;
     result.effectiveShapeScaleLambda = config_.enableLaplacian
@@ -894,7 +1105,10 @@ AlternatingBalanceOptimizer::optimize(
         }
     );
 
-    stability::BalanceTargetSchedule schedule(targetSpecifications_);
+    stability::BalanceTargetSchedule schedule(
+        targetSpecifications_,
+        config_.freezeTargetsAfterInitialRefresh
+    );
     MaterialSnapshot current = evaluateSolidState(
         deformationSystem_,
         restVoxelGrid_,
@@ -1013,6 +1227,261 @@ AlternatingBalanceOptimizer::optimize(
         {
             result.status =
                 AlternatingOptimizationStatus::NoDeformationDegreesOfFreedom;
+            completeResult(deformationSystem_, current, config_, result);
+            return result;
+        }
+
+        if (config_.releasedBetaOuterLoop)
+        {
+            for (int iteration = 0;
+                 iteration < config_.maximumDeformationIterationsPerBlock;
+                 ++iteration)
+            {
+                const VoxelGrid alphaBefore = current.voxelFill;
+                const Eigen::VectorXd parametersBefore = result.parameters;
+                const int geometryEpochBefore = result.geometryEpoch;
+                const std::size_t targetGenerationBefore =
+                    result.targets.generation;
+                const std::uint64_t alphaBeforeHash = alphaHash(alphaBefore);
+                const std::uint64_t geometryBeforeHash =
+                    deformation::deformedGeometryContentHash(current.geometry);
+
+                deformation::DeformationObjective objective(
+                    deformationSystem_,
+                    current.voxelFill,
+                    result.targets.objectives,
+                    result.effectiveShapeScaleLambda,
+                    config_.density,
+                    config_.minimumPositiveMass
+                );
+                const deformation::DeformationEnergyEvaluation evaluation =
+                    objective.evaluate(
+                        result.parameters,
+                        result.lineSearchState.mu
+                    );
+                const double gradientNorm = evaluation.gradient.norm();
+                if (!std::isfinite(gradientNorm))
+                {
+                    throw std::overflow_error(
+                        "released-beta deformation gradient norm overflowed"
+                    );
+                }
+                if (gradientNorm <= config_.gradientTolerance)
+                {
+                    result.status = AlternatingOptimizationStatus::
+                        DeformationConvergedUnstable;
+                    completeResult(deformationSystem_, current, config_, result);
+                    return result;
+                }
+
+                std::optional<ReleasedBetaBalanceOutcome> trialBalance;
+                bool trialBalanceAttempted = false;
+                int energyEvaluationCalls = 0;
+                const deformation::PaperLineSearchResult trial =
+                    deformation::paperGradientDescentTrial(
+                        result.parameters,
+                        evaluation.gradient,
+                        result.lineSearchState,
+                        config_.lineSearch,
+                        [&](const Eigen::VectorXd& parameters, double mu)
+                        {
+                            ++energyEvaluationCalls;
+                            if (energyEvaluationCalls == 1)
+                            {
+                                if (
+                                    !parameters.isApprox(parametersBefore, 0.0) ||
+                                    mu != result.lineSearchState.mu
+                                )
+                                {
+                                    throw std::logic_error(
+                                        "released-beta energy callback did not "
+                                        "begin from the committed state"
+                                    );
+                                }
+                                return evaluation.totalEnergy;
+                            }
+                            if (energyEvaluationCalls != 2)
+                            {
+                                throw std::logic_error(
+                                    "released-beta line search requested an "
+                                    "unexpected objective reweight"
+                                );
+                            }
+
+                            trialBalanceAttempted = true;
+                            trialBalance = runReleasedBetaBalance(
+                                deformationSystem_,
+                                restVoxelGrid_,
+                                parameters,
+                                result.targets.objectives,
+                                config_
+                            );
+                            const deformation::DeformationObjective trialObjective(
+                                deformationSystem_,
+                                trialBalance->state.voxelFill,
+                                result.targets.objectives,
+                                result.effectiveShapeScaleLambda,
+                                config_.density,
+                                config_.minimumPositiveMass
+                            );
+                            return trialObjective.evaluate(parameters, mu).totalEnergy;
+                        }
+                    );
+
+                AlternatingDeformationRecord record;
+                record.block = block;
+                record.iteration = iteration;
+                record.geometryEpochBefore = geometryEpochBefore;
+                record.decision = trial.decision;
+                record.accepted = trial.accepted;
+                record.rolledBack = trial.rolledBack;
+                record.energyBefore = trial.energyBefore;
+                record.trialEnergy = trial.trialEnergy;
+                record.gradientNorm = gradientNorm;
+                record.attemptedStep = trial.attemptedStep;
+                record.muBefore = trial.muBefore;
+                record.objectiveReweighted = trial.objectiveReweighted;
+                record.stateAfter = trial.nextState;
+                record.targetGenerationBefore = targetGenerationBefore;
+                record.alphaHashBefore = alphaBeforeHash;
+                record.parametersBefore = parametersBefore;
+                record.geometryHashBefore = geometryBeforeHash;
+                record.releasedBetaOuterLoop = true;
+                record.trialBalanceCalls = trialBalanceAttempted ? 1 : 0;
+                if (trialBalance.has_value())
+                {
+                    record.trialCarvingIterations =
+                        trialBalance->carvingIterations;
+                    record.trialCarvedVoxelCount =
+                        trialBalance->carvedVoxelCount;
+                    record.trialAlphaHash =
+                        alphaHash(trialBalance->state.voxelFill);
+                }
+
+                if (trial.accepted)
+                {
+                    if (!trialBalance.has_value())
+                    {
+                        throw std::logic_error(
+                            "accepted released-beta trial has no balanced state"
+                        );
+                    }
+                    result.parameters = trial.parameters;
+                    current = std::move(trialBalance->state);
+                    ++result.geometryEpoch;
+                }
+                else
+                {
+                    ReleasedBetaBalanceOutcome rollback =
+                        runReleasedBetaBalance(
+                            deformationSystem_,
+                            restVoxelGrid_,
+                            parametersBefore,
+                            result.targets.objectives,
+                            config_
+                        );
+                    record.rollbackBalanceCalls = 1;
+                    record.rollbackCarvingIterations =
+                        rollback.carvingIterations;
+                    record.rollbackCarvedVoxelCount = rollback.carvedVoxelCount;
+                    record.rollbackAlphaHash =
+                        alphaHash(rollback.state.voxelFill);
+                    current = std::move(rollback.state);
+
+                    if (
+                        !result.parameters.isApprox(parametersBefore, 0.0) ||
+                        record.rollbackAlphaHash != alphaBeforeHash ||
+                        deformation::deformedGeometryContentHash(
+                            current.geometry
+                        ) != geometryBeforeHash
+                    )
+                    {
+                        throw std::logic_error(
+                            "released-beta rollback did not restore and "
+                            "rebalance the committed geometry"
+                        );
+                    }
+                }
+
+                record.refillCalls =
+                    record.trialBalanceCalls + record.rollbackBalanceCalls;
+                record.carvingCalls = record.refillCalls;
+                result.lineSearchState = trial.nextState;
+                result.mu = result.lineSearchState.mu;
+                result.targets = schedule.refresh(current.centerOfMass);
+
+                if (trial.accepted)
+                {
+                    appendEvent(
+                        result,
+                        AlternatingEventKind::AcceptedDeformation,
+                        block,
+                        iteration,
+                        result.geometryEpoch,
+                        true,
+                        current.voxelFill,
+                        current.geometry,
+                        result.parameters,
+                        current.massProperties,
+                        current.centerOfMass,
+                        result.targets
+                    );
+                }
+
+                const deformation::DeformationObjective retainedObjective(
+                    deformationSystem_,
+                    current.voxelFill,
+                    result.targets.objectives,
+                    result.effectiveShapeScaleLambda,
+                    config_.density,
+                    config_.minimumPositiveMass
+                );
+                record.energyAfter = retainedObjective.evaluate(
+                    result.parameters,
+                    trial.muBefore
+                ).totalEnergy;
+                record.geometryEpochAfter = result.geometryEpoch;
+                record.targetGenerationAfter = result.targets.generation;
+                record.objectiveContextChanged = result.targets.contextChanged;
+                record.allTargetsReached = result.targets.allReached;
+                record.refreshedTargetEnergyAfter =
+                    aggregateProjectedCenterOfMassEnergy(
+                        current.centerOfMass,
+                        result.targets.objectives
+                    );
+                record.alphaHashAfter = alphaHash(current.voxelFill);
+                record.alphaHammingDistance = alphaHammingDistance(
+                    alphaBefore,
+                    current.voxelFill
+                );
+                record.parametersAfter = result.parameters;
+                record.geometryHashAfter =
+                    deformation::deformedGeometryContentHash(current.geometry);
+                record.massPropertiesAfter = current.massProperties;
+                record.centerOfMassAfter = current.centerOfMass;
+                result.deformationIterations.push_back(record);
+
+                if (result.targets.allReached)
+                {
+                    result.status =
+                        AlternatingOptimizationStatus::StableAfterDeformation;
+                    completeResult(deformationSystem_, current, config_, result);
+                    return result;
+                }
+                if (
+                    trial.decision ==
+                        deformation::PaperTrialDecision::MuExhausted
+                )
+                {
+                    result.status =
+                        AlternatingOptimizationStatus::MuExhaustedUnstable;
+                    completeResult(deformationSystem_, current, config_, result);
+                    return result;
+                }
+            }
+
+            result.status =
+                AlternatingOptimizationStatus::MaximumDeformationIterations;
             completeResult(deformationSystem_, current, config_, result);
             return result;
         }

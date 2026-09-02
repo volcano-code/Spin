@@ -15,12 +15,26 @@ namespace api
 {
 
 
+/** Cell-centered, canonical x-fast material occupancy import. */
+struct MaterialOccupancyData
+{
+    Eigen::Vector3i dimensions = Eigen::Vector3i::Zero();
+    Eigen::Vector3d minimum = Eigen::Vector3d::Zero();
+    Eigen::Vector3d maximum = Eigen::Vector3d::Ones();
+    std::vector<unsigned char> materialMaskXFast;
+    int protectedBoundaryLayers = 1;
+};
+
+
 /** Discretization and BBW settings that are fixed for one model. */
 struct BalanceModelConfig
 {
     int voxelResolution = 50;
     double minimumWallThickness = 0.0;
     deformation::WeightSolveOptions bbw;
+
+    /** Opt-in released-beta [0,1]^3 domain with N cells per axis. */
+    bool fixedUnitCubeVoxelGrid = false;
 };
 
 
@@ -30,6 +44,25 @@ struct BalanceRunConfig
     optimization::AlternatingBalanceOptimizerConfig optimizer;
     double initialMu = 0.2;
 };
+
+
+/**
+ * Exact cache payload written by the archived released beta.
+ *
+ * Cell IDs and BBW rows retain their on-disk z-fast order. The compatibility
+ * factory validates, normalizes, and remaps them by integer lattice coordinate.
+ */
+struct ReleasedBetaArchiveData
+{
+    int voxelResolution = 0;
+    int hullDepth = 2;
+    std::vector<int> cellIdsZFast;
+    Eigen::MatrixXd betaNodeWeightsZFast;
+};
+
+
+/** Audited opt-in parameter and controller profile for the released beta. */
+BalanceRunConfig releasedBetaRunConfig();
 
 
 /**
@@ -120,6 +153,22 @@ public:
         const BalanceModelConfig& config = BalanceModelConfig()
     );
 
+    /**
+     * Construct from an immutable occupied-cell lattice. Enclosed complement
+     * cells are source cavities and are never filled by optimizer refill.
+     */
+    static std::unique_ptr<BalanceModel> fromMaterialOccupancy(
+        const MaterialOccupancyData& occupancy,
+        const BalanceModelConfig& config = BalanceModelConfig()
+    );
+
+    static std::unique_ptr<BalanceModel> fromReleasedBetaArchive(
+        const Eigen::MatrixXd& normalizedVertices,
+        const Eigen::MatrixXi& faces,
+        const ReleasedBetaArchiveData& archive,
+        const BalanceModelConfig& config
+    );
+
     BalanceModel(const BalanceModel&) = delete;
     BalanceModel& operator=(const BalanceModel&) = delete;
     BalanceModel(BalanceModel&&) = delete;
@@ -149,7 +198,22 @@ public:
     /** Infer the standing support from source-mesh vertices near its floor. */
     void setSupportFromMesh(
         double contactThreshold,
-        double gammaRadians
+        double gammaRadians,
+        double minimumStabilityInset = 0.0,
+        bool supportPlaneAtBandTop = false
+    );
+
+    /**
+     * Infer support from a provenance-bound reference surface while keeping
+     * the model's mass/deformation outer surface unchanged. This is intended
+     * only for explicitly labelled repairs of invalid archived surfaces.
+     */
+    void setSupportFromReferenceMesh(
+        const Eigen::MatrixXd& referenceVertices,
+        double contactThreshold,
+        double gammaRadians,
+        double minimumStabilityInset = 0.0,
+        bool supportPlaneAtBandTop = false
     );
 
     /**
@@ -166,7 +230,9 @@ public:
     void addStandingConstraintFromMesh(
         const Eigen::Vector3d& gravityDirection,
         double contactThreshold,
-        double gammaRadians
+        double gammaRadians,
+        double minimumStabilityInset = 0.0,
+        bool supportPlaneAtBandTop = false
     );
 
     /** One unlocked translation/uniform-scale handle with fixed rotation. */
@@ -189,6 +255,8 @@ public:
     ) const;
 
 private:
+    BalanceModel();
+
     struct Impl;
     std::unique_ptr<Impl> impl_;
 };

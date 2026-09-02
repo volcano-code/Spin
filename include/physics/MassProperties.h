@@ -38,6 +38,40 @@ struct MassProperties
 };
 
 
+/**
+ * Uniform-density volume moments through degree two.
+ *
+ * secondMoment stores the raw tensor S = integral rho * x*x^T dV.  The
+ * inertia tensor about the center of mass is derived from S with the parallel
+ * axis theorem; it is intentionally kept separate from MassProperties so the
+ * balance solver's established zero/first-moment API remains unchanged.
+ */
+struct MassMoments
+{
+    double mass;
+    Eigen::Vector3d firstMoment;
+    Eigen::Matrix3d secondMoment;
+
+    MassMoments();
+
+    bool isFinite() const;
+    bool tryCenterOfMass(
+        Eigen::Vector3d& centerOfMass,
+        double minimumAbsoluteMass = 0.0
+    ) const;
+    Eigen::Matrix3d inertiaAboutCenter(
+        double minimumPositiveMass = 0.0
+    ) const;
+
+    MassMoments& operator+=(const MassMoments& other);
+    MassMoments& operator-=(const MassMoments& other);
+};
+
+
+MassMoments operator+(MassMoments first, const MassMoments& second);
+MassMoments operator-(MassMoments first, const MassMoments& second);
+
+
 MassProperties operator+(
     MassProperties first,
     const MassProperties& second
@@ -56,6 +90,14 @@ MassProperties operator-(
  * contribute negative mass, as required for cavity boundaries.
  */
 MassProperties computeSurfaceMassProperties(
+    const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXi& faces,
+    double density = 1.0
+);
+
+
+/** Integrate mass, first moment, and raw second moment of an oriented shell. */
+MassMoments computeSurfaceMassMoments(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
     double density = 1.0

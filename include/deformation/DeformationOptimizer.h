@@ -19,6 +19,14 @@ struct PaperLineSearchConfig
     double minimumStep = 0.4;
     double requiredRelativeDecrease = 0.01;
     double muDecrement = 0.05;
+
+    /**
+     * Opt into the released beta controller: retain every non-increasing
+     * trial, use requiredRelativeDecrease only to schedule step/mu changes,
+     * treat minimumStep as a switch threshold (not a clamp), and stop at the
+     * final positive mu instead of evaluating a mu=0 objective.
+     */
+    bool releasedBetaSemantics = false;
 };
 
 

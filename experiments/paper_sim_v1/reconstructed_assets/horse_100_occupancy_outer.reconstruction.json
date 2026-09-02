@@ -1,0 +1,21 @@
+{
+  "case": "horse",
+  "claim_boundary": "The distance is a deterministic sampled Hausdorff estimate, not an exact continuous Hausdorff proof. The reconstructed mesh is for simulation/compatibility evidence and is not the untouched paper input.",
+  "classification": "reconstructed_from_official_occupancy_not_original_surface",
+  "occupied_cells": 26597,
+  "output_sha256": "9e792c4b470dd2f33d0be9a132238516fb778cf2d131b559e9d0dbaf74013950",
+  "reconstructed_faces": 26460,
+  "reconstructed_signed_volume": 0.02644895833333333,
+  "reconstructed_vertices": 13232,
+  "reconstructed_watertight": true,
+  "reconstructed_winding_consistent": true,
+  "sample_count_each_direction": 100000,
+  "sampled_reconstructed_to_source_max": 0.013533014854740063,
+  "sampled_source_to_reconstructed_max": 0.015220462942558438,
+  "sampled_symmetric_hausdorff": 0.015220462942558438,
+  "schema": "make-it-stand-occupancy-surface-reconstruction-v1",
+  "schema_version": 1,
+  "source_faces": 171840,
+  "source_vertices": 85922,
+  "voxel_resolution": 100
+}

@@ -458,6 +458,74 @@ int runMulti(const std::string& scenario)
 }
 
 
+int runFrozen(const std::string& scenario)
+{
+    const stability::SupportRegion support = makeSquareSupport();
+    stability::BalanceTargetSpecifications specifications;
+    specifications.emplace_back(
+        stability::StandingTargetSpecification(
+            support,
+            std::atan(0.5)
+        )
+    );
+    stability::BalanceTargetSchedule schedule(specifications, true);
+
+    const Eigen::Vector3d initialCenter = pointAbove(
+        support,
+        Eigen::Vector2d(1.5, 0.0),
+        2.0
+    );
+    const stability::BalanceTargetSnapshot initial = schedule.refresh(
+        initialCenter
+    );
+    const Eigen::Vector3d frozenTarget = initial.objectives[0].target();
+
+    const Eigen::Vector3d stableCenter = pointAbove(
+        support,
+        Eigen::Vector2d(0.25, 0.0),
+        2.0
+    );
+    const stability::BalanceTargetSnapshot refreshed = schedule.refresh(
+        stableCenter
+    );
+
+    if (
+        !schedule.freezesObjectivesAfterInitialRefresh() ||
+        initial.generation != 1 ||
+        refreshed.generation != 1 ||
+        refreshed.contextChanged ||
+        !refreshed.allReached ||
+        !refreshed.constraints[0].reached ||
+        refreshed.constraints[0].standingState !=
+            stability::StandingState::Stable ||
+        !refreshed.objectives[0].target().isApprox(frozenTarget, 0.0) ||
+        !support.toPlaneCoordinates(frozenTarget).isApprox(
+            Eigen::Vector2d(1.0, 0.0),
+            TOLERANCE
+        ) ||
+        !close(
+            aggregateProjectedCenterOfMassEnergy(
+                stableCenter,
+                refreshed.objectives
+            ),
+            0.28125
+        )
+    )
+    {
+        return fail(
+            scenario,
+            "frozen objective changed or current constraint stopped updating"
+        );
+    }
+
+    std::cout
+        << "[PASS] scenario=" << scenario
+        << " target_generation=" << refreshed.generation
+        << " current_constraint=stable\n";
+    return EXIT_SUCCESS;
+}
+
+
 } // namespace
 
 
@@ -467,7 +535,8 @@ int main(int argc, char** argv)
     {
         return fail(
             "unknown",
-            "usage: balance-target-schedule-regression <refresh|stability|multi>"
+            "usage: balance-target-schedule-regression "
+            "<refresh|stability|multi|frozen>"
         );
     }
 
@@ -483,6 +552,10 @@ int main(int argc, char** argv)
     if (scenario == "multi")
     {
         return runMulti(scenario);
+    }
+    if (scenario == "frozen")
+    {
+        return runFrozen(scenario);
     }
     return fail(scenario, "unknown scenario");
 }

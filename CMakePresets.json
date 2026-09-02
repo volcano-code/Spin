@@ -31,6 +31,20 @@
       }
     },
     {
+      "name": "paper-python",
+      "displayName": "Paper and released-beta pure Python contracts",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/paper-python",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "MAKE_IT_STAND_BUILD_VIEWER": false,
+        "MAKE_IT_STAND_BUILD_PYTHON": false,
+        "MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS": true,
+        "BUILD_TESTING": true
+      }
+    },
+    {
       "name": "python",
       "displayName": "Python extension and R9/R10 evidence tests",
       "generator": "Ninja",
@@ -40,6 +54,21 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "MAKE_IT_STAND_BUILD_VIEWER": false,
         "MAKE_IT_STAND_BUILD_PYTHON": true,
+        "MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS": true,
+        "BUILD_TESTING": true
+      }
+    },
+    {
+      "name": "physics-python",
+      "displayName": "Optional PyBullet material/simulation contracts",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/physics-python",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "MAKE_IT_STAND_BUILD_VIEWER": false,
+        "MAKE_IT_STAND_BUILD_PYTHON": false,
+        "MAKE_IT_STAND_ENABLE_PYBULLET_TESTS": true,
         "BUILD_TESTING": true
       }
     }
@@ -54,8 +83,16 @@
       "configurePreset": "viewer"
     },
     {
+      "name": "paper-python",
+      "configurePreset": "paper-python"
+    },
+    {
       "name": "python",
       "configurePreset": "python"
+    },
+    {
+      "name": "physics-python",
+      "configurePreset": "physics-python"
     }
   ],
   "testPresets": [
@@ -67,8 +104,22 @@
       }
     },
     {
+      "name": "paper-python",
+      "configurePreset": "paper-python",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
       "name": "python",
       "configurePreset": "python",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "physics-python",
+      "configurePreset": "physics-python",
       "output": {
         "outputOnFailure": true
       }

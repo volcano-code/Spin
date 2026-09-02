@@ -59,6 +59,26 @@ double coordinateTolerance(
 }
 
 
+double classificationTolerance(
+    double scale
+)
+{
+    /*
+     * Geometry construction needs an ulp-scale tolerance so distinct hull
+     * features are not merged.  Feasibility classification has a different
+     * numerical role: a converged optimizer can retain a projected CoM a few
+     * 1e-11 outside a boundary even when its squared target energy is at
+     * machine zero.  sqrt(epsilon) is the standard scale for a predicate fed
+     * by first-order floating-point optimization.  Keeping this tolerance
+     * separate preserves strict polygon construction while preventing a
+     * numerically converged boundary state from being labelled Outside.
+     */
+    return
+        std::sqrt(std::numeric_limits<double>::epsilon()) *
+        std::max(1.0, scale);
+}
+
+
 bool lexicographicLess(
     const Eigen::Vector2d& first,
     const Eigen::Vector2d& second
@@ -660,10 +680,12 @@ SupportRegion::SupportRegion()
     planeOrigin_(Eigen::Vector3d::Zero()),
     supportHeight_(0.0),
     contactThreshold_(0.0),
+    minimumStabilityInset_(0.0),
     contactVertexIndices_(),
     supportPolygon2D_(0, 2),
     maximumInset_(0.0),
-    geometryTolerance_(0.0)
+    geometryTolerance_(0.0),
+    classificationTolerance_(0.0)
 {
 }
 
@@ -695,6 +717,7 @@ SupportRegion SupportRegion::fromPolygon(
         );
     }
     result.geometryTolerance_ = coordinateTolerance(scale);
+    result.classificationTolerance_ = classificationTolerance(scale);
 
     Eigen::Index leastAlignedAxis = 0;
     result.gravity_.cwiseAbs().minCoeff(&leastAlignedAxis);
@@ -741,6 +764,7 @@ SupportRegion SupportRegion::fromPolygon(
      */
     result.supportHeight_ = minimumHeight;
     result.contactThreshold_ = 0.0;
+    result.minimumStabilityInset_ = 0.0;
     result.planeOrigin_ =
         -result.supportHeight_ * result.gravity_;
 
@@ -783,7 +807,9 @@ SupportRegion SupportRegion::fromPolygon(
 SupportRegion SupportRegion::fromMesh(
     const Eigen::MatrixXd& vertices,
     const Eigen::Vector3d& gravityDirection,
-    double contactThreshold
+    double contactThreshold,
+    double minimumStabilityInset,
+    bool supportPlaneAtBandTop
 )
 {
     if (
@@ -799,11 +825,14 @@ SupportRegion SupportRegion::fromMesh(
 
     if (
         !std::isfinite(contactThreshold) ||
-        contactThreshold < 0.0
+        contactThreshold < 0.0 ||
+        !std::isfinite(minimumStabilityInset) ||
+        minimumStabilityInset < 0.0
     )
     {
         throw std::invalid_argument(
-            "contact threshold must be finite and non-negative"
+            "contact threshold and minimum stability inset must be finite "
+            "and non-negative"
         );
     }
 
@@ -823,6 +852,8 @@ SupportRegion SupportRegion::fromMesh(
 
     result.geometryTolerance_ =
         coordinateTolerance(scale);
+    result.classificationTolerance_ =
+        classificationTolerance(scale);
 
     Eigen::Index leastAlignedAxis = 0;
     result.gravity_.cwiseAbs().minCoeff(
@@ -864,8 +895,11 @@ SupportRegion SupportRegion::fromMesh(
             );
     }
 
-    result.supportHeight_ = heights.minCoeff();
+    const double minimumHeight = heights.minCoeff();
+    result.supportHeight_ = minimumHeight +
+        (supportPlaneAtBandTop ? contactThreshold : 0.0);
     result.contactThreshold_ = contactThreshold;
+    result.minimumStabilityInset_ = minimumStabilityInset;
     const Eigen::RowVector3d minimumVertex =
         vertices.colwise().minCoeff();
     const Eigen::RowVector3d maximumVertex =
@@ -888,7 +922,7 @@ SupportRegion SupportRegion::fromMesh(
     {
         if (
             heights(index) <=
-            result.supportHeight_ +
+            minimumHeight +
                 contactThreshold +
                 result.geometryTolerance_
         )
@@ -968,6 +1002,12 @@ double SupportRegion::contactThreshold() const
 }
 
 
+double SupportRegion::minimumStabilityInset() const
+{
+    return minimumStabilityInset_;
+}
+
+
 const std::vector<int>&
 SupportRegion::contactVertexIndices() const
 {
@@ -1030,7 +1070,7 @@ bool SupportRegion::contains2D(
     return containsClosedConvexSet(
         supportPolygon2D_,
         point,
-        geometryTolerance_
+        classificationTolerance_
     );
 }
 
@@ -1198,8 +1238,10 @@ StandingTarget makeStandingTarget(
         );
     }
 
-    const double requestedInset =
-        height * std::tan(gammaRadians);
+    const double requestedInset = std::max(
+        support.minimumStabilityInset_,
+        height * std::tan(gammaRadians)
+    );
 
     if (!std::isfinite(requestedInset))
     {
@@ -1245,7 +1287,7 @@ StandingTarget makeStandingTarget(
         containsClosedConvexSet(
             safeRegion,
             projectedCenterOfMass,
-            support.geometryTolerance_
+            support.classificationTolerance_
         );
 
     StandingState state = StandingState::OutsideSupport;
@@ -1261,7 +1303,7 @@ StandingTarget makeStandingTarget(
         closestPointInClosedConvexSet(
             safeRegion,
             projectedCenterOfMass,
-            support.geometryTolerance_
+            support.classificationTolerance_
         );
 
     const BalanceObjective objective(

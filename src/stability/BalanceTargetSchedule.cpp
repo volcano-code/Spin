@@ -271,13 +271,17 @@ SuspensionTargetSpecification::SuspensionTargetSpecification(
 
 
 BalanceTargetSchedule::BalanceTargetSchedule(
-    const BalanceTargetSpecifications& specifications
+    const BalanceTargetSpecifications& specifications,
+    bool freezeObjectivesAfterInitialRefresh
 )
     :
     specifications_(specifications),
     snapshot_{0, false, false, BalanceObjectives(), {}},
     hasSnapshot_(false),
-    generation_(0)
+    generation_(0),
+    freezeObjectivesAfterInitialRefresh_(
+        freezeObjectivesAfterInitialRefresh
+    )
 {
     if (specifications_.empty())
     {
@@ -361,6 +365,17 @@ BalanceTargetSnapshot BalanceTargetSchedule::refresh(
         next.allReached = next.allReached && state.reached;
     }
 
+    /*
+     * The released beta computes its standing target once when voxelization
+     * begins.  It still evaluates the current CoM against the fixed support
+     * on every optimize() call.  Preserve that distinction here: only the
+     * objective targets are frozen; constraint snapshots remain current.
+     */
+    if (freezeObjectivesAfterInitialRefresh_ && hasSnapshot_)
+    {
+        next.objectives = snapshot_.objectives;
+    }
+
     next.contextChanged =
         !hasSnapshot_ ||
         !objectiveContextsEquivalent(
@@ -415,6 +430,12 @@ const BalanceTargetSpecifications&
 BalanceTargetSchedule::specifications() const
 {
     return specifications_;
+}
+
+
+bool BalanceTargetSchedule::freezesObjectivesAfterInitialRefresh() const
+{
+    return freezeObjectivesAfterInitialRefresh_;
 }
 
 

@@ -1274,12 +1274,125 @@ int runLineSearch(const std::string& scenario)
         return fail(scenario, "mu exhaustion state-machine contract failed");
     }
 
+    deformation::PaperLineSearchConfig betaConfig;
+    betaConfig.requiredRelativeDecrease = 0.03;
+    betaConfig.releasedBetaSemantics = true;
+    deformation::PaperLineSearchState betaState;
+    betaState.step = betaConfig.initialStep;
+    betaState.mu = 0.75;
+
+    const deformation::PaperLineSearchResult retainedSmallDecrease =
+        deformation::paperGradientDescentTrial(
+            parameters,
+            gradient,
+            betaState,
+            betaConfig,
+            [](const Eigen::VectorXd& value, double)
+            {
+                return value(0) == 0.0 ? 100.0 : 99.0;
+            }
+        );
+    if (
+        retainedSmallDecrease.decision !=
+            deformation::PaperTrialDecision::StepReduced ||
+        !retainedSmallDecrease.accepted ||
+        retainedSmallDecrease.rolledBack ||
+        !retainedSmallDecrease.parameters.isApprox(
+            Eigen::VectorXd::Constant(1, -1.0),
+            0.0
+        ) ||
+        !approximatelyEqual(
+            retainedSmallDecrease.nextState.step,
+            0.8,
+            1.0e-14
+        )
+    )
+    {
+        return fail(scenario, "beta small-decrease retention failed");
+    }
+
+    const double betaAttempts[] =
+    {
+        1.0,
+        0.8,
+        0.64,
+        0.512,
+        0.4096,
+        0.32768
+    };
+    deformation::PaperLineSearchResult betaFailed;
+    for (std::size_t attempt = 0;
+         attempt < sizeof(betaAttempts) / sizeof(betaAttempts[0]);
+         ++attempt)
+    {
+        betaFailed = deformation::paperGradientDescentTrial(
+            parameters,
+            gradient,
+            betaState,
+            betaConfig,
+            [](const Eigen::VectorXd& value, double)
+            {
+                return value(0) == 0.0 ? 100.0 : 101.0;
+            }
+        );
+        if (
+            !approximatelyEqual(
+                betaFailed.attemptedStep,
+                betaAttempts[attempt],
+                1.0e-14
+            ) ||
+            betaFailed.accepted ||
+            !betaFailed.rolledBack
+        )
+        {
+            return fail(scenario, "beta step-threshold sequence failed");
+        }
+        betaState = betaFailed.nextState;
+    }
+    if (
+        betaFailed.decision != deformation::PaperTrialDecision::MuReduced ||
+        betaFailed.objectiveReweighted ||
+        !approximatelyEqual(betaState.step, 1.0, 1.0e-14) ||
+        !approximatelyEqual(betaState.mu, 0.70, 1.0e-14)
+    )
+    {
+        return fail(scenario, "beta step threshold did not reduce mu");
+    }
+
+    betaState.step = 0.32768;
+    betaState.mu = betaConfig.muDecrement;
+    const deformation::PaperLineSearchResult betaExhausted =
+        deformation::paperGradientDescentTrial(
+            parameters,
+            gradient,
+            betaState,
+            betaConfig,
+            [](const Eigen::VectorXd& value, double)
+            {
+                return value(0) == 0.0 ? 100.0 : 101.0;
+            }
+        );
+    if (
+        betaExhausted.decision !=
+            deformation::PaperTrialDecision::MuExhausted ||
+        betaExhausted.objectiveReweighted ||
+        !approximatelyEqual(
+            betaExhausted.nextState.mu,
+            betaConfig.muDecrement,
+            0.0
+        )
+    )
+    {
+        return fail(scenario, "beta mu endpoint changed from 0.05");
+    }
+
     std::cout
         << "[PASS] scenario=" << scenario
         << " acceptance=1%"
         << " failed_attempts="
         << sizeof(expectedAttempts) / sizeof(expectedAttempts[0])
-        << " final_mu=" << exhausted.nextState.mu << '\n';
+        << " final_mu=" << exhausted.nextState.mu
+        << " beta_final_mu=" << betaExhausted.nextState.mu << '\n';
     return EXIT_SUCCESS;
 }
 

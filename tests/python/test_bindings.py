@@ -300,6 +300,17 @@ class NativeBindingSmokeTests(unittest.TestCase):
             diagnostic["r10_metrics"]["maximum_user_handle_scale_deviation"],
             0.0,
         )
+        self.assertEqual(
+            diagnostic["r10_metrics"]["mass_moment_source"],
+            "outer_surface_minus_deformed_carved_cells",
+        )
+        inertia = self.np.asarray(
+            diagnostic["r10_metrics"]["final_inertia_tensor_about_center"],
+            dtype=float,
+        )
+        self.assertEqual(inertia.shape, (3, 3))
+        self.np.testing.assert_allclose(inertia, inertia.T, rtol=0.0, atol=1.0e-12)
+        self.assertTrue((self.np.linalg.eigvalsh(inertia) > 0.0).all())
         performance = json.loads(first.performance_report_json)
         self.assertEqual(
             performance["schema"],

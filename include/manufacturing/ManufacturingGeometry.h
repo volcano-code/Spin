@@ -114,6 +114,14 @@ struct ContainmentAudit
 };
 
 
+/** Clearance and containment audit for already sealed outer/inner shells. */
+struct MaterialShellAudit
+{
+    WallClearanceAudit wallClearance;
+    ContainmentAudit containment;
+};
+
+
 /**
  * Sampled local-injectivity gate for deformed active cells.
  *
@@ -264,6 +272,17 @@ BoundaryAudit auditTriangleBoundary(
     const Eigen::MatrixXi& faces,
     BoundaryOrientation requiredOrientation,
     bool allowEmpty = false,
+    double geometricTolerance = 0.0
+);
+
+
+/** Audit clearance and cavity containment without optimizer/voxel state. */
+MaterialShellAudit auditMaterialShells(
+    const Eigen::MatrixXd& outerVertices,
+    const Eigen::MatrixXi& outerFaces,
+    const Eigen::MatrixXd& innerVertices,
+    const Eigen::MatrixXi& innerFaces,
+    double requestedThickness = 0.0,
     double geometricTolerance = 0.0
 );
 

@@ -34,7 +34,7 @@ constexpr int OUTWARD_TRIANGLES[12][3] =
 };
 
 
-MassProperties integrateCell(
+MassMoments integrateCell(
     const std::array<Eigen::Vector3d, 8>& corners,
     double density
 )
@@ -46,7 +46,7 @@ MassProperties integrateCell(
     }
     reference /= 8.0;
 
-    MassProperties result;
+    MassMoments result;
 
     for (const auto& triangle : OUTWARD_TRIANGLES)
     {
@@ -62,8 +62,26 @@ MassProperties integrateCell(
         const Eigen::Vector3d tetrahedronCenter =
             reference + (first + second + third) / 4.0;
 
+        const Eigen::Vector3d tetrahedronVertices[4] =
+        {
+            reference,
+            corners[static_cast<std::size_t>(triangle[0])],
+            corners[static_cast<std::size_t>(triangle[1])],
+            corners[static_cast<std::size_t>(triangle[2])]
+        };
+        Eigen::Vector3d vertexSum = Eigen::Vector3d::Zero();
+        Eigen::Matrix3d selfOuter = Eigen::Matrix3d::Zero();
+        for (const Eigen::Vector3d& vertex : tetrahedronVertices)
+        {
+            vertexSum += vertex;
+            selfOuter += vertex * vertex.transpose();
+        }
+
         result.mass += signedMass;
         result.firstMoment += signedMass * tetrahedronCenter;
+        result.secondMoment += signedMass * (
+            vertexSum * vertexSum.transpose() + selfOuter
+        ) / 20.0;
     }
 
     return result;
@@ -98,7 +116,9 @@ DeformedVoxelMassField::DeformedVoxelMassField(
     activeMask_(domain.activeCellMask()),
     masses_(Eigen::VectorXd::Zero(domain.cellCount())),
     firstMoments_(Eigen::MatrixXd::Zero(domain.cellCount(), 3)),
+    secondMoments_(Eigen::MatrixXd::Zero(domain.cellCount(), 9)),
     centroids_(Eigen::MatrixXd::Zero(domain.cellCount(), 3)),
+    cornerAverages_(Eigen::MatrixXd::Zero(domain.cellCount(), 3)),
     activeCellCount_(domain.activeCellCount()),
     density_(density),
     minimumPositiveCellMass_(minimumPositiveCellMass)
@@ -158,9 +178,12 @@ DeformedVoxelMassField::DeformedVoxelMassField(
             }
             corners[static_cast<std::size_t>(bit)] =
                 fullDeformedCorners.row(global).transpose();
+            cornerAverages_.row(cell) +=
+                corners[static_cast<std::size_t>(bit)].transpose() / 8.0;
         }
 
-        const MassProperties properties = integrateCell(corners, density_);
+        const MassMoments moments = integrateCell(corners, density_);
+        const MassProperties properties(moments.mass, moments.firstMoment);
         Eigen::Vector3d center = Eigen::Vector3d::Zero();
 
         if (
@@ -178,8 +201,41 @@ DeformedVoxelMassField::DeformedVoxelMassField(
 
         masses_(cell) = properties.mass;
         firstMoments_.row(cell) = properties.firstMoment.transpose();
+        for (int row = 0; row < 3; ++row)
+        {
+            for (int column = 0; column < 3; ++column)
+            {
+                secondMoments_(cell, 3 * row + column) =
+                    moments.secondMoment(row, column);
+            }
+        }
         centroids_.row(cell) = center.transpose();
     }
+}
+
+
+MassMoments DeformedVoxelMassField::massMoments(int linearCell) const
+{
+    requireCellIndex(linearCell, cellCount());
+    if (activeMask_(linearCell) == 0)
+    {
+        throw std::invalid_argument(
+            "inactive grid cell has no deformed mass moments"
+        );
+    }
+
+    MassMoments result;
+    result.mass = masses_(linearCell);
+    result.firstMoment = firstMoments_.row(linearCell).transpose();
+    for (int row = 0; row < 3; ++row)
+    {
+        for (int column = 0; column < 3; ++column)
+        {
+            result.secondMoment(row, column) =
+                secondMoments_(linearCell, 3 * row + column);
+        }
+    }
+    return result;
 }
 
 
@@ -240,6 +296,21 @@ Eigen::Vector3d DeformedVoxelMassField::centroid(
         );
     }
     return centroids_.row(linearCell).transpose();
+}
+
+
+Eigen::Vector3d DeformedVoxelMassField::cornerAverage(
+    int linearCell
+) const
+{
+    requireCellIndex(linearCell, cellCount());
+    if (activeMask_(linearCell) == 0)
+    {
+        throw std::invalid_argument(
+            "inactive grid cell has no deformed corner average"
+        );
+    }
+    return cornerAverages_.row(linearCell).transpose();
 }
 
 

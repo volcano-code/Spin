@@ -330,6 +330,15 @@ int runIdentity()
         identityField,
         objectives
     );
+    if (sidecar.usesDeformedCornerAverageCandidatePositions())
+    {
+        return fail(scenario, "beta candidate ordering was enabled by default");
+    }
+    sidecar.setUseDeformedCornerAverageCandidatePositions(true);
+    if (!sidecar.usesDeformedCornerAverageCandidatePositions())
+    {
+        return fail(scenario, "beta candidate ordering could not be selected");
+    }
 
     Eigen::MatrixXd legacyPlane;
     Eigen::MatrixXi legacyFaces;

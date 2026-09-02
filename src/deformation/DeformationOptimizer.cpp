@@ -48,7 +48,11 @@ void validateLineSearchState(
     if (
         !std::isfinite(state.step) ||
         !std::isfinite(state.mu) ||
-        state.step < config.minimumStep ||
+        state.step <= 0.0 ||
+        (
+            !config.releasedBetaSemantics &&
+            state.step < config.minimumStep
+        ) ||
         state.step > config.initialStep ||
         state.mu < 0.0 ||
         state.mu > 1.0
@@ -141,7 +145,10 @@ PaperLineSearchResult paperGradientDescentTrial(
         (1.0 - config.requiredRelativeDecrease) *
         result.energyBefore;
 
-    if (validTrial && result.trialEnergy <= requiredMaximum)
+    const bool sufficientDecrease =
+        validTrial && result.trialEnergy <= requiredMaximum;
+
+    if (sufficientDecrease)
     {
         result.decision = PaperTrialDecision::Accepted;
         result.accepted = true;
@@ -151,18 +158,37 @@ PaperLineSearchResult paperGradientDescentTrial(
         return result;
     }
 
-    /* Every insufficient trial, including a small decrease, is rolled back. */
-    result.accepted = false;
-    result.rolledBack = true;
-    result.energyAfter = result.energyBefore;
+    const bool retainedBetaTrial =
+        config.releasedBetaSemantics &&
+        validTrial &&
+        result.trialEnergy <= result.energyBefore;
+    if (retainedBetaTrial)
+    {
+        /*
+         * In the beta, 3% controls the schedule, not acceptance. Equal and
+         * smaller energies remain committed even when the step or mu changes.
+         */
+        result.accepted = true;
+        result.rolledBack = false;
+        result.parameters = trialParameters;
+        result.energyAfter = result.trialEnergy;
+    }
+    else
+    {
+        result.accepted = false;
+        result.rolledBack = true;
+        result.energyAfter = result.energyBefore;
+    }
 
     if (state.step > config.minimumStep)
     {
         result.decision = PaperTrialDecision::StepReduced;
-        result.nextState.step = std::max(
-            config.minimumStep,
-            state.step * config.reductionRatio
-        );
+        result.nextState.step = config.releasedBetaSemantics
+            ? state.step * config.reductionRatio
+            : std::max(
+                config.minimumStep,
+                state.step * config.reductionRatio
+            );
         return result;
     }
 
@@ -180,7 +206,6 @@ PaperLineSearchResult paperGradientDescentTrial(
     if (state.mu > config.muDecrement + muTolerance)
     {
         result.decision = PaperTrialDecision::MuReduced;
-        result.objectiveReweighted = true;
         result.nextState.mu = state.mu - config.muDecrement;
         if (
             std::abs(result.nextState.mu - config.muDecrement) <=
@@ -189,22 +214,29 @@ PaperLineSearchResult paperGradientDescentTrial(
         {
             result.nextState.mu = config.muDecrement;
         }
-        result.energyAfter = checkedEnergy(
-            evaluateEnergy,
-            parameters,
-            result.nextState.mu
-        );
+        if (!config.releasedBetaSemantics)
+        {
+            result.objectiveReweighted = true;
+            result.energyAfter = checkedEnergy(
+                evaluateEnergy,
+                result.parameters,
+                result.nextState.mu
+            );
+        }
         return result;
     }
 
     result.decision = PaperTrialDecision::MuExhausted;
-    result.objectiveReweighted = true;
-    result.nextState.mu = 0.0;
-    result.energyAfter = checkedEnergy(
-        evaluateEnergy,
-        parameters,
-        0.0
-    );
+    if (!config.releasedBetaSemantics)
+    {
+        result.objectiveReweighted = true;
+        result.nextState.mu = 0.0;
+        result.energyAfter = checkedEnergy(
+            evaluateEnergy,
+            parameters,
+            0.0
+        );
+    }
     return result;
 }
 

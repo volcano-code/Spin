@@ -165,6 +165,7 @@ CarvingSolver::CarvingSolver(
     ),
     currentMassProperties_(initialMassProperties_),
     deformedVoxelMassField_(nullptr),
+    useDeformedCornerAverageCandidatePositions_(false),
     carvedVoxelCount_(0),
     iterations_(0),
     minimumRemovalsToContinue_(1),
@@ -215,6 +216,7 @@ CarvingSolver::CarvingSolver(
     initialMassProperties_(deformedOuterMassProperties),
     currentMassProperties_(initialMassProperties_),
     deformedVoxelMassField_(nullptr),
+    useDeformedCornerAverageCandidatePositions_(false),
     carvedVoxelCount_(0),
     iterations_(0),
     minimumRemovalsToContinue_(1),
@@ -512,7 +514,9 @@ Eigen::Vector3d CarvingSolver::voxelMassCentroid(
     const int linear = linearCellIndex(x, y, z);
     if (deformedVoxelMassField_ != nullptr)
     {
-        return deformedVoxelMassField_->centroid(linear);
+        return useDeformedCornerAverageCandidatePositions_
+            ? deformedVoxelMassField_->cornerAverage(linear)
+            : deformedVoxelMassField_->centroid(linear);
     }
 
     const Voxel& voxel = voxelGrid_(x, y, z);
@@ -1172,6 +1176,32 @@ void CarvingSolver::setMinimumRemovalsToContinue(
 int CarvingSolver::minimumRemovalsToContinue() const
 {
     return minimumRemovalsToContinue_;
+}
+
+
+void CarvingSolver::setUseDeformedCornerAverageCandidatePositions(
+    bool enabled
+)
+{
+    if (iterations_ != 0 || carveStepInProgress_)
+    {
+        throw std::logic_error(
+            "candidate-position compatibility must be selected before carving"
+        );
+    }
+    if (enabled && deformedVoxelMassField_ == nullptr)
+    {
+        throw std::logic_error(
+            "corner-average candidate positions require a deformed mass field"
+        );
+    }
+    useDeformedCornerAverageCandidatePositions_ = enabled;
+}
+
+
+bool CarvingSolver::usesDeformedCornerAverageCandidatePositions() const noexcept
+{
+    return useDeformedCornerAverageCandidatePositions_;
 }
 
 

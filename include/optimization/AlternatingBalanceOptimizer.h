@@ -35,6 +35,10 @@ struct AlternatingBalanceOptimizerConfig
     bool enableCarving = true;
     bool enableDeformation = true;
     bool enableLaplacian = true;
+
+    /** Released-beta compatibility controls; false in the paper profile. */
+    bool freezeTargetsAfterInitialRefresh = false;
+    bool releasedBetaOuterLoop = false;
 };
 
 
@@ -144,7 +148,7 @@ struct AlternatingCarvingRecord
 };
 
 
-/** One fixed-alpha R6 line-search trial inside an R7 deformation block. */
+/** One fixed-alpha paper trial or opt-in released-beta balance trial. */
 struct AlternatingDeformationRecord
 {
     int block = 0;
@@ -170,12 +174,21 @@ struct AlternatingDeformationRecord
     bool objectiveContextChanged = false;
     bool allTargetsReached = false;
 
-    /** Paper profile discriminator: both remain zero inside this block. */
+    /** Paper trials leave these zero; beta trials record complete balance calls. */
     int refillCalls = 0;
     int carvingCalls = 0;
+    bool releasedBetaOuterLoop = false;
+    int trialBalanceCalls = 0;
+    int rollbackBalanceCalls = 0;
+    int trialCarvingIterations = 0;
+    int trialCarvedVoxelCount = 0;
+    int rollbackCarvingIterations = 0;
+    int rollbackCarvedVoxelCount = 0;
     int alphaHammingDistance = 0;
     std::uint64_t alphaHashBefore = 0;
     std::uint64_t alphaHashAfter = 0;
+    std::uint64_t trialAlphaHash = 0;
+    std::uint64_t rollbackAlphaHash = 0;
     Eigen::VectorXd parametersBefore;
     Eigen::VectorXd parametersAfter;
 
@@ -194,6 +207,7 @@ struct AlternatingBalanceOptimizationResult
     bool carvingEnabled = true;
     bool deformationEnabled = true;
     bool laplacianEnabled = true;
+    bool releasedBetaOuterLoopEnabled = false;
     AlternatingOptimizationStatus status =
         AlternatingOptimizationStatus::MaximumCarvingBlocks;
     Eigen::VectorXd parameters;
@@ -226,6 +240,13 @@ struct AlternatingBalanceOptimizationResult
     double finalUnscaledShapeEnergy = 0.0;
     double finalShapeEnergy = 0.0;
     double finalTotalEnergy = 0.0;
+    /**
+     * Analytic material moments bound to the final occupancy/deformed lattice.
+     * The cavity contribution is subtracted cell-by-cell, never inferred from
+     * the exported (potentially non-manifold) inner visualization mesh.
+     */
+    MassMoments finalMassMoments;
+    Eigen::Matrix3d finalInertiaTensorAboutCenter = Eigen::Matrix3d::Zero();
     double initialOuterVolume = 0.0;
     double finalOuterVolume = 0.0;
     double finalCavityVolume = 0.0;

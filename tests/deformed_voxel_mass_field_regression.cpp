@@ -60,6 +60,20 @@ bool approximatelyEqual(
 }
 
 
+bool approximatelyEqual(
+    const Eigen::Matrix3d& first,
+    const Eigen::Matrix3d& second,
+    double tolerance
+)
+{
+    return
+        first.allFinite() &&
+        second.allFinite() &&
+        (first - second).norm() <= tolerance *
+            std::max({1.0, first.norm(), second.norm()});
+}
+
+
 void makeBox(
     const Eigen::Vector3d& minimum,
     const Eigen::Vector3d& maximum,
@@ -157,6 +171,13 @@ int runIdentityAndSimilarity()
         density
     );
     const MassProperties actual = identity.massProperties(cell);
+    const MassMoments actualMoments = identity.massMoments(cell);
+    const Eigen::Vector3d size = fixture.domain.voxelSize();
+    Eigen::Matrix3d expectedInertia = Eigen::Matrix3d::Zero();
+    expectedInertia.diagonal() <<
+        expected.mass * (size(1) * size(1) + size(2) * size(2)) / 12.0,
+        expected.mass * (size(0) * size(0) + size(2) * size(2)) / 12.0,
+        expected.mass * (size(0) * size(0) + size(1) * size(1)) / 12.0;
 
     if (
         identity.cellCount() != fixture.domain.cellCount() ||
@@ -165,7 +186,12 @@ int runIdentityAndSimilarity()
         !identity.contains(cell) ||
         !approximatelyEqual(actual.mass, expected.mass, 1.0e-12) ||
         !approximatelyEqual(actual.firstMoment, expected.firstMoment, 1.0e-12) ||
-        !approximatelyEqual(identity.centroid(cell), expectedCenter, 1.0e-12)
+        !approximatelyEqual(identity.centroid(cell), expectedCenter, 1.0e-12) ||
+        !approximatelyEqual(
+            actualMoments.inertiaAboutCenter(),
+            expectedInertia,
+            2.0e-12
+        )
     )
     {
         return fail("identity field disagrees with the exact axis-aligned cell");
@@ -341,9 +367,12 @@ int runDistortedCavitySum()
     cornerAverage /= 8.0;
     const double centroidVersusCornerAverage =
         (field.centroid(cells.front()) - cornerAverage).norm();
-    if (!(centroidVersusCornerAverage > 1.0e-8))
+    if (
+        !(centroidVersusCornerAverage > 1.0e-8) ||
+        !field.cornerAverage(cells.front()).isApprox(cornerAverage, 1.0e-14)
+    )
     {
-        return fail("distorted fixture does not distinguish volume centroid from corner average");
+        return fail("distorted fixture did not retain both beta and exact cell centers");
     }
 
     const MassProperties summed = sumField(field, cells);

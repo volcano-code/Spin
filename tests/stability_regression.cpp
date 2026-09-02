@@ -375,6 +375,33 @@ int runSupportScenario()
         );
     }
 
+    /*
+     * A first-order optimizer may converge to a support boundary with a
+     * residual of a few 1e-11 in normalized coordinates.  That is well below
+     * the meaningful geometric scale and must not disagree with its
+     * effectively-zero projected target energy.  A visibly distinct 1e-6
+     * violation must remain outside.
+     */
+    const Eigen::Vector2d numericalBoundaryPoint =
+        region.toPlaneCoordinates(
+            Eigen::Vector3d(2.0 + 4.0e-11, 0.0, 0.0)
+        );
+    const Eigen::Vector2d materiallyOutsidePoint =
+        region.toPlaneCoordinates(
+            Eigen::Vector3d(2.0 + 1.0e-6, 0.0, 0.0)
+        );
+    if (
+        !region.contains2D(numericalBoundaryPoint) ||
+        region.contains2D(materiallyOutsidePoint)
+    )
+    {
+        return fail(
+            scenario,
+            "support membership tolerance does not separate numerical "
+            "boundary residuals from material violations"
+        );
+    }
+
     const stability::SupportRegion scaledGravityRegion =
         stability::SupportRegion::fromMesh(
             vertices,
@@ -844,6 +871,53 @@ int runSafeScenario()
                 "toppling-angle inset did not produce [-1,1]^2"
             );
         }
+    }
+
+    const stability::SupportRegion betaInsetRegion =
+        stability::SupportRegion::fromMesh(
+            makeSquareSupportMesh(),
+            gravity,
+            0.25,
+            1.0e-4,
+            true
+        );
+    const Eigen::Vector2d nearEdge(2.0 - 5.0e-5, 0.0);
+    const Eigen::Vector3d nearEdgeCenterOfMass = pointAboveSupport(
+        betaInsetRegion,
+        nearEdge,
+        2.0
+    );
+    const stability::StandingTarget generalGammaZero =
+        stability::makeStandingTarget(
+            region,
+            pointAboveSupport(region, nearEdge, 2.0),
+            0.0
+        );
+    const stability::StandingTarget betaGammaZero =
+        stability::makeStandingTarget(
+            betaInsetRegion,
+            nearEdgeCenterOfMass,
+            0.0
+        );
+    if (
+        !approximatelyEqual(region.minimumStabilityInset(), 0.0) ||
+        !approximatelyEqual(
+            betaInsetRegion.minimumStabilityInset(),
+            1.0e-4
+        ) ||
+        !approximatelyEqual(betaInsetRegion.supportHeight(), 0.25) ||
+        generalGammaZero.state() != stability::StandingState::Stable ||
+        !approximatelyEqual(generalGammaZero.requestedInset(), 0.0) ||
+        betaGammaZero.state() !=
+            stability::StandingState::FeasibleButUnsafe ||
+        !approximatelyEqual(betaGammaZero.requestedInset(), 1.0e-4)
+    )
+    {
+        return fail(
+            scenario,
+            "opt-in beta minimum inset changed the general gamma=0 contract "
+            "or was not enforced"
+        );
     }
 
     const Eigen::Vector3d supportBoundaryCenterOfMass =

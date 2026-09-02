@@ -9,6 +9,7 @@
 #include "voxel/VoxelGrid.h"
 
 #include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 #include <algorithm>
 #include <cmath>
@@ -1071,6 +1072,9 @@ int runEndToEnd(const std::string& scenario)
 
     const MassProperties oracle = completeSurfaceMassOracle(first.geometry);
     Eigen::Vector3d oracleCenter = Eigen::Vector3d::Zero();
+    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> inertiaSolver(
+        first.finalInertiaTensorAboutCenter
+    );
     if (
         !oracle.tryCenterOfMass(oracleCenter, 0.0) ||
         !sameMassProperties(
@@ -1079,6 +1083,22 @@ int runEndToEnd(const std::string& scenario)
             1.0e-9
         ) ||
         !first.centerOfMass.isApprox(oracleCenter, 1.0e-9) ||
+        !close(
+            first.finalMassMoments.mass,
+            first.massProperties.mass,
+            1.0e-9
+        ) ||
+        !first.finalMassMoments.firstMoment.isApprox(
+            first.massProperties.firstMoment,
+            1.0e-9
+        ) ||
+        !first.finalInertiaTensorAboutCenter.allFinite() ||
+        !first.finalInertiaTensorAboutCenter.isApprox(
+            first.finalInertiaTensorAboutCenter.transpose(),
+            1.0e-12
+        ) ||
+        inertiaSolver.info() != Eigen::Success ||
+        !(inertiaSolver.eigenvalues().array() > 0.0).all() ||
         !supportNodesFixed(
             fixture.system,
             first.geometry.gridCorners,
@@ -1111,6 +1131,208 @@ int runEndToEnd(const std::string& scenario)
 }
 
 
+int runReleasedBetaOuterLoop(const std::string& scenario)
+{
+    Eigen::MatrixXd vertices;
+    Eigen::MatrixXi faces;
+    makeOverhangingPrism(vertices, faces);
+    const ProductionFixture fixture(vertices, faces, 14);
+    const stability::BalanceTargetSchedule schedule =
+        makeStandingSchedule(fixture.support, 0.08);
+    optimization::AlternatingBalanceOptimizerConfig config =
+        makeConfiguration(1, 0.0);
+    config.maximumDeformationIterationsPerBlock = 8;
+    config.shapeScaleLambda = 20.0;
+    config.lineSearch.requiredRelativeDecrease = 0.03;
+    config.lineSearch.releasedBetaSemantics = true;
+    config.freezeTargetsAfterInitialRefresh = true;
+    config.releasedBetaOuterLoop = true;
+
+    const optimization::AlternatingBalanceOptimizer optimizer(
+        fixture.system,
+        fixture.grid,
+        schedule,
+        config
+    );
+    const optimization::AlternatingBalanceOptimizationResult result =
+        optimizer.optimize(
+            fixture.binding.handles.optimizationParameters(),
+            0.75
+        );
+
+    if (
+        !result.releasedBetaOuterLoopEnabled ||
+        result.deformationIterations.empty() ||
+        result.carvingBlocks.size() != 1U ||
+        result.carvingBlocks.front().carvingIterations != 1
+    )
+    {
+        return fail(
+            scenario,
+            "released-beta outer loop did not begin with exactly one carve"
+        );
+    }
+
+    bool sawAccepted = false;
+    bool sawRollback = false;
+    for (const optimization::AlternatingDeformationRecord& record :
+         result.deformationIterations)
+    {
+        if (
+            !record.releasedBetaOuterLoop ||
+            record.trialBalanceCalls != 1 ||
+            record.trialCarvingIterations != 1 ||
+            record.refillCalls != record.carvingCalls ||
+            record.refillCalls !=
+                record.trialBalanceCalls + record.rollbackBalanceCalls ||
+            record.objectiveReweighted ||
+            record.targetGenerationAfter != record.targetGenerationBefore
+        )
+        {
+            return fail(
+                scenario,
+                "a beta trial skipped recarving or refreshed its frozen target"
+            );
+        }
+
+        if (record.accepted)
+        {
+            sawAccepted = true;
+            if (
+                record.rolledBack ||
+                record.rollbackBalanceCalls != 0 ||
+                record.refillCalls != 1 ||
+                record.alphaHashAfter != record.trialAlphaHash
+            )
+            {
+                return fail(
+                    scenario,
+                    "accepted beta trial did not retain its recarved state"
+                );
+            }
+        }
+        else
+        {
+            sawRollback = true;
+            if (
+                !record.rolledBack ||
+                record.rollbackBalanceCalls != 1 ||
+                record.rollbackCarvingIterations != 1 ||
+                record.refillCalls != 2 ||
+                record.alphaHashAfter != record.rollbackAlphaHash ||
+                record.alphaHashAfter != record.alphaHashBefore ||
+                record.geometryHashAfter != record.geometryHashBefore ||
+                !record.parametersAfter.isApprox(
+                    record.parametersBefore,
+                    0.0
+                )
+            )
+            {
+                return fail(
+                    scenario,
+                    "uphill beta trial was not fully rebalanced after rollback"
+                );
+            }
+        }
+    }
+
+    const MassProperties oracle = completeSurfaceMassOracle(result.geometry);
+    if (
+        !sawAccepted ||
+        !sawRollback ||
+        !sameMassProperties(result.massProperties, oracle, 1.0e-9)
+    )
+    {
+        return fail(
+            scenario,
+            "fixture did not prove accepted and rejected beta balance calls"
+        );
+    }
+
+    std::cout
+        << "[PASS] scenario=" << scenario
+        << " trials=" << result.deformationIterations.size()
+        << " accepted=" << sawAccepted
+        << " rollback=" << sawRollback
+        << " final_status=" << static_cast<int>(result.status)
+        << '\n';
+    return EXIT_SUCCESS;
+}
+
+
+int runInvalidOuterBoundaryGate(const std::string& scenario)
+{
+    Eigen::MatrixXd vertices;
+    Eigen::MatrixXi faces;
+    makeBox(
+        Eigen::Vector3d::Zero(),
+        Eigen::Vector3d::Ones(),
+        vertices,
+        faces
+    );
+    Eigen::MatrixXd crossingVertices;
+    Eigen::MatrixXi crossingFaces;
+    makeBox(
+        Eigen::Vector3d(0.5, 0.5, 0.5),
+        Eigen::Vector3d(1.5, 1.5, 1.5),
+        crossingVertices,
+        crossingFaces
+    );
+    Eigen::MatrixXd joinedVertices(vertices.rows() + crossingVertices.rows(), 3);
+    joinedVertices << vertices, crossingVertices;
+    Eigen::MatrixXi joinedFaces(faces.rows() + crossingFaces.rows(), 3);
+    joinedFaces.topRows(faces.rows()) = faces;
+    joinedFaces.bottomRows(crossingFaces.rows()) =
+        crossingFaces.array() + vertices.rows();
+    const VoxelGrid grid(joinedVertices, joinedFaces, 0.0, 8);
+    const deformation::GridDeformationDomain domain =
+        deformation::GridDeformationDomain::fromVoxelGrid(grid);
+    const GeometryBinding binding = makeVerticalBinding(domain);
+    const deformation::DeformationSystem invalidSystem(
+        grid,
+        joinedVertices,
+        joinedFaces,
+        binding.handles,
+        binding.weights,
+        true
+    );
+    const stability::SupportRegion support =
+        stability::SupportRegion::fromMesh(
+            joinedVertices,
+            Eigen::Vector3d(0.0, -1.0, 0.0),
+            0.0
+        );
+    const optimization::AlternatingBalanceOptimizer optimizer(
+        invalidSystem,
+        grid,
+        makeStandingSchedule(support, 0.08),
+        makeConfiguration(1, 1.0e-8)
+    );
+    bool rejected = false;
+    try
+    {
+        static_cast<void>(optimizer.optimize(
+            binding.handles.optimizationParameters(),
+            0.2
+        ));
+    }
+    catch (const deformation::InfeasibleDeformationState& error)
+    {
+        rejected = std::string(error.what()).find("outer boundary") !=
+            std::string::npos;
+    }
+    if (!rejected)
+    {
+        return fail(
+            scenario,
+            "invalid outer boundary was not rejected by deformation evaluation"
+        );
+    }
+    std::cout << "[PASS] scenario=" << scenario << " rejected=1\n";
+    return EXIT_SUCCESS;
+}
+
+
 } // namespace
 
 
@@ -1120,7 +1342,7 @@ int main(int argc, char** argv)
     {
         return fail(
             "unknown",
-            "expected refill-block, transaction, or e2e"
+            "expected refill-block, transaction, e2e, beta-outer, or invalid-outer"
         );
     }
 
@@ -1136,6 +1358,14 @@ int main(int argc, char** argv)
     if (scenario == "e2e")
     {
         return runEndToEnd(scenario);
+    }
+    if (scenario == "beta-outer")
+    {
+        return runReleasedBetaOuterLoop(scenario);
+    }
+    if (scenario == "invalid-outer")
+    {
+        return runInvalidOuterBoundaryGate(scenario);
     }
     return fail(scenario, "unknown scenario");
 }

@@ -167,6 +167,14 @@ public:
     void setMinimumRemovalsToContinue(int count);
     int minimumRemovalsToContinue() const;
 
+    /**
+     * Reproduce the released beta's candidate ordering for deformed cells.
+     * Plane scores then use the mean of eight deformed corners, while
+     * committed mass and first moments remain exactly integrated.
+     */
+    void setUseDeformedCornerAverageCandidatePositions(bool enabled);
+    bool usesDeformedCornerAverageCandidatePositions() const noexcept;
+
 private:
     friend struct CarvingSolverTestAccess;
 
@@ -232,6 +240,7 @@ private:
 
     /** Null selects the legacy axis-aligned rest-cell mass oracle. */
     const deformation::DeformedVoxelMassField* deformedVoxelMassField_;
+    bool useDeformedCornerAverageCandidatePositions_;
 
     int carvedVoxelCount_;
     int iterations_;

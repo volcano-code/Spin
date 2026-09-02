@@ -50,3 +50,8 @@ __pycache__/
 /dist/
 /wheelhouse/
 /*.egg-info/
+
+# Preserve legacy paper-simulation payloads in place without committing the
+# generated run trees.  Their hashes are recorded by the Spin-It checkpoint.
+/experiments/paper_sim_v1/results*/
+/experiments/paper_sim_v1/pybullet_results/

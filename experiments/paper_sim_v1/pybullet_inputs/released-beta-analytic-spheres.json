@@ -1,0 +1,57 @@
+{
+  "cases": [
+    {
+      "center_of_mass_native": [
+        0.4996988850248319,
+        0.3862602315349372,
+        0.7248211179141915
+      ],
+      "collision_mesh": "/home/lin/xvxinyao/make-it-balance-paper-sim/experiments/paper_sim_v1/results_full/released-beta-analytic-moments/spheres/repeat-1/outer.obj",
+      "collision_mesh_sha256": "190a621e60e54bbe9c407c9e62ea0dbbf15120814d555d80b38669eafd276855",
+      "expected_stable": true,
+      "geometry_hash": "10068925640689504020",
+      "gravity_direction_native": [
+        0,
+        -1,
+        0
+      ],
+      "inertia_tensor_about_center_native": [
+        [
+          0.007176755301746697,
+          2.700764066518313e-05,
+          -2.822908433243454e-05
+        ],
+        [
+          2.700764066518313e-05,
+          0.004774935703556749,
+          0.0023698756722141667
+        ],
+        [
+          -2.822908433243454e-05,
+          0.0023698756722141667,
+          0.004725184644471352
+        ]
+      ],
+      "inner_void_mesh": "/home/lin/xvxinyao/make-it-balance-paper-sim/experiments/paper_sim_v1/results_full/released-beta-analytic-moments/spheres/repeat-1/inner.obj",
+      "inner_void_mesh_sha256": "5788cfde30fda7718b72090cd989f8f1fdb2050b6c026a21a19c33cb3b99b15f",
+      "manufacturing_failures": [
+        "outer_boundary_invalid",
+        "inner_boundary_invalid",
+        "coherent_boundary_invalid",
+        "wall_clearance_not_completed",
+        "cavity_containment_not_completed",
+        "source_hypothetical_flattening_not_applied"
+      ],
+      "manufacturing_ready": false,
+      "mass_properties_sha256": "09f6df2b8600dd7aceba0a26f6db992854144ee62636a69870d7baf4a68f17c3",
+      "material_mass_native": 0.08171531684329772,
+      "name": "spheres",
+      "occupancy_hash": "2224767285512336823",
+      "provenance": "simulation-only-occupancy-bound-analytic-moments-v1",
+      "source_profile": "released-beta",
+      "visual_mesh": "/home/lin/xvxinyao/make-it-balance-paper-sim/experiments/paper_sim_v1/results_full/released-beta-analytic-moments/spheres/repeat-1/outer.obj"
+    }
+  ],
+  "schema": "make-it-stand-paper-sim-pybullet-input-v1",
+  "schema_version": 1
+}

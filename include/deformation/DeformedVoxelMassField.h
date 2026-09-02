@@ -52,8 +52,20 @@ public:
     /** Exact positive mass and first moment of one active deformed cell. */
     MassProperties massProperties(int linearCell) const;
 
+    /** Exact zero-, first-, and raw second-order volume moments. */
+    MassMoments massMoments(int linearCell) const;
+
     /** Exact uniform-volume centroid, equal to firstMoment / mass. */
     Eigen::Vector3d centroid(int linearCell) const;
+
+    /**
+     * Arithmetic mean of the eight deformed corners.
+     *
+     * The released beta uses this point only to rank plane-carving
+     * candidates.  Mass removal still uses the exact integrated first
+     * moment returned by massProperties().
+     */
+    Eigen::Vector3d cornerAverage(int linearCell) const;
 
     double density() const noexcept;
     double minimumPositiveCellMass() const noexcept;
@@ -63,7 +75,10 @@ private:
     Eigen::VectorXi activeMask_;
     Eigen::VectorXd masses_;
     Eigen::MatrixXd firstMoments_;
+    /** Row-major flattened 3x3 raw second moments, one row per cell. */
+    Eigen::MatrixXd secondMoments_;
     Eigen::MatrixXd centroids_;
+    Eigen::MatrixXd cornerAverages_;
     Eigen::Index activeCellCount_ = 0;
     double density_ = 1.0;
     double minimumPositiveCellMass_ = 0.0;

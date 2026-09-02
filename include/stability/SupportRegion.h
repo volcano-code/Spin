@@ -42,7 +42,9 @@ public:
     static SupportRegion fromMesh(
         const Eigen::MatrixXd& vertices,
         const Eigen::Vector3d& gravityDirection,
-        double contactThreshold
+        double contactThreshold,
+        double minimumStabilityInset = 0.0,
+        bool supportPlaneAtBandTop = false
     );
 
     const Eigen::Vector3d& gravity() const;
@@ -51,6 +53,8 @@ public:
     double supportHeight() const;
     /** User-requested hypothetical flattening band; zero uses true contacts. */
     double contactThreshold() const;
+    /** Optional beta compatibility floor; zero is the general paper contract. */
+    double minimumStabilityInset() const;
     const std::vector<int>& contactVertexIndices() const;
     const Eigen::MatrixXd& supportPolygon2D() const;
 
@@ -81,10 +85,13 @@ private:
     Eigen::Vector3d planeOrigin_;
     double supportHeight_;
     double contactThreshold_;
+    double minimumStabilityInset_;
     std::vector<int> contactVertexIndices_;
     Eigen::MatrixXd supportPolygon2D_;
     double maximumInset_;
     double geometryTolerance_;
+    /** Scale-aware predicate tolerance for optimizer terminal states. */
+    double classificationTolerance_;
 
     friend class StandingTarget;
     friend StandingTarget makeStandingTarget(

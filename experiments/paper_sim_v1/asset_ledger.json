@@ -1,0 +1,93 @@
+{
+  "schema": "make-it-stand-paper-asset-ledger-v1",
+  "schema_version": 1,
+  "archive": {
+    "distribution_policy": "external_read_only_reference; do_not_redistribute",
+    "license_note": "Archived beta states all rights reserved, research purposes only, no commercial use.",
+    "root_environment_variable": "MAKE_IT_STAND_BETA_ROOT",
+    "zip_sha256": "f516ac32c43680108a158f559e0e3caa2709017b2888fb35b0d9c428a9d8b834"
+  },
+  "cases": {
+    "armadillo1": {
+      "claim_ceiling": "EXACT_CACHE",
+      "paper_mapping": "Table 1 Armadillo (top)",
+      "files": {
+        "data/configs/armadillo1.mis": "ff97c08cf1c2a11afa511b2afce04a443c7c6d328acf3e2e2a806c252e3dbf67",
+        "data/configs/armadillo1_80.bbw": "ed481bf6f4f0708b804e3737aaf62efe6e58eb447e13c0f0041d8c57d355c741",
+        "data/configs/armadillo1_80.vox": "d773a55e2464abedabe2edb2f06f95ee5153b7c27bb87f0c61cdc1bdad702161",
+        "data/meshes/armadillo1.obj": "4f81af6033d668de50de363f0332792a742a36298cadfbf33df24d60d7134cba"
+      }
+    },
+    "armadillo2": {
+      "claim_ceiling": "EXACT_CACHE",
+      "paper_mapping": "Figure 8 pose audit; not Table 1 top case",
+      "files": {
+        "data/configs/armadillo2.mis": "1a18fed5f02668d0289d034a7d9e9bdcbbf7fdd7334b0bc251c817c90f4f7566",
+        "data/configs/armadillo2_80.bbw": "29a7cec50d0ea8c4fafc0b00950598b6650b151955c0683cca0ec76ba2362455",
+        "data/configs/armadillo2_80.vox": "ce739ba21250da7e3a92a9c1d2942254b40145db92734e07f53b117d1bde497e",
+        "data/meshes/armadillo2.obj": "ad216ec1d8e3d38065252fb0453e90f9048401a9ab307ac5e93792706047e841"
+      }
+    },
+    "dinosaur": {
+      "claim_ceiling": "EXACT_CACHE",
+      "paper_mapping": "Table 1 T-Rex archive-name mapping",
+      "files": {
+        "data/configs/dinosaur.mis": "2f9b25ad5ff685c75a950cac77de9d63cef5156a398412ece1ea3e26a1645ca1",
+        "data/configs/dinosaur_100.bbw": "73c65c66b5fb3084db22c98b7b7dbbe4ae02857cf53c2a27d994d8ad69ede4ac",
+        "data/configs/dinosaur_100.vox": "072e83cf0a01f7d797eb9ce9c9e50df090588e838b50a16b4394e1a8f6856595",
+        "data/meshes/dinosaur.obj": "3eb8ab3ee8f7aa5980291e625816feb8cb4632aaa5ec1b31a5b810d8a85845b0"
+      }
+    },
+    "horse": {
+      "claim_ceiling": "RECONSTRUCTED_ASSET_FOR_SIMULATION",
+      "exact_cache_compatibility_only": true,
+      "reason": "Untouched official OBJ fails the strict self-intersection gate.",
+      "files": {
+        "data/configs/horse.mis": "311a434f3366dccd86b0adedd770a1d7e77e9116ef25a009f9e08501355ea77f",
+        "data/configs/horse_100.bbw": "d11e3e034fe77f772a4ff943a6466332923f47418d9cefc7f8722db5c74d9856",
+        "data/configs/horse_100.vox": "22665aaf8d6ec1d7c326f60668052a34f7ca1827d11a9bf4f875b9d1be72e407",
+        "data/meshes/horse.obj": "3e75063e22f2e00f608d77abde95b557a6edec44bd69229110175acfa3239e14",
+        "repository:experiments/paper_sim_v1/reconstructed_assets/horse_100_occupancy_outer.obj": "9e792c4b470dd2f33d0be9a132238516fb778cf2d131b559e9d0dbaf74013950"
+      }
+    },
+    "spheres": {
+      "claim_ceiling": "EXACT_CACHE",
+      "paper_mapping": "Table 1 3-spheres and Figure 14",
+      "files": {
+        "data/configs/spheres.mis": "f60f3ca3e2b395568c05575d8aa2b1df54b51756057b16057099742096de5365",
+        "data/configs/spheres_80.bbw": "887b84f671be49f06e8f94442250683c80e2c37ff08f4bd8c87638cad4a612eb",
+        "data/configs/spheres_80.vox": "2b53a4cb0f93920a54cdb58d9e85b47844a16fb9963ed6a3c4681df79691e2b6",
+        "data/meshes/spheres.obj": "b9e680de0a588a92309b30ca688a76f7a72bf4176912da7dc130c52ec7618e0d"
+      }
+    },
+    "toyrocking": {
+      "claim_ceiling": "RECONSTRUCTED_ASSET",
+      "missing": ["mis", "vox", "bbw", "handles", "rotation", "flatten_threshold"],
+      "source_topology": "open mesh; 29 components after indexed cleanup",
+      "reconstruction": "deterministic surface voxelization, solid fill, union, and marching cubes; resolution is recorded per run",
+      "files": {
+        "data/meshes/toyrocking.obj": "6f6d6ea689f1502529d1ad1be79cdc5433139b72b6f734a48ec3d5169f9bfd7d"
+      }
+    },
+    "gargoyle": {
+      "claim_ceiling": "BLOCKED_MISSING_ASSET",
+      "files": {
+        "data/meshes/gargoyle.obj": "9fba5b9cac91bf6282942e8f9bdb7aacacdd8cc1b20e3e740c004049650f3205"
+      }
+    },
+    "mrhumpty": {
+      "claim_ceiling": "BLOCKED_MISSING_ASSET",
+      "files": {
+        "data/meshes/mrhumpty.obj": "10a327eb7d8ff229d0118086ae1520599b1c214a28388dc251b00177691d0527"
+      }
+    },
+    "ornament": {
+      "claim_ceiling": "BLOCKED_MISSING_ASSET",
+      "missing": ["obj", "mis", "vox", "bbw", "target_protocol"]
+    },
+    "teddy": {
+      "claim_ceiling": "BLOCKED_MISSING_ASSET",
+      "missing": ["obj", "mis", "vox", "bbw", "multiple_base_targets"]
+    }
+  }
+}

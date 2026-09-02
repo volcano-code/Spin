@@ -234,6 +234,8 @@ class ConfigSchemaTests(unittest.TestCase):
             (-1.0, 0.0, 0.0),
             0.03,
             0.2,
+            0.0,
+            False,
         ))
 
     def test_unknown_keys_are_rejected_at_every_schema_object(self) -> None:
@@ -698,8 +700,8 @@ def _fake_native_module() -> types.SimpleNamespace:
         def set_support_polygon(self, polygon: object, gamma: object) -> None:
             self.calls.append(("set_support_polygon", polygon, gamma))
 
-        def set_support_from_mesh(self, threshold: object, gamma: object) -> None:
-            self.calls.append(("set_support_from_mesh", threshold, gamma))
+        def set_support_from_mesh(self, *arguments: object) -> None:
+            self.calls.append(("set_support_from_mesh", *arguments))
 
         def add_standing_constraint_polygon(self, *arguments: object) -> None:
             self.calls.append(("add_standing_constraint_polygon", *arguments))
@@ -804,7 +806,7 @@ class MockedNativeWorkflowTests(unittest.TestCase):
         support_calls = [call for call in calls if str(call[0]).startswith("set_support")]
         self.assertEqual(
             support_calls,
-            [("set_support_from_mesh", 0.02, 0.15)],
+            [("set_support_from_mesh", 0.02, 0.15, 0.0, False)],
         )
 
     def test_in_memory_model_constructor_is_forwarded_once(self) -> None:
