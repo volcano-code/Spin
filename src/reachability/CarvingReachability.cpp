@@ -1,5 +1,7 @@
 #include "reachability/CarvingReachability.h"
 
+#include <Highs.h>
+
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -9,6 +11,20 @@ namespace reachability
 {
 namespace
 {
+
+struct LinearSystem
+{
+    Eigen::MatrixXd C;
+    Eigen::VectorXd d;
+};
+
+struct LpResult
+{
+    HighsModelStatus status = HighsModelStatus::kNotset;
+    std::string statusText;
+    Eigen::VectorXd values;
+    bool apiSucceeded = false;
+};
 
 bool finite(const Eigen::MatrixXd& value)
 {
@@ -25,6 +41,169 @@ double signedDoubleArea(const Eigen::MatrixXd& polygon)
             polygon(next, 0) * polygon(index, 1);
     }
     return area;
+}
+
+LinearSystem buildPolygonSystem(
+    const CarvingReachabilityInput& input,
+    const Halfspaces2D& halfspaces
+)
+{
+    LinearSystem system;
+    const Eigen::Index cellCount = static_cast<Eigen::Index>(
+        input.variableCells.size()
+    );
+    system.C.resize(halfspaces.A.rows(), cellCount);
+    system.d.resize(halfspaces.A.rows());
+    for (Eigen::Index row = 0; row < halfspaces.A.rows(); ++row)
+    {
+        const Eigen::Vector2d normal = halfspaces.A.row(row).transpose();
+        const double offset = halfspaces.b(row);
+        system.d(row) = offset * input.fixedMass -
+            normal.dot(input.fixedFirstMoment2D);
+        for (Eigen::Index column = 0; column < cellCount; ++column)
+        {
+            const ReachabilityCell& cell =
+                input.variableCells[static_cast<std::size_t>(column)];
+            system.C(row, column) =
+                normal.dot(cell.firstMoment2D) - offset * cell.mass;
+        }
+    }
+    return system;
+}
+
+LpResult solveLp(
+    const Eigen::MatrixXd& matrix,
+    const Eigen::VectorXd& rowLower,
+    const Eigen::VectorXd& rowUpper,
+    const Eigen::VectorXd& cost,
+    const Eigen::VectorXd& columnLower,
+    const Eigen::VectorXd& columnUpper
+)
+{
+    LpResult result;
+    HighsModel model;
+    model.lp_.num_col_ = static_cast<HighsInt>(matrix.cols());
+    model.lp_.num_row_ = static_cast<HighsInt>(matrix.rows());
+    model.lp_.sense_ = ObjSense::kMinimize;
+    model.lp_.offset_ = 0.0;
+    model.lp_.col_cost_.assign(cost.data(), cost.data() + cost.size());
+    model.lp_.col_lower_.assign(
+        columnLower.data(),
+        columnLower.data() + columnLower.size()
+    );
+    model.lp_.col_upper_.assign(
+        columnUpper.data(),
+        columnUpper.data() + columnUpper.size()
+    );
+    model.lp_.row_lower_.assign(
+        rowLower.data(),
+        rowLower.data() + rowLower.size()
+    );
+    model.lp_.row_upper_.assign(
+        rowUpper.data(),
+        rowUpper.data() + rowUpper.size()
+    );
+    model.lp_.a_matrix_.format_ = MatrixFormat::kColwise;
+    model.lp_.a_matrix_.start_.reserve(
+        static_cast<std::size_t>(matrix.cols() + 1)
+    );
+    for (Eigen::Index column = 0; column < matrix.cols(); ++column)
+    {
+        model.lp_.a_matrix_.start_.push_back(
+            static_cast<HighsInt>(model.lp_.a_matrix_.value_.size())
+        );
+        for (Eigen::Index row = 0; row < matrix.rows(); ++row)
+        {
+            const double value = matrix(row, column);
+            if (value != 0.0)
+            {
+                model.lp_.a_matrix_.index_.push_back(
+                    static_cast<HighsInt>(row)
+                );
+                model.lp_.a_matrix_.value_.push_back(value);
+            }
+        }
+    }
+    model.lp_.a_matrix_.start_.push_back(
+        static_cast<HighsInt>(model.lp_.a_matrix_.value_.size())
+    );
+
+    Highs solver;
+    bool optionsOk = true;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("output_flag", false) == HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("presolve", "on") == HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("threads", static_cast<HighsInt>(1)) ==
+            HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("parallel", "off") == HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("random_seed", static_cast<HighsInt>(0)) ==
+            HighsStatus::kOk;
+    if (!optionsOk || solver.passModel(model) == HighsStatus::kError)
+    {
+        result.statusText = "API_ERROR";
+        return result;
+    }
+    const HighsStatus runStatus = solver.run();
+    result.status = solver.getModelStatus();
+    result.statusText = solver.modelStatusToString(result.status);
+    result.apiSucceeded = runStatus != HighsStatus::kError;
+    if (result.status == HighsModelStatus::kOptimal)
+    {
+        const std::vector<double>& values = solver.getSolution().col_value;
+        result.values = Eigen::Map<const Eigen::VectorXd>(
+            values.data(),
+            static_cast<Eigen::Index>(values.size())
+        );
+    }
+    return result;
+}
+
+double maximumPrimalViolation(
+    const LinearSystem& system,
+    const Eigen::VectorXd& retained
+)
+{
+    double violation = 0.0;
+    if (system.C.rows() > 0)
+    {
+        violation = std::max(
+            violation,
+            (system.C * retained - system.d).maxCoeff()
+        );
+    }
+    if (retained.size() > 0)
+    {
+        violation = std::max(violation, -retained.minCoeff());
+        violation = std::max(violation, retained.maxCoeff() - 1.0);
+    }
+    return std::max(0.0, violation);
+}
+
+void populatePhysicalWitness(
+    const CarvingReachabilityInput& input,
+    const LinearSystem& system,
+    const Eigen::VectorXd& retained,
+    CarvingReachabilityResult& result
+)
+{
+    result.retainedFractions = retained;
+    result.finalMass = input.fixedMass;
+    result.finalFirstMoment2D = input.fixedFirstMoment2D;
+    for (Eigen::Index index = 0; index < retained.size(); ++index)
+    {
+        const ReachabilityCell& cell =
+            input.variableCells[static_cast<std::size_t>(index)];
+        result.finalMass += retained(index) * cell.mass;
+        result.finalFirstMoment2D +=
+            retained(index) * cell.firstMoment2D;
+    }
+    result.finalCenter2D = result.finalFirstMoment2D / result.finalMass;
+    result.maximumPrimalViolation =
+        maximumPrimalViolation(system, retained);
 }
 
 } // namespace
@@ -160,6 +339,62 @@ const char* toString(ReachabilityStatus status) noexcept
     case ReachabilityStatus::Indeterminate: return "INDETERMINATE";
     }
     return "INDETERMINATE";
+}
+
+CarvingReachabilityResult CarvingReachabilityAnalyzer::analyze(
+    const CarvingReachabilityInput& input
+) const
+{
+    validateInput(input);
+    const Halfspaces2D halfspaces =
+        safePolygonHalfspaces(input.safePolygon2D);
+    const LinearSystem system = buildPolygonSystem(input, halfspaces);
+    const Eigen::Index cellCount = static_cast<Eigen::Index>(
+        input.variableCells.size()
+    );
+
+    CarvingReachabilityResult result;
+    result.inputCellCount = static_cast<int>(cellCount);
+    const Eigen::VectorXd full = Eigen::VectorXd::Ones(cellCount);
+    if (maximumPrimalViolation(system, full) <= input.feasibilityTolerance)
+    {
+        result.status = ReachabilityStatus::AlreadySafe;
+        result.primalSolverStatus = "NOT_NEEDED_FULL_MATERIAL_SAFE";
+        populatePhysicalWitness(input, system, full, result);
+        return result;
+    }
+
+    const LpResult primal = solveLp(
+        system.C,
+        Eigen::VectorXd::Constant(system.C.rows(), -1e30),
+        system.d,
+        Eigen::VectorXd::Zero(cellCount),
+        Eigen::VectorXd::Zero(cellCount),
+        Eigen::VectorXd::Ones(cellCount)
+    );
+    result.primalSolverStatus = primal.statusText;
+    if (
+        primal.apiSucceeded &&
+        primal.status == HighsModelStatus::kOptimal &&
+        primal.values.size() == cellCount
+    )
+    {
+        populatePhysicalWitness(input, system, primal.values, result);
+        if (
+            result.maximumPrimalViolation <= input.feasibilityTolerance &&
+            contains(
+                halfspaces,
+                result.finalCenter2D,
+                input.feasibilityTolerance
+            )
+        )
+        {
+            result.status = ReachabilityStatus::RelaxationReachable;
+        }
+        return result;
+    }
+    result.status = ReachabilityStatus::Indeterminate;
+    return result;
 }
 
 } // namespace reachability

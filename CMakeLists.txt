@@ -337,8 +337,19 @@ if(BUILD_TESTING)
             NAME reachability-input
             COMMAND "$<TARGET_FILE:carving-reachability-regression>" input
         )
+        add_test(
+            NAME reachability-already-safe
+            COMMAND "$<TARGET_FILE:carving-reachability-regression>"
+                already-safe
+        )
+        add_test(
+            NAME reachability-feasible
+            COMMAND "$<TARGET_FILE:carving-reachability-regression>" feasible
+        )
         set_tests_properties(
             reachability-input
+            reachability-already-safe
+            reachability-feasible
             PROPERTIES
                 LABELS "spin-it;reachability;regression"
                 TIMEOUT 15
