@@ -1,0 +1,46 @@
+{
+  "schema": "spin-it-faster-complex-obj-cases-v1",
+  "schema_version": 1,
+  "claim_level": "RECONSTRUCTED_ASSET",
+  "design_domain": "assets/design-domain.obj",
+  "design_domain_sha256": "7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10",
+  "cases": [
+    {
+      "id": "static-faceted-shell",
+      "mode": "STATIC_BALANCE",
+      "source": "assets/faceted-rotor-shell.obj",
+      "source_sha256": "76e8a9bf7b0507ea4ddb4a8bea8016b66ab1d09655f58265fa1387ece89efcb6",
+      "target_origin": [0.05, 0.0, 0.0],
+      "minimum_wall_thickness": 0.19,
+      "initial_quadric": [0.2, 1.0, 0.123, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "id": "fidget-faceted-shell",
+      "mode": "FIDGET_SPINNER",
+      "source": "assets/faceted-rotor-shell.obj",
+      "source_sha256": "76e8a9bf7b0507ea4ddb4a8bea8016b66ab1d09655f58265fa1387ece89efcb6",
+      "target_origin": [0.05, 0.0, 0.0],
+      "minimum_wall_thickness": 0.19,
+      "initial_quadric": [-0.1, 0.8, 0.1, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "id": "yoyo-faceted-shell",
+      "mode": "YO_YO",
+      "source": "assets/faceted-yoyo-shell.obj",
+      "source_sha256": "163e83ee8ebfb138bd065f174e39918fbed6a26d70042ca680ce9af2087a0ab7",
+      "target_origin": [0.0, 0.0, 0.0],
+      "minimum_wall_thickness": 0.1,
+      "initial_quadric": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0]
+    },
+    {
+      "id": "top-faceted-shell",
+      "mode": "SPINNING_TOP",
+      "source": "assets/faceted-rotor-shell.obj",
+      "source_sha256": "76e8a9bf7b0507ea4ddb4a8bea8016b66ab1d09655f58265fa1387ece89efcb6",
+      "target_origin": [0.0, 0.0, 0.0],
+      "minimum_wall_thickness": 0.19,
+      "center_of_mass_weight": 0.1,
+      "initial_quadric": [0.0, 0.0, 0.0, -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0]
+    }
+  ]
+}
