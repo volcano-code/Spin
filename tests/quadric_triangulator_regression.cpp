@@ -153,10 +153,17 @@ int main()
     const Quadric plane = Quadric::fromUnnormalized(coefficients);
     const spin::QuadricTriangulation planar =
         spin::triangulateQuadric(plane, domain);
+    const manufacturing::BoundaryAudit planeAudit =
+        manufacturing::auditTriangleBoundary(
+            planar.closedBoundary.vertices,
+            planar.closedBoundary.faces,
+            manufacturing::BoundaryOrientation::OutwardPositive
+        );
     if (
         planar.type != spin::QuadricSurfaceType::Plane ||
         planar.interfaceFaceCount != 2 ||
-        maximumInterfaceResidual(planar, plane) > 1e-14
+        maximumInterfaceResidual(planar, plane) > 1e-14 ||
+        !planeAudit.strictBoundaryValid()
     )
     {
         return fail("explicit plane triangulation is incorrect");
@@ -175,10 +182,17 @@ int main()
             domain,
             paraboloidSettings
         );
+    const manufacturing::BoundaryAudit paraboloidAudit =
+        manufacturing::auditTriangleBoundary(
+            parabolic.closedBoundary.vertices,
+            parabolic.closedBoundary.faces,
+            manufacturing::BoundaryOrientation::OutwardPositive
+        );
     if (
         parabolic.type != spin::QuadricSurfaceType::Paraboloid ||
         parabolic.interfaceFaceCount != 2 * 12 * 12 ||
-        maximumInterfaceResidual(parabolic, paraboloid) > 1e-12
+        maximumInterfaceResidual(parabolic, paraboloid) > 1e-12 ||
+        !paraboloidAudit.strictBoundaryValid()
     )
     {
         return fail("explicit paraboloid triangulation is incorrect");

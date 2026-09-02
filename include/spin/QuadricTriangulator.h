@@ -51,7 +51,7 @@ struct QuadricTriangulation
 /**
  * Deterministically triangulate beta=0 for the paper's Boolean operation.
  * Hyperboloids are truncated beyond the design domain and capped.  Plane and
- * paraboloid results are explicit finite interface patches and remain open.
+ * paraboloid interfaces are closed with an extruded cap beyond the domain.
  */
 QuadricTriangulation triangulateQuadric(
     const QuadricCoefficients10& quadric,

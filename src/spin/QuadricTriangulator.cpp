@@ -355,6 +355,63 @@ spin::TriangleMesh matrixMesh(
 }
 
 
+spin::QuadricTriangulation closeExtrudedInterface(
+    spin::QuadricSurfaceType type,
+    const std::vector<Eigen::Vector3d>& interfaceVertices,
+    const std::vector<Face>& interfaceFaces,
+    const Eigen::Vector3d& extrusion,
+    double radius
+)
+{
+    const std::vector<std::vector<int>> loops =
+        boundaryLoops(interfaceFaces);
+    if (loops.size() != 1)
+    {
+        throw std::runtime_error(
+            "plane/paraboloid interface must have one boundary loop"
+        );
+    }
+    std::vector<Eigen::Vector3d> vertices = interfaceVertices;
+    const int offset = static_cast<int>(vertices.size());
+    for (const Eigen::Vector3d& vertex : interfaceVertices)
+    {
+        vertices.push_back(vertex + extrusion);
+    }
+    std::vector<Face> faces = interfaceFaces;
+    for (const Face& face : interfaceFaces)
+    {
+        faces.push_back({
+            face[2] + offset,
+            face[1] + offset,
+            face[0] + offset
+        });
+    }
+    const std::vector<int>& loop = loops.front();
+    for (std::size_t edge = 0; edge < loop.size(); ++edge)
+    {
+        const int first = loop[edge];
+        const int second = loop[(edge + 1) % loop.size()];
+        faces.push_back({second, first, first + offset});
+        faces.push_back({second, first + offset, second + offset});
+    }
+
+    spin::QuadricTriangulation result;
+    result.type = type;
+    result.closedBoundary = matrixMesh(vertices, faces);
+    result.interfaceVertexCount = offset;
+    result.interfaceFaceCount = static_cast<int>(interfaceFaces.size());
+    result.capFaceCount =
+        static_cast<int>(faces.size() - interfaceFaces.size());
+    result.boundaryLoopCount = 1;
+    result.truncationRadius = radius;
+    result.faceIsCap = Eigen::VectorXi::Ones(
+        static_cast<Eigen::Index>(faces.size())
+    );
+    result.faceIsCap.head(result.interfaceFaceCount).setZero();
+    return result;
+}
+
+
 std::string triangulationHash(const spin::QuadricTriangulation& result)
 {
     std::ostringstream stream;
@@ -406,13 +463,13 @@ spin::QuadricTriangulation triangulatePlane(
     {
         orientInterfaceFace(quadric, vertices, &face);
     }
-    spin::QuadricTriangulation result;
-    result.type = spin::QuadricSurfaceType::Plane;
-    result.closedBoundary = matrixMesh(vertices, faces);
-    result.faceIsCap = Eigen::VectorXi::Zero(2);
-    result.interfaceVertexCount = 4;
-    result.interfaceFaceCount = 2;
-    result.truncationRadius = radius;
+    spin::QuadricTriangulation result = closeExtrudedInterface(
+        spin::QuadricSurfaceType::Plane,
+        vertices,
+        faces,
+        4.0 * radius * normal.normalized(),
+        radius
+    );
     result.hash = triangulationHash(result);
     return result;
 }
@@ -480,15 +537,13 @@ spin::QuadricTriangulation triangulateParaboloid(
             faces.push_back(second);
         }
     }
-    spin::QuadricTriangulation result;
-    result.type = spin::QuadricSurfaceType::Paraboloid;
-    result.closedBoundary = matrixMesh(vertices, faces);
-    result.faceIsCap = Eigen::VectorXi::Zero(
-        static_cast<Eigen::Index>(faces.size())
+    spin::QuadricTriangulation result = closeExtrudedInterface(
+        spin::QuadricSurfaceType::Paraboloid,
+        vertices,
+        faces,
+        4.0 * radius * n,
+        radius
     );
-    result.interfaceVertexCount = static_cast<int>(vertices.size());
-    result.interfaceFaceCount = static_cast<int>(faces.size());
-    result.truncationRadius = radius;
     result.hash = triangulationHash(result);
     return result;
 }
