@@ -31,7 +31,10 @@ const std::string DEFAULT_MESH_FILE = "../data/bunny.off";
 // Viewer data indices
 int mesh_data_id;
 int inner_data_mesh_id;
+int design_data_mesh_id;
+int material_data_mesh_id;
 int plane_data_id;
+int axes_data_id;
 int gravity_data_id;
 int carve_plane_data_id;
 
@@ -52,12 +55,21 @@ const Eigen::RowVector3d black(0.0,0.0,0.0);
 const Eigen::RowVector4d resultShellColor(0.78, 0.84, 0.95, 0.24);
 const Eigen::RowVector4d resultVoidColor(0.90, 0.10, 0.08, 0.94);
 const Eigen::RowVector4d resultGroundColor(0.50, 0.66, 0.36, 0.70);
+const Eigen::RowVector4d spinDesignColor(0.18, 0.48, 0.88, 0.16);
+const Eigen::RowVector4d spinMaterialColor(0.95, 0.68, 0.12, 0.82);
 
 // GUI objects
 igl::opengl::glfw::Viewer viewer;
 igl::opengl::glfw::imgui::ImGuiMenu menu;
 bool resultViewMode = false;
+bool spinResultViewMode = false;
 std::string resultWindowTitle = "Make It Stand — sealed result";
+bool showSpinOuter = true;
+bool showSpinDesign = true;
+bool showSpinMaterial = true;
+bool showSpinCavity = true;
+bool showSpinAxes = true;
+bool showSpinTargetPlane = true;
 
 // Undeformed objects
 Eigen::MatrixXd origV;
@@ -71,6 +83,12 @@ struct State
 
 	Eigen::MatrixXd innerV;
 	Eigen::MatrixXi innerF;
+	Eigen::MatrixXd designV;
+	Eigen::MatrixXi designF;
+	Eigen::MatrixXd materialV;
+	Eigen::MatrixXi materialF;
+	result_view::SpinResultViewMetadata spinMetadata;
+	double spinAxisDisplayLength = 1.0;
 
 	Eigen::MatrixXd planeV;
 	Eigen::MatrixXi planeF;
@@ -238,8 +256,60 @@ void initState(int argc, char *argv[])
 				"Failed to load sealed cavity mesh: " + resultArguments.innerPath
 			);
 		}
-		const result_view::ResultViewGeometry geometry =
-			result_view::prepareResultViewGeometry(outerV, outerF, innerV, innerF);
+		if (resultArguments.spinEnabled)
+		{
+			Eigen::MatrixXd designV;
+			Eigen::MatrixXi designF;
+			Eigen::MatrixXd materialV;
+			Eigen::MatrixXi materialF;
+			if (!igl::read_triangle_mesh(
+					resultArguments.designPath, designV, designF))
+			{
+				throw std::runtime_error(
+					"Failed to load Spin-It design domain: " +
+					resultArguments.designPath
+				);
+			}
+			if (!igl::read_triangle_mesh(
+					resultArguments.materialPath, materialV, materialF))
+			{
+				throw std::runtime_error(
+					"Failed to load Spin-It material boundary: " +
+					resultArguments.materialPath
+				);
+			}
+			const result_view::SpinResultViewMetadata metadata =
+				result_view::loadSpinResultViewMetadata(
+					resultArguments.diagnosticsPath
+				);
+			const result_view::SpinResultViewGeometry geometry =
+				result_view::prepareSpinResultViewGeometry(
+					outerV, outerF, designV, designF,
+					materialV, materialF, innerV, innerF, metadata
+				);
+			origV = geometry.outerVertices;
+			origF = geometry.outerFaces;
+			state.V = geometry.outerVertices;
+			state.F = geometry.outerFaces;
+			state.designV = geometry.designVertices;
+			state.designF = geometry.designFaces;
+			state.materialV = geometry.materialVertices;
+			state.materialF = geometry.materialFaces;
+			state.innerV = geometry.cavityVertices;
+			state.innerF = geometry.cavityFaces;
+			state.planeV = geometry.targetPlaneVertices;
+			state.planeF = geometry.targetPlaneFaces;
+			state.spinMetadata = geometry.metadata;
+			state.spinAxisDisplayLength = geometry.axisDisplayLength;
+			state.planeCenter = state.spinMetadata.targetOrigin.transpose();
+			spinResultViewMode = true;
+		}
+		else
+		{
+			const result_view::ResultViewGeometry geometry =
+				result_view::prepareResultViewGeometry(
+					outerV, outerF, innerV, innerF
+				);
 		origV = geometry.outerVertices;
 		origF = geometry.outerFaces;
 		state.V = geometry.outerVertices;
@@ -249,6 +319,7 @@ void initState(int argc, char *argv[])
 		state.planeV = geometry.groundVertices;
 		state.planeF = geometry.groundFaces;
 		state.planeCenter = state.planeV.colwise().mean();
+		}
 		state.gravity = DEFAULT_GRAVITY;
 		state.yaw = DEFAULT_GRAVITY_YAW;
 		state.pitch = DEFAULT_GRAVITY_PITCH;
@@ -308,6 +379,51 @@ void initState(int argc, char *argv[])
 		std::cerr << "Failed to find index of lowest mesh point";
 		exit(-1);
 	}
+}
+
+
+void update_spin_visibility()
+{
+	viewer.data(mesh_data_id).show_faces = showSpinOuter;
+	viewer.data(mesh_data_id).show_lines = showSpinOuter;
+	viewer.data(design_data_mesh_id).show_faces = showSpinDesign;
+	viewer.data(design_data_mesh_id).show_lines = showSpinDesign;
+	viewer.data(material_data_mesh_id).show_faces = showSpinMaterial;
+	viewer.data(material_data_mesh_id).show_lines = false;
+	viewer.data(inner_data_mesh_id).show_faces = showSpinCavity;
+	viewer.data(inner_data_mesh_id).show_lines = false;
+	viewer.data(axes_data_id).show_lines = showSpinAxes;
+	viewer.data(axes_data_id).show_overlay = showSpinAxes;
+	viewer.data(plane_data_id).show_faces = showSpinTargetPlane;
+}
+
+
+void draw_spin_result_window()
+{
+	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(365, 310), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Spin-It Faster artifact", nullptr,
+		ImGuiWindowFlags_NoSavedSettings);
+	ImGui::TextWrapped("%s", resultWindowTitle.c_str());
+	ImGui::Text("Mode: %s", state.spinMetadata.mode.c_str());
+	ImGui::Separator();
+	bool changed = false;
+	changed |= ImGui::Checkbox("Fixed outer shell", &showSpinOuter);
+	changed |= ImGui::Checkbox("Design domain", &showSpinDesign);
+	changed |= ImGui::Checkbox("Retained material", &showSpinMaterial);
+	changed |= ImGui::Checkbox("Cavity / signed quadric", &showSpinCavity);
+	changed |= ImGui::Checkbox("CoM, target and principal axes", &showSpinAxes);
+	changed |= ImGui::Checkbox("Target/support plane", &showSpinTargetPlane);
+	if (changed) update_spin_visibility();
+	ImGui::Separator();
+	ImGui::TextColored(ImVec4(0.95f, 0.68f, 0.12f, 1.0f),
+		"Gold: retained design material");
+	ImGui::TextColored(ImVec4(0.90f, 0.10f, 0.08f, 1.0f),
+		"Red: cavity / quadric negative region");
+	ImGui::TextColored(ImVec4(0.18f, 0.48f, 0.88f, 1.0f),
+		"Blue: target axis; RGB: principal axes");
+	ImGui::TextWrapped("Read-only sealed result; outer coordinates are unchanged.");
+	ImGui::End();
 }
 
 void draw_result_window()
@@ -596,7 +712,69 @@ int main(int argc, char *argv[])
 	{
 		viewer.plugins.push_back(&menu);
 		menu.callback_draw_viewer_menu = draw_viewer_menu;
-		menu.callback_draw_custom_window = draw_result_window;
+		menu.callback_draw_custom_window = spinResultViewMode ?
+			draw_spin_result_window : draw_result_window;
+
+		if (spinResultViewMode)
+		{
+			plane_data_id = viewer.data().id;
+			viewer.data(plane_data_id).set_mesh(state.planeV, state.planeF);
+			viewer.data(plane_data_id).set_colors(resultGroundColor);
+			viewer.data(plane_data_id).show_lines = false;
+
+			viewer.append_mesh();
+			inner_data_mesh_id = viewer.data().id;
+			viewer.data(inner_data_mesh_id).set_mesh(state.innerV, state.innerF);
+			viewer.data(inner_data_mesh_id).set_colors(resultVoidColor);
+
+			viewer.append_mesh();
+			material_data_mesh_id = viewer.data().id;
+			viewer.data(material_data_mesh_id).set_mesh(
+				state.materialV, state.materialF);
+			viewer.data(material_data_mesh_id).set_colors(spinMaterialColor);
+
+			viewer.append_mesh();
+			design_data_mesh_id = viewer.data().id;
+			viewer.data(design_data_mesh_id).set_mesh(
+				state.designV, state.designF);
+			viewer.data(design_data_mesh_id).set_colors(spinDesignColor);
+
+			viewer.append_mesh();
+			mesh_data_id = viewer.data().id;
+			viewer.data(mesh_data_id).set_mesh(state.V, state.F);
+			viewer.data(mesh_data_id).set_colors(resultShellColor);
+
+			viewer.append_mesh();
+			axes_data_id = viewer.data().id;
+			const double length = state.spinAxisDisplayLength;
+			const Eigen::RowVector3d center =
+				state.spinMetadata.centerOfMass.transpose();
+			viewer.data(axes_data_id).add_points(center, orange);
+			viewer.data(axes_data_id).add_points(
+				state.spinMetadata.targetOrigin.transpose(), blue);
+			viewer.data(axes_data_id).add_edges(
+				state.spinMetadata.targetOrigin.transpose(),
+				(state.spinMetadata.targetOrigin +
+				 length * state.spinMetadata.targetAxes.col(2)).transpose(),
+				blue);
+			const Eigen::RowVector3d axisColors[3] = {
+				Eigen::RowVector3d(0.90, 0.15, 0.12),
+				Eigen::RowVector3d(0.15, 0.75, 0.25),
+				Eigen::RowVector3d(0.15, 0.35, 0.95)
+			};
+			for (int axis = 0; axis < 3; ++axis)
+			{
+				viewer.data(axes_data_id).add_edges(
+					center,
+					(state.spinMetadata.centerOfMass + length *
+					 state.spinMetadata.principalAxes.col(axis)).transpose(),
+					axisColors[axis]);
+			}
+			update_spin_visibility();
+			viewer.selected_data_index = viewer.mesh_index(mesh_data_id);
+			viewer.core().align_camera_center(state.V, state.F);
+			return viewer.launch(true, false, resultWindowTitle, 1280, 800);
+		}
 
 		// Draw back-to-front so the opaque cavity remains visible through the
 		// translucent, coordinate-preserving sealed outer shell.

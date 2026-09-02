@@ -27,6 +27,22 @@ bool exactlyEqual(const Eigen::MatrixXd& lhs, const Eigen::MatrixXd& rhs)
 
 int main()
 {
+    const char* spinArguments[] = {
+        "make-it-stand", "--spin-result", "outer.obj", "design.obj",
+        "material.obj", "cavity.obj", "diagnostics.json", "Fidget result"
+    };
+    const result_view::ResultViewArguments parsedSpin =
+        result_view::parseResultViewArguments(8, spinArguments);
+    if (!parsedSpin.enabled || !parsedSpin.spinEnabled ||
+        parsedSpin.designPath != "design.obj" ||
+        parsedSpin.materialPath != "material.obj" ||
+        parsedSpin.innerPath != "cavity.obj" ||
+        parsedSpin.diagnosticsPath != "diagnostics.json" ||
+        parsedSpin.title != "Fidget result")
+    {
+        return fail("--spin-result arguments were not preserved");
+    }
+
     const char* arguments[] = {
         "make-it-stand",
         "--result",
@@ -119,6 +135,36 @@ int main()
         return fail("ground plane faces away from the visible upper side");
     }
 
-    std::cout << "[PASS] result-view preserves posture and cavity registration\n";
+    result_view::SpinResultViewMetadata metadata;
+    metadata.mode = "STATIC_BALANCE";
+    metadata.centerOfMass = Eigen::Vector3d(0.1, 0.2, 0.3);
+    metadata.targetOrigin = Eigen::Vector3d(0.0, 0.0, -1.0);
+    metadata.targetAxes = Eigen::Matrix3d::Identity();
+    metadata.principalAxes = Eigen::Matrix3d::Identity();
+    const result_view::SpinResultViewGeometry spinGeometry =
+        result_view::prepareSpinResultViewGeometry(
+            outer, outerFaces, outer, outerFaces,
+            inner, innerFaces, inner, innerFaces, metadata
+        );
+    if (!exactlyEqual(spinGeometry.outerVertices, outer) ||
+        !exactlyEqual(spinGeometry.designVertices, outer) ||
+        !exactlyEqual(spinGeometry.materialVertices, inner) ||
+        !exactlyEqual(spinGeometry.cavityVertices, inner) ||
+        spinGeometry.metadata.mode != "STATIC_BALANCE")
+    {
+        return fail("Spin-It layers changed coordinate frames");
+    }
+    const Eigen::Vector3d targetEdgeA =
+        (spinGeometry.targetPlaneVertices.row(1) -
+         spinGeometry.targetPlaneVertices.row(0)).transpose();
+    const Eigen::Vector3d targetEdgeB =
+        (spinGeometry.targetPlaneVertices.row(2) -
+         spinGeometry.targetPlaneVertices.row(0)).transpose();
+    if (targetEdgeA.cross(targetEdgeB).dot(metadata.targetAxes.col(2)) <= 0.0)
+    {
+        return fail("Spin-It target plane does not face along the target axis");
+    }
+
+    std::cout << "[PASS] result-view preserves all sealed layer registrations\n";
     return 0;
 }

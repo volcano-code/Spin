@@ -14,6 +14,7 @@
 #include <igl/read_triangle_mesh.h>
 
 #include <Eigen/Geometry>
+#include <Eigen/Eigenvalues>
 
 #include <algorithm>
 #include <atomic>
@@ -1752,6 +1753,7 @@ const char* spinItFasterEvidenceToken(SpinItFasterEvidence evidence) noexcept
 struct SpinItFasterArtifact::Storage
 {
     spin::QuadricHollowingResult result;
+    spin::SpinDesignRequest request;
     SpinItFasterEvidence evidence =
         SpinItFasterEvidence::PaperFormulaReproduction;
     bool geometrySealed = false;
@@ -1777,6 +1779,7 @@ void appendSpinVector(std::ostream& output, const Eigen::VectorXd& values)
 
 std::string spinDiagnosticsJson(
     const spin::QuadricHollowingResult& result,
+    const spin::SpinDesignRequest& request,
     SpinItFasterEvidence evidence,
     bool geometrySealed,
     const manufacturing::BoundaryAudit& materialAudit,
@@ -1792,6 +1795,10 @@ std::string spinDiagnosticsJson(
            << spinItFasterEvidenceToken(evidence) << "\",\n"
            << "  \"status\": \""
            << spin::spinSolverStatusToken(result.status) << "\",\n"
+           << "  \"mode\": \"" << spin::spinModeToken(request.mode)
+           << "\",\n"
+           << "  \"static_objective\": \""
+           << spin::staticObjectiveToken(request.staticObjective) << "\",\n"
            << "  \"geometry_sealed\": "
            << jsonBoolean(geometrySealed) << ",\n"
            << "  \"input_hash\": \"" << result.inputHash << "\",\n"
@@ -1806,9 +1813,41 @@ std::string spinDiagnosticsJson(
     appendSpinVector(output, result.quadricCoefficients);
     output << ",\n  \"final_raw_moments\": ";
     appendSpinVector(output, result.finalMoments.values());
+    const bool validMoments = result.finalMoments.isFinite() &&
+        result.finalMoments.mass() > 0.0;
+    if (validMoments)
+    {
+        const Eigen::Vector3d centerTarget =
+            result.finalMoments.centerOfMass();
+        const Eigen::Vector3d centerModel =
+            request.targetFrame.axes * centerTarget +
+            request.targetFrame.origin;
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen(
+            result.finalMoments.inertiaAboutCenter()
+        );
+        const Eigen::Matrix3d principalAxesModel =
+            request.targetFrame.axes * eigen.eigenvectors();
+        output << ",\n  \"center_of_mass_model\": ";
+        appendVector3(output, centerModel);
+        output << ",\n  \"target_origin_model\": ";
+        appendVector3(output, request.targetFrame.origin);
+        output << ",\n  \"target_axes_model\": ";
+        appendMatrix3(output, request.targetFrame.axes);
+        output << ",\n  \"principal_axes_model\": ";
+        appendMatrix3(output, principalAxesModel);
+    }
+    else
+    {
+        output << ",\n  \"center_of_mass_model\": null"
+               << ",\n  \"target_origin_model\": null"
+               << ",\n  \"target_axes_model\": null"
+               << ",\n  \"principal_axes_model\": null";
+    }
     output << ",\n  \"geometry\": {"
            << "\"outer_vertices\":" << result.outerSurface.vertices.rows()
            << ",\"outer_faces\":" << result.outerSurface.faces.rows()
+           << ",\"design_vertices\":" << request.designDomain.vertices.rows()
+           << ",\"design_faces\":" << request.designDomain.faces.rows()
            << ",\"material_vertices\":"
            << result.materialBoundary.vertices.rows()
            << ",\"material_faces\":"
@@ -1910,6 +1949,18 @@ const Eigen::MatrixXi& SpinItFasterArtifact::outerFaces() const
 }
 
 
+const Eigen::MatrixXd& SpinItFasterArtifact::designVertices() const
+{
+    return storage_->request.designDomain.vertices;
+}
+
+
+const Eigen::MatrixXi& SpinItFasterArtifact::designFaces() const
+{
+    return storage_->request.designDomain.faces;
+}
+
+
 const Eigen::MatrixXd& SpinItFasterArtifact::materialVertices() const
 {
     return storage_->result.materialBoundary.vertices;
@@ -1945,6 +1996,15 @@ void SpinItFasterArtifact::saveOuterMesh(const std::string& filename) const
     writeAtomicBytes(
         filename,
         serializeDiagnosticObj(outerVertices(), outerFaces())
+    );
+}
+
+
+void SpinItFasterArtifact::saveDesignMesh(const std::string& filename) const
+{
+    writeAtomicBytes(
+        filename,
+        serializeDiagnosticObj(designVertices(), designFaces())
     );
 }
 
@@ -2007,10 +2067,12 @@ SpinItFasterArtifact solveSpinItFaster(
         result.traceHash.size() == 64U && result.outputHash.size() == 64U;
     auto storage = std::make_shared<SpinItFasterArtifact::Storage>();
     storage->result = std::move(result);
+    storage->request = request;
     storage->evidence = evidence;
     storage->geometrySealed = geometrySealed;
     storage->diagnostics = spinDiagnosticsJson(
         storage->result,
+        storage->request,
         evidence,
         geometrySealed,
         materialAudit,

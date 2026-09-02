@@ -574,6 +574,20 @@ PYBIND11_MODULE(_make_it_stand, module)
             }
         )
         .def_property_readonly(
+            "design_vertices",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXd(value.designVertices());
+            }
+        )
+        .def_property_readonly(
+            "design_faces",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXi(value.designFaces());
+            }
+        )
+        .def_property_readonly(
             "material_vertices",
             [](const api::SpinItFasterArtifact& value)
             {
@@ -609,6 +623,7 @@ PYBIND11_MODULE(_make_it_stand, module)
             }
         )
         .def("save_outer_mesh", &api::SpinItFasterArtifact::saveOuterMesh)
+        .def("save_design_mesh", &api::SpinItFasterArtifact::saveDesignMesh)
         .def("save_material_mesh", &api::SpinItFasterArtifact::saveMaterialMesh)
         .def("save_cavity_mesh", &api::SpinItFasterArtifact::saveCavityMesh)
         .def("save_diagnostics", &api::SpinItFasterArtifact::saveDiagnostics);

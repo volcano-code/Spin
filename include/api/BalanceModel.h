@@ -51,6 +51,8 @@ public:
     const spin::QuadricHollowingResult& result() const;
     const Eigen::MatrixXd& outerVertices() const;
     const Eigen::MatrixXi& outerFaces() const;
+    const Eigen::MatrixXd& designVertices() const;
+    const Eigen::MatrixXi& designFaces() const;
     const Eigen::MatrixXd& materialVertices() const;
     const Eigen::MatrixXi& materialFaces() const;
     const Eigen::MatrixXd& cavityVertices() const;
@@ -58,6 +60,7 @@ public:
     const std::string& diagnosticsJson() const;
 
     void saveOuterMesh(const std::string& filename) const;
+    void saveDesignMesh(const std::string& filename) const;
     void saveMaterialMesh(const std::string& filename) const;
     void saveCavityMesh(const std::string& filename) const;
     void saveDiagnostics(const std::string& filename) const;

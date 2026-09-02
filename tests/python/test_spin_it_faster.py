@@ -103,6 +103,10 @@ class SpinNativeArtifactTests(unittest.TestCase):
         self.assertTrue(first.geometry_sealed)
         self.assertGreater(first.material_faces.shape[0], 0)
         self.assertGreater(first.cavity_faces.shape[0], 0)
+        np.testing.assert_array_equal(first.design_vertices, design_vertices)
+        self.assertEqual(first.diagnostics["mode"], "STATIC_BALANCE")
+        self.assertEqual(len(first.diagnostics["center_of_mass_model"]), 3)
+        self.assertEqual(len(first.diagnostics["principal_axes_model"]), 3)
         self.assertFalse(first.outer_vertices.flags.writeable)
         with self.assertRaises(ValueError):
             first.outer_vertices[0, 0] = 42.0
@@ -118,9 +122,11 @@ class SpinNativeArtifactTests(unittest.TestCase):
             first.save_outer_mesh(root / "outer.obj")
             first.save_material_mesh(root / "material.obj")
             first.save_cavity_mesh(root / "cavity.obj")
+            first.save_design_mesh(root / "design.obj")
             first.save_diagnostics(root / "diagnostics.json")
             self.assertTrue(all((root / name).stat().st_size > 0 for name in (
-                "outer.obj", "material.obj", "cavity.obj", "diagnostics.json"
+                "outer.obj", "design.obj", "material.obj", "cavity.obj",
+                "diagnostics.json"
             )))
             payload = json.loads((root / "diagnostics.json").read_text())
             self.assertTrue(payload["geometry_sealed"])

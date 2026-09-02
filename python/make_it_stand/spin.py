@@ -215,6 +215,18 @@ class SpinItFasterResult:
         return value
 
     @property
+    def design_vertices(self) -> np.ndarray:
+        value = np.asarray(self._native.design_vertices).copy()
+        value.flags.writeable = False
+        return value
+
+    @property
+    def design_faces(self) -> np.ndarray:
+        value = np.asarray(self._native.design_faces).copy()
+        value.flags.writeable = False
+        return value
+
+    @property
     def material_vertices(self) -> np.ndarray:
         value = np.asarray(self._native.material_vertices).copy()
         value.flags.writeable = False
@@ -240,6 +252,9 @@ class SpinItFasterResult:
 
     def save_outer_mesh(self, path: os.PathLike[str] | str) -> None:
         self._native.save_outer_mesh(os.fspath(path))
+
+    def save_design_mesh(self, path: os.PathLike[str] | str) -> None:
+        self._native.save_design_mesh(os.fspath(path))
 
     def save_material_mesh(self, path: os.PathLike[str] | str) -> None:
         self._native.save_material_mesh(os.fspath(path))
