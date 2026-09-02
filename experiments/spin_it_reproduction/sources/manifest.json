@@ -1,0 +1,35 @@
+{
+  "schema": "spin-it-faster-sources-v1",
+  "schema_version": 1,
+  "title": "Spin-It Faster: Quadrics Solve All Topology Optimization Problems That Depend Only On Mass Moments",
+  "authors": [
+    "Christian Hafner",
+    "Mickael Ly",
+    "Chris Wojtan"
+  ],
+  "doi": "10.1145/3658194",
+  "publication": "ACM Transactions on Graphics 43(4), Article 78, July 2024",
+  "accessed_on": "2026-09-03",
+  "author_code_status": "NOT_PUBLICLY_RELEASED",
+  "author_asset_status": "NOT_PUBLICLY_RELEASED",
+  "maximum_claim": "PAPER_FORMULA_REPRODUCTION",
+  "sources": [
+    {
+      "id": "main",
+      "kind": "PUBLISHED_PAPER",
+      "url": "https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf",
+      "bytes": 7225150,
+      "md5_publisher_record": "0dc9f5a6422b8a49a79026900f349ee5",
+      "sha256": "e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc"
+    },
+    {
+      "id": "supplement",
+      "kind": "SUPPLEMENTAL_MATERIAL",
+      "url": "https://research-explorer.ista.ac.at/download/17203/17205/sif-supp-final.pdf",
+      "bytes": 397264,
+      "md5_publisher_record": "cde433c6a40688d5f1187fb5721f6f94",
+      "sha256": "3e18e0e784bb917897f01d1ce182e55dbc3bee5e055aca0f71582673f4431200"
+    }
+  ],
+  "repository_policy": "PDF bytes are not committed. URLs, publisher checksums, locally verified SHA-256 values, and formula notes are committed."
+}
