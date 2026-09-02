@@ -631,7 +631,7 @@ spin::QuadricTriangulation triangulateEllipticCylinder(
         for (int segment = 0; segment < resolution; ++segment)
         {
             const double angle =
-                2.0 * std::acos(-1.0) * segment / resolution;
+                2.0 * std::acos(-1.0) * (segment + 0.5) / resolution;
             vertices.push_back(
                 u * (centerU + radiusU * std::cos(angle)) +
                 v * (centerV + radiusV * std::sin(angle)) +

@@ -518,6 +518,28 @@ if(BUILD_TESTING)
             spin-faster-newton
             PROPERTIES LABELS "spin-it;spin-it-faster;solver;regression"
         )
+
+        add_executable(
+            spin-it-faster-end-to-end
+            tests/spin_it_faster_end_to_end.cpp
+        )
+        target_compile_features(spin-it-faster-end-to-end PRIVATE cxx_std_17)
+        set_target_properties(
+            spin-it-faster-end-to-end
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-faster-end-to-end
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-end-to-end
+            COMMAND "$<TARGET_FILE:spin-it-faster-end-to-end>"
+        )
+        set_tests_properties(
+            spin-faster-end-to-end
+            PROPERTIES LABELS "spin-it;spin-it-faster;solver;geometry;regression"
+        )
     endif()
 
     add_test(
