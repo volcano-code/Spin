@@ -4,35 +4,35 @@
   "cases": [
     {
       "id": "static-planar",
-      "output_hash": "4a141db93845189b79ccee76688fbcfa49f870d658e84434b85322d575b80c5b",
+      "output_hash": "b45d8faae0efb7b311588b8d1738ed9c47b8913b9ad3c39196d304bc65a24a1f",
       "status": "CONVERGED"
     },
     {
       "id": "fidget-circular-void",
-      "output_hash": "b2e1ce2b0f8e9febb7b0a96e18f527d13b61454837e7095df223291dc027720b",
+      "output_hash": "e9893c231df9f03ec050c272fe47c2e609e1df79f3f1f4ea130e81e1746ec9a8",
       "status": "CONVERGED"
     },
     {
       "id": "yoyo-symmetric",
-      "output_hash": "597eeebac523854240b2bd54b732d168f2f7633993010c2e1c4a59aaf22314fe",
+      "output_hash": "f96d70989aeba3d22113815259d3c5bd9f4183a10c10cf4619c5d7341bf11bfa",
       "status": "CONVERGED"
     },
     {
       "id": "top-symmetric",
-      "output_hash": "2b9e62c410ef992a5aa29fca8564c583da80285e8c5454f63eb9a53fb2fc8901",
+      "output_hash": "d73a88d25215815958b8d4098e1221676136191063b3cc8feb2f8799daa1b4eb",
       "status": "CONVERGED"
     }
   ],
   "claim_level": "PAPER_FORMULA_REPRODUCTION",
   "equation_residual_limit": 1e-12,
-  "executable_sha256": "3a3c73ecf10578a75c21ef88c82dd8e155935fb4e5031a7b85f080f119d77f61",
-  "git_commit": "b8d205fe65b6e62ac4f8c17c8f3863ad2f599432",
+  "executable_sha256": "cec360cbe4b14908b0db55643acb53794058aebd86814adfe03c03eb77a5334b",
+  "git_commit": "69f307caa3326f8f553d5012848d54e87c221d53",
   "manifest_sha256": "fbc0972ce8aaedc775173def119f332f5f21373e0de468cfe321113b56db62fe",
   "physical_relative_residual_limit": 1e-06,
   "repeat_count": 2,
   "schema": "spin-it-faster-analytic-results-v1",
   "schema_version": 1,
-  "stdout_sha256": "169555bc936cf615ae4b146ad3098dc7aab06dbc426bbdf12c857d77dd4b4c18",
+  "stdout_sha256": "3ef0ffae56236513d53b9e622ad4b0ab0179946eedda134c5b67a6ec6e5d809c",
   "worktree_clean": true,
   "worktree_status_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 }
