@@ -162,9 +162,11 @@ set(MAKE_IT_STAND_CORE_HEADERS
 if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES
         src/spin/SpinDesignRequest.cpp
+        src/spin/SpinMomentProblem.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
         include/spin/SpinDesignRequest.h
+        include/spin/SpinMomentProblem.h
     )
 endif()
 
@@ -347,6 +349,31 @@ if(BUILD_TESTING)
         )
         set_tests_properties(
             spin-faster-request
+            PROPERTIES LABELS "spin-it;spin-it-faster;regression"
+        )
+
+        add_executable(
+            spin-moment-problem-regression
+            tests/spin_moment_problem_regression.cpp
+        )
+        target_compile_features(
+            spin-moment-problem-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-moment-problem-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-moment-problem-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-moment-problems
+            COMMAND "$<TARGET_FILE:spin-moment-problem-regression>"
+        )
+        set_tests_properties(
+            spin-faster-moment-problems
             PROPERTIES LABELS "spin-it;spin-it-faster;regression"
         )
     endif()
