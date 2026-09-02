@@ -1,6 +1,7 @@
 #include "api/BalanceModel.h"
 
 #include "deformation/DeformationSystem.h"
+#include "deformation/DeformedVoxelMassField.h"
 #include "deformation/GridDeformationDomain.h"
 #include "deformation/HandleSet.h"
 #include "physics/BalanceEnergy.h"
@@ -1821,6 +1822,49 @@ struct BalanceModel::Impl
     std::vector<UserHandle, Eigen::aligned_allocator<UserHandle>> userHandles;
     std::shared_ptr<const ReleasedBetaCache> releasedBetaCache;
     std::shared_ptr<const MaterialOccupancyCache> materialOccupancyCache;
+
+    Snapshot captureSnapshot() const
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        Snapshot snapshot;
+        snapshot.vertices = vertices;
+        snapshot.faces = faces;
+        snapshot.config = config;
+        snapshot.gravity = gravity;
+        snapshot.standings = standings;
+        snapshot.suspensions = suspensions;
+        snapshot.userHandles = userHandles;
+        snapshot.releasedBetaCache = releasedBetaCache;
+        snapshot.materialOccupancyCache = materialOccupancyCache;
+        return snapshot;
+    }
+
+    static VoxelGrid makeVoxelGrid(const Snapshot& snapshot)
+    {
+        if (snapshot.releasedBetaCache)
+        {
+            return VoxelGrid::fromReleasedBetaOccupancy(
+                snapshot.releasedBetaCache->voxelResolution,
+                snapshot.releasedBetaCache->cellIdsZFast,
+                snapshot.releasedBetaCache->hullDepth
+            );
+        }
+        if (snapshot.materialOccupancyCache)
+        {
+            return VoxelGrid::fromMaterialOccupancy(
+                snapshot.materialOccupancyCache->domain,
+                snapshot.config.minimumWallThickness,
+                snapshot.materialOccupancyCache->protectedBoundaryLayers
+            );
+        }
+        return VoxelGrid(
+            snapshot.vertices,
+            snapshot.faces,
+            snapshot.config.minimumWallThickness,
+            snapshot.config.voxelResolution,
+            snapshot.config.fixedUnitCubeVoxelGrid
+        );
+    }
 };
 
 
@@ -2365,25 +2409,109 @@ void BalanceModel::clearConstraints()
 }
 
 
+#if MAKE_IT_STAND_HAS_REACHABILITY
+reachability::CarvingReachabilityResult
+BalanceModel::analyzeCarvingReachability(std::size_t standingIndex) const
+{
+    const Impl::Snapshot snapshot = impl_->captureSnapshot();
+    if (standingIndex >= snapshot.standings.size())
+    {
+        throw std::out_of_range(
+            "standing constraint index is outside the model"
+        );
+    }
+
+    const VoxelGrid grid = Impl::makeVoxelGrid(snapshot);
+    const deformation::GridDeformationDomain domain =
+        deformation::GridDeformationDomain::fromVoxelGrid(grid);
+    const deformation::DeformedVoxelMassField massField(
+        domain,
+        domain.fullRestCorners(),
+        1.0,
+        0.0
+    );
+    const Impl::Standing& standing = snapshot.standings[standingIndex];
+
+    MassMoments totalMoments;
+    double fixedMass = 0.0;
+    Eigen::Vector2d fixedFirstMoment2D = Eigen::Vector2d::Zero();
+    std::vector<reachability::ReachabilityCell> variableCells;
+    variableCells.reserve(static_cast<std::size_t>(domain.activeCellCount()));
+
+    for (Eigen::Index cell = 0; cell < domain.cellCount(); ++cell)
+    {
+        if (!domain.isActiveCell(static_cast<int>(cell))) continue;
+        const Eigen::Vector3i coordinate =
+            domain.cellCoordinates(static_cast<int>(cell));
+        const Voxel& voxelState = grid(
+            coordinate.x(),
+            coordinate.y(),
+            coordinate.z()
+        );
+        if (!voxelState.isFilled) continue;
+
+        const MassMoments moments = massField.massMoments(
+            static_cast<int>(cell)
+        );
+        totalMoments += moments;
+        const Eigen::Vector3d center =
+            moments.firstMoment / moments.mass;
+        const Eigen::Vector2d projectedFirstMoment = moments.mass *
+            standing.support.toPlaneCoordinates(center);
+        if (voxelState.isInner)
+        {
+            variableCells.push_back(reachability::ReachabilityCell{
+                static_cast<int>(cell),
+                moments.mass,
+                projectedFirstMoment
+            });
+        }
+        else
+        {
+            fixedMass += moments.mass;
+            fixedFirstMoment2D += projectedFirstMoment;
+        }
+    }
+    if (!(totalMoments.mass > 0.0) || !(fixedMass > 0.0))
+    {
+        throw std::domain_error(
+            "reachability requires positive total and fixed shell mass"
+        );
+    }
+
+    const stability::StandingTarget target = stability::makeStandingTarget(
+        standing.support,
+        totalMoments.firstMoment / totalMoments.mass,
+        standing.gammaRadians
+    );
+    if (!target.requestedMarginAttainable() || target.safeRegion2D().rows() < 3)
+    {
+        reachability::CarvingReachabilityResult result;
+        result.status = reachability::ReachabilityStatus::Indeterminate;
+        result.inputCellCount = static_cast<int>(variableCells.size());
+        result.variableCellCount = result.inputCellCount;
+        result.fixedMass = fixedMass;
+        result.primalSolverStatus = "DEGENERATE_OR_UNATTAINABLE_SAFE_REGION";
+        return result;
+    }
+
+    reachability::CarvingReachabilityInput input;
+    input.fixedMass = fixedMass;
+    input.fixedFirstMoment2D = fixedFirstMoment2D;
+    input.variableCells = std::move(variableCells);
+    input.safePolygon2D = target.safeRegion2D();
+    return reachability::CarvingReachabilityAnalyzer().analyze(input);
+}
+#endif
+
+
 BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
 {
     validateRunConfig(runConfig);
     const PerformanceClock::time_point totalStart = PerformanceClock::now();
     PerformanceDurations durations;
     PerformanceClock::time_point phaseStart = totalStart;
-    Impl::Snapshot snapshot;
-    {
-        std::lock_guard<std::mutex> lock(impl_->mutex);
-        snapshot.vertices = impl_->vertices;
-        snapshot.faces = impl_->faces;
-        snapshot.config = impl_->config;
-        snapshot.gravity = impl_->gravity;
-        snapshot.standings = impl_->standings;
-        snapshot.suspensions = impl_->suspensions;
-        snapshot.userHandles = impl_->userHandles;
-        snapshot.releasedBetaCache = impl_->releasedBetaCache;
-        snapshot.materialOccupancyCache = impl_->materialOccupancyCache;
-    }
+    const Impl::Snapshot snapshot = impl_->captureSnapshot();
     durations.inputSnapshot = elapsedSeconds(
         phaseStart,
         PerformanceClock::now()
@@ -2396,33 +2524,7 @@ BalanceResult BalanceModel::optimize(const BalanceRunConfig& runConfig) const
     }
 
     phaseStart = PerformanceClock::now();
-    VoxelGrid grid;
-    if (snapshot.releasedBetaCache)
-    {
-        grid = VoxelGrid::fromReleasedBetaOccupancy(
-            snapshot.releasedBetaCache->voxelResolution,
-            snapshot.releasedBetaCache->cellIdsZFast,
-            snapshot.releasedBetaCache->hullDepth
-        );
-    }
-    else if (snapshot.materialOccupancyCache)
-    {
-        grid = VoxelGrid::fromMaterialOccupancy(
-            snapshot.materialOccupancyCache->domain,
-            snapshot.config.minimumWallThickness,
-            snapshot.materialOccupancyCache->protectedBoundaryLayers
-        );
-    }
-    else
-    {
-        grid = VoxelGrid(
-            snapshot.vertices,
-            snapshot.faces,
-            snapshot.config.minimumWallThickness,
-            snapshot.config.voxelResolution,
-            snapshot.config.fixedUnitCubeVoxelGrid
-        );
-    }
+    VoxelGrid grid = Impl::makeVoxelGrid(snapshot);
     durations.voxelization = elapsedSeconds(
         phaseStart,
         PerformanceClock::now()

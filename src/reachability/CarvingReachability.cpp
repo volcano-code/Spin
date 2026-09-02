@@ -1,10 +1,15 @@
 #include "reachability/CarvingReachability.h"
 
+#include "manufacturing/SlicerValidation.h"
+
 #include <Highs.h>
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <limits>
+#include <locale>
+#include <sstream>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -26,6 +31,31 @@ struct LpResult
     Eigen::VectorXd values;
     bool apiSucceeded = false;
 };
+
+std::string inputHash(const CarvingReachabilityInput& input)
+{
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << "make-it-stand-carving-reachability-input-v1\n" << std::hexfloat;
+    stream << input.fixedMass << ' '
+           << input.fixedFirstMoment2D.x() << ' '
+           << input.fixedFirstMoment2D.y() << '\n';
+    stream << input.feasibilityTolerance << '\n';
+    stream << input.safePolygon2D.rows() << '\n';
+    for (Eigen::Index row = 0; row < input.safePolygon2D.rows(); ++row)
+    {
+        stream << input.safePolygon2D(row, 0) << ' '
+               << input.safePolygon2D(row, 1) << '\n';
+    }
+    stream << input.variableCells.size() << '\n';
+    for (const ReachabilityCell& cell : input.variableCells)
+    {
+        stream << cell.cellIndex << ' ' << cell.mass << ' '
+               << cell.firstMoment2D.x() << ' '
+               << cell.firstMoment2D.y() << '\n';
+    }
+    return manufacturing::computeContentSha256(stream.str());
+}
 
 bool finite(const Eigen::MatrixXd& value)
 {
@@ -416,7 +446,10 @@ CarvingReachabilityResult CarvingReachabilityAnalyzer::analyze(
     );
 
     CarvingReachabilityResult result;
+    result.inputHash = inputHash(input);
     result.inputCellCount = static_cast<int>(cellCount);
+    result.variableCellCount = static_cast<int>(cellCount);
+    result.fixedMass = input.fixedMass;
     const Eigen::VectorXd full = Eigen::VectorXd::Ones(cellCount);
     if (maximumPrimalViolation(system, full) <= input.feasibilityTolerance)
     {

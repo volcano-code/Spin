@@ -183,6 +183,10 @@ target_include_directories(
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
+target_compile_definitions(
+    make_it_stand_core
+    PUBLIC MAKE_IT_STAND_HAS_REACHABILITY=$<BOOL:${MAKE_IT_STAND_BUILD_REACHABILITY}>
+)
 target_link_libraries(make_it_stand_core PUBLIC igl::core)
 if(MAKE_IT_STAND_BUILD_REACHABILITY)
     target_link_libraries(make_it_stand_core PRIVATE highs::highs)
@@ -371,6 +375,33 @@ if(BUILD_TESTING)
             PROPERTIES
                 LABELS "spin-it;reachability;regression"
                 TIMEOUT 15
+        )
+
+        add_executable(
+            balance-model-reachability-regression
+            tests/balance_model_reachability_regression.cpp
+        )
+        target_compile_features(
+            balance-model-reachability-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            balance-model-reachability-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            balance-model-reachability-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME balance-model-reachability
+            COMMAND "$<TARGET_FILE:balance-model-reachability-regression>"
+        )
+        set_tests_properties(
+            balance-model-reachability
+            PROPERTIES
+                LABELS "spin-it;reachability;api;regression"
+                TIMEOUT 120
         )
     endif()
 
@@ -613,6 +644,23 @@ if(BUILD_TESTING)
     )
 
     if(MAKE_IT_STAND_BUILD_PYTHON)
+        if(MAKE_IT_STAND_BUILD_REACHABILITY)
+            add_test(
+                NAME reachability-python-bindings
+                COMMAND "${Python3_EXECUTABLE}" -m unittest
+                    discover
+                    -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+                    -p "test_reachability_bindings.py"
+                    -v
+            )
+            set_tests_properties(
+                reachability-python-bindings
+                PROPERTIES
+                    LABELS "spin-it;reachability;python;bindings"
+                    TIMEOUT 120
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+            )
+        endif()
         add_test(
             NAME r9-python-bindings
             COMMAND "${Python3_EXECUTABLE}" -m unittest

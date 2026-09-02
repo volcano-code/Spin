@@ -68,6 +68,7 @@ from .paper_evidence import (
 )
 from .paper_trace import TraceProfile, build_iteration_trace_v2
 from .sealed_artifact import SealedBalanceArtifact, load_sealed_pybullet_entry
+from .reachability import FarkasCertificate, ReachabilityResult
 from .stability_oracle import (
     QuasiStaticTiltResult,
     evaluate_quasi_static_tilt,
@@ -89,6 +90,7 @@ __all__ = [
     "EvidenceClass",
     "FreshnessAssessment",
     "FreshnessStatus",
+    "FarkasCertificate",
     "UnsafePathError",
     "HandleConfig",
     "ModelConfig",
@@ -99,6 +101,7 @@ __all__ = [
     "PaperCompatibilityResult",
     "PaperNormalization",
     "QuasiStaticTiltResult",
+    "ReachabilityResult",
     "ReleasedBetaArchive",
     "ReleasedBetaArchiveModel",
     "RunConfig",

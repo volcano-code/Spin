@@ -50,8 +50,11 @@ struct ReachabilityCertificate
 
 struct CarvingReachabilityResult
 {
+    std::string inputHash;
     ReachabilityStatus status = ReachabilityStatus::Indeterminate;
     int inputCellCount = 0;
+    int variableCellCount = 0;
+    double fixedMass = 0.0;
     Eigen::VectorXd retainedFractions;
     double finalMass = 0.0;
     Eigen::Vector2d finalFirstMoment2D = Eigen::Vector2d::Zero();

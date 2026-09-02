@@ -1046,6 +1046,15 @@ class BalanceModel:
         self._native.clear_constraints()
         return self
 
+    def analyze_carving_reachability(self, standing_index: int = 0) -> Any:
+        """Classify carving-only balance using a continuous relaxation."""
+        index = _integer(standing_index, "standing_index", minimum=0)
+        from .reachability import ReachabilityResult
+
+        return ReachabilityResult.from_native(
+            self._native.analyze_carving_reachability(index)
+        )
+
     def optimize(self, config: RunConfig | None = None) -> BalanceResult:
         settings = _validate_run_config(config if config is not None else RunConfig())
         return BalanceResult(

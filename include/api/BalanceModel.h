@@ -3,6 +3,9 @@
 #include "deformation/BoundedBiharmonicWeights.h"
 #include "manufacturing/ManufacturingGeometry.h"
 #include "optimization/AlternatingBalanceOptimizer.h"
+#if MAKE_IT_STAND_HAS_REACHABILITY
+#include "reachability/CarvingReachability.h"
+#endif
 
 #include <Eigen/Core>
 
@@ -253,6 +256,16 @@ public:
     BalanceResult optimize(
         const BalanceRunConfig& config = BalanceRunConfig()
     ) const;
+
+#if MAKE_IT_STAND_HAS_REACHABILITY
+    /**
+     * Classify static balance under a continuous relaxation of carving only.
+     * A reachable result is not a discrete or manufacturable cavity proof.
+     */
+    reachability::CarvingReachabilityResult analyzeCarvingReachability(
+        std::size_t standingIndex = 0
+    ) const;
+#endif
 
 private:
     BalanceModel();

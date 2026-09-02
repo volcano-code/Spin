@@ -404,6 +404,100 @@ PYBIND11_MODULE(_make_it_stand, module)
         .value("BINARY_STL", manufacturing::ManufacturingMeshFormat::BinaryStl)
         .export_values();
 
+#if MAKE_IT_STAND_HAS_REACHABILITY
+    py::class_<reachability::ReachabilityCertificate>(
+        module,
+        "ReachabilityCertificate"
+    )
+        .def_property_readonly(
+            "weights",
+            [](const reachability::ReachabilityCertificate& value)
+            {
+                return value.weights;
+            }
+        )
+        .def_readonly(
+            "minimum_weight",
+            &reachability::ReachabilityCertificate::minimumWeight
+        )
+        .def_readonly(
+            "normalization_residual",
+            &reachability::ReachabilityCertificate::normalizationResidual
+        )
+        .def_readonly(
+            "stationarity_infinity_norm",
+            &reachability::ReachabilityCertificate::stationarityInfinityNorm
+        )
+        .def_readonly(
+            "contradiction",
+            &reachability::ReachabilityCertificate::contradiction
+        )
+        .def_readonly(
+            "valid",
+            &reachability::ReachabilityCertificate::valid
+        );
+
+    py::class_<reachability::CarvingReachabilityResult>(
+        module,
+        "CarvingReachabilityResult"
+    )
+        .def_readonly(
+            "input_hash",
+            &reachability::CarvingReachabilityResult::inputHash
+        )
+        .def_property_readonly(
+            "status",
+            [](const reachability::CarvingReachabilityResult& value)
+            {
+                return std::string(reachability::toString(value.status));
+            }
+        )
+        .def_readonly(
+            "input_cell_count",
+            &reachability::CarvingReachabilityResult::inputCellCount
+        )
+        .def_readonly(
+            "variable_cell_count",
+            &reachability::CarvingReachabilityResult::variableCellCount
+        )
+        .def_readonly(
+            "fixed_mass",
+            &reachability::CarvingReachabilityResult::fixedMass
+        )
+        .def_readonly(
+            "retained_fractions",
+            &reachability::CarvingReachabilityResult::retainedFractions
+        )
+        .def_readonly(
+            "final_mass",
+            &reachability::CarvingReachabilityResult::finalMass
+        )
+        .def_readonly(
+            "final_first_moment_2d",
+            &reachability::CarvingReachabilityResult::finalFirstMoment2D
+        )
+        .def_readonly(
+            "final_center_2d",
+            &reachability::CarvingReachabilityResult::finalCenter2D
+        )
+        .def_readonly(
+            "maximum_primal_violation",
+            &reachability::CarvingReachabilityResult::maximumPrimalViolation
+        )
+        .def_readonly(
+            "certificate",
+            &reachability::CarvingReachabilityResult::certificate
+        )
+        .def_readonly(
+            "primal_solver_status",
+            &reachability::CarvingReachabilityResult::primalSolverStatus
+        )
+        .def_readonly(
+            "certificate_solver_status",
+            &reachability::CarvingReachabilityResult::certificateSolverStatus
+        );
+#endif
+
     py::class_<api::BalanceModelConfig>(module, "BalanceModelConfig")
         .def(py::init<>())
         .def_readwrite(
@@ -850,6 +944,17 @@ PYBIND11_MODULE(_make_it_stand, module)
         )
         .def("clear_handles", &api::BalanceModel::clearHandles)
         .def("clear_constraints", &api::BalanceModel::clearConstraints)
+#if MAKE_IT_STAND_HAS_REACHABILITY
+        .def(
+            "analyze_carving_reachability",
+            [](const api::BalanceModel& model, std::size_t standingIndex)
+            {
+                py::gil_scoped_release release;
+                return model.analyzeCarvingReachability(standingIndex);
+            },
+            py::arg("standing_index") = 0
+        )
+#endif
         .def(
             "optimize",
             [](
