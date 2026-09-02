@@ -29,6 +29,11 @@ option(
     OFF
 )
 option(
+    MAKE_IT_STAND_BUILD_SPIN_IT_2014
+    "Build the adaptive-voxel Spin-It 2014 formula-reproduction solver"
+    OFF
+)
+option(
     MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS
     "Run pure-Python paper/beta compatibility contract tests"
     OFF
@@ -70,6 +75,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
 else()
     set(LIBIGL_WITH_CGAL OFF CACHE BOOL "Use CGAL" FORCE)
 endif()
+
 set(LIBIGL_WITH_MOSEK OFF CACHE BOOL "Do not use proprietary MOSEK" FORCE)
 set(
     LIBIGL_USE_STATIC_LIBRARY
@@ -168,22 +174,46 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/voxel/VoxelTopology.h
 )
 
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER OR MAKE_IT_STAND_BUILD_SPIN_IT_2014)
+    list(APPEND MAKE_IT_STAND_CORE_SOURCES
+        src/spin/SpinDesignRequest.cpp
+        src/spin/SpinMomentProblem.cpp
+    )
+    list(APPEND MAKE_IT_STAND_CORE_HEADERS
+        include/spin/SpinDesignRequest.h
+        include/spin/SpinMomentProblem.h
+    )
+endif()
+
 if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES
         src/spin/QuadricCoefficients.cpp
         src/spin/QuadricMomentEvaluator.cpp
         src/spin/QuadricHollowingSolver.cpp
         src/spin/QuadricTriangulator.cpp
-        src/spin/SpinDesignRequest.cpp
-        src/spin/SpinMomentProblem.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
         include/spin/QuadricCoefficients.h
         include/spin/QuadricMomentEvaluator.h
         include/spin/QuadricHollowingSolver.h
         include/spin/QuadricTriangulator.h
-        include/spin/SpinDesignRequest.h
-        include/spin/SpinMomentProblem.h
+    )
+endif()
+
+if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
+    list(APPEND MAKE_IT_STAND_CORE_SOURCES
+        src/spin2014/AdaptiveVoxelDomain.cpp
+        src/spin2014/AdaptiveFillFunctional.cpp
+        src/spin2014/SpinIt2014MomentProblem.cpp
+        src/spin2014/SlqpLbfgsSolver.cpp
+        src/spin2014/AdaptiveVoxelSpinSolver.cpp
+    )
+    list(APPEND MAKE_IT_STAND_CORE_HEADERS
+        include/spin2014/AdaptiveVoxelDomain.h
+        include/spin2014/AdaptiveFillFunctional.h
+        include/spin2014/SpinIt2014MomentProblem.h
+        include/spin2014/SlqpLbfgsSolver.h
+        include/spin2014/AdaptiveVoxelSpinSolver.h
     )
 endif()
 
@@ -221,6 +251,7 @@ target_compile_definitions(
     PUBLIC
         MAKE_IT_STAND_HAS_REACHABILITY=$<BOOL:${MAKE_IT_STAND_BUILD_REACHABILITY}>
         MAKE_IT_STAND_HAS_SPIN_IT_FASTER=$<BOOL:${MAKE_IT_STAND_BUILD_SPIN_IT_FASTER}>
+        MAKE_IT_STAND_HAS_SPIN_IT_2014=$<BOOL:${MAKE_IT_STAND_BUILD_SPIN_IT_2014}>
 )
 target_link_libraries(make_it_stand_core PUBLIC igl::core)
 if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
@@ -346,6 +377,105 @@ endif()
 include(CTest)
 
 if(BUILD_TESTING)
+    if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
+        add_executable(
+            spin-it-2014-adaptive-domain-regression
+            tests/spin_it_2014_adaptive_domain_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-adaptive-domain-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-adaptive-domain-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-adaptive-domain-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-adaptive-domain
+            COMMAND "$<TARGET_FILE:spin-it-2014-adaptive-domain-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-adaptive-domain
+            PROPERTIES LABELS "spin-it;spin-it-2014;regression"
+        )
+
+        add_executable(
+            spin-it-2014-fill-functional-regression
+            tests/spin_it_2014_fill_functional_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-fill-functional-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-fill-functional-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-fill-functional-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-fill-functional
+            COMMAND "$<TARGET_FILE:spin-it-2014-fill-functional-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-fill-functional
+            PROPERTIES LABELS "spin-it;spin-it-2014;regression"
+        )
+
+        add_executable(
+            spin-it-2014-slqp-regression
+            tests/spin_it_2014_slqp_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-slqp-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-slqp-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-slqp-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-slqp
+            COMMAND "$<TARGET_FILE:spin-it-2014-slqp-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-slqp
+            PROPERTIES LABELS "spin-it;spin-it-2014;solver;regression"
+        )
+
+        add_executable(
+            spin-it-2014-end-to-end
+            tests/spin_it_2014_end_to_end.cpp
+        )
+        target_compile_features(spin-it-2014-end-to-end PRIVATE cxx_std_17)
+        set_target_properties(
+            spin-it-2014-end-to-end
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-end-to-end
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-end-to-end
+            COMMAND "$<TARGET_FILE:spin-it-2014-end-to-end>"
+        )
+        set_tests_properties(
+            spin-it-2014-end-to-end
+            PROPERTIES LABELS "spin-it;spin-it-2014;solver;geometry;regression"
+        )
+    endif()
+
     if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
         add_executable(
             spin-design-request-regression
