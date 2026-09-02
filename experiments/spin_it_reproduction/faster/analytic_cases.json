@@ -1,0 +1,36 @@
+{
+  "schema": "spin-it-faster-analytic-cases-v1",
+  "schema_version": 1,
+  "claim_level": "PAPER_FORMULA_REPRODUCTION",
+  "paper_equation_residual_limit": 1e-12,
+  "physical_relative_residual_limit": 1e-6,
+  "repeat_policy": "byte-identical stdout and identical per-case output hashes",
+  "geometry_policy": "outer vertex and face arrays are immutable; the material boundary must pass the strict closed-manifold audit",
+  "cases": [
+    {
+      "id": "static-planar",
+      "mode": "STATIC_BALANCE",
+      "unnormalized_quadric": [0.371, 0.8, 0.123, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      "expected_interface": "PLANE"
+    },
+    {
+      "id": "fidget-circular-void",
+      "mode": "FIDGET_SPINNER",
+      "unnormalized_quadric": [0.0, 0.8, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+      "expected_interface": "ELLIPTIC_CYLINDER"
+    },
+    {
+      "id": "yoyo-symmetric",
+      "mode": "YO_YO",
+      "unnormalized_quadric": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0],
+      "expected_interface": "HYPERBOLOID"
+    },
+    {
+      "id": "top-symmetric",
+      "mode": "SPINNING_TOP",
+      "unnormalized_quadric": [0.0, 0.0, 0.0, -1.0, 1.0, 1.0, -1.0, 0.0, 0.0, 0.0],
+      "expected_interface": "HYPERBOLOID",
+      "center_of_mass_weight": 0.6
+    }
+  ]
+}
