@@ -154,6 +154,15 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/voxel/VoxelTopology.h
 )
 
+if(MAKE_IT_STAND_BUILD_REACHABILITY)
+    list(APPEND MAKE_IT_STAND_CORE_SOURCES
+        src/reachability/CarvingReachability.cpp
+    )
+    list(APPEND MAKE_IT_STAND_CORE_HEADERS
+        include/reachability/CarvingReachability.h
+    )
+endif()
+
 add_library(
     make_it_stand_core
     STATIC
@@ -175,6 +184,9 @@ target_include_directories(
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 )
 target_link_libraries(make_it_stand_core PUBLIC igl::core)
+if(MAKE_IT_STAND_BUILD_REACHABILITY)
+    target_link_libraries(make_it_stand_core PRIVATE highs::highs)
+endif()
 
 if(MAKE_IT_STAND_BUILD_PYTHON)
     set(PYBIND11_FINDPYTHON ON)
@@ -303,6 +315,35 @@ if(BUILD_TESTING)
             LABELS "spin-it;reachability;build-system"
             TIMEOUT 60
     )
+
+    if(MAKE_IT_STAND_BUILD_REACHABILITY)
+        add_executable(
+            carving-reachability-regression
+            tests/carving_reachability_regression.cpp
+        )
+        target_compile_features(
+            carving-reachability-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            carving-reachability-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            carving-reachability-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME reachability-input
+            COMMAND "$<TARGET_FILE:carving-reachability-regression>" input
+        )
+        set_tests_properties(
+            reachability-input
+            PROPERTIES
+                LABELS "spin-it;reachability;regression"
+                TIMEOUT 15
+        )
+    endif()
 
     add_executable(
         result-view-regression
