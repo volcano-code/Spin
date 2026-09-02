@@ -1,0 +1,40 @@
+{
+  "schema": "spin-it-2014-reconstructed-release-gate-v1",
+  "schema_version": 1,
+  "claim_level": "RECONSTRUCTED_ASSET",
+  "paper_exact": false,
+  "passed": true,
+  "verified_source_commit": "f95463e6397e885bcadc7302020a026fc7b80540",
+  "requirements": {
+    "adaptive_voxel_core": true,
+    "slqp_lbfgs": true,
+    "static_top_yoyo_modes": true,
+    "dual_material": true,
+    "cage_deformation": true,
+    "automatic_cage_bbw_binding": true,
+    "sealed_artifact_api": true,
+    "mode_repeats_identical": true,
+    "mode_binary_constraints_zero": true,
+    "spin_2014_only_tests_12_of_12": true,
+    "combined_tests_159_of_159": true,
+    "combined_spin_2014_tests_13_of_13": true,
+    "real_desktop_opengl_static_top_yoyo": true
+  },
+  "known_limits": {
+    "author_assets_unavailable": true,
+    "author_interactive_cage_history_unavailable": true,
+    "large_adaptive_yoyo_default_solver_not_converged": true,
+    "physical_validation_not_performed": true
+  },
+  "hashes": {
+    "mode_summary_sha256": "be98da800fe27b96375c7938505b89bf4df33d2c99e2f1c8e0792b26d2163373",
+    "viewer_executable_sha256": "8d4d1456a021355a34b9c2e413c62af07c17f4b7522615ae02a7a408a21465bd",
+    "static_diagnostics_sha256": "bcf8c5ce4551a41973fe96566f46e0cdf24bba9d989fdd4172a9f9921be77f80",
+    "static_viewer_sha256": "f353faf08924b4f0b534625453fe73a4190a986598e5bfd28e3a14ba4e52aad3",
+    "static_cavity_exploded_sha256": "adb82955afa6b007abe8ce6827139eabcdf54194bf5e42084ffb62d8cec5ff88",
+    "top_viewer_sha256": "cf620eb95c83e72fabbf0065afaef81a2fdb56f1a255fa91ba4220654e1481a1",
+    "top_cavity_exploded_sha256": "5c5f3b62d50fc72e091c80913afee88adcee2cfe82e7545c63e307956617da50",
+    "yoyo_viewer_sha256": "cf2b663476fc782555165c73056179b218114b152de4604109803b843fedb8ac",
+    "yoyo_cavity_exploded_sha256": "9b8eef55605f218f0ca5ea08afc89d5dbbb334248d91e4867cd4260ac5a4612f"
+  }
+}

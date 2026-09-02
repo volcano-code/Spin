@@ -1,0 +1,20 @@
+{
+  "schema": "spin-it-2014-artifact-v1",
+  "schema_version": 1,
+  "evidence": "RECONSTRUCTED_ASSET",
+  "status": "CONVERGED",
+  "mode": "SPINNING_TOP",
+  "geometry_sealed": true,
+  "input_hash": "6bb5c1b6385ea6bcb9e9cabf3c6e3aa6228e75b42d4676de9292fab7b46ed167",
+  "trace_hash": "3b48b8248f3beee2db6ace43a255e754afce5a749a575ec9ac7248bd8129b4fa",
+  "geometry_hash": "a771377f39854b7458fd548aebe69ad4c44d42bf58ec3253e6aa4b225851d529",
+  "output_hash": "8bff6e1ea03c0e23be3deee7be01ca1d03ddab69d6deaf309a510541c846e10a",
+  "binary_constraint_infinity_norm": 0,
+  "mass_properties_available": true,
+  "center_of_mass_model": [0,0,1],
+  "target_origin_model": [0,0,0],
+  "target_axes_model": [[1,0,0],[0,1,0],[0,0,1]],
+  "principal_axes_model": [[0,0,1],[0,1,0],[1,0,0]],
+  "final_raw_moments": [7,0,0,7,2.5833333333333326,2.5833333333333326,9.5833333333333339,0,0,0],
+  "adaptive_passes": [{"pass":0,"leaves":8,"fractional":0,"split":0,"merged":0,"partition_hash":"ae525195f0b0caf7819ad3dca8b73c70b8b9470b544c808eae81ec2666692fd4","slqp_trace_hash":"62612b6727be228627e4ffcaa01f1101817366814b572aafd02acb54aa2d0be0"}]
+}

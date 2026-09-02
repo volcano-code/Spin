@@ -1,0 +1,83 @@
+{
+  "all_converged": true,
+  "all_repeats_identical": true,
+  "all_sealed": true,
+  "cases": [
+    {
+      "adaptive_pass_count": 1,
+      "binary_constraint_infinity_norm": 0,
+      "center_of_mass_model": [
+        0,
+        0,
+        0.9833333333333333
+      ],
+      "evidence": "RECONSTRUCTED_ASSET",
+      "files": {
+        "cavity.obj": "9a27b6274821fd724380b89551349a917d64896941d894568a1ac0b3c5db702a",
+        "design.obj": "affdf80e48dc2c9ce64abfb7d64bf9854a0b00c9ef7173a081df9367716a7327",
+        "diagnostics.json": "f9938068515a2db3c10a2469d386c2de2b66b81e88a2b7a76b38e60f601adf7f",
+        "material.obj": "3956e156d8991c203143f795147960bbb1b87e74fb59e1d2fb04ba455b5abefa",
+        "outer.obj": "3956e156d8991c203143f795147960bbb1b87e74fb59e1d2fb04ba455b5abefa"
+      },
+      "geometry_sealed": true,
+      "mode": "STATIC_BALANCE",
+      "output_hash": "ced0495981a376241ea3b557b69ec6f25dcff72dc4073e7d014aa9764e3c4888",
+      "repeat_identical": true,
+      "repeat_output_hash": "ced0495981a376241ea3b557b69ec6f25dcff72dc4073e7d014aa9764e3c4888",
+      "status": "CONVERGED",
+      "wall_seconds_excluded_from_hash": 0.004211051855236292
+    },
+    {
+      "adaptive_pass_count": 1,
+      "binary_constraint_infinity_norm": 0,
+      "center_of_mass_model": [
+        0,
+        0,
+        1
+      ],
+      "evidence": "RECONSTRUCTED_ASSET",
+      "files": {
+        "cavity.obj": "e154a1f0bd8182a4a937fdd6ef3fdc2b80961fab751623a0c8e16d02d916650f",
+        "design.obj": "affdf80e48dc2c9ce64abfb7d64bf9854a0b00c9ef7173a081df9367716a7327",
+        "diagnostics.json": "c0e346325dcddb3728b116c57eb6b51df9999b56b7404471b1006792a995b608",
+        "material.obj": "3956e156d8991c203143f795147960bbb1b87e74fb59e1d2fb04ba455b5abefa",
+        "outer.obj": "3956e156d8991c203143f795147960bbb1b87e74fb59e1d2fb04ba455b5abefa"
+      },
+      "geometry_sealed": true,
+      "mode": "SPINNING_TOP",
+      "output_hash": "8bff6e1ea03c0e23be3deee7be01ca1d03ddab69d6deaf309a510541c846e10a",
+      "repeat_identical": true,
+      "repeat_output_hash": "8bff6e1ea03c0e23be3deee7be01ca1d03ddab69d6deaf309a510541c846e10a",
+      "status": "CONVERGED",
+      "wall_seconds_excluded_from_hash": 0.001225238898769021
+    },
+    {
+      "adaptive_pass_count": 2,
+      "binary_constraint_infinity_norm": 0,
+      "center_of_mass_model": [
+        0,
+        0,
+        0
+      ],
+      "evidence": "RECONSTRUCTED_ASSET",
+      "files": {
+        "cavity.obj": "7ed58a30866eaeeb085a82ee185654a5b8fb64c940ba9698f560ec22c60971df",
+        "design.obj": "a5aefe43c585256e941f083f710ca918c423da871193953c624ebbc51426a1ef",
+        "diagnostics.json": "abc38a47b325171dd920de02ed3b96f5d4104bbe84de2f3db864eb2bb42c92e2",
+        "material.obj": "3901df088c8f5ecab65603e9716064d60c897f5ac8417b272230233d2d822dd6",
+        "outer.obj": "3901df088c8f5ecab65603e9716064d60c897f5ac8417b272230233d2d822dd6"
+      },
+      "geometry_sealed": true,
+      "mode": "YO_YO",
+      "output_hash": "1490aee94693fc30230c6ebb9f423f653f2be0aa5f2736e5464826d83538fcac",
+      "repeat_identical": true,
+      "repeat_output_hash": "1490aee94693fc30230c6ebb9f423f653f2be0aa5f2736e5464826d83538fcac",
+      "status": "CONVERGED",
+      "wall_seconds_excluded_from_hash": 0.0011710161343216896
+    }
+  ],
+  "claim_level": "RECONSTRUCTED_ASSET",
+  "schema": "spin-it-2014-reconstructed-modes-v1",
+  "schema_version": 1,
+  "source_commit": "f95463e6397e885bcadc7302020a026fc7b80540"
+}
