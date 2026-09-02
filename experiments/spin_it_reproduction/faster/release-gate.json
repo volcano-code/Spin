@@ -1,13 +1,19 @@
 {
   "claim_level": "RECONSTRUCTED_ASSET",
   "passed": true,
+  "verified_source_commit": "097cfb8b184afdcf4e5c32e6eeca8977cc85f9d1",
   "requirements": {
     "all_converged_and_sealed": true,
     "byte_identical_scientific_repeats": true,
     "clean_source_at_run_start": true,
-    "four_modes_present": true
+    "four_modes_present": true,
+    "spin_faster_on_full_ctest_134_of_134": true,
+    "spin_faster_off_build_and_contract_2_of_2": true,
+    "real_desktop_opengl_four_modes": true
   },
+  "analytic_summary_sha256": "e080fb44e9d224c9efd8386e98a9a8c0e25158e10b29d5aad90268215450e644",
   "schema": "spin-it-faster-release-gate-v1",
   "schema_version": 1,
-  "summary_sha256": "a6ceed57a8add30de3d625ad40372fea76ee5295add77f6a62fb80bb648a168b"
+  "summary_sha256": "a6ceed57a8add30de3d625ad40372fea76ee5295add77f6a62fb80bb648a168b",
+  "viewer_smoke_report_sha256": "5d77d684bfe7c1a8d0cc63584760e672a3322fa4098c700c2a3e85653c379134"
 }
