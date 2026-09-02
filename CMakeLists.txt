@@ -19,6 +19,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 option(MAKE_IT_STAND_BUILD_VIEWER "Build the interactive GLFW viewer" ON)
 option(MAKE_IT_STAND_BUILD_PYTHON "Build the pybind11 Python extension" OFF)
 option(
+    MAKE_IT_STAND_BUILD_REACHABILITY
+    "Build the HiGHS-backed carving reachability analyzer"
+    ON
+)
+option(
     MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS
     "Run pure-Python paper/beta compatibility contract tests"
     OFF
@@ -65,6 +70,10 @@ set(
 )
 
 find_package(LIBIGL REQUIRED QUIET)
+
+if(MAKE_IT_STAND_BUILD_REACHABILITY)
+    include(HighsDependency)
+endif()
 
 set(MAKE_IT_STAND_CORE_SOURCES
     src/api/BalanceModel.cpp
@@ -283,6 +292,18 @@ endif()
 include(CTest)
 
 if(BUILD_TESTING)
+    add_test(
+        NAME reachability-dependency-contract
+        COMMAND "${CMAKE_COMMAND}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_reachability_dependency.cmake"
+    )
+    set_tests_properties(
+        reachability-dependency-contract
+        PROPERTIES
+            LABELS "spin-it;reachability;build-system"
+            TIMEOUT 60
+    )
+
     add_executable(
         result-view-regression
         tests/result_view_regression.cpp
