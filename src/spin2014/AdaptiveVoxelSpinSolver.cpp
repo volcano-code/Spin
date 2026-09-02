@@ -187,6 +187,15 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
     validateAdaptiveVoxelSpinRequest(request);
     AdaptiveVoxelSpinResult result;
     result.inputHash = computeAdaptiveVoxelSpinRequestHash(request);
+    result.sourceBoundary = voxel::extractMaterialBoundaries(request.domain);
+    const std::shared_ptr<const voxel::VoxelDomain> designDomain =
+        voxel::VoxelDomain::create(
+            request.domain->grid(),
+            request.domain->carveableMask(),
+            request.domain->carveableMask(),
+            request.domain->carveableMask()
+        );
+    result.designBoundary = voxel::extractMaterialBoundaries(designDomain);
     AdaptiveVoxelDomain domain(
         request.domain,
         request.initialLevel,

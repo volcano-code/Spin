@@ -169,7 +169,9 @@ SpinResultViewMetadata loadSpinResultViewMetadata(
 )
 {
     const std::string text = readText(diagnosticsPath);
-    if (stringField(text, "schema") != "spin-it-faster-artifact-v1" ||
+    const std::string schema = stringField(text, "schema");
+    if ((schema != "spin-it-faster-artifact-v1" &&
+         schema != "spin-it-2014-artifact-v1") ||
         text.find("\"geometry_sealed\": true") == std::string::npos)
     {
         throw std::invalid_argument(

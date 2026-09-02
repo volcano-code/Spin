@@ -85,6 +85,12 @@ from .spin import (
     integrate_raw_mass_moments,
     solve_spin_it_faster,
 )
+from .spin2014 import (
+    SPIN_2014_ARTIFACT_SCHEMA,
+    SpinIt2014Request,
+    SpinIt2014Result,
+    solve_spin_it_2014,
+)
 
 __all__ = [
     "BalanceConfig",
@@ -119,6 +125,9 @@ __all__ = [
     "SealedBalanceArtifact",
     "StandingConstraintConfig",
     "SPIN_ARTIFACT_SCHEMA",
+    "SPIN_2014_ARTIFACT_SCHEMA",
+    "SpinIt2014Request",
+    "SpinIt2014Result",
     "SpinItFasterRequest",
     "SpinItFasterResult",
     "SpinIteration",
@@ -152,6 +161,7 @@ __all__ = [
     "run_config",
     "summarize_diagnostics",
     "solve_spin_it_faster",
+    "solve_spin_it_2014",
     "validate_balance_config",
     "validate_config",
     "write_csv_atomic",

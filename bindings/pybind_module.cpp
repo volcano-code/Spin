@@ -1,4 +1,7 @@
 #include "api/BalanceModel.h"
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014
+#include "api/SpinIt2014.h"
+#endif
 
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
@@ -682,6 +685,164 @@ PYBIND11_MODULE(_make_it_stand, module)
         },
         py::arg("request"),
         py::arg("quadric_coefficients")
+    );
+#endif
+
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014
+    #if !MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+    py::enum_<spin::SpinMode>(module, "SpinMode")
+        .value("STATIC_BALANCE", spin::SpinMode::StaticBalance)
+        .value("FIDGET_SPINNER", spin::SpinMode::FidgetSpinner)
+        .value("YO_YO", spin::SpinMode::YoYo)
+        .value("SPINNING_TOP", spin::SpinMode::SpinningTop);
+    #endif
+
+    py::enum_<api::SpinIt2014Evidence>(module, "SpinIt2014Evidence")
+        .value(
+            "PAPER_FORMULA_REPRODUCTION",
+            api::SpinIt2014Evidence::PaperFormulaReproduction
+        )
+        .value(
+            "RECONSTRUCTED_ASSET",
+            api::SpinIt2014Evidence::ReconstructedAsset
+        );
+
+    py::class_<api::SpinIt2014Artifact>(module, "SpinIt2014Artifact")
+        .def_property_readonly("status", &api::SpinIt2014Artifact::statusToken)
+        .def_property_readonly("evidence", &api::SpinIt2014Artifact::evidenceToken)
+        .def_property_readonly("succeeded", &api::SpinIt2014Artifact::succeeded)
+        .def_property_readonly(
+            "geometry_sealed", &api::SpinIt2014Artifact::geometrySealed
+        )
+        .def_property_readonly(
+            "outer_vertices",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXd(value.outerVertices());
+            }
+        )
+        .def_property_readonly(
+            "outer_faces",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXi(value.outerFaces());
+            }
+        )
+        .def_property_readonly(
+            "design_vertices",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXd(value.designVertices());
+            }
+        )
+        .def_property_readonly(
+            "design_faces",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXi(value.designFaces());
+            }
+        )
+        .def_property_readonly(
+            "material_vertices",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXd(value.materialVertices());
+            }
+        )
+        .def_property_readonly(
+            "material_faces",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXi(value.materialFaces());
+            }
+        )
+        .def_property_readonly(
+            "cavity_vertices",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXd(value.cavityVertices());
+            }
+        )
+        .def_property_readonly(
+            "cavity_faces",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return Eigen::MatrixXi(value.cavityFaces());
+            }
+        )
+        .def_property_readonly(
+            "diagnostics_json",
+            [](const api::SpinIt2014Artifact& value)
+            {
+                return std::string(value.diagnosticsJson());
+            }
+        )
+        .def("save_outer_mesh", &api::SpinIt2014Artifact::saveOuterMesh)
+        .def("save_design_mesh", &api::SpinIt2014Artifact::saveDesignMesh)
+        .def("save_material_mesh", &api::SpinIt2014Artifact::saveMaterialMesh)
+        .def("save_cavity_mesh", &api::SpinIt2014Artifact::saveCavityMesh)
+        .def("save_diagnostics", &api::SpinIt2014Artifact::saveDiagnostics);
+
+    module.def(
+        "solve_spin_it_2014",
+        [](
+            const Eigen::Vector3i& dimensions,
+            const Eigen::Vector3d& minimum,
+            const Eigen::Vector3d& maximum,
+            const std::vector<unsigned char>& materialMask,
+            const std::vector<unsigned char>& carveableMask,
+            spin::SpinMode mode,
+            api::SpinIt2014Evidence evidence,
+            int initialLevel,
+            int maximumLevel,
+            int maximumAdaptivePasses,
+            double initialFill,
+            double fractionalEpsilon,
+            double laplacianWeight,
+            double centerOfMassWeight,
+            double boundaryDensity,
+            double interiorDensity
+        )
+        {
+            voxel::GridSpec grid;
+            grid.dimensions = dimensions;
+            grid.minimum = minimum;
+            grid.maximum = maximum;
+            spin2014::AdaptiveVoxelSpinRequest request;
+            request.domain = voxel::VoxelDomain::create(
+                grid, materialMask, {}, carveableMask
+            );
+            request.mode = mode;
+            request.initialLevel = initialLevel;
+            request.maximumLevel = maximumLevel;
+            request.maximumAdaptivePasses = maximumAdaptivePasses;
+            request.initialFill = initialFill;
+            request.fractionalEpsilon = fractionalEpsilon;
+            request.laplacianWeight = laplacianWeight;
+            request.centerOfMassWeight = centerOfMassWeight;
+            request.boundaryDensity = boundaryDensity;
+            request.interiorDensity = interiorDensity;
+            py::gil_scoped_release release;
+            const api::SpinIt2014Artifact artifact =
+                api::solveSpinIt2014(request, evidence);
+            return std::make_unique<api::SpinIt2014Artifact>(artifact);
+        },
+        py::arg("dimensions"),
+        py::arg("minimum"),
+        py::arg("maximum"),
+        py::arg("material_mask"),
+        py::arg("carveable_mask"),
+        py::arg("mode"),
+        py::arg("evidence"),
+        py::arg("initial_level") = 3,
+        py::arg("maximum_level") = 7,
+        py::arg("maximum_adaptive_passes") = 8,
+        py::arg("initial_fill") = 0.5,
+        py::arg("fractional_epsilon") = 0.05,
+        py::arg("laplacian_weight") = 1e-3,
+        py::arg("center_of_mass_weight") = 1.0,
+        py::arg("boundary_density") = 1.0,
+        py::arg("interior_density") = 1.0
     );
 #endif
 

@@ -74,6 +74,8 @@ struct AdaptiveVoxelSpinResult
     physics::RawMassMoments10 finalMoments;
     Eigen::VectorXd binaryConstraints;
     double binaryConstraintInfinityNorm = 0.0;
+    voxel::MaterialBoundaryMesh sourceBoundary;
+    voxel::MaterialBoundaryMesh designBoundary;
     voxel::MaterialBoundaryMesh materialBoundary;
     std::vector<AdaptiveSpinPass> adaptiveTrace;
 };
