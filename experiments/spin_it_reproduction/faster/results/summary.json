@@ -23,14 +23,16 @@
       "passed": true,
       "repeats": [
         {
-          "diagnostics_sha256": "b065fd5625cb637f3fc130da7475720dbe584879997a7da4df5ff5a63072d288",
-          "elapsed_seconds": 0.14269546885043383,
+          "diagnostics_sha256": "6caed733b32185d1b7adef0e0f8cb682d1b290f58d12af59bbdbfb09f63fbf5a",
+          "elapsed_seconds": 0.1371702770702541,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 19,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 20,
             "cavity_vertices": 12,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 20,
             "material_vertices": 12,
@@ -50,14 +52,16 @@
           "trace_hash": "facba1a48f8018d8c1e9e494005c7abca60c452515203b45039445666752593d"
         },
         {
-          "diagnostics_sha256": "b065fd5625cb637f3fc130da7475720dbe584879997a7da4df5ff5a63072d288",
-          "elapsed_seconds": 0.1580088611226529,
+          "diagnostics_sha256": "6caed733b32185d1b7adef0e0f8cb682d1b290f58d12af59bbdbfb09f63fbf5a",
+          "elapsed_seconds": 0.13601937191560864,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 19,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 20,
             "cavity_vertices": 12,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 20,
             "material_vertices": 12,
@@ -102,14 +106,16 @@
       "passed": true,
       "repeats": [
         {
-          "diagnostics_sha256": "4b42b7260be17f5840dd807ede51db1b56b381321aa5f0f81761cdd0cb6a0602",
-          "elapsed_seconds": 0.93729606596753,
+          "diagnostics_sha256": "3e9de96db1288afaff994dc9504446045a35558794788159e153bc10a66c8746",
+          "elapsed_seconds": 0.6254714031238109,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 6,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 772,
             "cavity_vertices": 388,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 792,
             "material_vertices": 396,
@@ -129,14 +135,16 @@
           "trace_hash": "712670a0c0f211fe04eaed1312398a485126bfc23ab950850b8a703e5648eec9"
         },
         {
-          "diagnostics_sha256": "4b42b7260be17f5840dd807ede51db1b56b381321aa5f0f81761cdd0cb6a0602",
-          "elapsed_seconds": 0.9271390438079834,
+          "diagnostics_sha256": "3e9de96db1288afaff994dc9504446045a35558794788159e153bc10a66c8746",
+          "elapsed_seconds": 0.6420506190042943,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 6,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 772,
             "cavity_vertices": 388,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 792,
             "material_vertices": 396,
@@ -181,14 +189,16 @@
       "passed": true,
       "repeats": [
         {
-          "diagnostics_sha256": "723d11b07574ca0c12c0c081d1e008dca80dd33ac18a3326568ea3f874409a7b",
-          "elapsed_seconds": 0.4455125799868256,
+          "diagnostics_sha256": "0ce7b6f6ddb621e14a5c16d66508fa472948f6626e5900c9866bdd8344bb2e21",
+          "elapsed_seconds": 0.30546944215893745,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 5,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 362,
             "cavity_vertices": 183,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 378,
             "material_vertices": 191,
@@ -208,14 +218,16 @@
           "trace_hash": "ea5b2f614db8a83027544fe755d5f1fe56aa063768210aca739639586ff970c5"
         },
         {
-          "diagnostics_sha256": "723d11b07574ca0c12c0c081d1e008dca80dd33ac18a3326568ea3f874409a7b",
-          "elapsed_seconds": 0.4502661721780896,
+          "diagnostics_sha256": "0ce7b6f6ddb621e14a5c16d66508fa472948f6626e5900c9866bdd8344bb2e21",
+          "elapsed_seconds": 0.3082396350800991,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 5,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 362,
             "cavity_vertices": 183,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 378,
             "material_vertices": 191,
@@ -260,14 +272,16 @@
       "passed": true,
       "repeats": [
         {
-          "diagnostics_sha256": "d642ce2fe09428cec6a7fcca7bfe273385719114eb7c5061dd983a2575796784",
-          "elapsed_seconds": 1.244316603988409,
+          "diagnostics_sha256": "806ebfb0557ac4391bf5b32f5c01ac2231c68b50b878d99f0782447f7e730cff",
+          "elapsed_seconds": 0.8569279138464481,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 11,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 540,
             "cavity_vertices": 274,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 528,
             "material_vertices": 266,
@@ -287,14 +301,16 @@
           "trace_hash": "9c2e5b871c0aec8f15f17c10a4a3fb9dabb3e8369d8edfbb88b97debd87af55e"
         },
         {
-          "diagnostics_sha256": "d642ce2fe09428cec6a7fcca7bfe273385719114eb7c5061dd983a2575796784",
-          "elapsed_seconds": 1.2841934270691127,
+          "diagnostics_sha256": "806ebfb0557ac4391bf5b32f5c01ac2231c68b50b878d99f0782447f7e730cff",
+          "elapsed_seconds": 0.8658293311018497,
           "evidence": "RECONSTRUCTED_ASSET",
           "function_evaluations": 11,
           "geometry": {
             "cavity_boundary_valid": true,
             "cavity_faces": 540,
             "cavity_vertices": 274,
+            "design_faces": 12,
+            "design_vertices": 8,
             "material_boundary_valid": true,
             "material_faces": 528,
             "material_vertices": 266,
@@ -319,9 +335,9 @@
     }
   ],
   "claim_level": "RECONSTRUCTED_ASSET",
-  "git_commit": "9cb2f77667c9b8f01b4ede085219d3ec0786920e",
+  "git_commit": "0e5bbb4a40ccfc4c6a046919bd6da064de33c403",
   "manifest_sha256": "6e74a7893b2e0e8bac4f1a3e3b6dc8ec2377011ecf8447baaeb19afe1213916a",
-  "native_extension_sha256": "69d26fb9b265136ccef6a9f43a1527c922d6119b89168175ece65cec5551a7b3",
+  "native_extension_sha256": "2b0b2cb4590575781ee3d3eeebc558b0a10795c40ff2919c001e82cb55ab148b",
   "schema": "spin-it-faster-complex-obj-results-v1",
   "schema_version": 1,
   "worktree_clean_at_start": true,

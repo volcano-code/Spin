@@ -1,0 +1,28 @@
+{
+  "schema": "spin-it-faster-real-desktop-viewer-smoke-v1",
+  "schema_version": 1,
+  "git_commit": "0e5bbb4a40ccfc4c6a046919bd6da064de33c403",
+  "viewer_executable_sha256": "b1a00a1a8dcd716c193ab1eaed56411cb1696571678dd0a925f7cd8814e0987b",
+  "display": ":1",
+  "desktop": "GNOME on the host Xorg session",
+  "virtual_display_used": false,
+  "input_diagnostics_sha256": "6caed733b32185d1b7adef0e0f8cb682d1b290f58d12af59bbdbfb09f63fbf5a",
+  "modes": [
+    {"mode": "STATIC_BALANCE", "window_created": true},
+    {"mode": "FIDGET_SPINNER", "window_created": true},
+    {"mode": "YO_YO", "window_created": true},
+    {"mode": "SPINNING_TOP", "window_created": true}
+  ],
+  "interaction": {
+    "control": "Cavity / signed quadric",
+    "initially_enabled": true,
+    "clicked_on_real_desktop": true,
+    "disabled_state_observed": true
+  },
+  "screenshot": {
+    "path": "static-cavity-off.png",
+    "sha256": "dcd027f10af5a8db99b9c2170cba724362bceff2329ea97f06fbdccbb3479d3d",
+    "description": "Host-desktop window after disabling the red cavity layer; the unchecked control and changed scene are both visible."
+  },
+  "passed": true
+}
