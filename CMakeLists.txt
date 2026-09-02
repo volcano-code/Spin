@@ -161,10 +161,12 @@ set(MAKE_IT_STAND_CORE_HEADERS
 
 if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES
+        src/spin/QuadricCoefficients.cpp
         src/spin/SpinDesignRequest.cpp
         src/spin/SpinMomentProblem.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
+        include/spin/QuadricCoefficients.h
         include/spin/SpinDesignRequest.h
         include/spin/SpinMomentProblem.h
     )
@@ -374,6 +376,31 @@ if(BUILD_TESTING)
         )
         set_tests_properties(
             spin-faster-moment-problems
+            PROPERTIES LABELS "spin-it;spin-it-faster;regression"
+        )
+
+        add_executable(
+            quadric-coefficients-regression
+            tests/quadric_coefficients_regression.cpp
+        )
+        target_compile_features(
+            quadric-coefficients-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            quadric-coefficients-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            quadric-coefficients-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-quadric-coefficients
+            COMMAND "$<TARGET_FILE:quadric-coefficients-regression>"
+        )
+        set_tests_properties(
+            spin-faster-quadric-coefficients
             PROPERTIES LABELS "spin-it;spin-it-faster;regression"
         )
     endif()
