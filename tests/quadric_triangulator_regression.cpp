@@ -210,6 +210,30 @@ int main()
         return fail("explicit paraboloid triangulation is incorrect");
     }
 
+    coefficients.setZero();
+    coefficients(0) = -0.25;
+    coefficients(4) = 1.0;
+    coefficients(5) = 1.0;
+    const Quadric cylinder = Quadric::fromUnnormalized(coefficients);
+    const spin::QuadricTriangulation cylindrical =
+        spin::triangulateQuadric(cylinder, domain);
+    const manufacturing::BoundaryAudit cylinderAudit =
+        manufacturing::auditTriangleBoundary(
+            cylindrical.closedBoundary.vertices,
+            cylindrical.closedBoundary.faces,
+            manufacturing::BoundaryOrientation::OutwardPositive
+        );
+    if (
+        cylindrical.type != spin::QuadricSurfaceType::EllipticCylinder ||
+        cylindrical.boundaryLoopCount != 2 ||
+        cylindrical.interfaceFaceCount != 2 * 96 ||
+        maximumInterfaceResidual(cylindrical, cylinder) > 1e-12 ||
+        !cylinderAudit.strictBoundaryValid()
+    )
+    {
+        return fail("explicit elliptic-cylinder triangulation is incorrect");
+    }
+
     if (
         truncated.hash.size() != 64 ||
         truncated.hash != spin::triangulateQuadric(

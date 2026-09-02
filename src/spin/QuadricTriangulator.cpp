@@ -150,6 +150,21 @@ spin::QuadricSurfaceType classify(
         {
             return spin::QuadricSurfaceType::Paraboloid;
         }
+        std::array<int, 2> nonzero{};
+        int cursor = 0;
+        for (int index = 0; index < 3; ++index)
+        {
+            if (index != nullIndex)
+            {
+                nonzero[cursor++] = index;
+            }
+        }
+        const double first = eigensolver->eigenvalues()(nonzero[0]);
+        const double second = eigensolver->eigenvalues()(nonzero[1]);
+        if (first * second > 0.0)
+        {
+            return spin::QuadricSurfaceType::EllipticCylinder;
+        }
     }
     if (rank != 3)
     {
@@ -570,6 +585,107 @@ spin::QuadricTriangulation triangulateParaboloid(
 }
 
 
+spin::QuadricTriangulation triangulateEllipticCylinder(
+    const spin::QuadricCoefficients10& quadric,
+    const Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d>& eigen,
+    double radius,
+    int resolution
+)
+{
+    int nullIndex = 0;
+    eigen.eigenvalues().cwiseAbs().minCoeff(&nullIndex);
+    std::array<int, 2> nonzero{};
+    int cursor = 0;
+    for (int index = 0; index < 3; ++index)
+    {
+        if (index != nullIndex)
+        {
+            nonzero[cursor++] = index;
+        }
+    }
+    const Eigen::Vector3d n = eigen.eigenvectors().col(nullIndex);
+    const Eigen::Vector3d u = eigen.eigenvectors().col(nonzero[0]);
+    const Eigen::Vector3d v = eigen.eigenvectors().col(nonzero[1]);
+    const double au = eigen.eigenvalues()(nonzero[0]);
+    const double av = eigen.eigenvalues()(nonzero[1]);
+    const double bu = quadric.linearVector().dot(u);
+    const double bv = quadric.linearVector().dot(v);
+    const double centerU = -bu / (2.0 * au);
+    const double centerV = -bv / (2.0 * av);
+    const double shifted = quadric.constant() -
+        bu * bu / (4.0 * au) - bv * bv / (4.0 * av);
+    const double radiusSquaredU = -shifted / au;
+    const double radiusSquaredV = -shifted / av;
+    if (radiusSquaredU <= 0.0 || radiusSquaredV <= 0.0)
+    {
+        throw std::invalid_argument("elliptic cylinder has no real surface");
+    }
+    const double radiusU = std::sqrt(radiusSquaredU);
+    const double radiusV = std::sqrt(radiusSquaredV);
+
+    std::vector<Eigen::Vector3d> vertices;
+    vertices.reserve(static_cast<std::size_t>(2 * resolution + 2));
+    for (int layer = 0; layer < 2; ++layer)
+    {
+        const double height = layer == 0 ? -2.0 * radius : 2.0 * radius;
+        for (int segment = 0; segment < resolution; ++segment)
+        {
+            const double angle =
+                2.0 * std::acos(-1.0) * segment / resolution;
+            vertices.push_back(
+                u * (centerU + radiusU * std::cos(angle)) +
+                v * (centerV + radiusV * std::sin(angle)) +
+                n * height
+            );
+        }
+    }
+    std::vector<Face> faces;
+    faces.reserve(static_cast<std::size_t>(4 * resolution));
+    for (int segment = 0; segment < resolution; ++segment)
+    {
+        const int next = (segment + 1) % resolution;
+        Face first = {segment, next, next + resolution};
+        Face second = {segment, next + resolution, segment + resolution};
+        orientInterfaceFace(quadric, vertices, &first);
+        orientInterfaceFace(quadric, vertices, &second);
+        faces.push_back(first);
+        faces.push_back(second);
+    }
+    const int interfaceVertexCount = static_cast<int>(vertices.size());
+    const int interfaceFaceCount = static_cast<int>(faces.size());
+    const int lowerCenter = static_cast<int>(vertices.size());
+    vertices.push_back(u * centerU + v * centerV - 2.0 * radius * n);
+    const int upperCenter = static_cast<int>(vertices.size());
+    vertices.push_back(u * centerU + v * centerV + 2.0 * radius * n);
+    for (int segment = 0; segment < resolution; ++segment)
+    {
+        const int next = (segment + 1) % resolution;
+        faces.push_back({next, segment, lowerCenter});
+        faces.push_back({
+            segment + resolution,
+            next + resolution,
+            upperCenter
+        });
+    }
+
+    spin::QuadricTriangulation result;
+    result.type = spin::QuadricSurfaceType::EllipticCylinder;
+    result.closedBoundary = matrixMesh(vertices, faces);
+    makePositiveVolume(&result.closedBoundary);
+    result.interfaceVertexCount = interfaceVertexCount;
+    result.interfaceFaceCount = interfaceFaceCount;
+    result.capFaceCount = static_cast<int>(faces.size()) - interfaceFaceCount;
+    result.boundaryLoopCount = 2;
+    result.truncationRadius = radius;
+    result.faceIsCap = Eigen::VectorXi::Ones(
+        static_cast<Eigen::Index>(faces.size())
+    );
+    result.faceIsCap.head(interfaceFaceCount).setZero();
+    result.hash = triangulationHash(result);
+    return result;
+}
+
+
 } // namespace
 
 
@@ -587,6 +703,8 @@ const char* quadricSurfaceTypeToken(QuadricSurfaceType type) noexcept
         return "HYPERBOLOID";
     case QuadricSurfaceType::Paraboloid:
         return "PARABOLOID";
+    case QuadricSurfaceType::EllipticCylinder:
+        return "ELLIPTIC_CYLINDER";
     case QuadricSurfaceType::Plane:
         return "PLANE";
     }
@@ -604,6 +722,7 @@ QuadricTriangulation triangulateQuadric(
         settings.icosphereSubdivisions < 0 ||
         settings.icosphereSubdivisions > 7 ||
         settings.paraboloidGridResolution < 1 ||
+        settings.cylinderAngularResolution < 8 ||
         settings.maximumRadiusDoublings < 0 ||
         !std::isfinite(settings.truncationRadius) ||
         settings.truncationRadius < 0.0
@@ -634,6 +753,15 @@ QuadricTriangulation triangulateQuadric(
             eigen,
             radius,
             settings.paraboloidGridResolution
+        );
+    }
+    if (type == QuadricSurfaceType::EllipticCylinder)
+    {
+        return triangulateEllipticCylinder(
+            quadric,
+            eigen,
+            radius,
+            settings.cylinderAngularResolution
         );
     }
 

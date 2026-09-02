@@ -17,6 +17,7 @@ enum class QuadricSurfaceType
     Ellipsoid,
     Hyperboloid,
     Paraboloid,
+    EllipticCylinder,
     Plane
 };
 
@@ -28,6 +29,7 @@ struct QuadricTriangulationSettings
 {
     int icosphereSubdivisions = 3;
     int paraboloidGridResolution = 24;
+    int cylinderAngularResolution = 96;
     double truncationRadius = 0.0;
     int maximumRadiusDoublings = 8;
 };
