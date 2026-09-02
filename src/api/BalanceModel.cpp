@@ -1734,6 +1734,294 @@ BalanceRunConfig releasedBetaRunConfig()
 }
 
 
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+
+const char* spinItFasterEvidenceToken(SpinItFasterEvidence evidence) noexcept
+{
+    switch (evidence)
+    {
+    case SpinItFasterEvidence::PaperFormulaReproduction:
+        return "PAPER_FORMULA_REPRODUCTION";
+    case SpinItFasterEvidence::ReconstructedAsset:
+        return "RECONSTRUCTED_ASSET";
+    }
+    return "UNKNOWN";
+}
+
+
+struct SpinItFasterArtifact::Storage
+{
+    spin::QuadricHollowingResult result;
+    SpinItFasterEvidence evidence =
+        SpinItFasterEvidence::PaperFormulaReproduction;
+    bool geometrySealed = false;
+    std::string diagnostics;
+};
+
+
+namespace
+{
+
+
+void appendSpinVector(std::ostream& output, const Eigen::VectorXd& values)
+{
+    output << '[';
+    for (Eigen::Index index = 0; index < values.size(); ++index)
+    {
+        if (index != 0) output << ',';
+        appendNumber(output, values(index));
+    }
+    output << ']';
+}
+
+
+std::string spinDiagnosticsJson(
+    const spin::QuadricHollowingResult& result,
+    SpinItFasterEvidence evidence,
+    bool geometrySealed,
+    const manufacturing::BoundaryAudit& materialAudit,
+    const manufacturing::BoundaryAudit& cavityAudit
+)
+{
+    std::ostringstream output;
+    output.imbue(std::locale::classic());
+    output << "{\n"
+           << "  \"schema\": \"spin-it-faster-artifact-v1\",\n"
+           << "  \"schema_version\": 1,\n"
+           << "  \"evidence\": \""
+           << spinItFasterEvidenceToken(evidence) << "\",\n"
+           << "  \"status\": \""
+           << spin::spinSolverStatusToken(result.status) << "\",\n"
+           << "  \"geometry_sealed\": "
+           << jsonBoolean(geometrySealed) << ",\n"
+           << "  \"input_hash\": \"" << result.inputHash << "\",\n"
+           << "  \"geometry_hash\": \"" << result.geometryHash << "\",\n"
+           << "  \"trace_hash\": \"" << result.traceHash << "\",\n"
+           << "  \"output_hash\": \"" << result.outputHash << "\",\n"
+           << "  \"normalized_equation_residual\": ";
+    appendNumber(output, result.normalizedEquationResidual);
+    output << ",\n  \"physical_relative_residual\": ";
+    appendNumber(output, result.physicalRelativeResidual);
+    output << ",\n  \"quadric_coefficients\": ";
+    appendSpinVector(output, result.quadricCoefficients);
+    output << ",\n  \"final_raw_moments\": ";
+    appendSpinVector(output, result.finalMoments.values());
+    output << ",\n  \"geometry\": {"
+           << "\"outer_vertices\":" << result.outerSurface.vertices.rows()
+           << ",\"outer_faces\":" << result.outerSurface.faces.rows()
+           << ",\"material_vertices\":"
+           << result.materialBoundary.vertices.rows()
+           << ",\"material_faces\":"
+           << result.materialBoundary.faces.rows()
+           << ",\"material_boundary_valid\":"
+           << jsonBoolean(materialAudit.strictBoundaryValid())
+           << ",\"cavity_vertices\":"
+           << result.cavityBoundary.vertices.rows()
+           << ",\"cavity_faces\":" << result.cavityBoundary.faces.rows()
+           << ",\"cavity_boundary_valid\":"
+           << jsonBoolean(cavityAudit.strictBoundaryValid()) << "},\n"
+           << "  \"trace\": [";
+    for (std::size_t index = 0; index < result.trace.size(); ++index)
+    {
+        if (index != 0U) output << ',';
+        const spin::SpinIterationTrace& entry = result.trace[index];
+        output << "{\"restart\":" << entry.restart
+               << ",\"iteration\":" << entry.iteration
+               << ",\"function_evaluations\":"
+               << entry.functionEvaluations
+               << ",\"normalized_equation_residual\":";
+        appendNumber(output, entry.normalizedEquationResidual);
+        output << ",\"physical_relative_residual\":";
+        appendNumber(output, entry.physicalRelativeResidual);
+        output << ",\"objective\":";
+        appendNumber(output, entry.objective);
+        output << ",\"multiplier_mu\":";
+        appendNumber(output, entry.multiplierMu);
+        output << ",\"accepted_geodesic_step\":";
+        appendNumber(output, entry.acceptedGeodesicStep);
+        output << ",\"quadric_hash\":\"" << entry.quadricHash
+               << "\",\"material_geometry_hash\":\""
+               << entry.materialGeometryHash
+               << "\",\"material_topology_hash\":\""
+               << entry.materialTopologyHash << "\"}";
+    }
+    output << "]\n}\n";
+    return output.str();
+}
+
+
+} // namespace
+
+
+SpinItFasterArtifact::SpinItFasterArtifact(
+    std::shared_ptr<const Storage> storage
+)
+    : storage_(std::move(storage))
+{
+    if (!storage_)
+    {
+        throw std::invalid_argument("Spin-It Faster artifact storage must exist");
+    }
+}
+
+
+SpinItFasterArtifact::~SpinItFasterArtifact() = default;
+
+
+std::string SpinItFasterArtifact::statusToken() const
+{
+    return spin::spinSolverStatusToken(storage_->result.status);
+}
+
+
+std::string SpinItFasterArtifact::evidenceToken() const
+{
+    return spinItFasterEvidenceToken(storage_->evidence);
+}
+
+
+bool SpinItFasterArtifact::succeeded() const
+{
+    return storage_->result.status == spin::SpinSolverStatus::Converged;
+}
+
+
+bool SpinItFasterArtifact::geometrySealed() const
+{
+    return storage_->geometrySealed;
+}
+
+
+const spin::QuadricHollowingResult& SpinItFasterArtifact::result() const
+{
+    return storage_->result;
+}
+
+
+const Eigen::MatrixXd& SpinItFasterArtifact::outerVertices() const
+{
+    return storage_->result.outerSurface.vertices;
+}
+
+
+const Eigen::MatrixXi& SpinItFasterArtifact::outerFaces() const
+{
+    return storage_->result.outerSurface.faces;
+}
+
+
+const Eigen::MatrixXd& SpinItFasterArtifact::materialVertices() const
+{
+    return storage_->result.materialBoundary.vertices;
+}
+
+
+const Eigen::MatrixXi& SpinItFasterArtifact::materialFaces() const
+{
+    return storage_->result.materialBoundary.faces;
+}
+
+
+const Eigen::MatrixXd& SpinItFasterArtifact::cavityVertices() const
+{
+    return storage_->result.cavityBoundary.vertices;
+}
+
+
+const Eigen::MatrixXi& SpinItFasterArtifact::cavityFaces() const
+{
+    return storage_->result.cavityBoundary.faces;
+}
+
+
+const std::string& SpinItFasterArtifact::diagnosticsJson() const
+{
+    return storage_->diagnostics;
+}
+
+
+void SpinItFasterArtifact::saveOuterMesh(const std::string& filename) const
+{
+    writeAtomicBytes(
+        filename,
+        serializeDiagnosticObj(outerVertices(), outerFaces())
+    );
+}
+
+
+void SpinItFasterArtifact::saveMaterialMesh(const std::string& filename) const
+{
+    writeAtomicBytes(
+        filename,
+        serializeDiagnosticObj(materialVertices(), materialFaces())
+    );
+}
+
+
+void SpinItFasterArtifact::saveCavityMesh(const std::string& filename) const
+{
+    writeAtomicBytes(
+        filename,
+        serializeDiagnosticObj(cavityVertices(), cavityFaces())
+    );
+}
+
+
+void SpinItFasterArtifact::saveDiagnostics(const std::string& filename) const
+{
+    writeAtomicBytes(filename, diagnosticsJson());
+}
+
+
+SpinItFasterArtifact solveSpinItFaster(
+    const spin::SpinDesignRequest& request,
+    SpinItFasterEvidence evidence,
+    const spin::QuadricMomentEvaluatorSettings& evaluatorSettings,
+    const std::vector<spin::QuadricCoefficients10>& initialGuesses
+)
+{
+    spin::QuadricHollowingResult result = spin::solveQuadricHollowing(
+        request,
+        evaluatorSettings,
+        initialGuesses
+    );
+    const manufacturing::BoundaryAudit materialAudit =
+        manufacturing::auditTriangleBoundary(
+            result.materialBoundary.vertices,
+            result.materialBoundary.faces,
+            manufacturing::BoundaryOrientation::OutwardPositive,
+            result.status != spin::SpinSolverStatus::Converged
+        );
+    const manufacturing::BoundaryAudit cavityAudit =
+        manufacturing::auditTriangleBoundary(
+            result.cavityBoundary.vertices,
+            result.cavityBoundary.faces,
+            manufacturing::BoundaryOrientation::OutwardPositive,
+            result.status != spin::SpinSolverStatus::Converged
+        );
+    const bool geometrySealed =
+        result.status == spin::SpinSolverStatus::Converged &&
+        materialAudit.strictBoundaryValid() &&
+        cavityAudit.strictBoundaryValid() &&
+        result.inputHash.size() == 64U && result.geometryHash.size() == 64U &&
+        result.traceHash.size() == 64U && result.outputHash.size() == 64U;
+    auto storage = std::make_shared<SpinItFasterArtifact::Storage>();
+    storage->result = std::move(result);
+    storage->evidence = evidence;
+    storage->geometrySealed = geometrySealed;
+    storage->diagnostics = spinDiagnosticsJson(
+        storage->result,
+        evidence,
+        geometrySealed,
+        materialAudit,
+        cavityAudit
+    );
+    return SpinItFasterArtifact(std::move(storage));
+}
+
+#endif
+
+
 struct BalanceResult::Storage
 {
     optimization::AlternatingBalanceOptimizationResult result;

@@ -128,6 +128,7 @@ struct QuadricHollowingResult
     std::string diagnostic;
     std::string inputHash;
     std::string geometryHash;
+    std::string traceHash;
     std::string outputHash;
     Eigen::Matrix<double, 10, 1> quadricCoefficients =
         Eigen::Matrix<double, 10, 1>::Zero();

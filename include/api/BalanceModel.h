@@ -6,6 +6,9 @@
 #if MAKE_IT_STAND_HAS_REACHABILITY
 #include "reachability/CarvingReachability.h"
 #endif
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+#include "spin/QuadricHollowingSolver.h"
+#endif
 
 #include <Eigen/Core>
 
@@ -16,6 +19,72 @@
 
 namespace api
 {
+
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+
+enum class SpinItFasterEvidence
+{
+    PaperFormulaReproduction,
+    ReconstructedAsset
+};
+
+
+const char* spinItFasterEvidenceToken(SpinItFasterEvidence evidence) noexcept;
+
+
+/** Immutable, hash-bound result artifact for the Spin-It Faster solver. */
+class SpinItFasterArtifact
+{
+public:
+    SpinItFasterArtifact(const SpinItFasterArtifact&) noexcept = default;
+    SpinItFasterArtifact(SpinItFasterArtifact&&) = delete;
+    SpinItFasterArtifact& operator=(const SpinItFasterArtifact&) noexcept =
+        default;
+    SpinItFasterArtifact& operator=(SpinItFasterArtifact&&) = delete;
+    ~SpinItFasterArtifact();
+
+    std::string statusToken() const;
+    std::string evidenceToken() const;
+    bool succeeded() const;
+    bool geometrySealed() const;
+
+    const spin::QuadricHollowingResult& result() const;
+    const Eigen::MatrixXd& outerVertices() const;
+    const Eigen::MatrixXi& outerFaces() const;
+    const Eigen::MatrixXd& materialVertices() const;
+    const Eigen::MatrixXi& materialFaces() const;
+    const Eigen::MatrixXd& cavityVertices() const;
+    const Eigen::MatrixXi& cavityFaces() const;
+    const std::string& diagnosticsJson() const;
+
+    void saveOuterMesh(const std::string& filename) const;
+    void saveMaterialMesh(const std::string& filename) const;
+    void saveCavityMesh(const std::string& filename) const;
+    void saveDiagnostics(const std::string& filename) const;
+
+private:
+    struct Storage;
+    std::shared_ptr<const Storage> storage_;
+
+    explicit SpinItFasterArtifact(std::shared_ptr<const Storage> storage);
+
+    friend SpinItFasterArtifact solveSpinItFaster(
+        const spin::SpinDesignRequest&,
+        SpinItFasterEvidence,
+        const spin::QuadricMomentEvaluatorSettings&,
+        const std::vector<spin::QuadricCoefficients10>&
+    );
+};
+
+
+SpinItFasterArtifact solveSpinItFaster(
+    const spin::SpinDesignRequest& request,
+    SpinItFasterEvidence evidence,
+    const spin::QuadricMomentEvaluatorSettings& evaluatorSettings = {},
+    const std::vector<spin::QuadricCoefficients10>& initialGuesses = {}
+);
+
+#endif
 
 
 /** Cell-centered, canonical x-fast material occupancy import. */

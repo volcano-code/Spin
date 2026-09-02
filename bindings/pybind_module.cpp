@@ -267,6 +267,50 @@ Eigen::MatrixXd weightsFromPython(const py::handle& value)
 }
 
 
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+
+physics::RawMassMoments10 rawMomentsFromVector(const Eigen::VectorXd& values)
+{
+    if (values.size() != physics::RawMassMoments10::Count ||
+        !values.allFinite())
+    {
+        throw py::value_error("raw moments must contain 10 finite values");
+    }
+    MassMoments moments;
+    moments.mass = values(0);
+    moments.firstMoment = values.segment<3>(1);
+    moments.secondMoment <<
+        values(4), values(9), values(8),
+        values(9), values(5), values(7),
+        values(8), values(7), values(6);
+    return physics::RawMassMoments10::fromMassMoments(moments);
+}
+
+
+std::vector<spin::QuadricCoefficients10> quadricsFromRows(
+    const Eigen::MatrixXd& rows
+)
+{
+    if (rows.cols() != 10 || !rows.allFinite())
+    {
+        throw py::value_error(
+            "initial quadrics must have shape (N, 10) with finite values"
+        );
+    }
+    std::vector<spin::QuadricCoefficients10> result;
+    result.reserve(static_cast<std::size_t>(rows.rows()));
+    for (Eigen::Index row = 0; row < rows.rows(); ++row)
+    {
+        result.push_back(spin::QuadricCoefficients10::fromUnnormalized(
+            rows.row(row).transpose()
+        ));
+    }
+    return result;
+}
+
+#endif
+
+
 } // namespace
 
 
@@ -403,6 +447,201 @@ PYBIND11_MODULE(_make_it_stand, module)
         .value("ASCII_STL", manufacturing::ManufacturingMeshFormat::AsciiStl)
         .value("BINARY_STL", manufacturing::ManufacturingMeshFormat::BinaryStl)
         .export_values();
+
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+    py::enum_<spin::SpinMode>(module, "SpinMode")
+        .value("STATIC_BALANCE", spin::SpinMode::StaticBalance)
+        .value("FIDGET_SPINNER", spin::SpinMode::FidgetSpinner)
+        .value("YO_YO", spin::SpinMode::YoYo)
+        .value("SPINNING_TOP", spin::SpinMode::SpinningTop);
+
+    py::enum_<spin::StaticObjective>(module, "StaticObjective")
+        .value("MAXIMUM_MASS", spin::StaticObjective::MaximumMass)
+        .value("LOWER_CENTER_OF_MASS", spin::StaticObjective::LowerCenterOfMass);
+
+    py::enum_<api::SpinItFasterEvidence>(module, "SpinItFasterEvidence")
+        .value(
+            "PAPER_FORMULA_REPRODUCTION",
+            api::SpinItFasterEvidence::PaperFormulaReproduction
+        )
+        .value(
+            "RECONSTRUCTED_ASSET",
+            api::SpinItFasterEvidence::ReconstructedAsset
+        );
+
+    py::class_<spin::TriangleMesh>(module, "SpinTriangleMesh")
+        .def(py::init<>())
+        .def_readwrite("vertices", &spin::TriangleMesh::vertices)
+        .def_readwrite("faces", &spin::TriangleMesh::faces);
+
+    py::class_<spin::SpinTargetFrame>(module, "SpinTargetFrame")
+        .def(py::init<>())
+        .def_readwrite("origin", &spin::SpinTargetFrame::origin)
+        .def_readwrite("axes", &spin::SpinTargetFrame::axes);
+
+    py::class_<spin::SpinSolverSettings>(module, "SpinSolverSettings")
+        .def(py::init<>())
+        .def_readwrite("maximum_iterations", &spin::SpinSolverSettings::maximumIterations)
+        .def_readwrite("maximum_restarts", &spin::SpinSolverSettings::maximumRestarts)
+        .def_readwrite(
+            "maximum_function_evaluations_per_restart",
+            &spin::SpinSolverSettings::maximumFunctionEvaluationsPerRestart
+        )
+        .def_readwrite("equation_tolerance", &spin::SpinSolverSettings::equationTolerance)
+        .def_readwrite(
+            "physical_relative_tolerance",
+            &spin::SpinSolverSettings::physicalRelativeTolerance
+        )
+        .def_readwrite("line_search_reduction", &spin::SpinSolverSettings::lineSearchReduction)
+        .def_readwrite("maximum_geodesic_step", &spin::SpinSolverSettings::maximumGeodesicStep)
+        .def_readwrite("deterministic_seed", &spin::SpinSolverSettings::deterministicSeed);
+
+    py::class_<physics::RawMassMoments10>(module, "RawMassMoments10")
+        .def(py::init<>())
+        .def_static("from_values", &rawMomentsFromVector)
+        .def_property_readonly(
+            "values",
+            [](const physics::RawMassMoments10& moments)
+            {
+                return Eigen::VectorXd(moments.values());
+            }
+        );
+
+    py::class_<spin::SpinDesignRequest>(module, "SpinDesignRequest")
+        .def(py::init<>())
+        .def_readwrite("outer_surface", &spin::SpinDesignRequest::outerSurface)
+        .def_readwrite("design_domain", &spin::SpinDesignRequest::designDomain)
+        .def_readwrite("fixed_shell_moments", &spin::SpinDesignRequest::fixedShellMoments)
+        .def_readwrite("target_frame", &spin::SpinDesignRequest::targetFrame)
+        .def_readwrite("mode", &spin::SpinDesignRequest::mode)
+        .def_readwrite("static_objective", &spin::SpinDesignRequest::staticObjective)
+        .def_readwrite("material_density", &spin::SpinDesignRequest::materialDensity)
+        .def_readwrite(
+            "original_units_per_normalized_unit",
+            &spin::SpinDesignRequest::originalUnitsPerNormalizedUnit
+        )
+        .def_readwrite(
+            "minimum_wall_thickness",
+            &spin::SpinDesignRequest::minimumWallThickness
+        )
+        .def_readwrite("center_of_mass_weight", &spin::SpinDesignRequest::centerOfMassWeight)
+        .def_readwrite("settings", &spin::SpinDesignRequest::settings);
+
+    py::class_<api::SpinItFasterArtifact>(module, "SpinItFasterArtifact")
+        .def_property_readonly("status", &api::SpinItFasterArtifact::statusToken)
+        .def_property_readonly("evidence", &api::SpinItFasterArtifact::evidenceToken)
+        .def_property_readonly("succeeded", &api::SpinItFasterArtifact::succeeded)
+        .def_property_readonly("geometry_sealed", &api::SpinItFasterArtifact::geometrySealed)
+        .def_property_readonly(
+            "outer_vertices",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXd(value.outerVertices());
+            }
+        )
+        .def_property_readonly(
+            "outer_faces",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXi(value.outerFaces());
+            }
+        )
+        .def_property_readonly(
+            "material_vertices",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXd(value.materialVertices());
+            }
+        )
+        .def_property_readonly(
+            "material_faces",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXi(value.materialFaces());
+            }
+        )
+        .def_property_readonly(
+            "cavity_vertices",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXd(value.cavityVertices());
+            }
+        )
+        .def_property_readonly(
+            "cavity_faces",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return Eigen::MatrixXi(value.cavityFaces());
+            }
+        )
+        .def_property_readonly(
+            "diagnostics_json",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                return std::string(value.diagnosticsJson());
+            }
+        )
+        .def("save_outer_mesh", &api::SpinItFasterArtifact::saveOuterMesh)
+        .def("save_material_mesh", &api::SpinItFasterArtifact::saveMaterialMesh)
+        .def("save_cavity_mesh", &api::SpinItFasterArtifact::saveCavityMesh)
+        .def("save_diagnostics", &api::SpinItFasterArtifact::saveDiagnostics);
+
+    module.def(
+        "solve_spin_it_faster",
+        [](
+            const spin::SpinDesignRequest& request,
+            api::SpinItFasterEvidence evidence,
+            const Eigen::MatrixXd& initialQuadrics
+        )
+        {
+            const std::vector<spin::QuadricCoefficients10> initial =
+                quadricsFromRows(initialQuadrics);
+            py::gil_scoped_release release;
+            const api::SpinItFasterArtifact artifact =
+                api::solveSpinItFaster(request, evidence, {}, initial);
+            return std::make_unique<api::SpinItFasterArtifact>(artifact);
+        },
+        py::arg("request"),
+        py::arg("evidence"),
+        py::arg("initial_quadrics") = Eigen::MatrixXd(0, 10)
+    );
+
+    module.def(
+        "evaluate_spin_it_faster_quadric",
+        [](
+            const spin::SpinDesignRequest& request,
+            const Eigen::VectorXd& coefficients
+        )
+        {
+            if (coefficients.size() != 10 || !coefficients.allFinite())
+            {
+                throw py::value_error(
+                    "quadric coefficients must contain 10 finite values"
+                );
+            }
+            const spin::QuadricMomentEvaluation evaluation =
+                spin::evaluateQuadricMaterialMoments(
+                    request,
+                    spin::QuadricCoefficients10::fromUnnormalized(coefficients)
+                );
+            py::dict result;
+            result["variable_raw_moments"] =
+                Eigen::VectorXd(evaluation.variableMomentsTarget.values());
+            result["total_raw_moments"] =
+                Eigen::VectorXd(evaluation.totalMomentsTarget.values());
+            result["geometry_hash"] = evaluation.geometryHash;
+            result["topology_hash"] = evaluation.topologyHash;
+            result["interface_type"] = std::string(
+                spin::quadricSurfaceTypeToken(
+                    evaluation.quadricTriangulation.type
+                )
+            );
+            return result;
+        },
+        py::arg("request"),
+        py::arg("quadric_coefficients")
+    );
+#endif
 
 #if MAKE_IT_STAND_HAS_REACHABILITY
     py::class_<reachability::ReachabilityCertificate>(

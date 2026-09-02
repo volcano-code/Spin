@@ -234,7 +234,7 @@ std::string hollowingOutputHash(
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
     stream << "QuadricHollowingResult-v1;" << result.inputHash << ';'
-           << result.geometryHash << ';'
+           << result.geometryHash << ';' << result.traceHash << ';'
            << spin::spinSolverStatusToken(result.status) << ';'
            << std::hexfloat << result.normalizedEquationResidual << ';'
            << result.physicalRelativeResidual << ';';
@@ -586,6 +586,7 @@ QuadricHollowingResult solveQuadricHollowing(
     result.normalizedEquationResidual = solved.normalizedEquationResidual;
     result.physicalRelativeResidual = solved.physicalRelativeResidual;
     result.trace = solved.trace;
+    result.traceHash = solved.traceHash;
     if (solved.quadric.has_value())
     {
         result.quadricCoefficients = solved.quadric->values();
@@ -599,7 +600,22 @@ QuadricHollowingResult solveQuadricHollowing(
                 );
             result.finalMoments = finalEvaluation.totalMomentsTarget;
             result.materialBoundary = finalEvaluation.materialBoundary;
-            result.geometryHash = finalEvaluation.geometryHash;
+            const QuadricCoefficients10 complement =
+                QuadricCoefficients10::fromUnnormalized(
+                    -solved.quadric->values()
+                );
+            const QuadricMomentEvaluation cavityEvaluation =
+                evaluateQuadricMaterialMoments(
+                    request,
+                    complement,
+                    evaluatorSettings
+                );
+            result.cavityBoundary = cavityEvaluation.materialBoundary;
+            result.geometryHash = manufacturing::computeContentSha256(
+                std::string("QuadricHollowingGeometry-v2;") +
+                result.inputHash + ';' + finalEvaluation.geometryHash + ';' +
+                cavityEvaluation.geometryHash
+            );
         }
         catch (const std::exception& error)
         {

@@ -896,6 +896,23 @@ if(BUILD_TESTING)
     )
 
     if(MAKE_IT_STAND_BUILD_PYTHON)
+        if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+            add_test(
+                NAME spin-faster-python-api
+                COMMAND "${Python3_EXECUTABLE}" -m unittest
+                    discover
+                    -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+                    -p "test_spin_it_faster.py"
+                    -v
+            )
+            set_tests_properties(
+                spin-faster-python-api
+                PROPERTIES
+                    LABELS "spin-it;spin-it-faster;python;bindings;regression"
+                    TIMEOUT 180
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+            )
+        endif()
         if(MAKE_IT_STAND_BUILD_REACHABILITY)
             add_test(
                 NAME reachability-python-bindings

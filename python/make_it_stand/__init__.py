@@ -74,6 +74,16 @@ from .stability_oracle import (
     evaluate_quasi_static_tilt,
     evaluate_tilt_azimuths,
 )
+from .spin import (
+    SPIN_ARTIFACT_SCHEMA,
+    SpinItFasterRequest,
+    SpinItFasterResult,
+    SpinIteration,
+    SpinQuadricEvaluation,
+    SpinSolverConfig,
+    evaluate_spin_it_faster_quadric,
+    solve_spin_it_faster,
+)
 
 __all__ = [
     "BalanceConfig",
@@ -107,6 +117,12 @@ __all__ = [
     "RunConfig",
     "SealedBalanceArtifact",
     "StandingConstraintConfig",
+    "SPIN_ARTIFACT_SCHEMA",
+    "SpinItFasterRequest",
+    "SpinItFasterResult",
+    "SpinIteration",
+    "SpinQuadricEvaluation",
+    "SpinSolverConfig",
     "SupportConfig",
     "SupportFlattening",
     "SuspensionConfig",
@@ -121,6 +137,7 @@ __all__ = [
     "diagnostics_trace_rows",
     "evaluate_quasi_static_tilt",
     "evaluate_tilt_azimuths",
+    "evaluate_spin_it_faster_quadric",
     "load_config",
     "load_released_beta_archive",
     "load_sealed_pybullet_entry",
@@ -132,6 +149,7 @@ __all__ = [
     "run_batch",
     "run_config",
     "summarize_diagnostics",
+    "solve_spin_it_faster",
     "validate_balance_config",
     "validate_config",
     "write_csv_atomic",

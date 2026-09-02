@@ -120,7 +120,9 @@ bool solveAndCheck(
         result.normalizedEquationResidual > 1e-12 ||
         result.physicalRelativeResidual > 1e-6 ||
         result.materialBoundary.faces.rows() == 0 ||
-        result.geometryHash.size() != 64 || result.outputHash.size() != 64 ||
+        result.cavityBoundary.faces.rows() == 0 ||
+        result.geometryHash.size() != 64 || result.traceHash.size() != 64 ||
+        result.outputHash.size() != 64 ||
         result.outputHash != repeated.outputHash ||
         !result.quadricCoefficients.isApprox(expected.values(), 1e-13) ||
         result.outerSurface.vertices != request.outerSurface.vertices ||
@@ -132,6 +134,7 @@ bool solveAndCheck(
                   << " residual=" << result.normalizedEquationResidual
                   << " physical=" << result.physicalRelativeResidual
                   << " faces=" << result.materialBoundary.faces.rows()
+                  << " cavity_faces=" << result.cavityBoundary.faces.rows()
                   << " geometry_hash=" << result.geometryHash.size()
                   << " output_hash=" << result.outputHash.size()
                   << " repeat_equal="
