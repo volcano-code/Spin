@@ -2,6 +2,7 @@
 
 #include <Highs.h>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -71,6 +72,27 @@ LinearSystem buildPolygonSystem(
     return system;
 }
 
+LinearSystem appendUnitBounds(const LinearSystem& polygonSystem)
+{
+    const Eigen::Index polygonRows = polygonSystem.C.rows();
+    const Eigen::Index cellCount = polygonSystem.C.cols();
+    LinearSystem system;
+    system.C = Eigen::MatrixXd::Zero(
+        polygonRows + 2 * cellCount,
+        cellCount
+    );
+    system.d = Eigen::VectorXd::Zero(system.C.rows());
+    system.C.topRows(polygonRows) = polygonSystem.C;
+    system.d.head(polygonRows) = polygonSystem.d;
+    for (Eigen::Index column = 0; column < cellCount; ++column)
+    {
+        system.C(polygonRows + column, column) = 1.0;
+        system.d(polygonRows + column) = 1.0;
+        system.C(polygonRows + cellCount + column, column) = -1.0;
+    }
+    return system;
+}
+
 LpResult solveLp(
     const Eigen::MatrixXd& matrix,
     const Eigen::VectorXd& rowLower,
@@ -104,6 +126,9 @@ LpResult solveLp(
         rowUpper.data() + rowUpper.size()
     );
     model.lp_.a_matrix_.format_ = MatrixFormat::kColwise;
+    // HighsSparseMatrix starts with a sentinel zero. Rebuild the complete
+    // start array here; appending to the default would shift every column.
+    model.lp_.a_matrix_.start_.clear();
     model.lp_.a_matrix_.start_.reserve(
         static_cast<std::size_t>(matrix.cols() + 1)
     );
@@ -328,6 +353,43 @@ void validateInput(const CarvingReachabilityInput& input)
     }
 }
 
+ReachabilityCertificate validateFarkasCertificate(
+    const Eigen::MatrixXd& C,
+    const Eigen::VectorXd& d,
+    const Eigen::VectorXd& weights,
+    double tolerance
+)
+{
+    if (
+        C.rows() == 0 ||
+        C.rows() != d.size() ||
+        C.rows() != weights.size() ||
+        !finite(C) ||
+        !d.array().isFinite().all() ||
+        !weights.array().isFinite().all() ||
+        !(tolerance > 0.0) ||
+        !std::isfinite(tolerance)
+    )
+    {
+        throw std::invalid_argument("invalid Farkas certificate inputs");
+    }
+
+    ReachabilityCertificate certificate;
+    certificate.weights = weights;
+    certificate.minimumWeight = weights.minCoeff();
+    certificate.normalizationResidual = std::abs(weights.sum() - 1.0);
+    certificate.stationarityInfinityNorm = C.cols() == 0
+        ? 0.0
+        : (C.transpose() * weights).lpNorm<Eigen::Infinity>();
+    certificate.contradiction = d.dot(weights);
+    certificate.valid =
+        certificate.minimumWeight >= -tolerance &&
+        certificate.normalizationResidual <= tolerance &&
+        certificate.stationarityInfinityNorm <= tolerance &&
+        certificate.contradiction < -tolerance;
+    return certificate;
+}
+
 const char* toString(ReachabilityStatus status) noexcept
 {
     switch (status)
@@ -392,6 +454,55 @@ CarvingReachabilityResult CarvingReachabilityAnalyzer::analyze(
             result.status = ReachabilityStatus::RelaxationReachable;
         }
         return result;
+    }
+    if (
+        primal.apiSucceeded &&
+        primal.status == HighsModelStatus::kInfeasible
+    )
+    {
+        const LinearSystem fullSystem = appendUnitBounds(system);
+        const Eigen::Index proofRows = fullSystem.C.rows();
+        Eigen::MatrixXd certificateMatrix = Eigen::MatrixXd::Zero(
+            cellCount + 1,
+            proofRows
+        );
+        if (cellCount > 0)
+        {
+            certificateMatrix.topRows(cellCount) =
+                fullSystem.C.transpose();
+        }
+        certificateMatrix.row(cellCount).setOnes();
+        Eigen::VectorXd certificateRows = Eigen::VectorXd::Zero(
+            cellCount + 1
+        );
+        certificateRows(cellCount) = 1.0;
+        const LpResult certificateLp = solveLp(
+            certificateMatrix,
+            certificateRows,
+            certificateRows,
+            fullSystem.d,
+            Eigen::VectorXd::Zero(proofRows),
+            Eigen::VectorXd::Constant(proofRows, 1e30)
+        );
+        result.certificateSolverStatus = certificateLp.statusText;
+        if (
+            certificateLp.apiSucceeded &&
+            certificateLp.status == HighsModelStatus::kOptimal &&
+            certificateLp.values.size() == proofRows
+        )
+        {
+            result.certificate = validateFarkasCertificate(
+                fullSystem.C,
+                fullSystem.d,
+                certificateLp.values,
+                input.feasibilityTolerance
+            );
+            if (result.certificate.valid)
+            {
+                result.status = ReachabilityStatus::ProvenUnreachable;
+                return result;
+            }
+        }
     }
     result.status = ReachabilityStatus::Indeterminate;
     return result;
