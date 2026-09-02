@@ -421,6 +421,28 @@ int runExhaustive()
     return EXIT_SUCCESS;
 }
 
+int runSparseCertificate()
+{
+    constexpr int cellCount = 512;
+    const reachability::CarvingReachabilityResult result =
+        reachability::CarvingReachabilityAnalyzer().analyze(
+            unreachableFixedShellFixture(cellCount)
+        );
+    const std::size_t linearBound =
+        8U * static_cast<std::size_t>(cellCount) + 4U;
+    if (
+        result.status != reachability::ReachabilityStatus::ProvenUnreachable ||
+        result.certificateSystemNonzeroCount > linearBound
+    )
+    {
+        return fail(
+            "sparse-certificate",
+            "Farkas system did not retain linear sparse storage"
+        );
+    }
+    return EXIT_SUCCESS;
+}
+
 } // namespace
 
 int main(int argc, char** argv)
@@ -439,6 +461,7 @@ int main(int argc, char** argv)
         if (scenario == "infeasible") return runInfeasible();
         if (scenario == "certificate") return runCertificate();
         if (scenario == "exhaustive") return runExhaustive();
+        if (scenario == "sparse-certificate") return runSparseCertificate();
     }
     catch (const std::exception& error)
     {

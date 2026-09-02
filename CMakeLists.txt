@@ -365,6 +365,11 @@ if(BUILD_TESTING)
             COMMAND "$<TARGET_FILE:carving-reachability-regression>"
                 exhaustive
         )
+        add_test(
+            NAME reachability-sparse-certificate
+            COMMAND "$<TARGET_FILE:carving-reachability-regression>"
+                sparse-certificate
+        )
         set_tests_properties(
             reachability-input
             reachability-already-safe
@@ -372,6 +377,7 @@ if(BUILD_TESTING)
             reachability-infeasible
             reachability-certificate
             reachability-exhaustive
+            reachability-sparse-certificate
             PROPERTIES
                 LABELS "spin-it;reachability;regression"
                 TIMEOUT 15

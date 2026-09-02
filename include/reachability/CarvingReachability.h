@@ -61,6 +61,7 @@ struct CarvingReachabilityResult
     Eigen::Vector2d finalCenter2D = Eigen::Vector2d::Zero();
     double maximumPrimalViolation = 0.0;
     ReachabilityCertificate certificate;
+    std::size_t certificateSystemNonzeroCount = 0;
     std::string primalSolverStatus;
     std::string certificateSolverStatus;
 };

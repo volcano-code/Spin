@@ -30,6 +30,7 @@ struct LpResult
     std::string statusText;
     Eigen::VectorXd values;
     bool apiSucceeded = false;
+    std::size_t matrixNonzeroCount = 0;
 };
 
 std::string inputHash(const CarvingReachabilityInput& input)
@@ -102,25 +103,22 @@ LinearSystem buildPolygonSystem(
     return system;
 }
 
-LinearSystem appendUnitBounds(const LinearSystem& polygonSystem)
+bool configureSolver(Highs& solver)
 {
-    const Eigen::Index polygonRows = polygonSystem.C.rows();
-    const Eigen::Index cellCount = polygonSystem.C.cols();
-    LinearSystem system;
-    system.C = Eigen::MatrixXd::Zero(
-        polygonRows + 2 * cellCount,
-        cellCount
-    );
-    system.d = Eigen::VectorXd::Zero(system.C.rows());
-    system.C.topRows(polygonRows) = polygonSystem.C;
-    system.d.head(polygonRows) = polygonSystem.d;
-    for (Eigen::Index column = 0; column < cellCount; ++column)
-    {
-        system.C(polygonRows + column, column) = 1.0;
-        system.d(polygonRows + column) = 1.0;
-        system.C(polygonRows + cellCount + column, column) = -1.0;
-    }
-    return system;
+    bool optionsOk = true;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("output_flag", false) == HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("presolve", "on") == HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("threads", static_cast<HighsInt>(1)) ==
+            HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("parallel", "off") == HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("random_seed", static_cast<HighsInt>(0)) ==
+            HighsStatus::kOk;
+    return optionsOk;
 }
 
 LpResult solveLp(
@@ -183,21 +181,10 @@ LpResult solveLp(
         static_cast<HighsInt>(model.lp_.a_matrix_.value_.size())
     );
 
+    result.matrixNonzeroCount = model.lp_.a_matrix_.value_.size();
     Highs solver;
-    bool optionsOk = true;
-    optionsOk = optionsOk &&
-        solver.setOptionValue("output_flag", false) == HighsStatus::kOk;
-    optionsOk = optionsOk &&
-        solver.setOptionValue("presolve", "on") == HighsStatus::kOk;
-    optionsOk = optionsOk &&
-        solver.setOptionValue("threads", static_cast<HighsInt>(1)) ==
-            HighsStatus::kOk;
-    optionsOk = optionsOk &&
-        solver.setOptionValue("parallel", "off") == HighsStatus::kOk;
-    optionsOk = optionsOk &&
-        solver.setOptionValue("random_seed", static_cast<HighsInt>(0)) ==
-            HighsStatus::kOk;
-    if (!optionsOk || solver.passModel(model) == HighsStatus::kError)
+    if (!configureSolver(solver) ||
+        solver.passModel(model) == HighsStatus::kError)
     {
         result.statusText = "API_ERROR";
         return result;
@@ -215,6 +202,157 @@ LpResult solveLp(
         );
     }
     return result;
+}
+
+LpResult solveBoundedFarkasLp(const LinearSystem& polygonSystem)
+{
+    LpResult result;
+    const Eigen::Index polygonRows = polygonSystem.C.rows();
+    const Eigen::Index cellCount = polygonSystem.C.cols();
+    const Eigen::Index proofVariables = polygonRows + 2 * cellCount;
+    const Eigen::Index proofRows = cellCount + 1;
+
+    HighsModel model;
+    model.lp_.num_col_ = static_cast<HighsInt>(proofVariables);
+    model.lp_.num_row_ = static_cast<HighsInt>(proofRows);
+    model.lp_.sense_ = ObjSense::kMinimize;
+    model.lp_.offset_ = 0.0;
+    model.lp_.col_cost_.assign(
+        static_cast<std::size_t>(proofVariables),
+        0.0
+    );
+    for (Eigen::Index row = 0; row < polygonRows; ++row)
+    {
+        model.lp_.col_cost_[static_cast<std::size_t>(row)] =
+            polygonSystem.d(row);
+    }
+    for (Eigen::Index cell = 0; cell < cellCount; ++cell)
+    {
+        model.lp_.col_cost_[static_cast<std::size_t>(polygonRows + cell)] =
+            1.0;
+    }
+    model.lp_.col_lower_.assign(
+        static_cast<std::size_t>(proofVariables),
+        0.0
+    );
+    model.lp_.col_upper_.assign(
+        static_cast<std::size_t>(proofVariables),
+        1e30
+    );
+    model.lp_.row_lower_.assign(
+        static_cast<std::size_t>(proofRows),
+        0.0
+    );
+    model.lp_.row_upper_.assign(
+        static_cast<std::size_t>(proofRows),
+        0.0
+    );
+    model.lp_.row_lower_.back() = 1.0;
+    model.lp_.row_upper_.back() = 1.0;
+
+    HighsSparseMatrix& matrix = model.lp_.a_matrix_;
+    matrix.format_ = MatrixFormat::kColwise;
+    matrix.start_.clear();
+    matrix.start_.reserve(static_cast<std::size_t>(proofVariables + 1));
+    const auto beginColumn = [&matrix] {
+        matrix.start_.push_back(
+            static_cast<HighsInt>(matrix.value_.size())
+        );
+    };
+    const HighsInt normalizationRow = static_cast<HighsInt>(cellCount);
+    for (Eigen::Index polygonRow = 0;
+         polygonRow < polygonRows;
+         ++polygonRow)
+    {
+        beginColumn();
+        for (Eigen::Index cell = 0; cell < cellCount; ++cell)
+        {
+            const double value = polygonSystem.C(polygonRow, cell);
+            if (value != 0.0)
+            {
+                matrix.index_.push_back(static_cast<HighsInt>(cell));
+                matrix.value_.push_back(value);
+            }
+        }
+        matrix.index_.push_back(normalizationRow);
+        matrix.value_.push_back(1.0);
+    }
+    for (Eigen::Index cell = 0; cell < cellCount; ++cell)
+    {
+        beginColumn();
+        matrix.index_.push_back(static_cast<HighsInt>(cell));
+        matrix.value_.push_back(1.0);
+        matrix.index_.push_back(normalizationRow);
+        matrix.value_.push_back(1.0);
+    }
+    for (Eigen::Index cell = 0; cell < cellCount; ++cell)
+    {
+        beginColumn();
+        matrix.index_.push_back(static_cast<HighsInt>(cell));
+        matrix.value_.push_back(-1.0);
+        matrix.index_.push_back(normalizationRow);
+        matrix.value_.push_back(1.0);
+    }
+    beginColumn();
+    result.matrixNonzeroCount = matrix.value_.size();
+
+    Highs solver;
+    if (!configureSolver(solver) ||
+        solver.passModel(model) == HighsStatus::kError)
+    {
+        result.statusText = "API_ERROR";
+        return result;
+    }
+    const HighsStatus runStatus = solver.run();
+    result.status = solver.getModelStatus();
+    result.statusText = solver.modelStatusToString(result.status);
+    result.apiSucceeded = runStatus != HighsStatus::kError;
+    if (result.status == HighsModelStatus::kOptimal)
+    {
+        const std::vector<double>& values = solver.getSolution().col_value;
+        result.values = Eigen::Map<const Eigen::VectorXd>(
+            values.data(),
+            static_cast<Eigen::Index>(values.size())
+        );
+    }
+    return result;
+}
+
+ReachabilityCertificate validateBoundedFarkasCertificate(
+    const LinearSystem& polygonSystem,
+    const Eigen::VectorXd& weights,
+    double tolerance
+)
+{
+    const Eigen::Index polygonRows = polygonSystem.C.rows();
+    const Eigen::Index cellCount = polygonSystem.C.cols();
+    if (weights.size() != polygonRows + 2 * cellCount)
+    {
+        throw std::invalid_argument("bounded Farkas vector has wrong size");
+    }
+    ReachabilityCertificate certificate;
+    certificate.weights = weights;
+    certificate.minimumWeight = weights.minCoeff();
+    certificate.normalizationResidual = std::abs(weights.sum() - 1.0);
+    const Eigen::VectorXd polygonWeights = weights.head(polygonRows);
+    const Eigen::VectorXd upperWeights =
+        weights.segment(polygonRows, cellCount);
+    const Eigen::VectorXd lowerWeights =
+        weights.tail(cellCount);
+    const Eigen::VectorXd stationarity =
+        polygonSystem.C.transpose() * polygonWeights +
+        upperWeights - lowerWeights;
+    certificate.stationarityInfinityNorm = stationarity.size() == 0
+        ? 0.0
+        : stationarity.lpNorm<Eigen::Infinity>();
+    certificate.contradiction =
+        polygonSystem.d.dot(polygonWeights) + upperWeights.sum();
+    certificate.valid =
+        certificate.minimumWeight >= -tolerance &&
+        certificate.normalizationResidual <= tolerance &&
+        certificate.stationarityInfinityNorm <= tolerance &&
+        certificate.contradiction < -tolerance;
+    return certificate;
 }
 
 double maximumPrimalViolation(
@@ -493,40 +631,19 @@ CarvingReachabilityResult CarvingReachabilityAnalyzer::analyze(
         primal.status == HighsModelStatus::kInfeasible
     )
     {
-        const LinearSystem fullSystem = appendUnitBounds(system);
-        const Eigen::Index proofRows = fullSystem.C.rows();
-        Eigen::MatrixXd certificateMatrix = Eigen::MatrixXd::Zero(
-            cellCount + 1,
-            proofRows
-        );
-        if (cellCount > 0)
-        {
-            certificateMatrix.topRows(cellCount) =
-                fullSystem.C.transpose();
-        }
-        certificateMatrix.row(cellCount).setOnes();
-        Eigen::VectorXd certificateRows = Eigen::VectorXd::Zero(
-            cellCount + 1
-        );
-        certificateRows(cellCount) = 1.0;
-        const LpResult certificateLp = solveLp(
-            certificateMatrix,
-            certificateRows,
-            certificateRows,
-            fullSystem.d,
-            Eigen::VectorXd::Zero(proofRows),
-            Eigen::VectorXd::Constant(proofRows, 1e30)
-        );
+        const LpResult certificateLp = solveBoundedFarkasLp(system);
+        result.certificateSystemNonzeroCount =
+            certificateLp.matrixNonzeroCount;
         result.certificateSolverStatus = certificateLp.statusText;
         if (
             certificateLp.apiSucceeded &&
             certificateLp.status == HighsModelStatus::kOptimal &&
-            certificateLp.values.size() == proofRows
+            certificateLp.values.size() ==
+                system.C.rows() + 2 * cellCount
         )
         {
-            result.certificate = validateFarkasCertificate(
-                fullSystem.C,
-                fullSystem.d,
+            result.certificate = validateBoundedFarkasCertificate(
+                system,
                 certificateLp.values,
                 input.feasibilityTolerance
             );
