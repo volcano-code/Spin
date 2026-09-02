@@ -115,6 +115,18 @@ int main()
         }
         previousError = error;
     }
+    const spin::QuadricTriangulation invertedSphere =
+        spin::triangulateQuadric(sphere.inverted(), domain);
+    const manufacturing::BoundaryAudit invertedSphereAudit =
+        manufacturing::auditTriangleBoundary(
+            invertedSphere.closedBoundary.vertices,
+            invertedSphere.closedBoundary.faces,
+            manufacturing::BoundaryOrientation::OutwardPositive
+        );
+    if (!invertedSphereAudit.strictBoundaryValid())
+    {
+        return fail("inverted ellipsoid is not an outward Boolean solid");
+    }
 
     coefficients.setZero();
     coefficients(0) = -1.0;

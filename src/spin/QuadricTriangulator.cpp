@@ -355,6 +355,26 @@ spin::TriangleMesh matrixMesh(
 }
 
 
+void makePositiveVolume(spin::TriangleMesh* mesh)
+{
+    double sixVolume = 0.0;
+    for (Eigen::Index face = 0; face < mesh->faces.rows(); ++face)
+    {
+        const Eigen::Vector3d a =
+            mesh->vertices.row(mesh->faces(face, 0));
+        const Eigen::Vector3d b =
+            mesh->vertices.row(mesh->faces(face, 1));
+        const Eigen::Vector3d c =
+            mesh->vertices.row(mesh->faces(face, 2));
+        sixVolume += a.dot(b.cross(c));
+    }
+    if (sixVolume < 0.0)
+    {
+        mesh->faces.col(1).swap(mesh->faces.col(2));
+    }
+}
+
+
 spin::QuadricTriangulation closeExtrudedInterface(
     spin::QuadricSurfaceType type,
     const std::vector<Eigen::Vector3d>& interfaceVertices,
@@ -398,6 +418,7 @@ spin::QuadricTriangulation closeExtrudedInterface(
     spin::QuadricTriangulation result;
     result.type = type;
     result.closedBoundary = matrixMesh(vertices, faces);
+    makePositiveVolume(&result.closedBoundary);
     result.interfaceVertexCount = offset;
     result.interfaceFaceCount = static_cast<int>(interfaceFaces.size());
     result.capFaceCount =
@@ -641,6 +662,7 @@ QuadricTriangulation triangulateQuadric(
         QuadricTriangulation result;
         result.type = type;
         result.closedBoundary = matrixMesh(vertices, faces);
+        makePositiveVolume(&result.closedBoundary);
         result.faceIsCap = Eigen::VectorXi::Zero(
             static_cast<Eigen::Index>(faces.size())
         );
@@ -774,21 +796,7 @@ QuadricTriangulation triangulateQuadric(
         }
 
         TriangleMesh boundary = matrixMesh(vertices, faces);
-        double sixVolume = 0.0;
-        for (Eigen::Index face = 0; face < boundary.faces.rows(); ++face)
-        {
-            const Eigen::Vector3d a =
-                boundary.vertices.row(boundary.faces(face, 0));
-            const Eigen::Vector3d b =
-                boundary.vertices.row(boundary.faces(face, 1));
-            const Eigen::Vector3d c =
-                boundary.vertices.row(boundary.faces(face, 2));
-            sixVolume += a.dot(b.cross(c));
-        }
-        if (sixVolume < 0.0)
-        {
-            boundary.faces.col(1).swap(boundary.faces.col(2));
-        }
+        makePositiveVolume(&boundary);
 
         QuadricTriangulation result;
         result.type = type;
