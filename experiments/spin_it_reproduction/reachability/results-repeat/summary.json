@@ -1,0 +1,193 @@
+{
+  "case_order": [
+    "dinosaur-head-contact",
+    "spheres-45deg",
+    "toy-head-down"
+  ],
+  "cases": [
+    {
+      "case_definition": {
+        "contact_threshold": 0.005,
+        "evidence_level": "RECONSTRUCTED_PARAMETER",
+        "gamma_radians": 0.0,
+        "gravity": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "id": "dinosaur-head-contact",
+        "minimum_stability_inset": 0.0001,
+        "observed_optimizer_outcome": "SUCCESS",
+        "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run",
+        "source": "data/configs/dinosaur.mis",
+        "source_kind": "RELEASED_BETA_ARCHIVE",
+        "support_plane_at_band_top": true
+      },
+      "case_definition_hash": "e80aede05c1f4ed0a5fd8276f4dd1094a769bf47127bd8e3414533e5e8146d54",
+      "classification": "PHYSICALLY_UNREACHABLE_UNDER_CONTINUOUS_CARVING_RELAXATION",
+      "evidence_level": "RECONSTRUCTED_PARAMETER",
+      "id": "dinosaur-head-contact",
+      "observed_optimizer_outcome": "SUCCESS",
+      "result": {
+        "certificate": {
+          "contradiction": -0.0025021366782743636,
+          "minimum_weight": 0.0,
+          "normalization_residual": 2.930988785010413e-14,
+          "stationarity_infinity_norm": 6.106433869971978e-10,
+          "valid": true,
+          "weights_count": 27062,
+          "weights_sha256": "c785b606f923d9657d9026355887d07ffbff093486872d3c104427c74e5e462c"
+        },
+        "certificate_solver_status": "Optimal",
+        "certificate_system_nonzero_count": 189374,
+        "final_center_2d": [
+          0.0,
+          0.0
+        ],
+        "final_first_moment_2d": [
+          0.0,
+          0.0
+        ],
+        "final_mass": 0.0,
+        "fixed_mass": 0.024023000000003368,
+        "input_cell_count": 13526,
+        "input_hash": "2c21079d3459c124a5a525b5a33c5ff42100a4109099fc910780e005e51b8a73",
+        "maximum_primal_violation": 0.0,
+        "primal_solver_status": "Infeasible",
+        "retained_fractions": [],
+        "schema": "make-it-stand-carving-reachability-v1",
+        "schema_version": 1,
+        "status": "PROVEN_UNREACHABLE",
+        "variable_cell_count": 13526
+      },
+      "result_hash": "e0ed758e2d80ca6ce2fbfd02870669bd16807df79305c96426f9995bd579abc6"
+    },
+    {
+      "case_definition": {
+        "contact_threshold": 0.005,
+        "evidence_level": "RECONSTRUCTED_PARAMETER",
+        "gamma_radians": 0.0,
+        "gravity": [
+          -0.7071067811865476,
+          -0.7071067811865476,
+          0.0
+        ],
+        "id": "spheres-45deg",
+        "minimum_stability_inset": 0.0001,
+        "observed_optimizer_outcome": "FAILED",
+        "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run",
+        "source": "data/configs/spheres.mis",
+        "source_kind": "RELEASED_BETA_ARCHIVE",
+        "support_plane_at_band_top": true
+      },
+      "case_definition_hash": "7e2658a752c58434857a451fbb16ead40371933aac6f340048a303e9b2749648",
+      "classification": "PHYSICALLY_UNREACHABLE_UNDER_CONTINUOUS_CARVING_RELAXATION",
+      "evidence_level": "RECONSTRUCTED_PARAMETER",
+      "id": "spheres-45deg",
+      "observed_optimizer_outcome": "FAILED",
+      "result": {
+        "certificate": {
+          "contradiction": -0.013171430636880425,
+          "minimum_weight": 0.0,
+          "normalization_residual": 2.1094237467877974e-14,
+          "stationarity_infinity_norm": 7.782276784372996e-10,
+          "valid": true,
+          "weights_count": 103459,
+          "weights_sha256": "89e7202424a93780109be3589a23f3bd437376ea2976018c8ed9e8743c8a19ea"
+        },
+        "certificate_solver_status": "Optimal",
+        "certificate_system_nonzero_count": 775871,
+        "final_center_2d": [
+          0.0,
+          0.0
+        ],
+        "final_first_moment_2d": [
+          0.0,
+          0.0
+        ],
+        "final_mass": 0.0,
+        "fixed_mass": 0.06230273437503143,
+        "input_cell_count": 51724,
+        "input_hash": "5cf8cc3583640bc47a62d700b628fbc28d69c0a28aaeb67f176ebe9ef5feadf0",
+        "maximum_primal_violation": 0.0,
+        "primal_solver_status": "Infeasible",
+        "retained_fractions": [],
+        "schema": "make-it-stand-carving-reachability-v1",
+        "schema_version": 1,
+        "status": "PROVEN_UNREACHABLE",
+        "variable_cell_count": 51724
+      },
+      "result_hash": "998d8d2dbf6ede330dcca36009282496b6cdef0a969c5e6db083af75fe3470c0"
+    },
+    {
+      "case_definition": {
+        "contact_reconstruction_note": "The reconstructed N=80 surface has a 0.00617284 normalized layer pitch; 0.00625 is the smallest fixed rounded threshold that includes a non-collinear second layer.",
+        "contact_threshold": 0.00625,
+        "evidence_level": "RECONSTRUCTED_ASSET",
+        "gamma_radians": 0.0,
+        "gravity": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "id": "toy-head-down",
+        "minimum_stability_inset": 0.0001,
+        "observed_optimizer_outcome": "FAILED",
+        "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run",
+        "source": "experiments/paper_sim_v1/results_current/smoke/toyrocking/reconstructed-input.obj",
+        "source_kind": "RECONSTRUCTED_OBJ",
+        "source_sha256": "210a2098a9d2634c1a2388ae14f0479e2f5a04f04386ec4b303517fd67bb4b78",
+        "support_plane_at_band_top": true,
+        "voxel_resolution": 50
+      },
+      "case_definition_hash": "db3b8d72fea03bd8d75ca1a7c6c9399c7750ea5670f2a86a5b0410fec584cd86",
+      "classification": "PHYSICALLY_UNREACHABLE_UNDER_CONTINUOUS_CARVING_RELAXATION",
+      "evidence_level": "RECONSTRUCTED_ASSET",
+      "id": "toy-head-down",
+      "observed_optimizer_outcome": "FAILED",
+      "result": {
+        "certificate": {
+          "contradiction": -0.011622901086042707,
+          "minimum_weight": 0.0,
+          "normalization_residual": 1.2989609388114332e-14,
+          "stationarity_infinity_norm": 0.0,
+          "valid": true,
+          "weights_count": 8364,
+          "weights_sha256": "2a67c25cf87a2edca731bcfa47bbc506257dccdbb79edc6ffd1f3f4a283035dd"
+        },
+        "certificate_solver_status": "Optimal",
+        "certificate_system_nonzero_count": 41796,
+        "final_center_2d": [
+          0.0,
+          0.0
+        ],
+        "final_first_moment_2d": [
+          0.0,
+          0.0
+        ],
+        "final_mass": 0.0,
+        "fixed_mass": 0.06053600000000543,
+        "input_cell_count": 4179,
+        "input_hash": "e7d8708522b1f76cff76d54358885ffaba6991d1db8f40fab942b510c782b364",
+        "maximum_primal_violation": 0.0,
+        "primal_solver_status": "Infeasible",
+        "retained_fractions": [],
+        "schema": "make-it-stand-carving-reachability-v1",
+        "schema_version": 1,
+        "status": "PROVEN_UNREACHABLE",
+        "variable_cell_count": 4179
+      },
+      "result_hash": "a2943c4c425a4a99d6a3cab29b8cdf036d3ebcee40dafaa74c7ff34901deaec8"
+    }
+  ],
+  "classification_complete": true,
+  "manifest_hash": "e6bb113f64bc642c6da40d6e560d9e5452f15d4ad7239ad51333c6bd994a5255",
+  "release_gate_passed": true,
+  "result_hashes": [
+    "e0ed758e2d80ca6ce2fbfd02870669bd16807df79305c96426f9995bd579abc6",
+    "998d8d2dbf6ede330dcca36009282496b6cdef0a969c5e6db083af75fe3470c0",
+    "a2943c4c425a4a99d6a3cab29b8cdf036d3ebcee40dafaa74c7ff34901deaec8"
+  ],
+  "schema": "make-it-stand-reachability-report-v1",
+  "schema_version": 1
+}

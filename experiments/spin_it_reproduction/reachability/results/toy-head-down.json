@@ -1,0 +1,60 @@
+{
+  "case_definition": {
+    "contact_reconstruction_note": "The reconstructed N=80 surface has a 0.00617284 normalized layer pitch; 0.00625 is the smallest fixed rounded threshold that includes a non-collinear second layer.",
+    "contact_threshold": 0.00625,
+    "evidence_level": "RECONSTRUCTED_ASSET",
+    "gamma_radians": 0.0,
+    "gravity": [
+      0.0,
+      1.0,
+      0.0
+    ],
+    "id": "toy-head-down",
+    "minimum_stability_inset": 0.0001,
+    "observed_optimizer_outcome": "FAILED",
+    "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run",
+    "source": "experiments/paper_sim_v1/results_current/smoke/toyrocking/reconstructed-input.obj",
+    "source_kind": "RECONSTRUCTED_OBJ",
+    "source_sha256": "210a2098a9d2634c1a2388ae14f0479e2f5a04f04386ec4b303517fd67bb4b78",
+    "support_plane_at_band_top": true,
+    "voxel_resolution": 50
+  },
+  "case_definition_hash": "db3b8d72fea03bd8d75ca1a7c6c9399c7750ea5670f2a86a5b0410fec584cd86",
+  "classification": "PHYSICALLY_UNREACHABLE_UNDER_CONTINUOUS_CARVING_RELAXATION",
+  "evidence_level": "RECONSTRUCTED_ASSET",
+  "id": "toy-head-down",
+  "observed_optimizer_outcome": "FAILED",
+  "result": {
+    "certificate": {
+      "contradiction": -0.011622901086042707,
+      "minimum_weight": 0.0,
+      "normalization_residual": 1.2989609388114332e-14,
+      "stationarity_infinity_norm": 0.0,
+      "valid": true,
+      "weights_count": 8364,
+      "weights_sha256": "2a67c25cf87a2edca731bcfa47bbc506257dccdbb79edc6ffd1f3f4a283035dd"
+    },
+    "certificate_solver_status": "Optimal",
+    "certificate_system_nonzero_count": 41796,
+    "final_center_2d": [
+      0.0,
+      0.0
+    ],
+    "final_first_moment_2d": [
+      0.0,
+      0.0
+    ],
+    "final_mass": 0.0,
+    "fixed_mass": 0.06053600000000543,
+    "input_cell_count": 4179,
+    "input_hash": "e7d8708522b1f76cff76d54358885ffaba6991d1db8f40fab942b510c782b364",
+    "maximum_primal_violation": 0.0,
+    "primal_solver_status": "Infeasible",
+    "retained_fractions": [],
+    "schema": "make-it-stand-carving-reachability-v1",
+    "schema_version": 1,
+    "status": "PROVEN_UNREACHABLE",
+    "variable_cell_count": 4179
+  },
+  "result_hash": "a2943c4c425a4a99d6a3cab29b8cdf036d3ebcee40dafaa74c7ff34901deaec8"
+}

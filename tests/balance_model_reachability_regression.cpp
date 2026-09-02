@@ -76,5 +76,31 @@ int main()
         << "[PASS] scenario=balance-model-reachability status="
         << reachability::toString(result.status)
         << " variable_cells=" << result.variableCellCount << '\n';
+
+    api::BalanceModel degenerate(vertices, faces, config);
+    Eigen::MatrixXd tinySupport(4, 3);
+    tinySupport <<
+        0.0, 0.0, 0.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 1.0,
+        0.0, 0.0, 1.0;
+    degenerate.addStandingConstraintPolygon(
+        tinySupport,
+        Eigen::Vector3d(0.0, -1.0, 0.0),
+        60.0 * std::acos(-1.0) / 180.0
+    );
+    const reachability::CarvingReachabilityResult degenerateResult =
+        degenerate.analyzeCarvingReachability(0);
+    if (
+        degenerateResult.status !=
+            reachability::ReachabilityStatus::Indeterminate ||
+        degenerateResult.inputHash.size() != 64
+    )
+    {
+        std::cerr
+            << "[FAIL] scenario=balance-model-reachability "
+            << "degenerate early return lacks an auditable input hash\n";
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }

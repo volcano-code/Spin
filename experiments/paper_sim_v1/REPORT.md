@@ -4,13 +4,33 @@ Last audited: 2026-09-01 (Asia/Shanghai)
 
 ## Current claim
 
-The closeout infrastructure is implemented and all registered regression
-tests pass.  Five current-source full-resolution `RELEASED_BETA_PROFILE`
+The closeout infrastructure is implemented and all registered pre-reachability
+regression tests passed.  Five current-source full-resolution `RELEASED_BETA_PROFILE`
 diagnostic runs now exist, but the branch is **not** yet
 `VERIFIED_PAPER_SIM`: two cases miss the 5-degree safe region, the paper-profile
 lambda/Table 1 matrix and Figure 14 are incomplete, and the current Spheres
 collision proxies disagree with the static oracle.  Spin-It Faster therefore
-remains blocked.
+is not evidence for a `VERIFIED_PAPER_SIM` release.
+
+The later user-approved Spin-It track now has a separate carving-reachability
+gate.  It does not upgrade the paper-simulation claim or waive any blocker in
+this report, but it may unblock Spin-It Faster independently once its own build,
+test, provenance, and determinism checks pass.
+
+## Alternative-pose reachability result
+
+The official-cache Spheres 45-degree pose, official-cache Dinosaur head-contact
+pose, and reconstructed-asset Toy head-down pose were run twice against the
+fixed-region continuous carving relaxation.  All three are
+`PROVEN_UNREACHABLE`, with byte-identical repeat artifacts and valid Farkas
+certificates.  Their stationarity infinity norms are respectively
+`7.782e-10`, `6.106e-10`, and `0`, within the `1e-9` validation threshold.
+
+This resolves the prior plane-carver question without claiming general
+physical impossibility.  In particular, Dinosaur's earlier successful run is
+consistent with this result because that workflow allowed deformation and a
+changed contact geometry.  The auditable report is in
+`experiments/spin_it_reproduction/reachability/results/REPORT.md`.
 
 ## Evidence reset
 

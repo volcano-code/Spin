@@ -33,7 +33,7 @@ struct LpResult
     std::size_t matrixNonzeroCount = 0;
 };
 
-std::string inputHash(const CarvingReachabilityInput& input)
+std::string inputHashImpl(const CarvingReachabilityInput& input)
 {
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
@@ -117,6 +117,12 @@ bool configureSolver(Highs& solver)
         solver.setOptionValue("parallel", "off") == HighsStatus::kOk;
     optionsOk = optionsOk &&
         solver.setOptionValue("random_seed", static_cast<HighsInt>(0)) ==
+            HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("primal_feasibility_tolerance", 1e-9) ==
+            HighsStatus::kOk;
+    optionsOk = optionsOk &&
+        solver.setOptionValue("dual_feasibility_tolerance", 1e-9) ==
             HighsStatus::kOk;
     return optionsOk;
 }
@@ -401,6 +407,11 @@ void populatePhysicalWitness(
 
 } // namespace
 
+std::string computeInputHash(const CarvingReachabilityInput& input)
+{
+    return inputHashImpl(input);
+}
+
 Halfspaces2D safePolygonHalfspaces(const Eigen::MatrixXd& polygon)
 {
     if (polygon.cols() != 2 || polygon.rows() < 3)
@@ -584,7 +595,7 @@ CarvingReachabilityResult CarvingReachabilityAnalyzer::analyze(
     );
 
     CarvingReachabilityResult result;
-    result.inputHash = inputHash(input);
+    result.inputHash = computeInputHash(input);
     result.inputCellCount = static_cast<int>(cellCount);
     result.variableCellCount = static_cast<int>(cellCount);
     result.fixedMass = input.fixedMass;

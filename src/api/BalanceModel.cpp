@@ -2484,9 +2484,16 @@ BalanceModel::analyzeCarvingReachability(std::size_t standingIndex) const
         totalMoments.firstMoment / totalMoments.mass,
         standing.gammaRadians
     );
+
+    reachability::CarvingReachabilityInput input;
+    input.fixedMass = fixedMass;
+    input.fixedFirstMoment2D = fixedFirstMoment2D;
+    input.variableCells = variableCells;
+    input.safePolygon2D = target.safeRegion2D();
     if (!target.requestedMarginAttainable() || target.safeRegion2D().rows() < 3)
     {
         reachability::CarvingReachabilityResult result;
+        result.inputHash = reachability::computeInputHash(input);
         result.status = reachability::ReachabilityStatus::Indeterminate;
         result.inputCellCount = static_cast<int>(variableCells.size());
         result.variableCellCount = result.inputCellCount;
@@ -2495,11 +2502,7 @@ BalanceModel::analyzeCarvingReachability(std::size_t standingIndex) const
         return result;
     }
 
-    reachability::CarvingReachabilityInput input;
-    input.fixedMass = fixedMass;
-    input.fixedFirstMoment2D = fixedFirstMoment2D;
     input.variableCells = std::move(variableCells);
-    input.safePolygon2D = target.safeRegion2D();
     return reachability::CarvingReachabilityAnalyzer().analyze(input);
 }
 #endif

@@ -1,0 +1,57 @@
+{
+  "case_definition": {
+    "contact_threshold": 0.005,
+    "evidence_level": "RECONSTRUCTED_PARAMETER",
+    "gamma_radians": 0.0,
+    "gravity": [
+      -0.7071067811865476,
+      -0.7071067811865476,
+      0.0
+    ],
+    "id": "spheres-45deg",
+    "minimum_stability_inset": 0.0001,
+    "observed_optimizer_outcome": "FAILED",
+    "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run",
+    "source": "data/configs/spheres.mis",
+    "source_kind": "RELEASED_BETA_ARCHIVE",
+    "support_plane_at_band_top": true
+  },
+  "case_definition_hash": "7e2658a752c58434857a451fbb16ead40371933aac6f340048a303e9b2749648",
+  "classification": "PHYSICALLY_UNREACHABLE_UNDER_CONTINUOUS_CARVING_RELAXATION",
+  "evidence_level": "RECONSTRUCTED_PARAMETER",
+  "id": "spheres-45deg",
+  "observed_optimizer_outcome": "FAILED",
+  "result": {
+    "certificate": {
+      "contradiction": -0.013171430636880425,
+      "minimum_weight": 0.0,
+      "normalization_residual": 2.1094237467877974e-14,
+      "stationarity_infinity_norm": 7.782276784372996e-10,
+      "valid": true,
+      "weights_count": 103459,
+      "weights_sha256": "89e7202424a93780109be3589a23f3bd437376ea2976018c8ed9e8743c8a19ea"
+    },
+    "certificate_solver_status": "Optimal",
+    "certificate_system_nonzero_count": 775871,
+    "final_center_2d": [
+      0.0,
+      0.0
+    ],
+    "final_first_moment_2d": [
+      0.0,
+      0.0
+    ],
+    "final_mass": 0.0,
+    "fixed_mass": 0.06230273437503143,
+    "input_cell_count": 51724,
+    "input_hash": "5cf8cc3583640bc47a62d700b628fbc28d69c0a28aaeb67f176ebe9ef5feadf0",
+    "maximum_primal_violation": 0.0,
+    "primal_solver_status": "Infeasible",
+    "retained_fractions": [],
+    "schema": "make-it-stand-carving-reachability-v1",
+    "schema_version": 1,
+    "status": "PROVEN_UNREACHABLE",
+    "variable_cell_count": 51724
+  },
+  "result_hash": "998d8d2dbf6ede330dcca36009282496b6cdef0a969c5e6db083af75fe3470c0"
+}

@@ -495,6 +495,10 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_readonly(
             "certificate_solver_status",
             &reachability::CarvingReachabilityResult::certificateSolverStatus
+        )
+        .def_readonly(
+            "certificate_system_nonzero_count",
+            &reachability::CarvingReachabilityResult::certificateSystemNonzeroCount
         );
 #endif
 

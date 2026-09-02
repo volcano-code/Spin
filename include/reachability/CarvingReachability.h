@@ -76,6 +76,10 @@ bool contains(
 
 void validateInput(const CarvingReachabilityInput& input);
 
+// The fingerprint is defined for incomplete/degenerate inputs as well so an
+// INDETERMINATE early return remains bound to its exact evidence.
+std::string computeInputHash(const CarvingReachabilityInput& input);
+
 ReachabilityCertificate validateFarkasCertificate(
     const Eigen::MatrixXd& C,
     const Eigen::VectorXd& d,

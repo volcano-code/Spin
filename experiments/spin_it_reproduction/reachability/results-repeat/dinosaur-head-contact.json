@@ -1,0 +1,57 @@
+{
+  "case_definition": {
+    "contact_threshold": 0.005,
+    "evidence_level": "RECONSTRUCTED_PARAMETER",
+    "gamma_radians": 0.0,
+    "gravity": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "id": "dinosaur-head-contact",
+    "minimum_stability_inset": 0.0001,
+    "observed_optimizer_outcome": "SUCCESS",
+    "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run",
+    "source": "data/configs/dinosaur.mis",
+    "source_kind": "RELEASED_BETA_ARCHIVE",
+    "support_plane_at_band_top": true
+  },
+  "case_definition_hash": "e80aede05c1f4ed0a5fd8276f4dd1094a769bf47127bd8e3414533e5e8146d54",
+  "classification": "PHYSICALLY_UNREACHABLE_UNDER_CONTINUOUS_CARVING_RELAXATION",
+  "evidence_level": "RECONSTRUCTED_PARAMETER",
+  "id": "dinosaur-head-contact",
+  "observed_optimizer_outcome": "SUCCESS",
+  "result": {
+    "certificate": {
+      "contradiction": -0.0025021366782743636,
+      "minimum_weight": 0.0,
+      "normalization_residual": 2.930988785010413e-14,
+      "stationarity_infinity_norm": 6.106433869971978e-10,
+      "valid": true,
+      "weights_count": 27062,
+      "weights_sha256": "c785b606f923d9657d9026355887d07ffbff093486872d3c104427c74e5e462c"
+    },
+    "certificate_solver_status": "Optimal",
+    "certificate_system_nonzero_count": 189374,
+    "final_center_2d": [
+      0.0,
+      0.0
+    ],
+    "final_first_moment_2d": [
+      0.0,
+      0.0
+    ],
+    "final_mass": 0.0,
+    "fixed_mass": 0.024023000000003368,
+    "input_cell_count": 13526,
+    "input_hash": "2c21079d3459c124a5a525b5a33c5ff42100a4109099fc910780e005e51b8a73",
+    "maximum_primal_violation": 0.0,
+    "primal_solver_status": "Infeasible",
+    "retained_fractions": [],
+    "schema": "make-it-stand-carving-reachability-v1",
+    "schema_version": 1,
+    "status": "PROVEN_UNREACHABLE",
+    "variable_cell_count": 13526
+  },
+  "result_hash": "e0ed758e2d80ca6ce2fbfd02870669bd16807df79305c96426f9995bd579abc6"
+}

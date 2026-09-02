@@ -1,0 +1,49 @@
+{
+  "schema": "make-it-stand-reachability-cases-v1",
+  "schema_version": 1,
+  "claim_boundary": "All orientations are reconstructed parameters. The classifier is a fixed-safe-region continuous-carving relaxation, not a universal physical impossibility test.",
+  "cases": [
+    {
+      "id": "spheres-45deg",
+      "source_kind": "RELEASED_BETA_ARCHIVE",
+      "source": "data/configs/spheres.mis",
+      "evidence_level": "RECONSTRUCTED_PARAMETER",
+      "gravity": [-0.7071067811865476, -0.7071067811865476, 0.0],
+      "contact_threshold": 0.005,
+      "gamma_radians": 0.0,
+      "minimum_stability_inset": 0.0001,
+      "support_plane_at_band_top": true,
+      "observed_optimizer_outcome": "FAILED",
+      "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run"
+    },
+    {
+      "id": "dinosaur-head-contact",
+      "source_kind": "RELEASED_BETA_ARCHIVE",
+      "source": "data/configs/dinosaur.mis",
+      "evidence_level": "RECONSTRUCTED_PARAMETER",
+      "gravity": [1.0, 0.0, 0.0],
+      "contact_threshold": 0.005,
+      "gamma_radians": 0.0,
+      "minimum_stability_inset": 0.0001,
+      "support_plane_at_band_top": true,
+      "observed_optimizer_outcome": "SUCCESS",
+      "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run"
+    },
+    {
+      "id": "toy-head-down",
+      "source_kind": "RECONSTRUCTED_OBJ",
+      "source": "experiments/paper_sim_v1/results_current/smoke/toyrocking/reconstructed-input.obj",
+      "source_sha256": "210a2098a9d2634c1a2388ae14f0479e2f5a04f04386ec4b303517fd67bb4b78",
+      "evidence_level": "RECONSTRUCTED_ASSET",
+      "voxel_resolution": 50,
+      "gravity": [0.0, 1.0, 0.0],
+      "contact_threshold": 0.00625,
+      "gamma_radians": 0.0,
+      "minimum_stability_inset": 0.0001,
+      "support_plane_at_band_top": true,
+      "observed_optimizer_outcome": "FAILED",
+      "observed_outcome_scope": "prior alternative-pose plane-carving OpenGL run",
+      "contact_reconstruction_note": "The reconstructed N=80 surface has a 0.00617284 normalized layer pitch; 0.00625 is the smallest fixed rounded threshold that includes a non-collinear second layer."
+    }
+  ]
+}
