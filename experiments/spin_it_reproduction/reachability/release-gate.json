@@ -1,0 +1,53 @@
+{
+  "schema": "spin-it-reachability-release-gate-v1",
+  "schema_version": 1,
+  "source_commit": "722d71f485c3e48a5f5666207a94b32c1d39137a",
+  "toolchain": {
+    "cmake": "3.28.3",
+    "compiler": "GCC 13.3.0",
+    "highs_commit": "7df0786de3088c832297e5ed821db236d8fab281",
+    "highs_version": "1.14.0"
+  },
+  "builds": {
+    "reachability_enabled": {
+      "passed": true,
+      "registered_tests": 129,
+      "passed_tests": 129,
+      "not_run_tests": 0,
+      "core_library_sha256": "4af780f87ea407da19c8bf4d72c188084e281291e9710bcee1fca38d3304957f"
+    },
+    "reachability_disabled": {
+      "passed": true,
+      "registered_tests": 121,
+      "passed_tests": 121,
+      "not_run_tests": 0,
+      "core_library_sha256": "e4ac4d983d29128d44a8b4c6aa9b353cc052dce06a48bdec0127e50ebee09aa4"
+    }
+  },
+  "python_tests": {
+    "passed": true,
+    "passed_tests": 140,
+    "intentional_opt_in_skips": 2,
+    "unexpected_skips": 0,
+    "failed_tests": 0
+  },
+  "provenance_checkpoint": {
+    "manifest_sha256_verified": true,
+    "tracked_patch_sha256_verified": true
+  },
+  "reachability_evidence": {
+    "case_count": 3,
+    "classification_complete": true,
+    "indeterminate_case_count": 0,
+    "valid_farkas_certificate_count": 3,
+    "repeat_byte_identical": true,
+    "summary_sha256": "e24b55e0d48a4115a45fa8c27c0bb36f424db296c3f7a0844a587ceb9c260659"
+  },
+  "repository_checks_before_gate_record": {
+    "git_diff_check_passed": true,
+    "tracked_worktree_clean": true,
+    "libigl_submodule_clean": true
+  },
+  "claim_boundary": "This gate closes only the raw-moment and fixed-region continuous-carving reachability milestone. It does not grant VERIFIED_PAPER_SIM and does not resolve the Make-It-Stand paper-simulation blockers.",
+  "spin_it_faster_unblocked": true
+}

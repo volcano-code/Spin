@@ -17,6 +17,7 @@ Last audited: 2026-09-01 (Asia/Shanghai)
 | pybind11 headers | 3.0.1 |
 | NumPy runtime | 2.1.3 |
 | Optional simulation | PyBullet build 2026-03-16; trimesh 4.9.0 |
+| Reachability LP | HiGHS 1.14.0, commit `7df0786de3088c832297e5ed821db236d8fab281` |
 
 The project rejects CMake 4.x. The pinned libigl revision invokes legacy
 download subprojects whose old compatibility mode was removed in CMake 4.
@@ -71,6 +72,35 @@ write atomic-diagnostics fixtures at fixed paths in the system temporary
 directory.  Concurrent preset invocations use separate build trees but can
 still race on those fixtures and produce a false corruption failure.  The
 release gate deliberately invokes the presets one at a time.
+
+Configure separate build trees sequentially as well.  The pinned libigl CMake
+scripts use a shared `libigl/external` source/download directory; concurrent
+first-time configurations can race while materializing Eigen even when their
+binary directories differ.  This is an upstream dependency-layout constraint,
+not a compiler or reachability failure.
+
+## Carving reachability configuration
+
+Reachability is controlled by `MAKE_IT_STAND_BUILD_REACHABILITY` and defaults
+to `ON`.  The enabled configuration pins and statically links HiGHS; it sets
+the deterministic solver controls to one thread, parallel mode off, random
+seed zero, and primal/dual feasibility tolerances `1e-9`.  The disabled
+configuration neither builds nor links HiGHS, and omits the reachability API
+and its eight native tests while preserving all original targets.
+
+The 2026-09-02 milestone gate built and tested both configurations:
+
+| Configuration | Build | CTest |
+|---|---|---:|
+| `build/headless`, reachability enabled | passed | 129/129 |
+| `build/reachability-off` | passed | 121/121 |
+
+The extension-backed Python discovery run passed 140 tests.  Two additional
+official N=80 optimizer smoke tests were intentionally skipped because they
+require explicit `MAKE_IT_STAND_RUN_OFFICIAL_BETA_*` opt-in and are not part of
+the enabled reachability gate.  The full three-case reachability experiment
+was instead run twice at its declared resolutions; its two summary files are
+byte-identical.
 
 The presets intentionally use separate build trees. Headless testing does not
 enable OpenGL, GLFW or ImGui; the viewer build does not register tests. The
