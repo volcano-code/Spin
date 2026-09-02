@@ -65,6 +65,11 @@ set(LIBIGL_DIR "${MAKE_IT_STAND_LIBIGL_DIR}" CACHE PATH "libigl root" FORCE)
 option(LIBIGL_WITH_OPENGL "Use OpenGL" ${MAKE_IT_STAND_BUILD_VIEWER})
 option(LIBIGL_WITH_OPENGL_GLFW "Use GLFW" ${MAKE_IT_STAND_BUILD_VIEWER})
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui" ${MAKE_IT_STAND_BUILD_VIEWER})
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+    include(SpinItFasterDependencies)
+else()
+    set(LIBIGL_WITH_CGAL OFF CACHE BOOL "Use CGAL" FORCE)
+endif()
 set(LIBIGL_WITH_MOSEK OFF CACHE BOOL "Do not use proprietary MOSEK" FORCE)
 set(
     LIBIGL_USE_STATIC_LIBRARY
@@ -75,6 +80,10 @@ set(
 )
 
 find_package(LIBIGL REQUIRED QUIET)
+
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+    make_it_stand_verify_spin_it_faster_dependencies()
+endif()
 
 if(MAKE_IT_STAND_BUILD_REACHABILITY)
     include(HighsDependency)
@@ -208,6 +217,9 @@ target_compile_definitions(
         MAKE_IT_STAND_HAS_SPIN_IT_FASTER=$<BOOL:${MAKE_IT_STAND_BUILD_SPIN_IT_FASTER}>
 )
 target_link_libraries(make_it_stand_core PUBLIC igl::core)
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+    target_link_libraries(make_it_stand_core PUBLIC igl::cgal)
+endif()
 if(MAKE_IT_STAND_BUILD_REACHABILITY)
     target_link_libraries(make_it_stand_core PRIVATE highs::highs)
 endif()
@@ -403,12 +415,46 @@ if(BUILD_TESTING)
             spin-faster-quadric-coefficients
             PROPERTIES LABELS "spin-it;spin-it-faster;regression"
         )
+
+        add_executable(
+            spin-boolean-regression
+            tests/spin_boolean_regression.cpp
+        )
+        target_compile_features(spin-boolean-regression PRIVATE cxx_std_17)
+        set_target_properties(
+            spin-boolean-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-boolean-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-boolean
+            COMMAND "$<TARGET_FILE:spin-boolean-regression>"
+        )
+        set_tests_properties(
+            spin-faster-boolean
+            PROPERTIES LABELS "spin-it;spin-it-faster;geometry;regression"
+        )
     endif()
 
     add_test(
         NAME reachability-dependency-contract
         COMMAND "${CMAKE_COMMAND}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_reachability_dependency.cmake"
+    )
+
+    add_test(
+        NAME spin-faster-dependency-contract
+        COMMAND "${CMAKE_COMMAND}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_spin_it_faster_dependency.cmake"
+    )
+    set_tests_properties(
+        spin-faster-dependency-contract
+        PROPERTIES
+            LABELS "spin-it;spin-it-faster;build-system"
+            TIMEOUT 180
     )
     set_tests_properties(
         reachability-dependency-contract

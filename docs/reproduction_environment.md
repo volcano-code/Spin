@@ -18,6 +18,8 @@ Last audited: 2026-09-01 (Asia/Shanghai)
 | NumPy runtime | 2.1.3 |
 | Optional simulation | PyBullet build 2026-03-16; trimesh 4.9.0 |
 | Reachability LP | HiGHS 1.14.0, commit `7df0786de3088c832297e5ed821db236d8fab281` |
+| Spin-It Faster Boolean | CGAL commit `f7c3c8212b56c0d6dae63787efc99093f4383415` |
+| Exact arithmetic | GMP 6.3.0; MPFR 4.2.1 |
 
 The project rejects CMake 4.x. The pinned libigl revision invokes legacy
 download subprojects whose old compatibility mode was removed in CMake 4.
@@ -42,6 +44,7 @@ dependency source commits:
 | ImGui | `5503c0a12e0c929e84b3f61b2cb4bb9177ea3da1` (`v1.76`) |
 | ImGuizmo | `a23567269f6617342bcc112394bdad937b54b2d7` |
 | libigl-imgui | `99f0643089b19f6daf5b3efd9544a65c9a851966` |
+| CGAL (Faster only) | `f7c3c8212b56c0d6dae63787efc99093f4383415` |
 
 These external trees are selected by the pinned libigl CMake scripts and are
 not committed to the parent repository. The first clean configure can require
@@ -101,6 +104,17 @@ require explicit `MAKE_IT_STAND_RUN_OFFICIAL_BETA_*` opt-in and are not part of
 the enabled reachability gate.  The full three-case reachability experiment
 was instead run twice at its declared resolutions; its two summary files are
 byte-identical.
+
+## Spin-It Faster geometry configuration
+
+`MAKE_IT_STAND_BUILD_SPIN_IT_FASTER` defaults to `OFF`.  In that state CMake
+forces `LIBIGL_WITH_CGAL=OFF`; the core has no CGAL/GMP/MPFR link dependency
+and an invalid Faster-only CGAL override is deliberately ignored.  When the
+option is enabled, configuration checks the CGAL revision written in pinned
+libigl's download declaration, verifies the resolved checkout's Git HEAD, and
+requires the audited system GMP/MPFR versions above.  The core then links
+`igl::cgal` for exact mesh Booleans.  No alternate Boolean or voxel fallback
+is accepted by the Faster reproduction path.
 
 The presets intentionally use separate build trees. Headless testing does not
 enable OpenGL, GLFW or ImGui; the viewer build does not register tests. The
