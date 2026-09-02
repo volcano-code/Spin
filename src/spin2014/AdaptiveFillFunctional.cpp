@@ -14,16 +14,43 @@ AdaptiveFillFunctional::AdaptiveFillFunctional(
     SpinIt2014MomentProblem problem,
     double laplacianWeight
 )
+    : AdaptiveFillFunctional(
+          domain,
+          std::move(problem),
+          laplacianWeight,
+          1.0,
+          1.0
+      )
+{
+}
+
+
+AdaptiveFillFunctional::AdaptiveFillFunctional(
+    const AdaptiveVoxelDomain& domain,
+    SpinIt2014MomentProblem problem,
+    double laplacianWeight,
+    double boundaryDensity,
+    double interiorDensity
+)
     : domain_(&domain),
       problem_(std::move(problem)),
       laplacianWeight_(laplacianWeight),
+      baseMoments_(
+          (domain.solidMoments() - domain.variableMoments()).scaledDensity(
+              boundaryDensity
+          ) + domain.variableMoments().scaledDensity(interiorDensity)
+      ),
       momentColumns_(
           static_cast<Eigen::Index>(physics::RawMassMoments10::Count),
           static_cast<Eigen::Index>(domain.leaves().size())
       ),
       laplacian_(domain.uniformLaplacian())
 {
-    if (!std::isfinite(laplacianWeight) || laplacianWeight < 0.0)
+    if (
+        !std::isfinite(laplacianWeight) || laplacianWeight < 0.0 ||
+        !std::isfinite(boundaryDensity) || boundaryDensity <= 0.0 ||
+        !std::isfinite(interiorDensity) || interiorDensity <= 0.0
+    )
     {
         throw std::invalid_argument(
             "Spin-It 2014 Laplacian weight must be finite and nonnegative"
@@ -32,7 +59,7 @@ AdaptiveFillFunctional::AdaptiveFillFunctional(
     for (std::size_t index = 0; index < domain.leaves().size(); ++index)
     {
         momentColumns_.col(static_cast<Eigen::Index>(index)) =
-            domain.leaves()[index].moments.values();
+            interiorDensity * domain.leaves()[index].moments.values();
     }
 }
 
@@ -51,7 +78,7 @@ AdaptiveFillEvaluation AdaptiveFillFunctional::evaluate(
         );
     }
     const Eigen::Matrix<double, 10, 1> raw =
-        domain_->solidMoments().values() - momentColumns_ * beta;
+        baseMoments_.values() - momentColumns_ * beta;
     const physics::RawMassMoments10 finalMoments =
         physics::RawMassMoments10::fromMassMoments(
             [&raw]()

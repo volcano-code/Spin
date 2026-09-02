@@ -32,6 +32,13 @@ public:
         SpinIt2014MomentProblem problem,
         double laplacianWeight
     );
+    AdaptiveFillFunctional(
+        const AdaptiveVoxelDomain& domain,
+        SpinIt2014MomentProblem problem,
+        double laplacianWeight,
+        double boundaryDensity,
+        double interiorDensity
+    );
 
     AdaptiveFillEvaluation evaluate(const Eigen::VectorXd& beta) const;
     double laplacianEnergy(const Eigen::VectorXd& beta) const;
@@ -43,6 +50,7 @@ private:
     SpinIt2014MomentProblem problem_ =
         SpinIt2014MomentProblem::staticBalance();
     double laplacianWeight_ = 0.0;
+    physics::RawMassMoments10 baseMoments_;
     Eigen::MatrixXd momentColumns_;
     Eigen::MatrixXd laplacian_;
 };

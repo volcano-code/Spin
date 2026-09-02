@@ -207,6 +207,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         src/spin2014/SpinIt2014MomentProblem.cpp
         src/spin2014/SlqpLbfgsSolver.cpp
         src/spin2014/AdaptiveVoxelSpinSolver.cpp
+        src/spin2014/DualMaterialSpinSolver.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
         include/spin2014/AdaptiveVoxelDomain.h
@@ -214,6 +215,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         include/spin2014/SpinIt2014MomentProblem.h
         include/spin2014/SlqpLbfgsSolver.h
         include/spin2014/AdaptiveVoxelSpinSolver.h
+        include/spin2014/DualMaterialSpinSolver.h
     )
 endif()
 
@@ -473,6 +475,31 @@ if(BUILD_TESTING)
         set_tests_properties(
             spin-it-2014-end-to-end
             PROPERTIES LABELS "spin-it;spin-it-2014;solver;geometry;regression"
+        )
+
+        add_executable(
+            spin-it-2014-dual-material-regression
+            tests/spin_it_2014_dual_material_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-dual-material-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-dual-material-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-dual-material-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-dual-material
+            COMMAND "$<TARGET_FILE:spin-it-2014-dual-material-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-dual-material
+            PROPERTIES LABELS "spin-it;spin-it-2014;dual-material;regression"
         )
     endif()
 

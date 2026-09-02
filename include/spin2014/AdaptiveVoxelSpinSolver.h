@@ -41,6 +41,8 @@ struct AdaptiveVoxelSpinRequest
     double fractionalEpsilon = 0.05;
     double laplacianWeight = 1e-3;
     double centerOfMassWeight = 1.0;
+    double boundaryDensity = 1.0;
+    double interiorDensity = 1.0;
     double binaryConstraintTolerance = 1e-6;
     SlqpLbfgsSettings slqp;
 };

@@ -128,6 +128,10 @@ void validateAdaptiveVoxelSpinRequest(const AdaptiveVoxelSpinRequest& request)
         request.laplacianWeight < 0.0 ||
         !std::isfinite(request.centerOfMassWeight) ||
         request.centerOfMassWeight < 0.0 ||
+        !std::isfinite(request.boundaryDensity) ||
+        request.boundaryDensity <= 0.0 ||
+        !std::isfinite(request.interiorDensity) ||
+        request.interiorDensity <= 0.0 ||
         !std::isfinite(request.binaryConstraintTolerance) ||
         request.binaryConstraintTolerance <= 0.0
     )
@@ -160,6 +164,8 @@ std::string computeAdaptiveVoxelSpinRequestHash(
     appendDouble(bytes, request.fractionalEpsilon);
     appendDouble(bytes, request.laplacianWeight);
     appendDouble(bytes, request.centerOfMassWeight);
+    appendDouble(bytes, request.boundaryDensity);
+    appendDouble(bytes, request.interiorDensity);
     appendDouble(bytes, request.binaryConstraintTolerance);
     appendInt(bytes, request.slqp.maximumIterations);
     appendInt(bytes, request.slqp.maximumLineSearchSteps);
@@ -199,7 +205,9 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         const AdaptiveFillFunctional functional(
             domain,
             momentProblem(request),
-            request.laplacianWeight
+            request.laplacianWeight,
+            request.boundaryDensity,
+            request.interiorDensity
         );
         const SlqpLbfgsResult relaxed = solveSlqpLbfgs(
             functional,
@@ -273,7 +281,9 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
     const AdaptiveFillFunctional finalFunctional(
         domain,
         momentProblem(request),
-        request.laplacianWeight
+        request.laplacianWeight,
+        request.boundaryDensity,
+        request.interiorDensity
     );
     const AdaptiveFillEvaluation finalEvaluation =
         finalFunctional.evaluate(binary);
@@ -305,7 +315,14 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         request.maximumLevel,
         request.maximumLevel
     );
-    if (!finalMomentDomain.solidMoments().values().isApprox(
+    const physics::RawMassMoments10 boundaryMoments =
+        domain.solidMoments() - domain.variableMoments();
+    const physics::RawMassMoments10 retainedInteriorMoments =
+        finalMomentDomain.solidMoments() - boundaryMoments;
+    const physics::RawMassMoments10 independentlyWeighted =
+        boundaryMoments.scaledDensity(request.boundaryDensity) +
+        retainedInteriorMoments.scaledDensity(request.interiorDensity);
+    if (!independentlyWeighted.values().isApprox(
             result.finalMoments.values(), 1e-10
         ))
     {
