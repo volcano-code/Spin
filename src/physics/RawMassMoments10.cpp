@@ -1,6 +1,9 @@
 #include "physics/RawMassMoments10.h"
 
+#include <Eigen/LU>
+
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 
@@ -113,4 +116,91 @@ Eigen::Matrix3d RawMassMoments10::inertiaAboutCenter(
 }
 
 
+RawMassMoments10 RawMassMoments10::scaledDensity(double factor) const
+{
+    if (!std::isfinite(factor) || factor < 0.0)
+    {
+        throw std::invalid_argument(
+            "density scale must be finite and non-negative"
+        );
+    }
+    return RawMassMoments10(factor * values_);
+}
+
+
+RawMassMoments10 RawMassMoments10::transformed(
+    const Eigen::Matrix3d& linear,
+    const Eigen::Vector3d& translation
+) const
+{
+    if (!isFinite() || !linear.allFinite() || !translation.allFinite())
+    {
+        throw std::invalid_argument("raw-moment transform must be finite");
+    }
+    const double determinant = std::abs(linear.determinant());
+    if (
+        !std::isfinite(determinant) ||
+        determinant <= std::numeric_limits<double>::epsilon()
+    )
+    {
+        throw std::invalid_argument(
+            "raw-moment linear transform must be non-singular"
+        );
+    }
+
+    const MassMoments source = toMassMoments();
+    const Eigen::Vector3d linearFirst = linear * source.firstMoment;
+    MassMoments result;
+    result.mass = determinant * source.mass;
+    result.firstMoment = determinant * (
+        linearFirst + source.mass * translation
+    );
+    result.secondMoment = determinant * (
+        linear * source.secondMoment * linear.transpose() +
+        linearFirst * translation.transpose() +
+        translation * linearFirst.transpose() +
+        source.mass * translation * translation.transpose()
+    );
+    return fromMassMoments(result);
+}
+
+
+RawMassMoments10& RawMassMoments10::operator+=(
+    const RawMassMoments10& other
+)
+{
+    values_ += other.values_;
+    return *this;
+}
+
+
+RawMassMoments10& RawMassMoments10::operator-=(
+    const RawMassMoments10& other
+)
+{
+    values_ -= other.values_;
+    return *this;
+}
+
+
 } // namespace physics
+
+
+physics::RawMassMoments10 operator+(
+    physics::RawMassMoments10 first,
+    const physics::RawMassMoments10& second
+)
+{
+    first += second;
+    return first;
+}
+
+
+physics::RawMassMoments10 operator-(
+    physics::RawMassMoments10 first,
+    const physics::RawMassMoments10& second
+)
+{
+    first -= second;
+    return first;
+}

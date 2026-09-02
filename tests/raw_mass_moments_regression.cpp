@@ -95,6 +95,60 @@ int runConversion()
 }
 
 
+int runTransform()
+{
+    MassMoments cube;
+    cube.mass = 8.0;
+    cube.secondMoment = (8.0 / 3.0) * Eigen::Matrix3d::Identity();
+    const physics::RawMassMoments10 raw =
+        physics::RawMassMoments10::fromMassMoments(cube);
+
+    const Eigen::Matrix3d linear = 2.0 * Eigen::Matrix3d::Identity();
+    const Eigen::Vector3d translation(3.0, -4.0, 5.0);
+    const physics::RawMassMoments10 transformed =
+        raw.transformed(linear, translation);
+    const MassMoments actual = transformed.toMassMoments();
+
+    Eigen::Matrix3d expectedSecond;
+    expectedSecond <<
+        1984.0 / 3.0, -768.0, 960.0,
+        -768.0, 3328.0 / 3.0, -1280.0,
+        960.0, -1280.0, 5056.0 / 3.0;
+    if (
+        !approximatelyEqual(actual.mass, 64.0) ||
+        !actual.firstMoment.isApprox(
+            Eigen::Vector3d(192.0, -256.0, 320.0),
+            1e-12
+        ) ||
+        !actual.secondMoment.isApprox(expectedSecond, 1e-12) ||
+        !transformed.centerOfMass().isApprox(translation, 1e-12)
+    )
+    {
+        return fail("transform", "affine raw moments differ from analytic cube");
+    }
+
+    const physics::RawMassMoments10 doubled = raw.scaledDensity(2.0);
+    const physics::RawMassMoments10 algebra = raw + doubled - raw;
+    if (!algebra.values().isApprox(doubled.values(), 1e-14))
+    {
+        return fail("transform", "raw-moment algebra is inconsistent");
+    }
+
+    try
+    {
+        static_cast<void>(raw.transformed(
+            Eigen::Matrix3d::Zero(),
+            Eigen::Vector3d::Zero()
+        ));
+    }
+    catch (const std::invalid_argument&)
+    {
+        return EXIT_SUCCESS;
+    }
+    return fail("transform", "singular affine transform was accepted");
+}
+
+
 } // namespace
 
 
@@ -110,6 +164,7 @@ int main(int argc, char** argv)
     {
         if (scenario == "ordering") return runOrdering();
         if (scenario == "conversion") return runConversion();
+        if (scenario == "transform") return runTransform();
     }
     catch (const std::exception& error)
     {

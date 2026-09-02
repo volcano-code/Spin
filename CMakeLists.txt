@@ -633,6 +633,7 @@ if(BUILD_TESTING)
 
     add_raw_mass_moments_test(raw-moments-ordering ordering)
     add_raw_mass_moments_test(raw-moments-conversion conversion)
+    add_raw_mass_moments_test(raw-moments-transform transform)
 
     add_executable(
         stability-regression

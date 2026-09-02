@@ -47,6 +47,15 @@ public:
         double minimumPositiveMass = 0.0
     ) const;
 
+    RawMassMoments10 scaledDensity(double factor) const;
+    RawMassMoments10 transformed(
+        const Eigen::Matrix3d& linear,
+        const Eigen::Vector3d& translation
+    ) const;
+
+    RawMassMoments10& operator+=(const RawMassMoments10& other);
+    RawMassMoments10& operator-=(const RawMassMoments10& other);
+
 private:
     explicit RawMassMoments10(const Vector& values);
 
@@ -55,3 +64,15 @@ private:
 
 
 } // namespace physics
+
+
+physics::RawMassMoments10 operator+(
+    physics::RawMassMoments10 first,
+    const physics::RawMassMoments10& second
+);
+
+
+physics::RawMassMoments10 operator-(
+    physics::RawMassMoments10 first,
+    const physics::RawMassMoments10& second
+);
