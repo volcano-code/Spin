@@ -82,6 +82,7 @@ from .spin import (
     SpinQuadricEvaluation,
     SpinSolverConfig,
     evaluate_spin_it_faster_quadric,
+    integrate_raw_mass_moments,
     solve_spin_it_faster,
 )
 
@@ -138,6 +139,7 @@ __all__ = [
     "evaluate_quasi_static_tilt",
     "evaluate_tilt_azimuths",
     "evaluate_spin_it_faster_quadric",
+    "integrate_raw_mass_moments",
     "load_config",
     "load_released_beta_archive",
     "load_sealed_pybullet_entry",

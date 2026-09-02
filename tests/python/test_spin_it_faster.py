@@ -12,6 +12,7 @@ from make_it_stand.spin import (
     SpinItFasterRequest,
     SpinSolverConfig,
     evaluate_spin_it_faster_quadric,
+    integrate_raw_mass_moments,
     solve_spin_it_faster,
 )
 
@@ -56,6 +57,16 @@ class SpinSchemaTests(unittest.TestCase):
 
 
 class SpinNativeArtifactTests(unittest.TestCase):
+    def test_raw_moment_integration_matches_cube(self) -> None:
+        vertices, faces = cube(-1.0, 1.0)
+        moments = integrate_raw_mass_moments(vertices, faces)
+        np.testing.assert_allclose(
+            moments,
+            (8.0, 0.0, 0.0, 0.0, 8.0 / 3.0, 8.0 / 3.0,
+             8.0 / 3.0, 0.0, 0.0, 0.0),
+            atol=1e-14,
+        )
+
     def test_planar_fixture_returns_immutable_sealed_artifact(self) -> None:
         outer_vertices, outer_faces = cube(-5.0, 5.0)
         design_vertices, design_faces = cube(-1.0, 1.0)

@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -449,6 +450,32 @@ PYBIND11_MODULE(_make_it_stand, module)
         .export_values();
 
 #if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+    module.def(
+        "integrate_raw_mass_moments",
+        [](
+            const py::object& vertices,
+            const py::object& faces,
+            double density
+        )
+        {
+            if (!std::isfinite(density) || density <= 0.0)
+            {
+                throw py::value_error("density must be finite and positive");
+            }
+            const MassMoments moments = computeSurfaceMassMoments(
+                verticesFromPython(vertices),
+                facesFromPython(faces),
+                density
+            );
+            return Eigen::VectorXd(
+                physics::RawMassMoments10::fromMassMoments(moments).values()
+            );
+        },
+        py::arg("vertices"),
+        py::arg("faces"),
+        py::arg("density") = 1.0
+    );
+
     py::enum_<spin::SpinMode>(module, "SpinMode")
         .value("STATIC_BALANCE", spin::SpinMode::StaticBalance)
         .value("FIDGET_SPINNER", spin::SpinMode::FidgetSpinner)

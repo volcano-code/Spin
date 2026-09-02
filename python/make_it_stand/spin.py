@@ -301,6 +301,22 @@ def evaluate_spin_it_faster_quadric(
     )
 
 
+def integrate_raw_mass_moments(
+    vertices: Sequence[Sequence[float]],
+    faces: Sequence[Sequence[int]],
+    density: float = 1.0,
+) -> tuple[float, ...]:
+    native = _native_module()
+    normalized_vertices = _vertices(vertices, "vertices")
+    normalized_faces = _faces(faces, "faces")
+    values = native.integrate_raw_mass_moments(
+        np.asarray(normalized_vertices, dtype=np.float64),
+        np.asarray(normalized_faces, dtype=np.int32),
+        float(density),
+    )
+    return tuple(float(value) for value in values)
+
+
 def solve_spin_it_faster(
     request: SpinItFasterRequest,
     *,
