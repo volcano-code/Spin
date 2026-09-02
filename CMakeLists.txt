@@ -92,6 +92,7 @@ set(MAKE_IT_STAND_CORE_SOURCES
     src/physics/BalanceEnergy.cpp
     src/physics/BalanceObjective.cpp
     src/physics/MassProperties.cpp
+    src/physics/RawMassMoments10.cpp
     src/physics/SurfaceMassDifferential.cpp
     src/stability/SupportRegion.cpp
     src/stability/BalanceTargetSchedule.cpp
@@ -132,6 +133,7 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/physics/BalanceEnergy.h
     include/physics/BalanceObjective.h
     include/physics/MassProperties.h
+    include/physics/RawMassMoments10.h
     include/physics/SurfaceMassDifferential.h
     include/stability/SupportRegion.h
     include/stability/BalanceTargetSchedule.h
@@ -597,6 +599,40 @@ if(BUILD_TESTING)
     add_mass_properties_test(mass-voxel-analytic voxel)
     add_mass_properties_test(mass-deletion-exhaustive deletion)
     add_mass_properties_test(balance-energy-analytic energy)
+
+    add_executable(
+        raw-mass-moments-regression
+        tests/raw_mass_moments_regression.cpp
+    )
+    target_compile_features(
+        raw-mass-moments-regression
+        PRIVATE cxx_std_17
+    )
+    set_target_properties(
+        raw-mass-moments-regression
+        PROPERTIES CXX_EXTENSIONS OFF
+    )
+    target_link_libraries(
+        raw-mass-moments-regression
+        PRIVATE make_it_stand::core
+    )
+
+    function(add_raw_mass_moments_test test_name scenario)
+        add_test(
+            NAME "${test_name}"
+            COMMAND "$<TARGET_FILE:raw-mass-moments-regression>"
+                "${scenario}"
+        )
+        set_tests_properties(
+            "${test_name}"
+            PROPERTIES
+                LABELS "spin-it;physics;moments"
+                TIMEOUT 30
+        )
+    endfunction()
+
+    add_raw_mass_moments_test(raw-moments-ordering ordering)
+    add_raw_mass_moments_test(raw-moments-conversion conversion)
 
     add_executable(
         stability-regression
