@@ -24,6 +24,11 @@ option(
     ON
 )
 option(
+    MAKE_IT_STAND_BUILD_SPIN_IT_FASTER
+    "Build the Spin-It Faster formula-reproduction solver"
+    OFF
+)
+option(
     MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS
     "Run pure-Python paper/beta compatibility contract tests"
     OFF
@@ -154,6 +159,15 @@ set(MAKE_IT_STAND_CORE_HEADERS
     include/voxel/VoxelTopology.h
 )
 
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+    list(APPEND MAKE_IT_STAND_CORE_SOURCES
+        src/spin/SpinDesignRequest.cpp
+    )
+    list(APPEND MAKE_IT_STAND_CORE_HEADERS
+        include/spin/SpinDesignRequest.h
+    )
+endif()
+
 if(MAKE_IT_STAND_BUILD_REACHABILITY)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES
         src/reachability/CarvingReachability.cpp
@@ -185,7 +199,9 @@ target_include_directories(
 )
 target_compile_definitions(
     make_it_stand_core
-    PUBLIC MAKE_IT_STAND_HAS_REACHABILITY=$<BOOL:${MAKE_IT_STAND_BUILD_REACHABILITY}>
+    PUBLIC
+        MAKE_IT_STAND_HAS_REACHABILITY=$<BOOL:${MAKE_IT_STAND_BUILD_REACHABILITY}>
+        MAKE_IT_STAND_HAS_SPIN_IT_FASTER=$<BOOL:${MAKE_IT_STAND_BUILD_SPIN_IT_FASTER}>
 )
 target_link_libraries(make_it_stand_core PUBLIC igl::core)
 if(MAKE_IT_STAND_BUILD_REACHABILITY)
@@ -308,6 +324,33 @@ endif()
 include(CTest)
 
 if(BUILD_TESTING)
+    if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+        add_executable(
+            spin-design-request-regression
+            tests/spin_design_request_regression.cpp
+        )
+        target_compile_features(
+            spin-design-request-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-design-request-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-design-request-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-request
+            COMMAND "$<TARGET_FILE:spin-design-request-regression>"
+        )
+        set_tests_properties(
+            spin-faster-request
+            PROPERTIES LABELS "spin-it;spin-it-faster;regression"
+        )
+    endif()
+
     add_test(
         NAME reachability-dependency-contract
         COMMAND "${CMAKE_COMMAND}"
