@@ -179,6 +179,11 @@ SpinResultViewMetadata loadSpinResultViewMetadata(
         );
     }
     SpinResultViewMetadata result;
+    if (schema == "spin-it-2014-artifact-v1")
+    {
+        result.artifactFamily = "Spin-It 2014";
+        result.cavityLayerName = "Cavity / adaptive voxel field";
+    }
     result.mode = stringField(text, "mode");
     const std::vector<double> center =
         numericArrayField(text, "center_of_mass_model");

@@ -212,6 +212,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         src/spin2014/SurfaceRawMomentDifferential.cpp
         src/spin2014/CageSpinDeformation.cpp
         src/spin2014/CageSpinDeformationSolver.cpp
+        src/spin2014/AutomaticCageBinding.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
         include/spin2014/AdaptiveVoxelDomain.h
@@ -224,6 +225,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         include/spin2014/SurfaceRawMomentDifferential.h
         include/spin2014/CageSpinDeformation.h
         include/spin2014/CageSpinDeformationSolver.h
+        include/spin2014/AutomaticCageBinding.h
     )
 endif()
 
@@ -486,6 +488,28 @@ if(BUILD_TESTING)
         )
 
         add_executable(
+            spin-it-2014-modes-regression
+            tests/spin_it_2014_modes_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-modes-regression PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-modes-regression PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-modes-regression PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-modes
+            COMMAND "$<TARGET_FILE:spin-it-2014-modes-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-modes
+            PROPERTIES LABELS "spin-it;spin-it-2014;solver;regression"
+        )
+
+        add_executable(
             spin-it-2014-dual-material-regression
             tests/spin_it_2014_dual_material_regression.cpp
         )
@@ -602,6 +626,29 @@ if(BUILD_TESTING)
         set_tests_properties(
             spin-it-2014-cage-solver
             PROPERTIES LABELS "spin-it;spin-it-2014;deformation;solver;regression"
+        )
+
+        add_executable(
+            spin-it-2014-automatic-cage-regression
+            tests/spin_it_2014_automatic_cage_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-automatic-cage-regression PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-automatic-cage-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-automatic-cage-regression PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-automatic-cage
+            COMMAND "$<TARGET_FILE:spin-it-2014-automatic-cage-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-automatic-cage
+            PROPERTIES LABELS "spin-it;spin-it-2014;deformation;bbw;regression"
         )
 
         if(MAKE_IT_STAND_BUILD_PYTHON)
@@ -827,11 +874,22 @@ if(BUILD_TESTING)
         COMMAND "${CMAKE_COMMAND}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_spin_it_faster_dependency.cmake"
     )
+    add_test(
+        NAME spin-2014-dependency-contract
+        COMMAND "${CMAKE_COMMAND}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_spin_it_2014_dependency.cmake"
+    )
     set_tests_properties(
         spin-faster-dependency-contract
         PROPERTIES
             LABELS "spin-it;spin-it-faster;build-system"
             TIMEOUT 180
+    )
+    set_tests_properties(
+        spin-2014-dependency-contract
+        PROPERTIES
+            LABELS "spin-it;spin-it-2014;build-system"
+            TIMEOUT 240
     )
     set_tests_properties(
         reachability-dependency-contract

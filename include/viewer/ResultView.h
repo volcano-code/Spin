@@ -22,6 +22,8 @@ struct ResultViewArguments
 
 struct SpinResultViewMetadata
 {
+    std::string artifactFamily = "Spin-It Faster";
+    std::string cavityLayerName = "Cavity / signed quadric";
     std::string mode;
     Eigen::Vector3d centerOfMass = Eigen::Vector3d::Zero();
     Eigen::Vector3d targetOrigin = Eigen::Vector3d::Zero();

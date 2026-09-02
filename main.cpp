@@ -70,6 +70,7 @@ bool showSpinMaterial = true;
 bool showSpinCavity = true;
 bool showSpinAxes = true;
 bool showSpinTargetPlane = true;
+bool explodeSpinCavity = false;
 
 // Undeformed objects
 Eigen::MatrixXd origV;
@@ -398,11 +399,37 @@ void update_spin_visibility()
 }
 
 
+void update_spin_cavity_geometry()
+{
+	Eigen::MatrixXd displayed = state.innerV;
+	if (explodeSpinCavity)
+	{
+		const double width = state.V.col(0).maxCoeff() -
+			state.V.col(0).minCoeff();
+		displayed.col(0).array() += 1.25 * (width > 0.0 ? width : 1.0);
+	}
+	viewer.data(inner_data_mesh_id).set_vertices(displayed);
+	if (explodeSpinCavity)
+	{
+		Eigen::MatrixXd framing(state.V.rows() + displayed.rows(), 3);
+		framing.topRows(state.V.rows()) = state.V;
+		framing.bottomRows(displayed.rows()) = displayed;
+		viewer.core().align_camera_center(framing);
+	}
+	else
+	{
+		viewer.core().align_camera_center(state.V, state.F);
+	}
+}
+
+
 void draw_spin_result_window()
 {
 	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSize(ImVec2(365, 310), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Spin-It Faster artifact", nullptr,
+	ImGui::SetNextWindowSize(ImVec2(365, 335), ImGuiCond_FirstUseEver);
+	const std::string panelTitle =
+		state.spinMetadata.artifactFamily + " artifact";
+	ImGui::Begin(panelTitle.c_str(), nullptr,
 		ImGuiWindowFlags_NoSavedSettings);
 	ImGui::TextWrapped("%s", resultWindowTitle.c_str());
 	ImGui::Text("Mode: %s", state.spinMetadata.mode.c_str());
@@ -411,7 +438,13 @@ void draw_spin_result_window()
 	changed |= ImGui::Checkbox("Fixed outer shell", &showSpinOuter);
 	changed |= ImGui::Checkbox("Design domain", &showSpinDesign);
 	changed |= ImGui::Checkbox("Retained material", &showSpinMaterial);
-	changed |= ImGui::Checkbox("Cavity / signed quadric", &showSpinCavity);
+	changed |= ImGui::Checkbox(
+		state.spinMetadata.cavityLayerName.c_str(), &showSpinCavity
+	);
+	if (ImGui::Checkbox("Explode cavity for inspection", &explodeSpinCavity))
+	{
+		update_spin_cavity_geometry();
+	}
 	changed |= ImGui::Checkbox("CoM, target and principal axes", &showSpinAxes);
 	changed |= ImGui::Checkbox("Target/support plane", &showSpinTargetPlane);
 	if (changed) update_spin_visibility();
@@ -419,10 +452,12 @@ void draw_spin_result_window()
 	ImGui::TextColored(ImVec4(0.95f, 0.68f, 0.12f, 1.0f),
 		"Gold: retained design material");
 	ImGui::TextColored(ImVec4(0.90f, 0.10f, 0.08f, 1.0f),
-		"Red: cavity / quadric negative region");
+		"Red: cavity / optimized negative region");
 	ImGui::TextColored(ImVec4(0.18f, 0.48f, 0.88f, 1.0f),
 		"Blue: target axis; RGB: principal axes");
-	ImGui::TextWrapped("Read-only sealed result; outer coordinates are unchanged.");
+	ImGui::TextWrapped(
+		"Read-only sealed result; explode changes display only, never geometry."
+	);
 	ImGui::End();
 }
 
@@ -724,7 +759,13 @@ int main(int argc, char *argv[])
 
 			viewer.append_mesh();
 			inner_data_mesh_id = viewer.data().id;
-			viewer.data(inner_data_mesh_id).set_mesh(state.innerV, state.innerF);
+			Eigen::MatrixXi cavityDisplayFaces = state.innerF;
+			// The sealed material boundary is oriented into the void.  Reverse
+			// faces only in the viewer so the extracted cavity volume is lit
+			// from its own exterior; the artifact itself remains untouched.
+			cavityDisplayFaces.rowwise().reverseInPlace();
+			viewer.data(inner_data_mesh_id).set_mesh(
+				state.innerV, cavityDisplayFaces);
 			viewer.data(inner_data_mesh_id).set_colors(resultVoidColor);
 
 			viewer.append_mesh();
