@@ -1076,6 +1076,7 @@ if(BUILD_TESTING)
                 test_paper_trace.PaperTraceTests
                 test_experiment_drivers.ExperimentDriverTests
                 test_stability_oracle.StabilityOracleTests
+                test_spin_it_paper_inventory.SpinItPaperInventoryTests
                 -v
         )
         set_tests_properties(

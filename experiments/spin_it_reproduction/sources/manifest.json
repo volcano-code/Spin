@@ -32,4 +32,16 @@
     }
   ],
   "repository_policy": "PDF bytes are not committed. URLs, publisher checksums, locally verified SHA-256 values, and formula notes are committed."
+  ,
+  "spin_it_2014": {
+    "doi": "10.1145/2601097.2601157",
+    "author_code_status": "NOT_PUBLICLY_RELEASED",
+    "author_asset_status": "NOT_PUBLICLY_RELEASED",
+    "local_reference_sha256": "3add70de03df9b0e173028d55c775e8520fa89a6b21d9b269f926ccbe8a76e4e"
+  },
+  "public_video": {
+    "url": "https://research-explorer.ista.ac.at/download/17203/17276/sif-video-final.mp4",
+    "publisher_record_id": "17276"
+  },
+  "complete_inventory": "../paper_inventory.json"
 }

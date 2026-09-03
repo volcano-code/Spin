@@ -1,0 +1,89 @@
+{
+  "schema": "spin-it-public-paper-inventory-v1",
+  "schema_version": 1,
+  "claim_dimensions": [
+    "formula_coverage",
+    "experiment_coverage",
+    "asset_class",
+    "author_exact",
+    "physical_validation"
+  ],
+  "aggregate_claim": {
+    "target": "PUBLIC_COMPLETE_REPRODUCTION",
+    "author_exact": false,
+    "physical_validation": false
+  },
+  "author_asset_lookup": {
+    "directory": "experiments/spin_it_reproduction/author_assets",
+    "tracked": false,
+    "policy": "Author assets may upgrade asset_class only; they must not change solver equations or tolerances."
+  },
+  "papers": [
+    {
+      "id": "spin-it-2014",
+      "title": "Spin-It: Optimizing Moment of Inertia for Spinnable Objects",
+      "doi": "10.1145/2601097.2601157",
+      "author_code_status": "NOT_PUBLICLY_RELEASED",
+      "author_asset_status": "NOT_PUBLICLY_RELEASED",
+      "sources": [
+        {
+          "kind": "PAPER",
+          "url": "https://doi.org/10.1145/2601097.2601157",
+          "sha256": "3add70de03df9b0e173028d55c775e8520fa89a6b21d9b269f926ccbe8a76e4e"
+        }
+      ]
+    },
+    {
+      "id": "spin-it-faster-2024",
+      "title": "Spin-It Faster: Quadrics Solve All Topology Optimization Problems That Depend Only On Mass Moments",
+      "doi": "10.1145/3658194",
+      "author_code_status": "NOT_PUBLICLY_RELEASED",
+      "author_asset_status": "NOT_PUBLICLY_RELEASED",
+      "sources": [
+        {
+          "kind": "PAPER",
+          "url": "https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf",
+          "sha256": "e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc"
+        },
+        {
+          "kind": "SUPPLEMENT",
+          "url": "https://research-explorer.ista.ac.at/download/17203/17205/sif-supp-final.pdf",
+          "sha256": "3e18e0e784bb917897f01d1ce182e55dbc3bee5e055aca0f71582673f4431200"
+        },
+        {
+          "kind": "VIDEO",
+          "url": "https://research-explorer.ista.ac.at/download/17203/17276/sif-video-final.mp4",
+          "publisher_record_id": "17276"
+        }
+      ]
+    }
+  ],
+  "experiments": [
+    {"id":"sif-static-tilted-vase","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-floating-tea-infuser","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":false,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-floating-island-cat","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":false,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-floating-island-dog-human","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":false,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-heart-top","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-noodles-top","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-jellyfish-yoyo","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-flower-fidget","paper":"spin-it-faster-2024","section":"6.2","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-quadratic-convergence","paper":"spin-it-faster-2024","section":"6.3","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-static-pareto","paper":"spin-it-faster-2024","section":"6.4","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":false,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-top-pareto","paper":"spin-it-faster-2024","section":"6.4","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":false,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-near-infeasible","paper":"spin-it-faster-2024","section":"6.5","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"sif-degenerate-problems","paper":"spin-it-faster-2024","section":"6.6","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":false,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-ellipsoid","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-heart","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-armadillo-hand","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-armadillo-shell","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-teapot-variants","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-cuboid-yoyo","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-woven-ring-yoyo","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-dancing-couple","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-sumone-dual-material","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-trex-static","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-elephant","paper":"spin-it-2014","section":"8","asset_class":"RECONSTRUCTED_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false},
+    {"id":"si14-cuts-and-voids","paper":"spin-it-2014","section":"8","asset_class":"BLOCKED_MISSING_ASSET","formula_coverage":true,"experiment_coverage":false,"author_exact":false,"physical_validation":false}
+  ],
+  "inventory_sha256": "510d6b0744269be16bb216865ab17b5282723c4211e58a26c38f40fe6ab8efff"
+}
