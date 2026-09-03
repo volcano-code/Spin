@@ -481,6 +481,7 @@ PYBIND11_MODULE(_make_it_stand, module)
 
     py::enum_<spin::SpinMode>(module, "SpinMode")
         .value("STATIC_BALANCE", spin::SpinMode::StaticBalance)
+        .value("BUOYANT_STABILITY", spin::SpinMode::BuoyantStability)
         .value("FIDGET_SPINNER", spin::SpinMode::FidgetSpinner)
         .value("YO_YO", spin::SpinMode::YoYo)
         .value("SPINNING_TOP", spin::SpinMode::SpinningTop);
@@ -526,6 +527,27 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_readwrite("maximum_geodesic_step", &spin::SpinSolverSettings::maximumGeodesicStep)
         .def_readwrite("deterministic_seed", &spin::SpinSolverSettings::deterministicSeed);
 
+    py::class_<spin::BuoyantStabilityData>(module, "BuoyantStabilityData")
+        .def(py::init<>())
+        .def_readwrite("liquid_density", &spin::BuoyantStabilityData::liquidDensity)
+        .def_readwrite(
+            "displaced_liquid_volume",
+            &spin::BuoyantStabilityData::displacedLiquidVolume
+        )
+        .def_readwrite(
+            "center_of_buoyancy_target",
+            &spin::BuoyantStabilityData::centerOfBuoyancyTarget
+        )
+        .def_readwrite("waterline_area", &spin::BuoyantStabilityData::waterlineArea)
+        .def_readwrite(
+            "waterline_central_second_moment",
+            &spin::BuoyantStabilityData::waterlineCentralSecondMoment
+        )
+        .def_readwrite(
+            "fixed_shell_volume",
+            &spin::BuoyantStabilityData::fixedShellVolume
+        );
+
     py::class_<physics::RawMassMoments10>(module, "RawMassMoments10")
         .def(py::init<>())
         .def_static("from_values", &rawMomentsFromVector)
@@ -555,6 +577,7 @@ PYBIND11_MODULE(_make_it_stand, module)
             &spin::SpinDesignRequest::minimumWallThickness
         )
         .def_readwrite("center_of_mass_weight", &spin::SpinDesignRequest::centerOfMassWeight)
+        .def_readwrite("buoyancy", &spin::SpinDesignRequest::buoyancy)
         .def_readwrite("settings", &spin::SpinDesignRequest::settings);
 
     py::class_<api::SpinItFasterArtifact>(module, "SpinItFasterArtifact")

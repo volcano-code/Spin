@@ -85,7 +85,9 @@ int main()
             "FIDGET_SPINNER" ||
         std::string(spin::spinModeToken(spin::SpinMode::YoYo)) != "YO_YO" ||
         std::string(spin::spinModeToken(spin::SpinMode::SpinningTop)) !=
-            "SPINNING_TOP"
+            "SPINNING_TOP" ||
+        std::string(spin::spinModeToken(spin::SpinMode::BuoyantStability)) !=
+            "BUOYANT_STABILITY"
     )
     {
         return fail("mode tokens do not match the public contract");
@@ -127,6 +129,43 @@ int main()
     if (!throwsInvalid([&] { spin::validateSpinDesignRequest(invalid); }))
     {
         return fail("non-finite solver tolerance was accepted");
+    }
+
+    spin::SpinDesignRequest buoyant = request;
+    buoyant.mode = spin::SpinMode::BuoyantStability;
+    MassMoments fixedShell;
+    fixedShell.mass = 0.25;
+    fixedShell.firstMoment = Eigen::Vector3d(0.0, 0.0, 0.05);
+    fixedShell.secondMoment = 0.1 * Eigen::Matrix3d::Identity();
+    buoyant.fixedShellMoments =
+        physics::RawMassMoments10::fromMassMoments(fixedShell);
+    buoyant.materialDensity = 0.5;
+    buoyant.buoyancy.liquidDensity = 1.0;
+    buoyant.buoyancy.displacedLiquidVolume = 1.5;
+    buoyant.buoyancy.centerOfBuoyancyTarget = Eigen::Vector3d(0.1, -0.2, 0.0);
+    buoyant.buoyancy.waterlineArea = 2.0;
+    buoyant.buoyancy.waterlineCentralSecondMoment =
+        (Eigen::Matrix2d() << 0.4, 0.05, 0.05, 0.3).finished();
+    buoyant.buoyancy.fixedShellVolume = 0.5;
+    spin::validateSpinDesignRequest(buoyant);
+    const std::string buoyantHash = spin::computeSpinDesignRequestHash(buoyant);
+    spin::SpinDesignRequest changedBuoyancy = buoyant;
+    changedBuoyancy.buoyancy.waterlineArea = 2.5;
+    if (spin::computeSpinDesignRequestHash(changedBuoyancy) == buoyantHash)
+    {
+        return fail("buoyancy inputs are not bound into the request hash");
+    }
+    spin::SpinDesignRequest invalidBuoyancy = buoyant;
+    invalidBuoyancy.buoyancy.liquidDensity = 0.0;
+    if (!throwsInvalid([&] { spin::validateSpinDesignRequest(invalidBuoyancy); }))
+    {
+        return fail("non-positive liquid density was accepted");
+    }
+    invalidBuoyancy = buoyant;
+    invalidBuoyancy.buoyancy.waterlineCentralSecondMoment(0, 1) = 0.3;
+    if (!throwsInvalid([&] { spin::validateSpinDesignRequest(invalidBuoyancy); }))
+    {
+        return fail("non-symmetric waterline moment tensor was accepted");
     }
 
     spin::QuadricHollowingResult result;

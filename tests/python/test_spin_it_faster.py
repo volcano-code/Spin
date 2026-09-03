@@ -55,6 +55,34 @@ class SpinSchemaTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported Spin-It Faster mode"):
             replace(request, mode="UNKNOWN")
 
+    def test_buoyant_request_normalizes_public_paper_inputs(self) -> None:
+        outer_vertices, outer_faces = cube(-5.0, 5.0)
+        design_vertices, design_faces = cube(-1.0, 1.0)
+        request = SpinItFasterRequest(
+            outer_vertices=outer_vertices,
+            outer_faces=outer_faces,
+            design_vertices=design_vertices,
+            design_faces=design_faces,
+            mode="BUOYANT_STABILITY",
+            material_density=0.5,
+            minimum_wall_thickness=4.0,
+            liquid_density=1.0,
+            displaced_liquid_volume=1.5,
+            center_of_buoyancy_target=(0.1, -0.2, 0.0),
+            waterline_area=2.0,
+            waterline_central_second_moment=((0.4, 0.05), (0.05, 0.3)),
+            fixed_shell_volume=0.5,
+        )
+        self.assertEqual(request.mode, "BUOYANT_STABILITY")
+        self.assertEqual(request.center_of_buoyancy_target, (0.1, -0.2, 0.0))
+        with self.assertRaisesRegex(ValueError, "liquid_density"):
+            replace(request, liquid_density=0.0)
+        with self.assertRaisesRegex(ValueError, "symmetric"):
+            replace(
+                request,
+                waterline_central_second_moment=((0.4, 0.3), (0.05, 0.3)),
+            )
+
 
 class SpinNativeArtifactTests(unittest.TestCase):
     def test_raw_moment_integration_matches_cube(self) -> None:

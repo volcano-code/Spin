@@ -15,6 +15,7 @@ namespace spin
 enum class SpinMode
 {
     StaticBalance,
+    BuoyantStability,
     FidgetSpinner,
     YoYo,
     SpinningTop
@@ -69,6 +70,18 @@ struct SpinSolverSettings
 };
 
 
+/** Published prescribed-waterline inputs for buoyant stability. */
+struct BuoyantStabilityData
+{
+    double liquidDensity = 0.0;
+    double displacedLiquidVolume = 0.0;
+    Eigen::Vector3d centerOfBuoyancyTarget = Eigen::Vector3d::Zero();
+    double waterlineArea = 0.0;
+    Eigen::Matrix2d waterlineCentralSecondMoment = Eigen::Matrix2d::Zero();
+    double fixedShellVolume = 0.0;
+};
+
+
 /** Immutable input contract for the quadric hollowing solver. */
 struct SpinDesignRequest
 {
@@ -84,6 +97,8 @@ struct SpinDesignRequest
 
     /** Paper spinning-top weight w_c; unsupported for all other modes. */
     double centerOfMassWeight = 0.0;
+
+    BuoyantStabilityData buoyancy;
 
     SpinSolverSettings settings;
 };

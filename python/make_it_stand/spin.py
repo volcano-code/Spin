@@ -14,7 +14,13 @@ import numpy as np
 
 
 SPIN_ARTIFACT_SCHEMA = "spin-it-faster-artifact-v1"
-SPIN_MODES = frozenset({"STATIC_BALANCE", "FIDGET_SPINNER", "YO_YO", "SPINNING_TOP"})
+SPIN_MODES = frozenset({
+    "STATIC_BALANCE",
+    "BUOYANT_STABILITY",
+    "FIDGET_SPINNER",
+    "YO_YO",
+    "SPINNING_TOP",
+})
 SPIN_EVIDENCE = frozenset({"PAPER_FORMULA_REPRODUCTION", "RECONSTRUCTED_ASSET"})
 STATIC_OBJECTIVES = frozenset({"MAXIMUM_MASS", "LOWER_CENTER_OF_MASS"})
 
@@ -107,6 +113,15 @@ class SpinItFasterRequest:
     original_units_per_normalized_unit: float = 1.0
     minimum_wall_thickness: float = 0.0
     center_of_mass_weight: float = 0.0
+    liquid_density: float = 0.0
+    displaced_liquid_volume: float = 0.0
+    center_of_buoyancy_target: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    waterline_area: float = 0.0
+    waterline_central_second_moment: tuple[tuple[float, float], ...] = (
+        (0.0, 0.0),
+        (0.0, 0.0),
+    )
+    fixed_shell_volume: float = 0.0
     settings: SpinSolverConfig = field(default_factory=SpinSolverConfig)
 
     def __post_init__(self) -> None:
@@ -126,16 +141,67 @@ class SpinItFasterRequest:
             raise ValueError(f"unsupported static objective: {self.static_objective!r}")
         if self.evidence not in SPIN_EVIDENCE:
             raise ValueError(f"unsupported evidence level: {self.evidence!r}")
+        object.__setattr__(
+            self,
+            "center_of_buoyancy_target",
+            _finite_tuple(
+                self.center_of_buoyancy_target,
+                3,
+                "center_of_buoyancy_target",
+            ),
+        )
+        waterline = tuple(
+            _finite_tuple(row, 2, "waterline_central_second_moment")
+            for row in self.waterline_central_second_moment
+        )
+        if len(waterline) != 2:
+            raise ValueError(
+                "waterline_central_second_moment must contain two rows"
+            )
+        if abs(waterline[0][1] - waterline[1][0]) > 1e-12:
+            raise ValueError(
+                "waterline_central_second_moment must be symmetric"
+            )
+        object.__setattr__(self, "waterline_central_second_moment", waterline)
         for name in (
             "material_density",
             "original_units_per_normalized_unit",
             "minimum_wall_thickness",
             "center_of_mass_weight",
+            "liquid_density",
+            "displaced_liquid_volume",
+            "waterline_area",
+            "fixed_shell_volume",
         ):
             value = float(getattr(self, name))
             if not math.isfinite(value):
                 raise ValueError(f"{name} must be finite")
             object.__setattr__(self, name, value)
+        if self.mode == "BUOYANT_STABILITY":
+            if self.liquid_density <= 0.0:
+                raise ValueError("liquid_density must be positive")
+            if self.displaced_liquid_volume <= 0.0:
+                raise ValueError("displaced_liquid_volume must be positive")
+            if self.waterline_area <= 0.0:
+                raise ValueError("waterline_area must be positive")
+            if self.fixed_shell_volume < 0.0:
+                raise ValueError("fixed_shell_volume must be nonnegative")
+            if min(np.linalg.eigvalsh(np.asarray(waterline))) <= 0.0:
+                raise ValueError(
+                    "waterline_central_second_moment must be positive definite"
+                )
+        elif any((
+            self.liquid_density,
+            self.displaced_liquid_volume,
+            *self.center_of_buoyancy_target,
+            self.waterline_area,
+            *waterline[0],
+            *waterline[1],
+            self.fixed_shell_volume,
+        )):
+            raise ValueError(
+                "buoyancy inputs require mode='BUOYANT_STABILITY'"
+            )
 
 
 @dataclass(frozen=True)
@@ -293,6 +359,20 @@ def _native_request(request: SpinItFasterRequest) -> tuple[Any, Any]:
     result.original_units_per_normalized_unit = request.original_units_per_normalized_unit
     result.minimum_wall_thickness = request.minimum_wall_thickness
     result.center_of_mass_weight = request.center_of_mass_weight
+    buoyancy = native.BuoyantStabilityData()
+    buoyancy.liquid_density = request.liquid_density
+    buoyancy.displaced_liquid_volume = request.displaced_liquid_volume
+    buoyancy.center_of_buoyancy_target = np.asarray(
+        request.center_of_buoyancy_target,
+        dtype=np.float64,
+    )
+    buoyancy.waterline_area = request.waterline_area
+    buoyancy.waterline_central_second_moment = np.asarray(
+        request.waterline_central_second_moment,
+        dtype=np.float64,
+    )
+    buoyancy.fixed_shell_volume = request.fixed_shell_volume
+    result.buoyancy = buoyancy
     result.settings = settings
     return native, result
 

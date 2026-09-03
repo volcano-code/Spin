@@ -3,8 +3,10 @@
 #include "manufacturing/ManufacturingGeometry.h"
 #include "manufacturing/SlicerValidation.h"
 
+#include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <limits>
@@ -99,6 +101,8 @@ const char* spinModeToken(SpinMode mode) noexcept
     {
     case SpinMode::StaticBalance:
         return "STATIC_BALANCE";
+    case SpinMode::BuoyantStability:
+        return "BUOYANT_STABILITY";
     case SpinMode::FidgetSpinner:
         return "FIDGET_SPINNER";
     case SpinMode::YoYo:
@@ -227,6 +231,86 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
         );
     }
 
+    const BuoyantStabilityData& buoyancy = request.buoyancy;
+    if (request.mode == SpinMode::BuoyantStability)
+    {
+        requireFinite(buoyancy.liquidDensity, "liquid density");
+        requireFinite(
+            buoyancy.displacedLiquidVolume,
+            "displaced liquid volume"
+        );
+        requireFinite(buoyancy.waterlineArea, "waterline area");
+        requireFinite(buoyancy.fixedShellVolume, "fixed shell volume");
+        if (
+            !buoyancy.centerOfBuoyancyTarget.allFinite() ||
+            !buoyancy.waterlineCentralSecondMoment.allFinite()
+        )
+        {
+            throw std::invalid_argument(
+                "buoyancy center and waterline moments must be finite"
+            );
+        }
+        if (
+            buoyancy.liquidDensity <= 0.0 ||
+            buoyancy.displacedLiquidVolume <= 0.0 ||
+            buoyancy.waterlineArea <= 0.0 ||
+            buoyancy.fixedShellVolume < 0.0
+        )
+        {
+            throw std::invalid_argument(
+                "buoyancy density, displaced volume and waterline area must "
+                "be positive; fixed shell volume must be nonnegative"
+            );
+        }
+        if (!buoyancy.waterlineCentralSecondMoment.isApprox(
+                buoyancy.waterlineCentralSecondMoment.transpose(),
+                frameTolerance))
+        {
+            throw std::invalid_argument(
+                "waterline central second moment must be symmetric"
+            );
+        }
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> waterlineEigen(
+            buoyancy.waterlineCentralSecondMoment
+        );
+        if (
+            waterlineEigen.info() != Eigen::Success ||
+            waterlineEigen.eigenvalues().minCoeff() <= 0.0
+        )
+        {
+            throw std::invalid_argument(
+                "waterline central second moment must be positive definite"
+            );
+        }
+        const double expectedShellMass =
+            request.materialDensity * buoyancy.fixedShellVolume;
+        const double shellScale = std::max(1.0, std::abs(expectedShellMass));
+        if (
+            std::abs(
+                request.fixedShellMoments.mass() - expectedShellMass
+            ) > 1e-10 * shellScale
+        )
+        {
+            throw std::invalid_argument(
+                "fixed-shell mass is inconsistent with material density and "
+                "fixed shell volume"
+            );
+        }
+    }
+    else if (
+        buoyancy.liquidDensity != 0.0 ||
+        buoyancy.displacedLiquidVolume != 0.0 ||
+        !buoyancy.centerOfBuoyancyTarget.isZero(0.0) ||
+        buoyancy.waterlineArea != 0.0 ||
+        !buoyancy.waterlineCentralSecondMoment.isZero(0.0) ||
+        buoyancy.fixedShellVolume != 0.0
+    )
+    {
+        throw std::invalid_argument(
+            "buoyancy inputs are supported only in buoyant-stability mode"
+        );
+    }
+
     const SpinSolverSettings& settings = request.settings;
     requireFinite(settings.equationTolerance, "equation tolerance");
     requireFinite(
@@ -283,7 +367,7 @@ std::string computeSpinDesignRequestHash(const SpinDesignRequest& request)
     validateSpinDesignRequest(request);
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << "SpinDesignRequest-v1;";
+    stream << "SpinDesignRequest-v2;";
     stream << spinModeToken(request.mode) << ';';
     stream << staticObjectiveToken(request.staticObjective) << ';';
     appendMatrix(stream, request.outerSurface.vertices);
@@ -297,6 +381,12 @@ std::string computeSpinDesignRequestHash(const SpinDesignRequest& request)
     appendScalar(stream, request.originalUnitsPerNormalizedUnit);
     appendScalar(stream, request.minimumWallThickness);
     appendScalar(stream, request.centerOfMassWeight);
+    appendScalar(stream, request.buoyancy.liquidDensity);
+    appendScalar(stream, request.buoyancy.displacedLiquidVolume);
+    appendMatrix(stream, request.buoyancy.centerOfBuoyancyTarget);
+    appendScalar(stream, request.buoyancy.waterlineArea);
+    appendMatrix(stream, request.buoyancy.waterlineCentralSecondMoment);
+    appendScalar(stream, request.buoyancy.fixedShellVolume);
     stream << request.settings.maximumIterations << ';'
            << request.settings.maximumRestarts << ';'
            << request.settings.maximumFunctionEvaluationsPerRestart << ';';
