@@ -12,6 +12,8 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -98,6 +100,38 @@ struct Bounds
 {
     Eigen::Vector3i minimum;
     Eigen::Vector3i maximum;
+};
+
+
+struct FaceTile
+{
+    int axis = 0;
+    int plane = 0;
+    int first = 0;
+    int second = 0;
+
+    bool operator==(const FaceTile& other) const noexcept
+    {
+        return axis == other.axis && plane == other.plane &&
+            first == other.first && second == other.second;
+    }
+};
+
+
+struct FaceTileHash
+{
+    std::size_t operator()(const FaceTile& value) const noexcept
+    {
+        std::size_t seed = 0xcbf29ce484222325ULL;
+        for (const int coordinate : {
+                 value.axis, value.plane, value.first, value.second
+             })
+        {
+            seed ^= std::hash<int>{}(coordinate) + 0x9e3779b9U +
+                (seed << 6U) + (seed >> 2U);
+        }
+        return seed;
+    }
 };
 
 
@@ -268,16 +302,37 @@ physics::RawMassMoments10 AdaptiveVoxelDomain::momentsForCell(
     bool carveableOnly
 ) const
 {
-    const int span = powerOfTwo(maximumLevel_ - level);
-    const Eigen::Vector3i lower = span * coordinate;
-    const Eigen::Vector3i upper = span * (coordinate.array() + 1).matrix();
+    const int cellsPerAxis = powerOfTwo(level);
+    const Eigen::Vector3d extent =
+        source_->grid().maximum - source_->grid().minimum;
+    const Eigen::Vector3d cellMinimum = source_->grid().minimum +
+        extent.cwiseProduct(coordinate.cast<double>()) /
+            static_cast<double>(cellsPerAxis);
+    const Eigen::Vector3d cellMaximum = source_->grid().minimum +
+        extent.cwiseProduct((coordinate.array() + 1).matrix().cast<double>()) /
+            static_cast<double>(cellsPerAxis);
     const Eigen::Vector3i dimensions = source_->grid().dimensions;
-    physics::RawMassMoments10 result;
-    for (int z = lower(2); z < std::min(upper(2), dimensions(2)); ++z)
+    Eigen::Vector3i lower;
+    Eigen::Vector3i upper;
+    for (int axis = 0; axis < 3; ++axis)
     {
-        for (int y = lower(1); y < std::min(upper(1), dimensions(1)); ++y)
+        const double lo = (cellMinimum(axis) - source_->grid().minimum(axis)) /
+            source_->spacing()(axis);
+        const double hi = (cellMaximum(axis) - source_->grid().minimum(axis)) /
+            source_->spacing()(axis);
+        lower(axis) = std::clamp(
+            static_cast<int>(std::floor(lo + 1e-12)), 0, dimensions(axis)
+        );
+        upper(axis) = std::clamp(
+            static_cast<int>(std::ceil(hi - 1e-12)), 0, dimensions(axis)
+        );
+    }
+    physics::RawMassMoments10 result;
+    for (int z = lower(2); z < upper(2); ++z)
+    {
+        for (int y = lower(1); y < upper(1); ++y)
         {
-            for (int x = lower(0); x < std::min(upper(0), dimensions(0)); ++x)
+            for (int x = lower(0); x < upper(0); ++x)
             {
                 const std::size_t index = source_->cellIndex(x, y, z);
                 if (
@@ -287,15 +342,19 @@ physics::RawMassMoments10 AdaptiveVoxelDomain::momentsForCell(
                 {
                     continue;
                 }
-                const Eigen::Vector3d minimum =
+                const Eigen::Vector3d sourceMinimum =
                     source_->grid().minimum +
                     source_->spacing().cwiseProduct(
                         Eigen::Vector3d(x, y, z)
                     );
-                result += cuboidMoments(
-                    minimum,
-                    minimum + source_->spacing()
-                );
+                const Eigen::Vector3d overlapMinimum =
+                    sourceMinimum.cwiseMax(cellMinimum);
+                const Eigen::Vector3d overlapMaximum =
+                    (sourceMinimum + source_->spacing()).cwiseMin(cellMaximum);
+                if ((overlapMaximum.array() > overlapMinimum.array()).all())
+                {
+                    result += cuboidMoments(overlapMinimum, overlapMaximum);
+                }
             }
         }
     }
@@ -444,6 +503,8 @@ std::size_t AdaptiveVoxelDomain::mergeBinarySiblings(
 
     std::vector<unsigned char> remove(leaves_.size(), 0U);
     std::vector<std::pair<AdaptiveVoxelCell, double>> additions;
+    const double exactBoundTolerance =
+        64.0 * std::numeric_limits<double>::epsilon();
     for (const auto& entry : groups)
     {
         const std::vector<std::size_t>& indices = entry.second;
@@ -451,8 +512,11 @@ std::size_t AdaptiveVoxelDomain::mergeBinarySiblings(
         bool allOne = true;
         for (std::size_t index : indices)
         {
-            allZero = allZero && fill(static_cast<Eigen::Index>(index)) <= epsilon;
-            allOne = allOne && fill(static_cast<Eigen::Index>(index)) >= 1.0 - epsilon;
+            allZero = allZero &&
+                fill(static_cast<Eigen::Index>(index)) <= exactBoundTolerance;
+            allOne = allOne &&
+                fill(static_cast<Eigen::Index>(index)) >=
+                    1.0 - exactBoundTolerance;
         }
         if (!allZero && !allOne)
         {
@@ -466,6 +530,17 @@ std::size_t AdaptiveVoxelDomain::mergeBinarySiblings(
             std::get<3>(entry.first)
         );
         parent.moments = momentsForCell(parent.level, parent.coordinate, true);
+        physics::RawMassMoments10 childMoments;
+        for (std::size_t index : indices)
+        {
+            childMoments += leaves_[index].moments;
+        }
+        if (!childMoments.values().isApprox(parent.moments.values(), 1e-12))
+        {
+            // Some of the parent's region is represented by a coarser leaf,
+            // so replacing this partial sibling set would overlap material.
+            continue;
+        }
         for (std::size_t index : indices)
         {
             remove[index] = 1U;
@@ -519,6 +594,7 @@ std::vector<unsigned char> AdaptiveVoxelDomain::binaryVoidMask(
         throw std::invalid_argument("invalid binary void-field request");
     }
     std::vector<unsigned char> result(source_->cellCount(), 0U);
+    std::vector<double> voidVolume(source_->cellCount(), 0.0);
     const Eigen::Vector3i dimensions = source_->grid().dimensions;
     for (std::size_t leafIndex = 0; leafIndex < leaves_.size(); ++leafIndex)
     {
@@ -526,86 +602,204 @@ std::vector<unsigned char> AdaptiveVoxelDomain::binaryVoidMask(
         {
             continue;
         }
-        const Bounds cellBounds = bounds(leaves_[leafIndex], maximumLevel_);
-        for (int z = cellBounds.minimum(2);
-             z < std::min(cellBounds.maximum(2), dimensions(2)); ++z)
+        const AdaptiveVoxelCell& leaf = leaves_[leafIndex];
+        const int cellsPerAxis = powerOfTwo(leaf.level);
+        const Eigen::Vector3d extent =
+            source_->grid().maximum - source_->grid().minimum;
+        const Eigen::Vector3d leafMinimum = source_->grid().minimum +
+            extent.cwiseProduct(leaf.coordinate.cast<double>()) /
+                static_cast<double>(cellsPerAxis);
+        const Eigen::Vector3d leafMaximum = source_->grid().minimum +
+            extent.cwiseProduct(
+                (leaf.coordinate.array() + 1).matrix().cast<double>()
+            ) / static_cast<double>(cellsPerAxis);
+        Eigen::Vector3i lower;
+        Eigen::Vector3i upper;
+        for (int axis = 0; axis < 3; ++axis)
         {
-            for (int y = cellBounds.minimum(1);
-                 y < std::min(cellBounds.maximum(1), dimensions(1)); ++y)
+            lower(axis) = std::clamp(static_cast<int>(std::floor(
+                (leafMinimum(axis) - source_->grid().minimum(axis)) /
+                source_->spacing()(axis) + 1e-12)), 0, dimensions(axis));
+            upper(axis) = std::clamp(static_cast<int>(std::ceil(
+                (leafMaximum(axis) - source_->grid().minimum(axis)) /
+                source_->spacing()(axis) - 1e-12)), 0, dimensions(axis));
+        }
+        for (int z = lower(2); z < upper(2); ++z)
+        {
+            for (int y = lower(1); y < upper(1); ++y)
             {
-                for (int x = cellBounds.minimum(0);
-                     x < std::min(cellBounds.maximum(0), dimensions(0)); ++x)
+                for (int x = lower(0); x < upper(0); ++x)
                 {
                     const std::size_t index = source_->cellIndex(x, y, z);
                     if (source_->carveable(index))
                     {
-                        result[index] = 1U;
-                    }
-                }
-            }
-        }
-    }
-    return result;
-}
-
-
-Eigen::MatrixXd AdaptiveVoxelDomain::uniformLaplacian() const
-{
-    const Eigen::Index count = static_cast<Eigen::Index>(leaves_.size());
-    Eigen::MatrixXd result = Eigen::MatrixXd::Zero(count, count);
-    for (Eigen::Index left = 0; left < count; ++left)
-    {
-        for (Eigen::Index right = left + 1; right < count; ++right)
-        {
-            if (!faceNeighbors(
-                    leaves_[static_cast<std::size_t>(left)],
-                    leaves_[static_cast<std::size_t>(right)],
-                    maximumLevel_
-                ))
-            {
-                continue;
-            }
-            result(left, right) = -1.0;
-            result(right, left) = -1.0;
-            result(left, left) += 1.0;
-            result(right, right) += 1.0;
-        }
-    }
-    return result;
-}
-
-
-bool AdaptiveVoxelDomain::validatePartition() const
-{
-    const Eigen::Vector3i dimensions = source_->grid().dimensions;
-    std::vector<unsigned char> coverage(source_->cellCount(), 0U);
-    for (const AdaptiveVoxelCell& cell : leaves_)
-    {
-        const Bounds cellBounds = bounds(cell, maximumLevel_);
-        for (int z = cellBounds.minimum(2);
-             z < std::min(cellBounds.maximum(2), dimensions(2)); ++z)
-        {
-            for (int y = cellBounds.minimum(1);
-                 y < std::min(cellBounds.maximum(1), dimensions(1)); ++y)
-            {
-                for (int x = cellBounds.minimum(0);
-                     x < std::min(cellBounds.maximum(0), dimensions(0)); ++x)
-                {
-                    const std::size_t index = source_->cellIndex(x, y, z);
-                    if (source_->carveable(index))
-                    {
-                        if (++coverage[index] != 1U)
+                        const Eigen::Vector3d sourceMinimum =
+                            source_->grid().minimum +
+                            source_->spacing().cwiseProduct(Eigen::Vector3d(x,y,z));
+                        const Eigen::Vector3d overlapMinimum =
+                            sourceMinimum.cwiseMax(leafMinimum);
+                        const Eigen::Vector3d overlapMaximum =
+                            (sourceMinimum + source_->spacing()).cwiseMin(leafMaximum);
+                        if ((overlapMaximum.array() > overlapMinimum.array()).all())
                         {
-                            return false;
+                            voidVolume[index] +=
+                                (overlapMaximum - overlapMinimum).prod();
                         }
                     }
                 }
             }
         }
     }
-    for (std::size_t index = 0; index < coverage.size(); ++index)
+    const double sourceCellVolume = source_->spacing().prod();
+    for (std::size_t index = 0; index < result.size(); ++index)
     {
-        if ((coverage[index] == 1U) != source_->carveable(index))
+        result[index] = source_->carveable(index) &&
+            voidVolume[index] >= sourceCellVolume * (1.0 - 1e-10) ? 1U : 0U;
+    }
+    return result;
+}
+
+
+std::shared_ptr<const voxel::VoxelDomain>
+AdaptiveVoxelDomain::maximumResolutionMaterialDomain(
+    const Eigen::VectorXd& fill,
+    double threshold
+) const
+{
+    if (
+        fill.size() != static_cast<Eigen::Index>(leaves_.size()) ||
+        !fill.allFinite() || !std::isfinite(threshold) ||
+        threshold < 0.0 || threshold > 1.0
+    )
+    {
+        throw std::invalid_argument("invalid maximum-resolution material request");
+    }
+    const int side = powerOfTwo(maximumLevel_);
+    const Eigen::Vector3i sourceDimensions = source_->grid().dimensions;
+    bool divisible = true;
+    for (int axis = 0; axis < 3; ++axis)
+    {
+        divisible = divisible && side % sourceDimensions(axis) == 0;
+    }
+    if (!divisible)
+    {
+        throw std::invalid_argument(
+            "maximum-resolution grid must be divisible by source dimensions"
+        );
+    }
+    const std::size_t cellCount = static_cast<std::size_t>(side) *
+        static_cast<std::size_t>(side) * static_cast<std::size_t>(side);
+    std::vector<unsigned char> material(cellCount, 0U);
+    for (int z = 0; z < side; ++z)
+    {
+        const int sourceZ = z * sourceDimensions(2) / side;
+        for (int y = 0; y < side; ++y)
+        {
+            const int sourceY = y * sourceDimensions(1) / side;
+            for (int x = 0; x < side; ++x)
+            {
+                const int sourceX = x * sourceDimensions(0) / side;
+                material[static_cast<std::size_t>(x + side * (y + side * z))] =
+                    source_->material(source_->cellIndex(sourceX, sourceY, sourceZ))
+                    ? 1U : 0U;
+            }
+        }
+    }
+    for (std::size_t leafIndex = 0; leafIndex < leaves_.size(); ++leafIndex)
+    {
+        if (fill(static_cast<Eigen::Index>(leafIndex)) < threshold) continue;
+        const Bounds leafBounds = bounds(leaves_[leafIndex], maximumLevel_);
+        for (int z = leafBounds.minimum(2); z < leafBounds.maximum(2); ++z)
+            for (int y = leafBounds.minimum(1); y < leafBounds.maximum(1); ++y)
+                for (int x = leafBounds.minimum(0); x < leafBounds.maximum(0); ++x)
+                {
+                    const int sourceX = x * sourceDimensions(0) / side;
+                    const int sourceY = y * sourceDimensions(1) / side;
+                    const int sourceZ = z * sourceDimensions(2) / side;
+                    if (source_->carveable(source_->cellIndex(
+                            sourceX, sourceY, sourceZ
+                        )))
+                    {
+                        material[static_cast<std::size_t>(
+                            x + side * (y + side * z)
+                        )] = 0U;
+                    }
+                }
+    }
+    voxel::GridSpec grid = source_->grid();
+    grid.dimensions = Eigen::Vector3i::Constant(side);
+    return voxel::VoxelDomain::create(grid, material, material, material);
+}
+
+
+Eigen::SparseMatrix<double> AdaptiveVoxelDomain::uniformLaplacian() const
+{
+    const Eigen::Index count = static_cast<Eigen::Index>(leaves_.size());
+    std::unordered_map<FaceTile, int, FaceTileHash> faceOwner;
+    std::unordered_set<std::uint64_t> neighborPairs;
+    const auto pairKey = [](int first, int second)
+    {
+        if (first > second) std::swap(first, second);
+        return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(first)) << 32U) |
+            static_cast<std::uint32_t>(second);
+    };
+    for (int index = 0; index < static_cast<int>(leaves_.size()); ++index)
+    {
+        const Bounds cell = bounds(leaves_[static_cast<std::size_t>(index)], maximumLevel_);
+        for (int axis = 0; axis < 3; ++axis)
+        {
+            const int firstAxis = (axis + 1) % 3;
+            const int secondAxis = (axis + 2) % 3;
+            for (const int plane : {cell.minimum(axis), cell.maximum(axis)})
+            {
+                for (int first = cell.minimum(firstAxis);
+                     first < cell.maximum(firstAxis); ++first)
+                {
+                    for (int second = cell.minimum(secondAxis);
+                         second < cell.maximum(secondAxis); ++second)
+                    {
+                        const FaceTile key{axis, plane, first, second};
+                        const auto inserted = faceOwner.emplace(key, index);
+                        if (!inserted.second && inserted.first->second != index)
+                        {
+                            neighborPairs.insert(pairKey(inserted.first->second, index));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    std::vector<double> degree(static_cast<std::size_t>(count), 0.0);
+    std::vector<Eigen::Triplet<double>> triplets;
+    triplets.reserve(2U * neighborPairs.size() + static_cast<std::size_t>(count));
+    for (const std::uint64_t encoded : neighborPairs)
+    {
+        const int first = static_cast<int>(encoded >> 32U);
+        const int second = static_cast<int>(encoded & 0xffffffffU);
+        triplets.emplace_back(first, second, -1.0);
+        triplets.emplace_back(second, first, -1.0);
+        degree[static_cast<std::size_t>(first)] += 1.0;
+        degree[static_cast<std::size_t>(second)] += 1.0;
+    }
+    for (Eigen::Index index = 0; index < count; ++index)
+    {
+        if (degree[static_cast<std::size_t>(index)] != 0.0)
+            triplets.emplace_back(index, index, degree[static_cast<std::size_t>(index)]);
+    }
+    Eigen::SparseMatrix<double> result(count, count);
+    result.setFromTriplets(triplets.begin(), triplets.end());
+    result.makeCompressed();
+    return result;
+}
+
+
+bool AdaptiveVoxelDomain::validatePartition() const
+{
+    for (const AdaptiveVoxelCell& cell : leaves_)
+    {
+        const int side = powerOfTwo(cell.level);
+        if ((cell.coordinate.array() < 0).any() ||
+            (cell.coordinate.array() >= side).any())
         {
             return false;
         }

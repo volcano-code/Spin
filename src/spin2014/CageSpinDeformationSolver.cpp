@@ -120,7 +120,8 @@ Eigen::VectorXd lagrangian(
 
 bool validGeometry(
     const spin2014::CageSpinDeformationFunctional& functional,
-    const Evaluation& value
+    const Evaluation& value,
+    std::string* diagnostic = nullptr
 )
 {
     const manufacturing::BoundaryAudit audit =
@@ -129,10 +130,17 @@ bool validGeometry(
             functional.outerFaces(),
             manufacturing::BoundaryOrientation::OutwardPositive
         );
-    if (!audit.strictBoundaryValid()) return false;
+    if (!audit.strictBoundaryValid())
+    {
+        if (diagnostic) *diagnostic = "outer boundary audit failed";
+        return false;
+    }
     const std::vector<spin::TriangleMesh>& cells = functional.voidCells();
     if (cells.size() != value.physical.deformedVoidCellVertices.size())
+    {
+        if (diagnostic) *diagnostic = "void-cell count mismatch";
         return false;
+    }
     for (std::size_t index = 0; index < cells.size(); ++index)
     {
         Eigen::MatrixXi inward = cells[index].faces;
@@ -143,7 +151,11 @@ bool validGeometry(
                 cells[index].faces,
                 manufacturing::BoundaryOrientation::OutwardPositive
             );
-        if (!cellAudit.strictBoundaryValid()) return false;
+        if (!cellAudit.strictBoundaryValid())
+        {
+            if (diagnostic) *diagnostic = "void-cell boundary audit failed";
+            return false;
+        }
         const manufacturing::MaterialShellAudit shell =
             manufacturing::auditMaterialShells(
                 value.physical.deformedOuterVertices,
@@ -160,6 +172,26 @@ bool validGeometry(
             !shell.containment.allCavitiesInsideOuter
         )
         {
+            if (diagnostic)
+            {
+                if (!shell.wallClearance.completed)
+                    *diagnostic = "shell clearance audit did not complete";
+                else if (!shell.wallClearance.intersectionFree)
+                    *diagnostic = "void cell intersects the outer boundary"
+                        " (minimum_clearance=" +
+                        std::to_string(
+                            shell.wallClearance.measuredMinimumClearance
+                        ) + ", outer_face=" +
+                        std::to_string(shell.wallClearance.outerFace) +
+                        ", inner_face=" +
+                        std::to_string(shell.wallClearance.innerFace) + ')';
+                else if (!shell.wallClearance.meetsRequestedThickness)
+                    *diagnostic = "void cell violates shell thickness";
+                else if (!shell.containment.completed)
+                    *diagnostic = "shell containment audit did not complete";
+                else
+                    *diagnostic = "void cell lies outside the outer boundary";
+            }
             return false;
         }
     }
@@ -272,11 +304,16 @@ CageSpinDeformationResult solveCageSpinDeformation(
 
     CageSpinDeformationResult result;
     Evaluation current = evaluate(functional, state, fillCount);
-    result.geometryValid = validGeometry(functional, current);
+    result.evaluation = current.physical;
+    std::string initialGeometryDiagnostic;
+    result.geometryValid = validGeometry(
+        functional, current, &initialGeometryDiagnostic
+    );
     if (!result.geometryValid)
     {
         result.status = CageSpinStatus::InvalidGeometry;
-        result.diagnostic = "initial cage geometry failed the boundary audit";
+        result.diagnostic = "initial cage geometry failed: " +
+            initialGeometryDiagnostic;
         return result;
     }
     History history;

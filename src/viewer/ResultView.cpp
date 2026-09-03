@@ -112,6 +112,25 @@ std::vector<double> numericArrayField(
     return values;
 }
 
+
+double numericField(const std::string& text, const std::string& key)
+{
+    const std::string marker = "\"" + key + "\"";
+    std::size_t cursor = text.find(marker);
+    if (cursor == std::string::npos) throw std::invalid_argument("missing " + key);
+    cursor = text.find(':', cursor + marker.size());
+    if (cursor == std::string::npos) throw std::invalid_argument("invalid " + key);
+    char* parsedEnd = nullptr;
+    errno = 0;
+    const double value = std::strtod(text.c_str() + cursor + 1, &parsedEnd);
+    if (parsedEnd == text.c_str() + cursor + 1 || errno == ERANGE ||
+        !std::isfinite(value))
+    {
+        throw std::invalid_argument("non-finite numeric field " + key);
+    }
+    return value;
+}
+
 } // namespace
 
 ResultViewArguments parseResultViewArguments(
@@ -185,6 +204,17 @@ SpinResultViewMetadata loadSpinResultViewMetadata(
         result.cavityLayerName = "Cavity / adaptive voxel field";
     }
     result.mode = stringField(text, "mode");
+    if (result.mode == "BUOYANT_STABILITY")
+    {
+        result.buoyancyAvailable = true;
+        result.planeLayerName = "Waterline / buoyancy plane";
+        result.displacedLiquidVolume =
+            numericField(text, "displaced_liquid_volume");
+        result.buoyantMetacenterHeight =
+            numericField(text, "buoyant_metacenter_height");
+        result.buoyantStabilityMargin =
+            numericField(text, "buoyant_stability_margin");
+    }
     const std::vector<double> center =
         numericArrayField(text, "center_of_mass_model");
     const std::vector<double> origin =
@@ -235,6 +265,11 @@ SpinResultViewGeometry prepareSpinResultViewGeometry(
         !metadata.targetOrigin.allFinite() ||
         !metadata.targetAxes.allFinite() ||
         !metadata.principalAxes.allFinite() ||
+        (metadata.buoyancyAvailable &&
+         (!std::isfinite(metadata.displacedLiquidVolume) ||
+          metadata.displacedLiquidVolume <= 0.0 ||
+          !std::isfinite(metadata.buoyantMetacenterHeight) ||
+          !std::isfinite(metadata.buoyantStabilityMargin))) ||
         !std::isfinite(displayScaleFraction) || displayScaleFraction <= 0.0)
     {
         throw std::invalid_argument("Spin-It view metadata must be finite");

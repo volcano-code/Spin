@@ -1,0 +1,1609 @@
+{
+  "asset_class": "RECONSTRUCTED_ASSET",
+  "author_exact": false,
+  "cases": [
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.000638538,
+          "elapsed_seconds": 0.5559609278570861,
+          "function_evaluations": 42,
+          "initial_quadric": [
+            0.23591052135570922,
+            0.963655857864528,
+            0.12535395293750393,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 18,
+          "normalized_equation_residual": 7.122130753850608e-16,
+          "output_hash": "0b0146cbc941a34967f667caba121beea14ff9f45f1dfc4219bac8ab9b3a7e07",
+          "physical_relative_residual": 6.632302763482649e-17,
+          "residual_seconds": 0.4724632339999999,
+          "restart": 1,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.7137827936871423,
+              "physical_relative_residual": 0.06781108655203318
+            },
+            {
+              "accepted_geodesic_step": 0.25,
+              "function_evaluations": 3,
+              "iteration": 1,
+              "normalized_equation_residual": 0.5024071716548826,
+              "physical_relative_residual": 0.045451764624415816
+            },
+            {
+              "accepted_geodesic_step": 0.10054887888396177,
+              "function_evaluations": 6,
+              "iteration": 2,
+              "normalized_equation_residual": 0.37655208122920686,
+              "physical_relative_residual": 0.03342191262033868
+            },
+            {
+              "accepted_geodesic_step": 0.125,
+              "function_evaluations": 9,
+              "iteration": 3,
+              "normalized_equation_residual": 0.33977849805677846,
+              "physical_relative_residual": 0.03001024853151914
+            },
+            {
+              "accepted_geodesic_step": 0.0625,
+              "function_evaluations": 13,
+              "iteration": 4,
+              "normalized_equation_residual": 0.33972506394180463,
+              "physical_relative_residual": 0.03000518911886237
+            },
+            {
+              "accepted_geodesic_step": 0.0625,
+              "function_evaluations": 17,
+              "iteration": 5,
+              "normalized_equation_residual": 0.33969602313726555,
+              "physical_relative_residual": 0.030002417492841615
+            },
+            {
+              "accepted_geodesic_step": 0.0625,
+              "function_evaluations": 21,
+              "iteration": 6,
+              "normalized_equation_residual": 0.33967866787668416,
+              "physical_relative_residual": 0.030000825744835397
+            },
+            {
+              "accepted_geodesic_step": 0.0625,
+              "function_evaluations": 25,
+              "iteration": 7,
+              "normalized_equation_residual": 0.33963196763358783,
+              "physical_relative_residual": 0.02999668040042621
+            },
+            {
+              "accepted_geodesic_step": 0.125,
+              "function_evaluations": 28,
+              "iteration": 8,
+              "normalized_equation_residual": 0.33962558078414007,
+              "physical_relative_residual": 0.0299967324375524
+            },
+            {
+              "accepted_geodesic_step": 0.125,
+              "function_evaluations": 31,
+              "iteration": 9,
+              "normalized_equation_residual": 0.33958617451204687,
+              "physical_relative_residual": 0.029993980287283013
+            },
+            {
+              "accepted_geodesic_step": 0.125,
+              "function_evaluations": 34,
+              "iteration": 10,
+              "normalized_equation_residual": 0.33957928380847424,
+              "physical_relative_residual": 0.02999453688493502
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 35,
+              "iteration": 11,
+              "normalized_equation_residual": 0.32195828773717344,
+              "physical_relative_residual": 0.028737968709902677
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 36,
+              "iteration": 12,
+              "normalized_equation_residual": 0.24868862538496347,
+              "physical_relative_residual": 0.02245248206887815
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 37,
+              "iteration": 13,
+              "normalized_equation_residual": 0.15519293329250727,
+              "physical_relative_residual": 0.0141952120875464
+            },
+            {
+              "accepted_geodesic_step": 0.4246029716958914,
+              "function_evaluations": 38,
+              "iteration": 14,
+              "normalized_equation_residual": 0.02825261538901422,
+              "physical_relative_residual": 0.0026474116238778783
+            },
+            {
+              "accepted_geodesic_step": 0.08956061403921056,
+              "function_evaluations": 39,
+              "iteration": 15,
+              "normalized_equation_residual": 0.001068880025814395,
+              "physical_relative_residual": 0.0001001260555621257
+            },
+            {
+              "accepted_geodesic_step": 0.0013452720181747336,
+              "function_evaluations": 40,
+              "iteration": 16,
+              "normalized_equation_residual": 1.3414669844812768e-06,
+              "physical_relative_residual": 1.2569157505525376e-07
+            },
+            {
+              "accepted_geodesic_step": 1.6489852893427283e-06,
+              "function_evaluations": 41,
+              "iteration": 17,
+              "normalized_equation_residual": 2.12447408174396e-12,
+              "physical_relative_residual": 1.9905713659195281e-13
+            },
+            {
+              "accepted_geodesic_step": 2.5660622070068407e-12,
+              "function_evaluations": 42,
+              "iteration": 18,
+              "normalized_equation_residual": 7.122130753850608e-16,
+              "physical_relative_residual": 6.632302763482649e-17
+            }
+          ]
+        }
+      ],
+      "id": "static-tilted-vase",
+      "mode": "STATIC_BALANCE",
+      "scientific_hash": "43667eef0cdf09a117dd3376074f3d16103ac2acb4fe6d247f4b36ae047d5251",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 1.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.000638538,
+        "median_function_evaluations": 42.0,
+        "median_newton_iterations": 18.0,
+        "median_residual_seconds": 0.4724632339999999,
+        "successful_runs": 1
+      }
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.001013391,
+          "elapsed_seconds": 1.850400818977505,
+          "function_evaluations": 16,
+          "initial_quadric": [
+            -0.7049018438412984,
+            -0.3829764519821631,
+            -0.5947033597399897,
+            -0.052634035473828285,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 15,
+          "normalized_equation_residual": 2.1543617540139724e-14,
+          "output_hash": "f09ec9000f619f33c2408bed6dbcd99e01006cfb51a32d888158c250ea33c7b6",
+          "physical_relative_residual": 5.095042186356331e-15,
+          "residual_seconds": 1.608931907,
+          "restart": 1,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.7907669042192897,
+              "physical_relative_residual": 0.22219043904075092
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.7849411163791084,
+              "physical_relative_residual": 0.2212564930954455
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.7726110650041382,
+              "physical_relative_residual": 0.2165545200255132
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 0.4865029753029494,
+              "physical_relative_residual": 0.11976822643718567
+            },
+            {
+              "accepted_geodesic_step": 0.2274616648336498,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 0.08016695516075152,
+              "physical_relative_residual": 0.0191312443703737
+            },
+            {
+              "accepted_geodesic_step": 0.08990785077715295,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 0.03496136033613587,
+              "physical_relative_residual": 0.008304919207085374
+            },
+            {
+              "accepted_geodesic_step": 0.1353531322579349,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 0.0156606312620518,
+              "physical_relative_residual": 0.003708152876426899
+            },
+            {
+              "accepted_geodesic_step": 0.1894100129078586,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 0.006659548614479313,
+              "physical_relative_residual": 0.0015754589992372245
+            },
+            {
+              "accepted_geodesic_step": 0.23499139583707418,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 0.0026053035090202264,
+              "physical_relative_residual": 0.000616194333113384
+            },
+            {
+              "accepted_geodesic_step": 0.24133084635421215,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 0.0008932484022923345,
+              "physical_relative_residual": 0.00021125669808506268
+            },
+            {
+              "accepted_geodesic_step": 0.18917634229665317,
+              "function_evaluations": 11,
+              "iteration": 10,
+              "normalized_equation_residual": 0.00025036533867259404,
+              "physical_relative_residual": 5.921261594713101e-05
+            },
+            {
+              "accepted_geodesic_step": 0.11009382948332963,
+              "function_evaluations": 12,
+              "iteration": 11,
+              "normalized_equation_residual": 5.97065581081829e-05,
+              "physical_relative_residual": 1.412090245959033e-05
+            },
+            {
+              "accepted_geodesic_step": 0.047076189141819,
+              "function_evaluations": 13,
+              "iteration": 12,
+              "normalized_equation_residual": 9.711106345455732e-06,
+              "physical_relative_residual": 2.296728146425527e-06
+            },
+            {
+              "accepted_geodesic_step": 0.011027444477079549,
+              "function_evaluations": 14,
+              "iteration": 13,
+              "normalized_equation_residual": 5.095451843653864e-07,
+              "physical_relative_residual": 1.2051017646159755e-07
+            },
+            {
+              "accepted_geodesic_step": 0.0006516588064613203,
+              "function_evaluations": 15,
+              "iteration": 14,
+              "normalized_equation_residual": 1.7599112542256457e-09,
+              "physical_relative_residual": 4.162284828581863e-10
+            },
+            {
+              "accepted_geodesic_step": 2.2759956895168343e-06,
+              "function_evaluations": 16,
+              "iteration": 15,
+              "normalized_equation_residual": 2.1543617540139724e-14,
+              "physical_relative_residual": 5.095042186356331e-15
+            }
+          ]
+        }
+      ],
+      "id": "floating-tea-infuser",
+      "mode": "BUOYANT_STABILITY",
+      "scientific_hash": "cede1edefff73f876ed9b76510a47775735b4086c806398e4bd0d1ec9a41471e",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 1.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.001013391,
+        "median_function_evaluations": 16.0,
+        "median_newton_iterations": 15.0,
+        "median_residual_seconds": 1.608931907,
+        "successful_runs": 1
+      }
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.0007000060000000001,
+          "elapsed_seconds": 0.5363886021077633,
+          "function_evaluations": 21,
+          "initial_quadric": [
+            -0.24403196530761778,
+            -0.2316976053446028,
+            0.9055870962833565,
+            0.2582181841597469,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 18,
+          "normalized_equation_residual": 7.257648151084511e-17,
+          "output_hash": "9109ddff1af9727280878904d05b164a8dddbac947599400a0d5a6bb02126a72",
+          "physical_relative_residual": 1.2183339963957687e-17,
+          "residual_seconds": 0.5285066000000002,
+          "restart": 1,
+          "run": 0,
+          "status": "LOCAL_MAXIMUM",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.2944902223943752,
+              "physical_relative_residual": 0.11221419372161308
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.2916984007659356,
+              "physical_relative_residual": 0.11111402426747496
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.2526573962028519,
+              "physical_relative_residual": 0.09540403745187626
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 0.07581135431580147,
+              "physical_relative_residual": 0.026610289439928155
+            },
+            {
+              "accepted_geodesic_step": 0.19361273029140386,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 0.017194635076939333,
+              "physical_relative_residual": 0.006130595426949405
+            },
+            {
+              "accepted_geodesic_step": 0.17578559027179097,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 0.007151040441099366,
+              "physical_relative_residual": 0.002548402414180007
+            },
+            {
+              "accepted_geodesic_step": 0.22985479557911462,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 0.0028696796981533316,
+              "physical_relative_residual": 0.001022611038480604
+            },
+            {
+              "accepted_geodesic_step": 0.2635988256932681,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 0.0010433138756054813,
+              "physical_relative_residual": 0.000371795180812981
+            },
+            {
+              "accepted_geodesic_step": 0.23832426607116833,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 0.0003232108900459466,
+              "physical_relative_residual": 0.00011518234844282567
+            },
+            {
+              "accepted_geodesic_step": 0.15883466956318854,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 8.329709098718713e-05,
+              "physical_relative_residual": 2.9684857502000917e-05
+            },
+            {
+              "accepted_geodesic_step": 0.07883309056464927,
+              "function_evaluations": 11,
+              "iteration": 10,
+              "normalized_equation_residual": 1.6789347085639328e-05,
+              "physical_relative_residual": 5.983295354055093e-06
+            },
+            {
+              "accepted_geodesic_step": 0.026312104057942848,
+              "function_evaluations": 12,
+              "iteration": 11,
+              "normalized_equation_residual": 1.7792645379532992e-06,
+              "physical_relative_residual": 6.340849733735014e-07
+            },
+            {
+              "accepted_geodesic_step": 0.003535777575590064,
+              "function_evaluations": 13,
+              "iteration": 12,
+              "normalized_equation_residual": 3.1833256708528165e-08,
+              "physical_relative_residual": 1.134457009510948e-08
+            },
+            {
+              "accepted_geodesic_step": 6.560636371641126e-05,
+              "function_evaluations": 14,
+              "iteration": 13,
+              "normalized_equation_residual": 1.0949397941139031e-11,
+              "physical_relative_residual": 3.902089368738234e-12
+            },
+            {
+              "accepted_geodesic_step": 2.2581254375096646e-08,
+              "function_evaluations": 15,
+              "iteration": 14,
+              "normalized_equation_residual": 5.524688844353707e-16,
+              "physical_relative_residual": 1.5636785380867422e-17
+            },
+            {
+              "accepted_geodesic_step": 5.3716725720121207e-14,
+              "function_evaluations": 16,
+              "iteration": 15,
+              "normalized_equation_residual": 4.1118291470910535e-16,
+              "physical_relative_residual": 1.1429875473932416e-17
+            },
+            {
+              "accepted_geodesic_step": 6.683654561676453e-14,
+              "function_evaluations": 17,
+              "iteration": 16,
+              "normalized_equation_residual": 2.9626297461027507e-16,
+              "physical_relative_residual": 9.243700715010995e-17
+            },
+            {
+              "accepted_geodesic_step": 9.537106478495708e-14,
+              "function_evaluations": 18,
+              "iteration": 17,
+              "normalized_equation_residual": 9.704628810484684e-17,
+              "physical_relative_residual": 1.245159128668055e-17
+            },
+            {
+              "accepted_geodesic_step": 1.7939449183372168e-14,
+              "function_evaluations": 21,
+              "iteration": 18,
+              "normalized_equation_residual": 7.257648151084511e-17,
+              "physical_relative_residual": 1.2183339963957687e-17
+            }
+          ]
+        },
+        {
+          "derivative_seconds": 0.0009670849999999998,
+          "elapsed_seconds": 0.738394777989015,
+          "function_evaluations": 32,
+          "initial_quadric": [
+            0.11237651008013179,
+            0.6781434326541913,
+            -0.3266475043436119,
+            0.6486866829497044,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 14,
+          "normalized_equation_residual": 7.168866238710867e-17,
+          "output_hash": "679717a30c6129ec613e1d5a1174684d2eef15b96da353ae1c4acd1d7d5ea8ad",
+          "physical_relative_residual": 1.1496393254556418e-17,
+          "residual_seconds": 0.7291809559999999,
+          "restart": 2,
+          "run": 0,
+          "status": "LOCAL_MAXIMUM",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.0386755196813588,
+              "physical_relative_residual": 0.013833106734812585
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.02039586948480984,
+              "physical_relative_residual": 0.007278541058027748
+            },
+            {
+              "accepted_geodesic_step": 0.19359459160704082,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.00613671708785441,
+              "physical_relative_residual": 0.0021872922294406396
+            },
+            {
+              "accepted_geodesic_step": 0.24516638154229003,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 0.0021491245841184677,
+              "physical_relative_residual": 0.0007658816779760454
+            },
+            {
+              "accepted_geodesic_step": 0.2634477599328233,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 0.0007150678807408837,
+              "physical_relative_residual": 0.00025482596839425056
+            },
+            {
+              "accepted_geodesic_step": 0.21597962062404688,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 0.00020949633611178742,
+              "physical_relative_residual": 7.465844969911333e-05
+            },
+            {
+              "accepted_geodesic_step": 0.13029553897510615,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 5.09546622113208e-05,
+              "physical_relative_residual": 1.815891138554173e-05
+            },
+            {
+              "accepted_geodesic_step": 0.05827589360997275,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 8.945003329055086e-06,
+              "physical_relative_residual": 3.1877723804374616e-06
+            },
+            {
+              "accepted_geodesic_step": 0.015655882297043244,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 6.267620967042895e-07,
+              "physical_relative_residual": 2.2336220328020716e-07
+            },
+            {
+              "accepted_geodesic_step": 0.0012754212404041208,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 4.139437459423192e-09,
+              "physical_relative_residual": 1.4751911467551995e-09
+            },
+            {
+              "accepted_geodesic_step": 8.53623349629238e-06,
+              "function_evaluations": 11,
+              "iteration": 10,
+              "normalized_equation_residual": 1.8540312348895292e-13,
+              "physical_relative_residual": 6.607291610596502e-14
+            },
+            {
+              "accepted_geodesic_step": 3.823735136322547e-10,
+              "function_evaluations": 12,
+              "iteration": 11,
+              "normalized_equation_residual": 2.718803987421183e-16,
+              "physical_relative_residual": 2.3212818187638597e-17
+            },
+            {
+              "accepted_geodesic_step": 3.423844998297132e-14,
+              "function_evaluations": 15,
+              "iteration": 12,
+              "normalized_equation_residual": 2.5819826600936094e-16,
+              "physical_relative_residual": 9.201535230962951e-17
+            },
+            {
+              "accepted_geodesic_step": 1.6676478033673484e-15,
+              "function_evaluations": 23,
+              "iteration": 13,
+              "normalized_equation_residual": 9.611382643184596e-17,
+              "physical_relative_residual": 1.1496393254556418e-17
+            },
+            {
+              "accepted_geodesic_step": 2.514693168574074e-16,
+              "function_evaluations": 32,
+              "iteration": 14,
+              "normalized_equation_residual": 7.168866238710867e-17,
+              "physical_relative_residual": 1.1496393254556418e-17
+            }
+          ]
+        },
+        {
+          "derivative_seconds": 0.00035359799999999994,
+          "elapsed_seconds": 0.30507303099147975,
+          "function_evaluations": 15,
+          "initial_quadric": [
+            0.4569976328452449,
+            -0.7482847590950994,
+            -0.46830432626333535,
+            -0.10915191653322188,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 14,
+          "normalized_equation_residual": 3.221448065404874e-15,
+          "output_hash": "a646daf6393193d3655ef0f86f9a74b973b5f95436882164d1596ebdeefff3b7",
+          "physical_relative_residual": 1.1434971862313157e-15,
+          "residual_seconds": 0.263406679,
+          "restart": 3,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.3275008845763591,
+              "physical_relative_residual": 0.11178707103683874
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.3263374099897217,
+              "physical_relative_residual": 0.11141758994584175
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.319108728464568,
+              "physical_relative_residual": 0.10905865111437671
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 0.1816130098023361,
+              "physical_relative_residual": 0.06537122086289622
+            },
+            {
+              "accepted_geodesic_step": 0.29586286535767464,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 0.032485774640562015,
+              "physical_relative_residual": 0.011661560642467058
+            },
+            {
+              "accepted_geodesic_step": 0.1415678805996389,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 0.011291941492051373,
+              "physical_relative_residual": 0.004031189280540291
+            },
+            {
+              "accepted_geodesic_step": 0.1902691450498487,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 0.004105989183491171,
+              "physical_relative_residual": 0.0014637940990314352
+            },
+            {
+              "accepted_geodesic_step": 0.22761965714950125,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 0.0014670544883313768,
+              "physical_relative_residual": 0.0005228366364720974
+            },
+            {
+              "accepted_geodesic_step": 0.22517886843259555,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 0.0004824472742390871,
+              "physical_relative_residual": 0.0001719287528507829
+            },
+            {
+              "accepted_geodesic_step": 0.17153334925736627,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 0.00013730296024495208,
+              "physical_relative_residual": 4.893072845328323e-05
+            },
+            {
+              "accepted_geodesic_step": 0.09873727221280493,
+              "function_evaluations": 11,
+              "iteration": 10,
+              "normalized_equation_residual": 3.1856675469861395e-05,
+              "physical_relative_residual": 1.1352859360914244e-05
+            },
+            {
+              "accepted_geodesic_step": 0.04096277905848581,
+              "function_evaluations": 12,
+              "iteration": 11,
+              "normalized_equation_residual": 4.793291459277058e-06,
+              "physical_relative_residual": 1.7082036176610454e-06
+            },
+            {
+              "accepted_geodesic_step": 0.00876611139995729,
+              "function_evaluations": 13,
+              "iteration": 12,
+              "normalized_equation_residual": 2.111211395435324e-07,
+              "physical_relative_residual": 7.523807951280387e-08
+            },
+            {
+              "accepted_geodesic_step": 0.00042330044644679294,
+              "function_evaluations": 14,
+              "iteration": 13,
+              "normalized_equation_residual": 4.889214751879912e-10,
+              "physical_relative_residual": 1.742388924955273e-10
+            },
+            {
+              "accepted_geodesic_step": 9.848525723975356e-07,
+              "function_evaluations": 15,
+              "iteration": 14,
+              "normalized_equation_residual": 3.221448065404874e-15,
+              "physical_relative_residual": 1.1434971862313157e-15
+            }
+          ]
+        }
+      ],
+      "id": "floating-island-cat",
+      "mode": "BUOYANT_STABILITY",
+      "scientific_hash": "7eb2525044894bdbaf03eb65ead429c0151ac033bc52f4186c6a980bfddd8258",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 3.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.00035359799999999994,
+        "median_function_evaluations": 15.0,
+        "median_newton_iterations": 14.0,
+        "median_residual_seconds": 0.263406679,
+        "successful_runs": 1
+      }
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.00059826,
+          "elapsed_seconds": 0.5728129730559886,
+          "function_evaluations": 22,
+          "initial_quadric": [
+            -0.3552609919047392,
+            0.12146185037594122,
+            0.8717414489570462,
+            0.3148070721956273,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 19,
+          "normalized_equation_residual": 1.6491353607738087e-16,
+          "output_hash": "d7524a570a02720a4a2a934b1b46b761651b2080394f286c84e2f89dc1d57dde",
+          "physical_relative_residual": 6.25591326332917e-18,
+          "residual_seconds": 0.565433249,
+          "restart": 1,
+          "run": 0,
+          "status": "LOCAL_MAXIMUM",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.3941959307600837,
+              "physical_relative_residual": 0.11377405650967536
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.3794046279301235,
+              "physical_relative_residual": 0.10895878860774365
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.28370380097994713,
+              "physical_relative_residual": 0.0793331950057124
+            },
+            {
+              "accepted_geodesic_step": 0.37004710381893985,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 0.03524602425443179,
+              "physical_relative_residual": 0.009272674912430837
+            },
+            {
+              "accepted_geodesic_step": 0.15494419962098396,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 0.014985538950808376,
+              "physical_relative_residual": 0.003944258736682805
+            },
+            {
+              "accepted_geodesic_step": 0.19773548605624755,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 0.006155495789824712,
+              "physical_relative_residual": 0.001620654694975374
+            },
+            {
+              "accepted_geodesic_step": 0.2347529141032729,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 0.00232548808466882,
+              "physical_relative_residual": 0.0006123746406250547
+            },
+            {
+              "accepted_geodesic_step": 0.23152899967172566,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 0.0007668538896007933,
+              "physical_relative_residual": 0.00020195371567728392
+            },
+            {
+              "accepted_geodesic_step": 0.17511210126253063,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 0.00021388255546036443,
+              "physical_relative_residual": 5.632861407270181e-05
+            },
+            {
+              "accepted_geodesic_step": 0.09964252779788958,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 4.883237558040795e-05,
+              "physical_relative_residual": 1.2860749663809315e-05
+            },
+            {
+              "accepted_geodesic_step": 0.040718601867938735,
+              "function_evaluations": 11,
+              "iteration": 10,
+              "normalized_equation_residual": 7.200668353683557e-06,
+              "physical_relative_residual": 1.896411202337116e-06
+            },
+            {
+              "accepted_geodesic_step": 0.00848322117635582,
+              "function_evaluations": 12,
+              "iteration": 11,
+              "normalized_equation_residual": 3.0204041282134057e-07,
+              "physical_relative_residual": 7.954721442921407e-08
+            },
+            {
+              "accepted_geodesic_step": 0.00038836742192487213,
+              "function_evaluations": 13,
+              "iteration": 12,
+              "normalized_equation_residual": 6.294042250307633e-10,
+              "physical_relative_residual": 1.657637581943643e-10
+            },
+            {
+              "accepted_geodesic_step": 8.126822289315179e-07,
+              "function_evaluations": 14,
+              "iteration": 13,
+              "normalized_equation_residual": 2.630839605913265e-15,
+              "physical_relative_residual": 6.876762143782728e-16
+            },
+            {
+              "accepted_geodesic_step": 3.500039116641705e-12,
+              "function_evaluations": 15,
+              "iteration": 14,
+              "normalized_equation_residual": 6.013767540960868e-16,
+              "physical_relative_residual": 1.390324614204111e-16
+            },
+            {
+              "accepted_geodesic_step": 3.024213648022756e-14,
+              "function_evaluations": 16,
+              "iteration": 15,
+              "normalized_equation_residual": 3.26608318945169e-16,
+              "physical_relative_residual": 1.7151812998483575e-17
+            },
+            {
+              "accepted_geodesic_step": 8.585076006125246e-14,
+              "function_evaluations": 17,
+              "iteration": 16,
+              "normalized_equation_residual": 3.1076497655008203e-16,
+              "physical_relative_residual": 1.744262739491715e-17
+            },
+            {
+              "accepted_geodesic_step": 8.718467638148284e-14,
+              "function_evaluations": 18,
+              "iteration": 17,
+              "normalized_equation_residual": 2.684023927906156e-16,
+              "physical_relative_residual": 1.2155485232585746e-17
+            },
+            {
+              "accepted_geodesic_step": 5.0197981562332864e-14,
+              "function_evaluations": 19,
+              "iteration": 18,
+              "normalized_equation_residual": 2.300355778042095e-16,
+              "physical_relative_residual": 1.0860543650277321e-17
+            },
+            {
+              "accepted_geodesic_step": 1.2065633433628126e-14,
+              "function_evaluations": 22,
+              "iteration": 19,
+              "normalized_equation_residual": 1.6491353607738087e-16,
+              "physical_relative_residual": 6.25591326332917e-18
+            }
+          ]
+        },
+        {
+          "derivative_seconds": 0.000316136,
+          "elapsed_seconds": 0.351885796058923,
+          "function_evaluations": 14,
+          "initial_quadric": [
+            -0.07935147213591776,
+            -0.4151213655869169,
+            -0.7272127933743885,
+            -0.5408688832385673,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 13,
+          "normalized_equation_residual": 7.702853498384963e-16,
+          "output_hash": "600210f2ad7aa67234f4413bc914dbf4026d3bb5daf56a323ba7562a66cd082c",
+          "physical_relative_residual": 1.938685193645412e-16,
+          "residual_seconds": 0.30367899200000004,
+          "restart": 2,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.39423024933382983,
+              "physical_relative_residual": 0.10714985387049454
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.3685109846161304,
+              "physical_relative_residual": 0.09996451638217084
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.21161702304654842,
+              "physical_relative_residual": 0.056417587601294714
+            },
+            {
+              "accepted_geodesic_step": 0.313877689909828,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 0.036875918856465406,
+              "physical_relative_residual": 0.009740046039677824
+            },
+            {
+              "accepted_geodesic_step": 0.1523970429469957,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 0.014829342833976161,
+              "physical_relative_residual": 0.0039074163287106615
+            },
+            {
+              "accepted_geodesic_step": 0.20773077394890138,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 0.005910510962141169,
+              "physical_relative_residual": 0.0015566320997776307
+            },
+            {
+              "accepted_geodesic_step": 0.250826054671512,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 0.002197776475586066,
+              "physical_relative_residual": 0.0005787896207981458
+            },
+            {
+              "accepted_geodesic_step": 0.2456816420233506,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 0.0007144345562266982,
+              "physical_relative_residual": 0.00018815243756161948
+            },
+            {
+              "accepted_geodesic_step": 0.1802018197999135,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 0.00019524349193310894,
+              "physical_relative_residual": 5.1420099549555596e-05
+            },
+            {
+              "accepted_geodesic_step": 0.09820786016197758,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 4.3200075853070495e-05,
+              "physical_relative_residual": 1.1377432040390747e-05
+            },
+            {
+              "accepted_geodesic_step": 0.03807366231035753,
+              "function_evaluations": 11,
+              "iteration": 10,
+              "normalized_equation_residual": 5.945294182652179e-06,
+              "physical_relative_residual": 1.5657914692522506e-06
+            },
+            {
+              "accepted_geodesic_step": 0.007213009841177741,
+              "function_evaluations": 12,
+              "iteration": 11,
+              "normalized_equation_residual": 2.091725108527923e-07,
+              "physical_relative_residual": 5.508905298961127e-08
+            },
+            {
+              "accepted_geodesic_step": 0.00027296568795593296,
+              "function_evaluations": 13,
+              "iteration": 12,
+              "normalized_equation_residual": 2.987106792463153e-10,
+              "physical_relative_residual": 7.867041677405454e-11
+            },
+            {
+              "accepted_geodesic_step": 3.909277482444848e-07,
+              "function_evaluations": 14,
+              "iteration": 13,
+              "normalized_equation_residual": 7.702853498384963e-16,
+              "physical_relative_residual": 1.938685193645412e-16
+            }
+          ]
+        }
+      ],
+      "id": "floating-island-dog-human",
+      "mode": "BUOYANT_STABILITY",
+      "scientific_hash": "eae70d53a984bc4be96fe54573f86ed78b72e529fc9a8daf5c32deb78713fa7b",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 2.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.000316136,
+        "median_function_evaluations": 14.0,
+        "median_newton_iterations": 13.0,
+        "median_residual_seconds": 0.30367899200000004,
+        "successful_runs": 1
+      }
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.006265011,
+          "elapsed_seconds": 1.5057277020532638,
+          "function_evaluations": 11,
+          "initial_quadric": [
+            -0.5253651017033585,
+            -0.05154585583683088,
+            -0.0029291624897763062,
+            0.7333153318039134,
+            -0.24736921043027513,
+            -0.24736921043027513,
+            -0.24736921043027513,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 9,
+          "normalized_equation_residual": 3.044190447337796e-13,
+          "output_hash": "9e68f427991ea7f0b93bc203f5ca3831a9d3fd6ab7bd306fd4e07d149f640e27",
+          "physical_relative_residual": 2.7455862932491395e-14,
+          "residual_seconds": 1.13010815,
+          "restart": 1,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.5766125211969387,
+              "physical_relative_residual": 0.000723772621814167
+            },
+            {
+              "accepted_geodesic_step": 0.25,
+              "function_evaluations": 3,
+              "iteration": 1,
+              "normalized_equation_residual": 0.4309422632215464,
+              "physical_relative_residual": 8.666912416919334e-05
+            },
+            {
+              "accepted_geodesic_step": 0.48252033317299053,
+              "function_evaluations": 4,
+              "iteration": 2,
+              "normalized_equation_residual": 0.09063343063931861,
+              "physical_relative_residual": 0.007275737024259641
+            },
+            {
+              "accepted_geodesic_step": 0.3106342951343286,
+              "function_evaluations": 5,
+              "iteration": 3,
+              "normalized_equation_residual": 0.01271675310125893,
+              "physical_relative_residual": 0.001129766727586598
+            },
+            {
+              "accepted_geodesic_step": 0.07949274574618595,
+              "function_evaluations": 6,
+              "iteration": 4,
+              "normalized_equation_residual": 0.0006167470242080628,
+              "physical_relative_residual": 5.357547705117844e-05
+            },
+            {
+              "accepted_geodesic_step": 0.003929257830710262,
+              "function_evaluations": 7,
+              "iteration": 5,
+              "normalized_equation_residual": 7.117126018528559e-06,
+              "physical_relative_residual": 6.40299246217526e-07
+            },
+            {
+              "accepted_geodesic_step": 2.528657887735051e-05,
+              "function_evaluations": 8,
+              "iteration": 6,
+              "normalized_equation_residual": 2.4331059368751092e-08,
+              "physical_relative_residual": 2.190379145171423e-09
+            },
+            {
+              "accepted_geodesic_step": 1.1247475062490858e-07,
+              "function_evaluations": 9,
+              "iteration": 7,
+              "normalized_equation_residual": 4.0854744343161644e-10,
+              "physical_relative_residual": 3.6889023665825333e-11
+            },
+            {
+              "accepted_geodesic_step": 3.117959417576379e-09,
+              "function_evaluations": 10,
+              "iteration": 8,
+              "normalized_equation_residual": 9.78200037832819e-12,
+              "physical_relative_residual": 8.821663735470843e-13
+            },
+            {
+              "accepted_geodesic_step": 8.664016441547547e-11,
+              "function_evaluations": 11,
+              "iteration": 9,
+              "normalized_equation_residual": 3.044190447337796e-13,
+              "physical_relative_residual": 2.7455862932491395e-14
+            }
+          ]
+        }
+      ],
+      "id": "heart-spinning-top",
+      "mode": "SPINNING_TOP",
+      "scientific_hash": "fb1e25f5f60eeecd19f2113b6ce5278079d7fb30fe3498f37821a692b9cfe3ac",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 1.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.006265011,
+        "median_function_evaluations": 11.0,
+        "median_newton_iterations": 9.0,
+        "median_residual_seconds": 1.13010815,
+        "successful_runs": 1
+      }
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.0033218440000000004,
+          "elapsed_seconds": 1.3451294309925288,
+          "function_evaluations": 10,
+          "initial_quadric": [
+            -0.42763716347769953,
+            0.023523122281941596,
+            -0.06102050409712187,
+            0.7544743495841258,
+            -0.28496670742983266,
+            -0.28496670742983266,
+            -0.28496670742983266,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 9,
+          "normalized_equation_residual": 2.8848275039022727e-13,
+          "output_hash": "dbeadd2f110295677f58a15470c218e49c4697872aee76ade51ee70e59187b4b",
+          "physical_relative_residual": 2.9920156543754657e-14,
+          "residual_seconds": 1.084608175,
+          "restart": 1,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.7071405317138544,
+              "physical_relative_residual": 0.0034356454832860654
+            },
+            {
+              "accepted_geodesic_step": 0.5,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.2800326978940452,
+              "physical_relative_residual": 0.004246645714178714
+            },
+            {
+              "accepted_geodesic_step": 0.2769311479167691,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.018337229140019028,
+              "physical_relative_residual": 0.0016490458619192242
+            },
+            {
+              "accepted_geodesic_step": 0.05833933310929023,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 0.0007119467925122637,
+              "physical_relative_residual": 6.974153683702097e-05
+            },
+            {
+              "accepted_geodesic_step": 0.0031976878975631395,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 9.410992031917082e-06,
+              "physical_relative_residual": 9.648018482247032e-07
+            },
+            {
+              "accepted_geodesic_step": 8.585980122237834e-05,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 2.640460341582274e-07,
+              "physical_relative_residual": 2.738522802843509e-08
+            },
+            {
+              "accepted_geodesic_step": 2.424182377205453e-06,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 8.070664754490378e-09,
+              "physical_relative_residual": 8.370266555777964e-10
+            },
+            {
+              "accepted_geodesic_step": 7.42629645389324e-08,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 2.596635760053241e-10,
+              "physical_relative_residual": 2.693010457002246e-11
+            },
+            {
+              "accepted_geodesic_step": 2.397410081738517e-09,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 8.595367578126919e-12,
+              "physical_relative_residual": 8.914427253326089e-13
+            },
+            {
+              "accepted_geodesic_step": 7.959175329966912e-11,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 2.8848275039022727e-13,
+              "physical_relative_residual": 2.9920156543754657e-14
+            }
+          ]
+        }
+      ],
+      "id": "noodles-spinning-top",
+      "mode": "SPINNING_TOP",
+      "scientific_hash": "8916ec47ba6efc9241a74d3356e60dff69a9971b2fdf964a9778a51cf120d1cf",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 1.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.0033218440000000004,
+        "median_function_evaluations": 10.0,
+        "median_newton_iterations": 9.0,
+        "median_residual_seconds": 1.084608175,
+        "successful_runs": 1
+      }
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.0023932380000000002,
+          "elapsed_seconds": 1.058009082917124,
+          "function_evaluations": 9,
+          "initial_quadric": [
+            0.0,
+            0.0,
+            0.0,
+            -0.29364856350524693,
+            0.5864291095734668,
+            0.5864291095734668,
+            -0.4753654594530895,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 8,
+          "normalized_equation_residual": 4.2330594686456386e-14,
+          "output_hash": "9bcac4dc7630015683eab339034a0825da7fce79a1ad841778c42203bdff6889",
+          "physical_relative_residual": 2.357876942954023e-15,
+          "residual_seconds": 0.8539462090000001,
+          "restart": 1,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.5493075161870283,
+              "physical_relative_residual": 0.03054317492955735
+            },
+            {
+              "accepted_geodesic_step": 0.4861015526913788,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.11778169674082113,
+              "physical_relative_residual": 0.00653800147806899
+            },
+            {
+              "accepted_geodesic_step": 0.07340648144444807,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 0.0024194708905885274,
+              "physical_relative_residual": 0.00013474636664120447
+            },
+            {
+              "accepted_geodesic_step": 0.00149420749202095,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 3.693122386366335e-05,
+              "physical_relative_residual": 2.0571159958481543e-06
+            },
+            {
+              "accepted_geodesic_step": 2.247996995114095e-05,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 5.993349875812207e-07,
+              "physical_relative_residual": 3.338385826918836e-08
+            },
+            {
+              "accepted_geodesic_step": 3.6547423385220827e-07,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 9.781612657502845e-09,
+              "physical_relative_residual": 5.448505755379969e-10
+            },
+            {
+              "accepted_geodesic_step": 5.965436201768188e-09,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 1.5966841360843527e-10,
+              "physical_relative_residual": 8.893771437214792e-12
+            },
+            {
+              "accepted_geodesic_step": 9.737593723661449e-11,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 2.6064400533202395e-12,
+              "physical_relative_residual": 1.451826408097114e-13
+            },
+            {
+              "accepted_geodesic_step": 1.5895583737339369e-12,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 4.2330594686456386e-14,
+              "physical_relative_residual": 2.357876942954023e-15
+            }
+          ]
+        }
+      ],
+      "id": "jellyfish-yoyo",
+      "mode": "YO_YO",
+      "scientific_hash": "611238d3a97981675d34b542d9835e1bbc8431870523fe7475cf044b62f5962a",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 1.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.0023932380000000002,
+        "median_function_evaluations": 9.0,
+        "median_newton_iterations": 8.0,
+        "median_residual_seconds": 0.8539462090000001,
+        "successful_runs": 1
+      }
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.003608816,
+          "elapsed_seconds": 1.6420091278851032,
+          "function_evaluations": 18,
+          "initial_quadric": [
+            -0.01411487159294714,
+            -0.03245296460702233,
+            0.1095742535734113,
+            0.0,
+            0.7024033949383928,
+            0.7024033949383928,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 17,
+          "normalized_equation_residual": 7.57732131512229e-13,
+          "output_hash": "b1dca111394445e4f9aad9fe6d7406aa8d73e01c6a2d2d39de9def224656334c",
+          "physical_relative_residual": 3.3111871261711267e-13,
+          "residual_seconds": 1.457359991,
+          "restart": 1,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.014281462081637225,
+              "physical_relative_residual": 0.0006366332289606244
+            },
+            {
+              "accepted_geodesic_step": 0.023440946486840416,
+              "function_evaluations": 2,
+              "iteration": 1,
+              "normalized_equation_residual": 0.00021258557685004993,
+              "physical_relative_residual": 9.219878941558283e-05
+            },
+            {
+              "accepted_geodesic_step": 0.031628770322411764,
+              "function_evaluations": 3,
+              "iteration": 2,
+              "normalized_equation_residual": 6.249277184079292e-05,
+              "physical_relative_residual": 2.7322482939976103e-05
+            },
+            {
+              "accepted_geodesic_step": 0.021318967534479438,
+              "function_evaluations": 4,
+              "iteration": 3,
+              "normalized_equation_residual": 1.856786504066221e-05,
+              "physical_relative_residual": 8.115757368652634e-06
+            },
+            {
+              "accepted_geodesic_step": 0.014258822248617988,
+              "function_evaluations": 5,
+              "iteration": 4,
+              "normalized_equation_residual": 5.511473393367686e-06,
+              "physical_relative_residual": 2.408683845134917e-06
+            },
+            {
+              "accepted_geodesic_step": 0.009521269438671022,
+              "function_evaluations": 6,
+              "iteration": 5,
+              "normalized_equation_residual": 1.635225284491152e-06,
+              "physical_relative_residual": 7.146036206099554e-07
+            },
+            {
+              "accepted_geodesic_step": 0.006353240234362616,
+              "function_evaluations": 7,
+              "iteration": 6,
+              "normalized_equation_residual": 4.850652040754264e-07,
+              "physical_relative_residual": 2.1197119989619749e-07
+            },
+            {
+              "accepted_geodesic_step": 0.004237963221011059,
+              "function_evaluations": 8,
+              "iteration": 7,
+              "normalized_equation_residual": 1.4387447662625557e-07,
+              "physical_relative_residual": 6.287176511463742e-08
+            },
+            {
+              "accepted_geodesic_step": 0.002826554888107108,
+              "function_evaluations": 9,
+              "iteration": 8,
+              "normalized_equation_residual": 4.26726963582729e-08,
+              "physical_relative_residual": 1.8647466233652137e-08
+            },
+            {
+              "accepted_geodesic_step": 0.0018850819095254513,
+              "function_evaluations": 10,
+              "iteration": 9,
+              "normalized_equation_residual": 1.2656357010120279e-08,
+              "physical_relative_residual": 5.530666911043013e-09
+            },
+            {
+              "accepted_geodesic_step": 0.0012571607811294831,
+              "function_evaluations": 11,
+              "iteration": 10,
+              "normalized_equation_residual": 3.7537377045562365e-09,
+              "physical_relative_residual": 1.6403339876040602e-09
+            },
+            {
+              "accepted_geodesic_step": 0.0008383898142281318,
+              "function_evaluations": 12,
+              "iteration": 11,
+              "normalized_equation_residual": 1.1133138250193167e-09,
+              "physical_relative_residual": 4.865032811495625e-10
+            },
+            {
+              "accepted_geodesic_step": 0.0005591119118205552,
+              "function_evaluations": 13,
+              "iteration": 12,
+              "normalized_equation_residual": 3.301950795695421e-10,
+              "physical_relative_residual": 1.4429081438822328e-10
+            },
+            {
+              "accepted_geodesic_step": 0.00037286396438200554,
+              "function_evaluations": 14,
+              "iteration": 13,
+              "normalized_equation_residual": 9.793171738570361e-11,
+              "physical_relative_residual": 4.279484132802722e-11
+            },
+            {
+              "accepted_geodesic_step": 0.0002486575600736481,
+              "function_evaluations": 15,
+              "iteration": 14,
+              "normalized_equation_residual": 2.904531756448649e-11,
+              "physical_relative_residual": 1.2692412039421937e-11
+            },
+            {
+              "accepted_geodesic_step": 0.00016582609466172374,
+              "function_evaluations": 16,
+              "iteration": 15,
+              "normalized_equation_residual": 8.61446011850736e-12,
+              "physical_relative_residual": 3.764402823543681e-12
+            },
+            {
+              "accepted_geodesic_step": 0.00011058684019543155,
+              "function_evaluations": 17,
+              "iteration": 16,
+              "normalized_equation_residual": 2.554926896149884e-12,
+              "physical_relative_residual": 1.1164685634416686e-12
+            },
+            {
+              "accepted_geodesic_step": 7.374835154644785e-05,
+              "function_evaluations": 18,
+              "iteration": 17,
+              "normalized_equation_residual": 7.57732131512229e-13,
+              "physical_relative_residual": 3.3111871261711267e-13
+            }
+          ]
+        }
+      ],
+      "id": "flower-fidget-spinner",
+      "mode": "FIDGET_SPINNER",
+      "scientific_hash": "9031fcd50c136ff07ff07971bdb42490e1fb131ee25062abaf65724e180e0ffb",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 1.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.003608816,
+        "median_function_evaluations": 18.0,
+        "median_newton_iterations": 17.0,
+        "median_residual_seconds": 1.457359991,
+        "successful_runs": 1
+      }
+    }
+  ],
+  "maximum_restarts_per_run": 8,
+  "paper_doi": "10.1145/3658194",
+  "physical_validation": false,
+  "schema": "spin-it-faster-table1-results-v1",
+  "schema_version": 1,
+  "scientific_hash": "5c0b0c76034d840d2fd535e3736aa2a8285105fdb467afc57b69af2843bb4959",
+  "starts_per_case": 1
+}

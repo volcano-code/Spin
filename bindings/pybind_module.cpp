@@ -1,6 +1,9 @@
 #include "api/BalanceModel.h"
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014
 #include "api/SpinIt2014.h"
+#include "spin2014/AutomaticCageBinding.h"
+#include "spin2014/CageSpinDeformation.h"
+#include "spin2014/CageSpinDeformationSolver.h"
 #endif
 
 #include <pybind11/eigen.h>
@@ -488,7 +491,8 @@ PYBIND11_MODULE(_make_it_stand, module)
 
     py::enum_<spin::StaticObjective>(module, "StaticObjective")
         .value("MAXIMUM_MASS", spin::StaticObjective::MaximumMass)
-        .value("LOWER_CENTER_OF_MASS", spin::StaticObjective::LowerCenterOfMass);
+        .value("LOWER_CENTER_OF_MASS", spin::StaticObjective::LowerCenterOfMass)
+        .value("PARETO_TRADEOFF", spin::StaticObjective::ParetoTradeoff);
 
     py::enum_<api::SpinItFasterEvidence>(module, "SpinItFasterEvidence")
         .value(
@@ -567,6 +571,10 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_readwrite("target_frame", &spin::SpinDesignRequest::targetFrame)
         .def_readwrite("mode", &spin::SpinDesignRequest::mode)
         .def_readwrite("static_objective", &spin::SpinDesignRequest::staticObjective)
+        .def_readwrite(
+            "static_pareto_weight",
+            &spin::SpinDesignRequest::staticParetoWeight
+        )
         .def_readwrite("material_density", &spin::SpinDesignRequest::materialDensity)
         .def_readwrite(
             "original_units_per_normalized_unit",
@@ -841,7 +849,11 @@ PYBIND11_MODULE(_make_it_stand, module)
             double laplacianWeight,
             double centerOfMassWeight,
             double boundaryDensity,
-            double interiorDensity
+            double interiorDensity,
+            int maximumLeafCount,
+            double binaryConstraintTolerance,
+            int slqpMaximumIterations,
+            double slqpProjectedGradientTolerance
         )
         {
             voxel::GridSpec grid;
@@ -862,6 +874,11 @@ PYBIND11_MODULE(_make_it_stand, module)
             request.centerOfMassWeight = centerOfMassWeight;
             request.boundaryDensity = boundaryDensity;
             request.interiorDensity = interiorDensity;
+            request.maximumLeafCount = maximumLeafCount;
+            request.binaryConstraintTolerance = binaryConstraintTolerance;
+            request.slqp.maximumIterations = slqpMaximumIterations;
+            request.slqp.projectedGradientTolerance =
+                slqpProjectedGradientTolerance;
             py::gil_scoped_release release;
             const api::SpinIt2014Artifact artifact =
                 api::solveSpinIt2014(request, evidence);
@@ -882,7 +899,122 @@ PYBIND11_MODULE(_make_it_stand, module)
         py::arg("laplacian_weight") = 1e-3,
         py::arg("center_of_mass_weight") = 1.0,
         py::arg("boundary_density") = 1.0,
-        py::arg("interior_density") = 1.0
+        py::arg("interior_density") = 1.0,
+        py::arg("maximum_leaf_count") = 1000000,
+        py::arg("binary_constraint_tolerance") = 1e-6,
+        py::arg("slqp_maximum_iterations") = 120,
+        py::arg("slqp_projected_gradient_tolerance") = 1e-7
+    );
+
+    module.def(
+        "solve_spin_it_2014_cage",
+        [](
+            const api::SpinIt2014Artifact& artifact,
+            const Eigen::Vector3i& dimensions,
+            const Eigen::Vector3d& minimum,
+            const Eigen::Vector3d& maximum,
+            const std::vector<unsigned char>& materialMask,
+            const std::vector<unsigned char>& carveableMask,
+            double centerOfMassWeight,
+            int maximumHandleCount
+        )
+        {
+            voxel::GridSpec grid;
+            grid.dimensions = dimensions;
+            grid.minimum = minimum;
+            grid.maximum = maximum;
+            const std::shared_ptr<const voxel::VoxelDomain> domain =
+                voxel::VoxelDomain::create(
+                    grid, materialMask, {}, carveableMask
+                );
+            if (
+                artifact.cavityVertices().rows() == 0 ||
+                artifact.cavityFaces().rows() == 0
+            )
+            {
+                throw std::invalid_argument(
+                    "cage deformation requires a nonempty hollowing cavity"
+                );
+            }
+
+            spin::TriangleMesh outer;
+            outer.vertices = artifact.outerVertices();
+            outer.faces = artifact.outerFaces();
+            spin::TriangleMesh cavity;
+            cavity.vertices = artifact.cavityVertices();
+            cavity.faces = artifact.cavityFaces();
+            cavity.faces.col(1).swap(cavity.faces.col(2));
+
+            spin2014::AutomaticCageBindingRequest bindingRequest;
+            bindingRequest.domain = domain;
+            bindingRequest.outerVertices = outer.vertices;
+            bindingRequest.voidCellVertices = {cavity.vertices};
+            bindingRequest.maximumHandleCount = maximumHandleCount;
+
+            spin2014::CageSpinDeformationResult result;
+            spin2014::AutomaticCageBinding binding;
+            {
+                py::gil_scoped_release release;
+                binding = spin2014::buildAutomaticCageBinding(bindingRequest);
+                spin2014::CageSpinDeformationRequest cageRequest;
+                cageRequest.outerSurface = outer;
+                cageRequest.voidCells = {cavity};
+                cageRequest.outerWeights = binding.outerWeights;
+                cageRequest.voidCellWeights = binding.voidCellWeights;
+                cageRequest.handles = binding.handles;
+                cageRequest.problem =
+                    spin2014::SpinIt2014MomentProblem::spinningTop(
+                        centerOfMassWeight
+                    );
+                cageRequest.fillLaplacian = Eigen::MatrixXd::Zero(1, 1);
+                cageRequest.fillLaplacianWeight = 1e-3;
+                cageRequest.biharmonicWeight = 1e-3;
+                cageRequest.displacementWeight = 1e-3;
+                cageRequest.minimumShellThickness = 0.0;
+                const spin2014::CageSpinDeformationFunctional functional(
+                    cageRequest
+                );
+                Eigen::VectorXd beta = Eigen::VectorXd::Ones(1);
+                spin2014::CageSpinDeformationSolverSettings settings;
+                settings.projectedGradientTolerance = 1e-6;
+                result = spin2014::solveCageSpinDeformation(
+                    functional, beta, settings
+                );
+            }
+            py::dict payload;
+            payload["status"] = spin2014::cageSpinStatusToken(result.status);
+            payload["diagnostic"] = result.diagnostic;
+            payload["geometry_valid"] = result.geometryValid;
+            payload["silhouette_changed"] = result.silhouetteChanged;
+            payload["constraint_infinity_norm"] =
+                result.evaluation.constraints.size() > 0
+                ? result.evaluation.constraints.lpNorm<Eigen::Infinity>()
+                : 0.0;
+            payload["trace_hash"] = result.traceHash;
+            payload["output_hash"] = result.outputHash;
+            payload["binding_hash"] = binding.bindingHash;
+            payload["handle_count"] = binding.handles.size();
+            payload["iteration_count"] = result.trace.size();
+            payload["final_projected_gradient_infinity_norm"] =
+                result.trace.empty()
+                ? std::numeric_limits<double>::infinity()
+                : result.trace.back().projectedGradientInfinityNorm;
+            payload["deformed_outer_vertices"] =
+                result.evaluation.deformedOuterVertices;
+            payload["deformed_cavity_vertices"] =
+                result.evaluation.deformedVoidCellVertices.empty()
+                ? Eigen::MatrixXd(0, 3)
+                : result.evaluation.deformedVoidCellVertices.front();
+            return payload;
+        },
+        py::arg("artifact"),
+        py::arg("dimensions"),
+        py::arg("minimum"),
+        py::arg("maximum"),
+        py::arg("material_mask"),
+        py::arg("carveable_mask"),
+        py::arg("center_of_mass_weight") = 1.0,
+        py::arg("maximum_handle_count") = 12
     );
 #endif
 

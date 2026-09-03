@@ -37,6 +37,7 @@ public:
     using Vector10 = Eigen::Matrix<double, 10, 1>;
 
     static SpinMomentProblem staticBalance(StaticObjective objective);
+    static SpinMomentProblem staticBalancePareto(double massWeight);
     static SpinMomentProblem buoyantStability(
         double targetMass,
         const Eigen::Vector2d& horizontalCenterOfBuoyancy
@@ -48,6 +49,7 @@ public:
     SpinMode mode() const noexcept;
     StaticObjective staticObjective() const noexcept;
     double centerOfMassWeight() const noexcept;
+    double staticParetoWeight() const noexcept;
 
     SpinMomentEvaluation evaluate(const Vector10& rawMoments) const;
 
@@ -56,6 +58,7 @@ private:
         SpinMode mode,
         StaticObjective staticObjective,
         double centerOfMassWeight,
+        double staticParetoWeight = 0.0,
         double targetMass = 0.0,
         const Eigen::Vector2d& horizontalCenterOfBuoyancy =
             Eigen::Vector2d::Zero()
@@ -64,6 +67,7 @@ private:
     SpinMode mode_ = SpinMode::StaticBalance;
     StaticObjective staticObjective_ = StaticObjective::MaximumMass;
     double centerOfMassWeight_ = 0.0;
+    double staticParetoWeight_ = 0.0;
     double targetMass_ = 0.0;
     Eigen::Vector2d horizontalCenterOfBuoyancy_ = Eigen::Vector2d::Zero();
 };

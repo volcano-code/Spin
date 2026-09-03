@@ -10,6 +10,8 @@ import math
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
+
 
 Mesh = tuple[list[tuple[float, float, float]], list[tuple[int, int, int]]]
 BOX_FACES = (
@@ -52,6 +54,26 @@ def subdivided_cube(levels: int = 2) -> Mesh:
 def warped_cube(scale: float, mapping: Callable[[float, float, float], tuple[float, float, float]]) -> Mesh:
     vertices, faces = subdivided_cube()
     return [mapping(scale * x, scale * y, scale * z) for x, y, z in vertices], faces
+
+
+def affine_cube(
+    scales: tuple[float, float, float],
+    *,
+    levels: int,
+    angle: float = 0.0,
+    center: tuple[float, float, float] = (0.0, 0.0, 0.0),
+) -> Mesh:
+    vertices, faces = subdivided_cube(levels)
+    cosine, sine = math.cos(angle), math.sin(angle)
+    mapped = []
+    for x, y, z in vertices:
+        x, y, z = scales[0] * x, scales[1] * y, scales[2] * z
+        mapped.append((
+            cosine * x - sine * y + center[0],
+            sine * x + cosine * y + center[1],
+            z + center[2],
+        ))
+    return mapped, faces
 
 
 def torus(major: float, minor: float, nu: int = 48, nv: int = 20) -> Mesh:
@@ -104,6 +126,48 @@ def write_obj(path: Path, mesh: Mesh) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
+def raw_mass_properties(mesh: Mesh) -> tuple[float, np.ndarray, np.ndarray]:
+    vertices, faces = mesh
+    mass = 0.0
+    first = np.zeros(3)
+    second = np.zeros((3, 3))
+    for ia, ib, ic in faces:
+        a, b, c = (np.asarray(vertices[index], dtype=float) for index in (ia, ib, ic))
+        volume = float(np.dot(a, np.cross(b, c)) / 6.0)
+        mass += volume
+        first += volume * (a + b + c) / 4.0
+        vectors = (a, b, c)
+        second += volume * sum(np.outer(value, value) for value in vectors) / 10.0
+        second += volume * sum(
+            np.outer(vectors[i], vectors[j]) + np.outer(vectors[j], vectors[i])
+            for i in range(3) for j in range(i + 1, 3)
+        ) / 20.0
+    return mass, first, second
+
+
+def principal_target_frame(mesh: Mesh, *, tip_origin: bool) -> tuple[list[float], list[list[float]]]:
+    mass, first, second = raw_mass_properties(mesh)
+    center = first / mass
+    inertia = np.trace(second) * np.eye(3) - second
+    inertia -= mass * ((center @ center) * np.eye(3) - np.outer(center, center))
+    _eigenvalues, eigenvectors = np.linalg.eigh(inertia)
+    third_index = int(np.argmax(np.abs(eigenvectors[2, :])))
+    e3 = eigenvectors[:, third_index]
+    if e3[2] < 0.0:
+        e3 = -e3
+    first_index = next(index for index in range(3) if index != third_index)
+    e1 = eigenvectors[:, first_index]
+    e1 -= e3 * float(e1 @ e3)
+    e1 /= np.linalg.norm(e1)
+    e2 = np.cross(e3, e1)
+    axes = np.column_stack((e1, e2, e3))
+    origin = center.copy()
+    if tip_origin:
+        projections = (np.asarray(mesh[0], dtype=float) - center) @ e3
+        origin += float(np.min(projections)) * e3
+    return origin.tolist(), axes.tolist()
+
+
 def pair(kind: str) -> tuple[Mesh, Mesh, str]:
     if kind == "vase":
         def shape(x: float, y: float, z: float) -> tuple[float, float, float]:
@@ -132,12 +196,21 @@ def pair(kind: str) -> tuple[Mesh, Mesh, str]:
             return (c * x - s * y, s * x + c * y, 1.35 * z)
         return warped_cube(1.0, shape), warped_cube(0.64, shape), "twisted high-complexity proxy"
     if kind == "jellyfish":
-        def shape(x: float, y: float, z: float) -> tuple[float, float, float]:
-            radial = 1.0 + 0.28 * math.cos(1.4 * z)
-            return (radial * x, radial * y, 1.20 * z + 0.08 * (x * x + y * y))
-        return warped_cube(1.0, shape), warped_cube(0.66, shape), "axis-oriented jellyfish-like yo-yo"
+        # A stretched, slightly rotated faceted body preserves the paper
+        # problem's off-axis starting frame while retaining an exact, simple
+        # interior design domain for robust Boolean differentiation.
+        outer = affine_cube(
+            (1.30, 1.29983286, 1.83696459),
+            levels=3,
+            angle=0.04255563,
+            center=(0.0, 0.0, -0.059454092034775544),
+        )
+        design = affine_cube((1.0, 1.0, 1.0), levels=0)
+        return outer, design, "faceted elongated jellyfish-like yo-yo counterpart"
     if kind == "flower":
-        return radial_extrusion(1.25, 7), radial_extrusion(0.78, 7), "seven-lobed planar spinner"
+        outer = radial_extrusion(1.25, 7)
+        design = affine_cube((0.55, 0.55, 0.15), levels=0)
+        return outer, design, "seven-lobed planar spinner with a protected cuboid core"
     raise ValueError(kind)
 
 
@@ -186,11 +259,29 @@ def main() -> int:
             case["static_objective"] = "MAXIMUM_MASS"
         elif mode == "SPINNING_TOP":
             case["center_of_mass_weight"] = 0.25
+            case["target_origin"], case["target_axes"] = principal_target_frame(
+                outer,
+                tip_origin=True,
+            )
+        elif mode == "YO_YO":
+            case["target_origin"], case["target_axes"] = principal_target_frame(
+                outer,
+                tip_origin=False,
+            )
         elif mode == "BUOYANT_STABILITY":
+            # Targets are the independently integrated total moments of the
+            # listed feasible plane.  This guarantees a nonempty equilibrium
+            # manifold without embedding a solved optimum.
+            feasible = {
+                "floating-tea-infuser": (4.59625251660662, 0.1849352704595321, 0.03698633309075461),
+                "floating-island-cat": (3.5121711334769143, 0.08558581166706312, 0.005404338280521669),
+                "floating-island-dog-human": (4.325410392245944, 0.09129467930121796, 0.0002290752576555812),
+            }[case_id]
+            case["known_feasible_quadric"] = [0.2, 1.0, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             case["buoyancy"] = {
                 "liquid_density": 1.0,
-                "displaced_liquid_volume": 4.0,
-                "center_of_buoyancy_target": [0.0, 0.0, 0.0],
+                "displaced_liquid_volume": feasible[0],
+                "center_of_buoyancy_target": [feasible[1], feasible[2], 0.0],
                 "waterline_area": 4.0,
                 "waterline_central_second_moment": [[1.0, 0.0], [0.0, 1.0]],
             }

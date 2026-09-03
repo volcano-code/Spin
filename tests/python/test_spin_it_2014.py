@@ -2,10 +2,46 @@ import json
 import tempfile
 import unittest
 
-from make_it_stand import SpinIt2014Request, solve_spin_it_2014
+from make_it_stand import (
+    SpinIt2014Request,
+    solve_spin_it_2014,
+    solve_spin_it_2014_cage,
+)
 
 
 class SpinIt2014PythonTests(unittest.TestCase):
+    def test_cage_api_rejects_non_artifact_before_native_execution(self) -> None:
+        request = SpinIt2014Request(
+            dimensions=(1, 1, 1), minimum=(0.0, 0.0, 0.0), maximum=(1.0, 1.0, 1.0),
+            material_mask=(1,), carveable_mask=(1,),
+        )
+        with self.assertRaises(TypeError):
+            solve_spin_it_2014_cage(object(), request)  # type: ignore[arg-type]
+
+    def test_binary_constraint_tolerance_must_be_positive(self) -> None:
+        with self.assertRaises(ValueError):
+            SpinIt2014Request(
+                dimensions=(1, 1, 1), minimum=(0.0, 0.0, 0.0), maximum=(1.0, 1.0, 1.0),
+                material_mask=(1,), carveable_mask=(1,),
+                binary_constraint_tolerance=0.0,
+            )
+
+    def test_slqp_iteration_limit_must_be_positive(self) -> None:
+        with self.assertRaises(ValueError):
+            SpinIt2014Request(
+                dimensions=(1, 1, 1), minimum=(0.0, 0.0, 0.0), maximum=(1.0, 1.0, 1.0),
+                material_mask=(1,), carveable_mask=(1,),
+                slqp_maximum_iterations=0,
+            )
+
+    def test_slqp_gradient_tolerance_must_be_positive(self) -> None:
+        with self.assertRaises(ValueError):
+            SpinIt2014Request(
+                dimensions=(1, 1, 1), minimum=(0.0, 0.0, 0.0), maximum=(1.0, 1.0, 1.0),
+                material_mask=(1,), carveable_mask=(1,),
+                slqp_projected_gradient_tolerance=0.0,
+            )
+
     def test_sealed_deterministic_static_artifact_and_viewer_bundle(self) -> None:
         dimensions = (4, 4, 4)
         material = [1] * 64

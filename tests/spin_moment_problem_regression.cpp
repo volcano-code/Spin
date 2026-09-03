@@ -176,6 +176,14 @@ int main()
         return fail("static lower-CoM formula is incorrect");
     }
 
+    const spin::SpinMomentProblem staticPareto =
+        spin::SpinMomentProblem::staticBalancePareto(0.25);
+    evaluation = staticPareto.evaluate(r);
+    if (std::abs(evaluation.objective - (-0.25 * 8.0 + 0.75 * 0.125)) > 1e-14)
+    {
+        return fail("static Pareto objective is incorrect");
+    }
+
     const spin::SpinMomentProblem fidget =
         spin::SpinMomentProblem::fidgetSpinner();
     evaluation = fidget.evaluate(r);
@@ -247,6 +255,24 @@ int main()
     )
     {
         return fail("spinning-top objective or constraints are incorrect");
+    }
+
+
+    std::string derivativeDiagnostic;
+    if (!derivativesAgree(staticPareto, r, &derivativeDiagnostic))
+    {
+        return fail("static Pareto " + derivativeDiagnostic);
+    }
+    const spin::SpinMomentEvaluation paretoLower =
+        spin::SpinMomentProblem::staticBalancePareto(0.0).evaluate(r);
+    const spin::SpinMomentEvaluation paretoMass =
+        spin::SpinMomentProblem::staticBalancePareto(1.0).evaluate(r);
+    if (
+        std::abs(paretoLower.objective - staticLow.evaluate(r).objective) > 1e-14 ||
+        std::abs(paretoMass.objective - staticMass.evaluate(r).objective) > 1e-14
+    )
+    {
+        return fail("static Pareto endpoints do not match published objectives");
     }
 
     std::string diagnostic;

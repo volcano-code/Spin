@@ -211,9 +211,13 @@ spin::SpinMomentProblem problemForRequest(
     switch (request.mode)
     {
     case spin::SpinMode::StaticBalance:
-        return spin::SpinMomentProblem::staticBalance(
-            request.staticObjective
-        );
+        return request.staticObjective == spin::StaticObjective::ParetoTradeoff
+            ? spin::SpinMomentProblem::staticBalancePareto(
+                request.staticParetoWeight
+            )
+            : spin::SpinMomentProblem::staticBalance(
+                request.staticObjective
+            );
     case spin::SpinMode::BuoyantStability:
         return spin::SpinMomentProblem::buoyantStability(
             request.buoyancy.liquidDensity *

@@ -42,12 +42,16 @@ class SpinIt2014Request:
     initial_level: int = 3
     maximum_level: int = 7
     maximum_adaptive_passes: int = 8
+    maximum_leaf_count: int = 1000000
     initial_fill: float = 0.5
     fractional_epsilon: float = 0.05
     laplacian_weight: float = 1e-3
     center_of_mass_weight: float = 1.0
     boundary_density: float = 1.0
     interior_density: float = 1.0
+    binary_constraint_tolerance: float = 1e-6
+    slqp_maximum_iterations: int = 120
+    slqp_projected_gradient_tolerance: float = 1e-7
 
     def __post_init__(self) -> None:
         if len(self.dimensions) != 3 or any(
@@ -74,6 +78,28 @@ class SpinIt2014Request:
             for lo, hi in zip(self.minimum, self.maximum)
         ):
             raise ValueError("grid bounds must be finite and strictly increasing")
+        if (
+            isinstance(self.maximum_leaf_count, bool)
+            or not isinstance(self.maximum_leaf_count, int)
+            or self.maximum_leaf_count <= 0
+        ):
+            raise ValueError("maximum_leaf_count must be a positive integer")
+        if (
+            not math.isfinite(float(self.binary_constraint_tolerance))
+            or self.binary_constraint_tolerance <= 0.0
+        ):
+            raise ValueError("binary_constraint_tolerance must be positive and finite")
+        if (
+            isinstance(self.slqp_maximum_iterations, bool)
+            or not isinstance(self.slqp_maximum_iterations, int)
+            or self.slqp_maximum_iterations <= 0
+        ):
+            raise ValueError("slqp_maximum_iterations must be a positive integer")
+        if (
+            not math.isfinite(float(self.slqp_projected_gradient_tolerance))
+            or self.slqp_projected_gradient_tolerance <= 0.0
+        ):
+            raise ValueError("slqp_projected_gradient_tolerance must be positive and finite")
 
 
 class SpinIt2014Result:
@@ -164,5 +190,37 @@ def solve_spin_it_2014(request: SpinIt2014Request) -> SpinIt2014Result:
         request.center_of_mass_weight,
         request.boundary_density,
         request.interior_density,
+        request.maximum_leaf_count,
+        request.binary_constraint_tolerance,
+        request.slqp_maximum_iterations,
+        request.slqp_projected_gradient_tolerance,
     )
     return SpinIt2014Result(artifact)
+
+
+def solve_spin_it_2014_cage(
+    hollowing: SpinIt2014Result,
+    request: SpinIt2014Request,
+    *,
+    maximum_handle_count: int = 12,
+) -> dict[str, Any]:
+    """Run the paper's joint cage/fill stage from a hollowing artifact."""
+    if not isinstance(hollowing, SpinIt2014Result):
+        raise TypeError("hollowing must be a SpinIt2014Result")
+    if (
+        isinstance(maximum_handle_count, bool)
+        or not isinstance(maximum_handle_count, int)
+        or maximum_handle_count < 2
+    ):
+        raise ValueError("maximum_handle_count must be an integer of at least two")
+    native = _native_module()
+    return dict(native.solve_spin_it_2014_cage(
+        hollowing._native,
+        np.asarray(request.dimensions, dtype=np.int32),
+        np.asarray(request.minimum, dtype=np.float64),
+        np.asarray(request.maximum, dtype=np.float64),
+        list(request.material_mask),
+        list(request.carveable_mask),
+        request.center_of_mass_weight,
+        maximum_handle_count,
+    ))

@@ -90,6 +90,17 @@ int main()
         return fail("split failed to conserve raw moments");
     }
 
+    Eigen::VectorXd nearBinary = fill;
+    nearBinary.setConstant(1e-3);
+    const std::string refinedHash = domain.partitionHash();
+    if (
+        domain.mergeBinarySiblings(nearBinary, 0.05) != 0U ||
+        domain.partitionHash() != refinedHash
+    )
+    {
+        return fail("near-binary siblings were rounded during merge");
+    }
+
     fill.setZero();
     const std::size_t merged = domain.mergeBinarySiblings(fill, 1e-9);
     if (merged != 1U || domain.leaves().size() != 8U)

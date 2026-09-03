@@ -83,6 +83,24 @@ class SpinSchemaTests(unittest.TestCase):
                 waterline_central_second_moment=((0.4, 0.3), (0.05, 0.3)),
             )
 
+    def test_static_pareto_weight_is_mode_checked(self) -> None:
+        outer_vertices, outer_faces = cube(-5.0, 5.0)
+        design_vertices, design_faces = cube(-1.0, 1.0)
+        request = SpinItFasterRequest(
+            outer_vertices=outer_vertices,
+            outer_faces=outer_faces,
+            design_vertices=design_vertices,
+            design_faces=design_faces,
+            static_objective="PARETO_TRADEOFF",
+            static_pareto_weight=0.25,
+            minimum_wall_thickness=4.0,
+        )
+        self.assertEqual(request.static_pareto_weight, 0.25)
+        with self.assertRaisesRegex(ValueError, "static_pareto_weight"):
+            replace(request, static_pareto_weight=1.1)
+        with self.assertRaisesRegex(ValueError, "only.*PARETO_TRADEOFF"):
+            replace(request, static_objective="MAXIMUM_MASS")
+
 
 class SpinNativeArtifactTests(unittest.TestCase):
     def test_raw_moment_integration_matches_cube(self) -> None:

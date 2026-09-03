@@ -90,6 +90,7 @@ from .spin2014 import (
     SpinIt2014Request,
     SpinIt2014Result,
     solve_spin_it_2014,
+    solve_spin_it_2014_cage,
 )
 
 __all__ = [
@@ -162,6 +163,7 @@ __all__ = [
     "summarize_diagnostics",
     "solve_spin_it_faster",
     "solve_spin_it_2014",
+    "solve_spin_it_2014_cage",
     "validate_balance_config",
     "validate_config",
     "write_csv_atomic",

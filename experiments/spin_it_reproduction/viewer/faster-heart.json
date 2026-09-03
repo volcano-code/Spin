@@ -1,0 +1,136 @@
+{
+  "asset_class": "RECONSTRUCTED_ASSET",
+  "author_exact": false,
+  "cases": [
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "attempts": [
+        {
+          "derivative_seconds": 0.005998555,
+          "elapsed_seconds": 1.4298303530085832,
+          "function_evaluations": 11,
+          "initial_quadric": [
+            -0.5253651017033585,
+            -0.05154585583683088,
+            -0.0029291624897763062,
+            0.7333153318039134,
+            -0.24736921043027513,
+            -0.24736921043027513,
+            -0.24736921043027513,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "newton_iterations": 9,
+          "normalized_equation_residual": 3.044190447337796e-13,
+          "output_hash": "9e68f427991ea7f0b93bc203f5ca3831a9d3fd6ab7bd306fd4e07d149f640e27",
+          "physical_relative_residual": 2.7455862932491395e-14,
+          "residual_seconds": 1.069423118,
+          "restart": 1,
+          "run": 0,
+          "status": "CONVERGED",
+          "trace": [
+            {
+              "accepted_geodesic_step": 0,
+              "function_evaluations": 1,
+              "iteration": 0,
+              "normalized_equation_residual": 0.5766125211969387,
+              "physical_relative_residual": 0.000723772621814167
+            },
+            {
+              "accepted_geodesic_step": 0.25,
+              "function_evaluations": 3,
+              "iteration": 1,
+              "normalized_equation_residual": 0.4309422632215464,
+              "physical_relative_residual": 8.666912416919334e-05
+            },
+            {
+              "accepted_geodesic_step": 0.48252033317299053,
+              "function_evaluations": 4,
+              "iteration": 2,
+              "normalized_equation_residual": 0.09063343063931861,
+              "physical_relative_residual": 0.007275737024259641
+            },
+            {
+              "accepted_geodesic_step": 0.3106342951343286,
+              "function_evaluations": 5,
+              "iteration": 3,
+              "normalized_equation_residual": 0.01271675310125893,
+              "physical_relative_residual": 0.001129766727586598
+            },
+            {
+              "accepted_geodesic_step": 0.07949274574618595,
+              "function_evaluations": 6,
+              "iteration": 4,
+              "normalized_equation_residual": 0.0006167470242080628,
+              "physical_relative_residual": 5.357547705117844e-05
+            },
+            {
+              "accepted_geodesic_step": 0.003929257830710262,
+              "function_evaluations": 7,
+              "iteration": 5,
+              "normalized_equation_residual": 7.117126018528559e-06,
+              "physical_relative_residual": 6.40299246217526e-07
+            },
+            {
+              "accepted_geodesic_step": 2.528657887735051e-05,
+              "function_evaluations": 8,
+              "iteration": 6,
+              "normalized_equation_residual": 2.4331059368751092e-08,
+              "physical_relative_residual": 2.190379145171423e-09
+            },
+            {
+              "accepted_geodesic_step": 1.1247475062490858e-07,
+              "function_evaluations": 9,
+              "iteration": 7,
+              "normalized_equation_residual": 4.0854744343161644e-10,
+              "physical_relative_residual": 3.6889023665825333e-11
+            },
+            {
+              "accepted_geodesic_step": 3.117959417576379e-09,
+              "function_evaluations": 10,
+              "iteration": 8,
+              "normalized_equation_residual": 9.78200037832819e-12,
+              "physical_relative_residual": 8.821663735470843e-13
+            },
+            {
+              "accepted_geodesic_step": 8.664016441547547e-11,
+              "function_evaluations": 11,
+              "iteration": 9,
+              "normalized_equation_residual": 3.044190447337796e-13,
+              "physical_relative_residual": 2.7455862932491395e-14
+            }
+          ]
+        }
+      ],
+      "id": "heart-spinning-top",
+      "mode": "SPINNING_TOP",
+      "passed": true,
+      "scientific_hash": "633203e3c098dbf0cb7bf9d816b76ddf8939446850fdfe99bacc38e9c187f3de",
+      "summary": {
+        "all_runs_converged": true,
+        "average_restarts": 1.0,
+        "expected_runs": 1,
+        "median_derivative_seconds": 0.005998555,
+        "median_function_evaluations": 11.0,
+        "median_newton_iterations": 9.0,
+        "median_residual_seconds": 1.069423118,
+        "successful_runs": 1
+      },
+      "viewer_bundle": {
+        "cavity.obj": "52eb9839f8e181f51aa997a5b9b9b2e11a93714d37e3c8f1bc323bd7b822f38b",
+        "design.obj": "cb45928002bcb737649d4805d1b40e6a6a415517c64a2fac265ca0af887aab9b",
+        "diagnostics.json": "d54540d8c494653a9a234c0686c3b9413f1b1c7304890f4fe86bf809a834ece2",
+        "material.obj": "140215a174cb3ed9f93cecc52fa9588cad6b31976d652989ae446eb795f77652",
+        "outer.obj": "3f0247d24f233e086f591414d52b95c26b09cef0bde910149f1ed46f2faabb9d"
+      }
+    }
+  ],
+  "maximum_restarts_per_run": 8,
+  "paper_doi": "10.1145/3658194",
+  "physical_validation": false,
+  "schema": "spin-it-faster-table1-results-v1",
+  "schema_version": 1,
+  "scientific_hash": "95250de309500a0372d40d22be7fce8cf9b0e8ca903f4d2da14bb1c57b0972cf",
+  "starts_per_case": 1
+}

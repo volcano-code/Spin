@@ -446,7 +446,9 @@ void draw_spin_result_window()
 		update_spin_cavity_geometry();
 	}
 	changed |= ImGui::Checkbox("CoM, target and principal axes", &showSpinAxes);
-	changed |= ImGui::Checkbox("Target/support plane", &showSpinTargetPlane);
+	changed |= ImGui::Checkbox(
+		state.spinMetadata.planeLayerName.c_str(), &showSpinTargetPlane
+	);
 	if (changed) update_spin_visibility();
 	ImGui::Separator();
 	ImGui::TextColored(ImVec4(0.95f, 0.68f, 0.12f, 1.0f),
@@ -455,6 +457,15 @@ void draw_spin_result_window()
 		"Red: cavity / optimized negative region");
 	ImGui::TextColored(ImVec4(0.18f, 0.48f, 0.88f, 1.0f),
 		"Blue: target axis; RGB: principal axes");
+	if (state.spinMetadata.buoyancyAvailable)
+	{
+		ImGui::Text("Displaced volume: %.6g",
+			state.spinMetadata.displacedLiquidVolume);
+		ImGui::Text("Metacenter height: %.6g",
+			state.spinMetadata.buoyantMetacenterHeight);
+		ImGui::Text("Stability margin: %.6g",
+			state.spinMetadata.buoyantStabilityMargin);
+	}
 	ImGui::TextWrapped(
 		"Read-only sealed result; explode changes display only, never geometry."
 	);

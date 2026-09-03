@@ -41,9 +41,13 @@ struct SlqpIteration
     double objective = 0.0;
     double equalityInfinityNorm = 0.0;
     double projectedGradientInfinityNorm = 0.0;
+    double kktInfinityNorm = 0.0;
+    double meritValue = 0.0;
     double acceptedStep = 0.0;
+    int lineSearchEvaluations = 0;
     int activeVariables = 0;
     int lbfgsHistorySize = 0;
+    bool usedFirstOrderFallback = false;
 };
 
 

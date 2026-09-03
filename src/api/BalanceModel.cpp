@@ -1799,6 +1799,9 @@ std::string spinDiagnosticsJson(
            << "\",\n"
            << "  \"static_objective\": \""
            << spin::staticObjectiveToken(request.staticObjective) << "\",\n"
+           << "  \"static_pareto_weight\": ";
+    appendNumber(output, request.staticParetoWeight);
+    output << ",\n"
            << "  \"geometry_sealed\": "
            << jsonBoolean(geometrySealed) << ",\n"
            << "  \"input_hash\": \"" << result.inputHash << "\",\n"
@@ -1811,6 +1814,8 @@ std::string spinDiagnosticsJson(
     appendNumber(output, result.physicalRelativeResidual);
     if (request.mode == spin::SpinMode::BuoyantStability)
     {
+        output << ",\n  \"displaced_liquid_volume\": ";
+        appendNumber(output, request.buoyancy.displacedLiquidVolume);
         output << ",\n  \"buoyant_metacenter_height\": ";
         appendNumber(output, result.buoyantMetacenterHeight);
         output << ",\n  \"buoyant_stability_margin\": ";
@@ -1818,7 +1823,8 @@ std::string spinDiagnosticsJson(
     }
     else
     {
-        output << ",\n  \"buoyant_metacenter_height\": null"
+        output << ",\n  \"displaced_liquid_volume\": null"
+               << ",\n  \"buoyant_metacenter_height\": null"
                << ",\n  \"buoyant_stability_margin\": null";
     }
     output << ",\n  \"quadric_coefficients\": ";

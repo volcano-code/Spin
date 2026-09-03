@@ -1,0 +1,23 @@
+{
+  "schema": "spin-it-2014-artifact-v1",
+  "schema_version": 1,
+  "evidence": "RECONSTRUCTED_ASSET",
+  "status": "CONVERGED",
+  "mode": "SPINNING_TOP",
+  "geometry_sealed": true,
+  "input_hash": "4f25304b370c7e43e2fa0d68d074a7e89b8c06ca5e833bb4a6144e25efcf9a39",
+  "trace_hash": "c7d083925cb87cb84848afd2f9c942a504e696a79bc93d83014b3f3983463f96",
+  "geometry_hash": "b0ea711b9053f888f2897d2f77dbdf04cc0b7050f95db1e48f9d31647e6ac25b",
+  "output_hash": "5d425b9e998e9006aeed3c1adbfb6801117dd22b7e0684c11c7fc7392afde0ae",
+  "binary_constraint_infinity_norm": 0,
+  "binary_projection_changed_leaves": 38,
+  "binary_projection_max_delta": 0.3879733213438582,
+  "output_grid_dimensions": [16,16,16],
+  "mass_properties_available": true,
+  "center_of_mass_model": [0,0,1],
+  "target_origin_model": [0,0,0],
+  "target_axes_model": [[1,0,0],[0,1,0],[0,0,1]],
+  "principal_axes_model": [[1,0,0],[0,1,0],[0,0,1]],
+  "final_raw_moments": [0.53125,0,0,0.53125,0.09016927083333276,0.072591145833334508,0.57259114583333326,0,0,0],
+  "adaptive_passes": [{"pass":0,"leaves":24,"fractional":4,"split":4,"merged":0,"slqp_status":"CONVERGED","final_equality_infinity_norm":6.9177441135465755e-18,"final_projected_gradient_infinity_norm":4.7998154257579417e-08,"line_search_evaluations":21,"active_set_transitions":4,"partition_hash":"874d77a9bdebe18cdf680a0fb452c6eaca130da151257442479c9c5689e548ba","slqp_trace_hash":"e4ca86da1a7abb6d35c0ca86ffa186bff212f6e8bbf2b4fb94fed748f160311d"},{"pass":1,"leaves":28,"fractional":12,"split":12,"merged":0,"slqp_status":"CONVERGED","final_equality_infinity_norm":7.1528786184581688e-18,"final_projected_gradient_infinity_norm":9.7353373635869991e-08,"line_search_evaluations":37,"active_set_transitions":1,"partition_hash":"eec1b779a63d0882018b41045278e494e7177f5151a3aa40fefe591689c2484a","slqp_trace_hash":"dd34fd9d5e4daaf5205f9e02189694e8138fc37bcf1419c2bc5840e758cf3804"},{"pass":2,"leaves":44,"fractional":20,"split":4,"merged":0,"slqp_status":"CONVERGED","final_equality_infinity_norm":5.0408413480672793e-19,"final_projected_gradient_infinity_norm":6.6182934445754242e-08,"line_search_evaluations":20,"active_set_transitions":2,"partition_hash":"ba9cc2e96bc4b4d7d8a6485acc28947ae416353c11875ca82cae2433afd96660","slqp_trace_hash":"f539f1a43ccfb57385f97ee45f7e0da3eec0b32422cdb19613bae1acafff1413"},{"pass":3,"leaves":44,"fractional":20,"split":0,"merged":0,"slqp_status":"CONVERGED","final_equality_infinity_norm":5.0408413480672793e-19,"final_projected_gradient_infinity_norm":6.6182934417948215e-08,"line_search_evaluations":0,"active_set_transitions":0,"partition_hash":"ac252a319dcee5efe7de8686f6c73f42f4a1f74a5816d88f11eab0a12755959f","slqp_trace_hash":"d3a20b43a820a1ba25d4dd7434de2d1fa14600e8bf222dd6bc075d2dd791b2dc"}]
+}

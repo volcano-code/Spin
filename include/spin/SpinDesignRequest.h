@@ -29,7 +29,8 @@ const char* spinModeToken(SpinMode mode) noexcept;
 enum class StaticObjective
 {
     MaximumMass,
-    LowerCenterOfMass
+    LowerCenterOfMass,
+    ParetoTradeoff
 };
 
 
@@ -92,6 +93,8 @@ struct SpinDesignRequest
     SpinTargetFrame targetFrame;
     SpinMode mode = SpinMode::StaticBalance;
     StaticObjective staticObjective = StaticObjective::MaximumMass;
+    /** Paper Fig. 11 weight kappa in -kappa*v+(1-kappa)*c3. */
+    double staticParetoWeight = 0.0;
     double materialDensity = 1.0;
     double originalUnitsPerNormalizedUnit = 1.0;
     double minimumWallThickness = 0.0;

@@ -8,6 +8,7 @@
 
 #include <Eigen/Core>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@ enum class AdaptiveSpinStatus
     RelaxationDidNotConverge,
     AdaptivePassLimit,
     BinaryValidationFailed,
+    ResourceLimitReached,
     InvalidRequest
 };
 
@@ -37,6 +39,8 @@ struct AdaptiveVoxelSpinRequest
     int initialLevel = 3;
     int maximumLevel = 7;
     int maximumAdaptivePasses = 8;
+    int maximumLeafCount = 1000000;
+    std::uint64_t maximumOutputCellCount = 150000000U;
     double initialFill = 0.5;
     double fractionalEpsilon = 0.05;
     double laplacianWeight = 1e-3;
@@ -55,8 +59,14 @@ struct AdaptiveSpinPass
     int fractionalLeafCount = 0;
     int splitLeafCount = 0;
     int mergedParentCount = 0;
+    SlqpStatus slqpStatus = SlqpStatus::InvalidProblem;
+    double finalEqualityInfinityNorm = 0.0;
+    double finalProjectedGradientInfinityNorm = 0.0;
+    int totalLineSearchEvaluations = 0;
+    int activeSetTransitions = 0;
     std::string partitionHash;
     std::string slqpTraceHash;
+    std::vector<SlqpIteration> slqpTrace;
 };
 
 
@@ -74,6 +84,9 @@ struct AdaptiveVoxelSpinResult
     physics::RawMassMoments10 finalMoments;
     Eigen::VectorXd binaryConstraints;
     double binaryConstraintInfinityNorm = 0.0;
+    int binaryProjectionChangedLeaves = 0;
+    double binaryProjectionMaxDelta = 0.0;
+    Eigen::Vector3i outputGridDimensions = Eigen::Vector3i::Zero();
     voxel::MaterialBoundaryMesh sourceBoundary;
     voxel::MaterialBoundaryMesh designBoundary;
     voxel::MaterialBoundaryMesh materialBoundary;

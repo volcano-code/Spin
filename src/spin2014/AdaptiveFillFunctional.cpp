@@ -128,7 +128,7 @@ const Eigen::MatrixXd& AdaptiveFillFunctional::momentColumns() const noexcept
 }
 
 
-const Eigen::MatrixXd& AdaptiveFillFunctional::laplacian() const noexcept
+const Eigen::SparseMatrix<double>& AdaptiveFillFunctional::laplacian() const noexcept
 {
     return laplacian_;
 }

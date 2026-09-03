@@ -22,7 +22,9 @@ SPIN_MODES = frozenset({
     "SPINNING_TOP",
 })
 SPIN_EVIDENCE = frozenset({"PAPER_FORMULA_REPRODUCTION", "RECONSTRUCTED_ASSET"})
-STATIC_OBJECTIVES = frozenset({"MAXIMUM_MASS", "LOWER_CENTER_OF_MASS"})
+STATIC_OBJECTIVES = frozenset({
+    "MAXIMUM_MASS", "LOWER_CENTER_OF_MASS", "PARETO_TRADEOFF",
+})
 
 
 def _native_module() -> Any:
@@ -108,6 +110,7 @@ class SpinItFasterRequest:
     )
     mode: str = "STATIC_BALANCE"
     static_objective: str = "MAXIMUM_MASS"
+    static_pareto_weight: float = 0.0
     evidence: str = "PAPER_FORMULA_REPRODUCTION"
     material_density: float = 1.0
     original_units_per_normalized_unit: float = 1.0
@@ -168,6 +171,7 @@ class SpinItFasterRequest:
             "original_units_per_normalized_unit",
             "minimum_wall_thickness",
             "center_of_mass_weight",
+            "static_pareto_weight",
             "liquid_density",
             "displaced_liquid_volume",
             "waterline_area",
@@ -177,6 +181,13 @@ class SpinItFasterRequest:
             if not math.isfinite(value):
                 raise ValueError(f"{name} must be finite")
             object.__setattr__(self, name, value)
+        if self.static_objective == "PARETO_TRADEOFF":
+            if not 0.0 <= self.static_pareto_weight <= 1.0:
+                raise ValueError("static_pareto_weight must lie in [0,1]")
+        elif self.static_pareto_weight != 0.0:
+            raise ValueError(
+                "static_pareto_weight is supported only for PARETO_TRADEOFF"
+            )
         if self.mode == "BUOYANT_STABILITY":
             if self.liquid_density <= 0.0:
                 raise ValueError("liquid_density must be positive")
@@ -340,6 +351,19 @@ class SpinItFasterResult:
     def save_diagnostics(self, path: os.PathLike[str] | str) -> None:
         self._native.save_diagnostics(os.fspath(path))
 
+    def save_viewer_bundle(self, directory: os.PathLike[str] | str) -> tuple[str, ...]:
+        root = os.fspath(directory)
+        os.makedirs(root, exist_ok=True)
+        paths = tuple(os.path.join(root, name) for name in (
+            "outer.obj", "design.obj", "material.obj", "cavity.obj", "diagnostics.json"
+        ))
+        self.save_outer_mesh(paths[0])
+        self.save_design_mesh(paths[1])
+        self.save_material_mesh(paths[2])
+        self.save_cavity_mesh(paths[3])
+        self.save_diagnostics(paths[4])
+        return paths
+
 
 def _native_request(request: SpinItFasterRequest) -> tuple[Any, Any]:
     native = _native_module()
@@ -364,6 +388,7 @@ def _native_request(request: SpinItFasterRequest) -> tuple[Any, Any]:
     result.target_frame = frame
     result.mode = getattr(native.SpinMode, request.mode)
     result.static_objective = getattr(native.StaticObjective, request.static_objective)
+    result.static_pareto_weight = request.static_pareto_weight
     result.material_density = request.material_density
     result.original_units_per_normalized_unit = request.original_units_per_normalized_unit
     result.minimum_wall_thickness = request.minimum_wall_thickness

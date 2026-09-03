@@ -4,6 +4,7 @@
 #include "voxel/VoxelDomain.h"
 
 #include <Eigen/Core>
+#include <Eigen/SparseCore>
 
 #include <cstddef>
 #include <memory>
@@ -54,8 +55,12 @@ public:
         const Eigen::VectorXd& fill,
         double threshold = 0.5
     ) const;
+    std::shared_ptr<const voxel::VoxelDomain> maximumResolutionMaterialDomain(
+        const Eigen::VectorXd& fill,
+        double threshold = 0.5
+    ) const;
 
-    Eigen::MatrixXd uniformLaplacian() const;
+    Eigen::SparseMatrix<double> uniformLaplacian() const;
     bool validatePartition() const;
     std::string partitionHash() const;
 

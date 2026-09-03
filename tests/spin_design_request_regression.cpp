@@ -100,6 +100,20 @@ int main()
         return fail("density is not bound into the request hash");
     }
 
+    spin::SpinDesignRequest pareto = request;
+    pareto.staticObjective = spin::StaticObjective::ParetoTradeoff;
+    pareto.staticParetoWeight = 0.25;
+    spin::validateSpinDesignRequest(pareto);
+    if (spin::computeSpinDesignRequestHash(pareto) == hash)
+    {
+        return fail("static Pareto weight is not bound into the request hash");
+    }
+    pareto.staticParetoWeight = 1.1;
+    if (!throwsInvalid([&] { spin::validateSpinDesignRequest(pareto); }))
+    {
+        return fail("out-of-range static Pareto weight was accepted");
+    }
+
     spin::SpinDesignRequest invalid = request;
     invalid.targetFrame.axes(0, 0) = 2.0;
     if (!throwsInvalid([&] { spin::validateSpinDesignRequest(invalid); }))

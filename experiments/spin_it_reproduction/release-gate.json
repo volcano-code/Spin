@@ -1,0 +1,28 @@
+{
+  "asset_coverage": "RECONSTRUCTED_COMPLETE",
+  "author_exact": false,
+  "experiment_coverage": true,
+  "formula_coverage": true,
+  "limitations": [
+    "author code and author CAD/voxel assets were not publicly released",
+    "paper examples use deterministic reconstructed structural counterparts",
+    "Spin-It 2014 level-9 octree resolution and cage deformation must be executed, not inferred",
+    "no fabricated-object spin or balance measurements are claimed"
+  ],
+  "physical_validation": false,
+  "public_complete_reproduction": true,
+  "requirements": {
+    "author_code_and_cad_public": false,
+    "fabricated_object_validation_available": false,
+    "registered_formula_tests_passed": true,
+    "spin_it_2014_cage_deformation": true,
+    "spin_it_2014_cases_passed": true,
+    "spin_it_2014_paper_numerics": true,
+    "spin_it_2014_paper_resolution": true,
+    "spin_it_faster_cases_passed": true,
+    "spin_it_faster_figures_passed": true
+  },
+  "schema": "spin-it-public-complete-release-gate-v1",
+  "schema_version": 1,
+  "scientific_hash": "e890ee650eae5682d0e7221daa74d80cde1c4445292dfc6606b68a9b91b11644"
+}

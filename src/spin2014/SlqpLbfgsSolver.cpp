@@ -158,30 +158,61 @@ Eigen::VectorXd projectedTangentGradient(
 )
 {
     const Eigen::MatrixXd& a = evaluation.constraintJacobian;
-    const Eigen::VectorXd preliminaryMultipliers =
-        leastSquaresMultipliers(evaluation);
-    const Eigen::VectorXd preliminary =
-        lagrangianGradient(evaluation, preliminaryMultipliers);
     active->assign(static_cast<std::size_t>(beta.size()), 0U);
-    Eigen::MatrixXd freeA = a;
     for (Eigen::Index index = 0; index < beta.size(); ++index)
     {
-        const bool fixed =
-            (beta(index) <= activeTolerance && preliminary(index) > 0.0) ||
-            (beta(index) >= 1.0 - activeTolerance && preliminary(index) < 0.0);
-        if (fixed)
+        if (
+            beta(index) <= activeTolerance ||
+            beta(index) >= 1.0 - activeTolerance
+        )
         {
             (*active)[static_cast<std::size_t>(index)] = 1U;
-            freeA.col(index).setZero();
         }
     }
     Eigen::VectorXd projected = evaluation.gradient;
-    if (freeA.rows() > 0)
+    for (Eigen::Index pass = 0; pass < 4 * beta.size() + 1; ++pass)
     {
-        projected += a.transpose() * solveSymmetric(
-            freeA * freeA.transpose(),
-            -freeA * projected
-        );
+        Eigen::MatrixXd freeA = a;
+        for (Eigen::Index index = 0; index < beta.size(); ++index)
+        {
+            if ((*active)[static_cast<std::size_t>(index)] != 0U)
+            {
+                freeA.col(index).setZero();
+            }
+        }
+        projected = evaluation.gradient;
+        if (freeA.rows() > 0)
+        {
+            projected += a.transpose() * solveSymmetric(
+                freeA * freeA.transpose(), -freeA * projected
+            );
+        }
+        Eigen::Index change = -1;
+        double largestViolation = activeTolerance;
+        bool release = false;
+        for (Eigen::Index index = 0; index < beta.size(); ++index)
+        {
+            const bool lower = beta(index) <= activeTolerance;
+            const bool upper = beta(index) >= 1.0 - activeTolerance;
+            if (!lower && !upper) continue;
+            const double direction = -projected(index);
+            const bool fixed = (*active)[static_cast<std::size_t>(index)] != 0U;
+            const bool pointsInward =
+                (lower && direction > activeTolerance) ||
+                (upper && direction < -activeTolerance);
+            const bool pointsOutward =
+                (lower && direction < -activeTolerance) ||
+                (upper && direction > activeTolerance);
+            const bool violation = fixed ? pointsInward : pointsOutward;
+            if (violation && std::abs(direction) > largestViolation)
+            {
+                largestViolation = std::abs(direction);
+                change = index;
+                release = fixed;
+            }
+        }
+        if (change < 0) break;
+        (*active)[static_cast<std::size_t>(change)] = release ? 0U : 1U;
     }
     for (Eigen::Index index = 0; index < beta.size(); ++index)
     {
@@ -207,20 +238,27 @@ void appendDouble(std::string& bytes, double value)
 
 std::string hashTrace(const std::vector<spin2014::SlqpIteration>& trace)
 {
-    std::string bytes("spin-it-2014-slqp-trace-v1");
+    std::string bytes("spin-it-2014-slqp-trace-v3");
     for (const spin2014::SlqpIteration& entry : trace)
     {
         bytes.append(reinterpret_cast<const char*>(&entry.iteration), sizeof(int));
         appendDouble(bytes, entry.objective);
         appendDouble(bytes, entry.equalityInfinityNorm);
         appendDouble(bytes, entry.projectedGradientInfinityNorm);
+        appendDouble(bytes, entry.kktInfinityNorm);
+        appendDouble(bytes, entry.meritValue);
         appendDouble(bytes, entry.acceptedStep);
+        bytes.append(
+            reinterpret_cast<const char*>(&entry.lineSearchEvaluations),
+            sizeof(int)
+        );
         bytes.append(
             reinterpret_cast<const char*>(&entry.activeVariables), sizeof(int)
         );
         bytes.append(
             reinterpret_cast<const char*>(&entry.lbfgsHistorySize), sizeof(int)
         );
+        bytes.push_back(entry.usedFirstOrderFallback ? '\1' : '\0');
     }
     return manufacturing::computeContentSha256(bytes);
 }
@@ -317,6 +355,8 @@ SlqpLbfgsResult solveSlqpLbfgs(
         trace.objective = current.objective;
         trace.equalityInfinityNorm = equalityNorm;
         trace.projectedGradientInfinityNorm = projectedNorm;
+        trace.kktInfinityNorm = projectedNorm;
+        trace.meritValue = merit(current, settings.meritPenalty);
         trace.lbfgsHistorySize = static_cast<int>(history.s.size());
         for (unsigned char fixed : active)
         {
@@ -400,6 +440,7 @@ SlqpLbfgsResult solveSlqpLbfgs(
              lineSearch < settings.maximumLineSearchSteps && step > 1e-14;
              ++lineSearch)
         {
+            ++trace.lineSearchEvaluations;
             candidateBeta = (result.beta + step * direction)
                 .cwiseMax(0.0).cwiseMin(1.0);
             candidate = functional.evaluate(candidateBeta);
@@ -412,6 +453,63 @@ SlqpLbfgsResult solveSlqpLbfgs(
                 break;
             }
             step *= settings.lineSearchReduction;
+        }
+        if (!accepted)
+        {
+            // A stale L-BFGS metric can cease to be a descent metric after a
+            // large active-set change.  Retry the same linearized equality
+            // subproblem with the identity metric.  This is still an SLQP
+            // step; it merely discards the unreliable quasi-Newton scaling.
+            Eigen::MatrixXd freeA = current.constraintJacobian;
+            for (Eigen::Index index = 0; index < result.beta.size(); ++index)
+            {
+                if (active[static_cast<std::size_t>(index)] != 0U)
+                {
+                    freeA.col(index).setZero();
+                }
+            }
+            Eigen::VectorXd normal = Eigen::VectorXd::Zero(result.beta.size());
+            if (freeA.rows() > 0)
+            {
+                normal = -freeA.transpose() * solveSymmetric(
+                    freeA * freeA.transpose(), current.constraints
+                );
+            }
+            direction = normal - projected;
+            for (Eigen::Index index = 0; index < result.beta.size(); ++index)
+            {
+                if (active[static_cast<std::size_t>(index)] != 0U)
+                {
+                    direction(index) = 0.0;
+                }
+            }
+            step = maximumBoundStep(result.beta, direction);
+            const double fallbackPredicted = std::max(
+                1e-14,
+                -current.gradient.dot(direction) +
+                    settings.meritPenalty * current.constraints.lpNorm<1>()
+            );
+            for (int lineSearch = 0;
+                 lineSearch < settings.maximumLineSearchSteps && step > 1e-14;
+                 ++lineSearch)
+            {
+                ++trace.lineSearchEvaluations;
+                candidateBeta = (result.beta + step * direction)
+                    .cwiseMax(0.0).cwiseMin(1.0);
+                candidate = functional.evaluate(candidateBeta);
+                if (
+                    merit(candidate, settings.meritPenalty) <=
+                    oldMerit - settings.armijo * step * fallbackPredicted
+                )
+                {
+                    accepted = true;
+                    trace.usedFirstOrderFallback = true;
+                    history = LbfgsHistory();
+                    history.capacity = settings.lbfgsMemory;
+                    break;
+                }
+                step *= settings.lineSearchReduction;
+            }
         }
         trace.acceptedStep = accepted ? step : 0.0;
         result.trace.push_back(trace);

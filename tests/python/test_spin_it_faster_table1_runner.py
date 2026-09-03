@@ -36,6 +36,10 @@ class SpinItFasterTable1RunnerTests(unittest.TestCase):
             self.assertLess(row[6], 0.0)
         for row in runner.generate_initial_quadrics("BUOYANT_STABILITY", 11, 4):
             self.assertEqual(row[4:], [0.0] * 6)
+        for row in runner.generate_initial_quadrics("FIDGET_SPINNER", 17, 4):
+            self.assertLess(row[0], 0.0)
+            self.assertGreater(row[4], 0.0)
+            self.assertEqual(row[4], row[5])
 
     def test_domain_aware_planes_intersect_the_design_bounds(self) -> None:
         runner = load_runner()
@@ -93,6 +97,7 @@ class SpinItFasterTable1NativeRunnerTests(unittest.TestCase):
         manifest = json.loads(runner.DEFAULT_CASES.read_text(encoding="utf-8"))
         case = next(row for row in manifest["cases"] if row["id"] == "static-tilted-vase")
         payload = runner.run_case(case, starts=2, max_restarts=1)
+        self.assertTrue(payload["passed"])
         self.assertTrue(payload["summary"]["all_runs_converged"])
         self.assertEqual(payload["summary"]["successful_runs"], 2)
         self.assertEqual(payload["summary"]["average_restarts"], 1.0)

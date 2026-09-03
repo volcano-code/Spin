@@ -5,6 +5,7 @@
 #include "spin2014/SpinIt2014MomentProblem.h"
 
 #include <Eigen/Core>
+#include <Eigen/SparseCore>
 
 
 namespace spin2014
@@ -43,7 +44,7 @@ public:
     AdaptiveFillEvaluation evaluate(const Eigen::VectorXd& beta) const;
     double laplacianEnergy(const Eigen::VectorXd& beta) const;
     const Eigen::MatrixXd& momentColumns() const noexcept;
-    const Eigen::MatrixXd& laplacian() const noexcept;
+    const Eigen::SparseMatrix<double>& laplacian() const noexcept;
 
 private:
     const AdaptiveVoxelDomain* domain_ = nullptr;
@@ -52,7 +53,7 @@ private:
     double laplacianWeight_ = 0.0;
     physics::RawMassMoments10 baseMoments_;
     Eigen::MatrixXd momentColumns_;
-    Eigen::MatrixXd laplacian_;
+    Eigen::SparseMatrix<double> laplacian_;
 };
 
 

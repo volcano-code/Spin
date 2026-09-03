@@ -1,0 +1,485 @@
+{
+  "asset_class": "RECONSTRUCTED_ASSET",
+  "author_exact": false,
+  "cases": [
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "ellipsoid-top",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/ellipsoid-top.vox.json",
+        "sha256": "6036f03ff83777a636cbb8cf67bd57675caa44b90c40b3d2e442f5fb27d85983"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 6",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "heart-top",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/heart-top.vox.json",
+        "sha256": "68edcd5c61dc7f71f4dbdebb8bf1a5f6875b5c8ecd93eb5ba46b2be32a208f51"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 7",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 3
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "armadillo-hand",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 3,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/armadillo-hand.vox.json",
+        "sha256": "8a7e2051df7a32503f09725061365e0792ee76446dc6d1377d1c65969da09973"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 8",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 2
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 5,
+      "id": "armadillo-shell",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 2,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/armadillo-shell.vox.json",
+        "sha256": "666c14fd628fd791d9868fda7a05ce07b4d87da529f11564dfdf65735276e13b"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 8",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 0.0,
+      "expected_void_components": 2,
+      "id": "teapot-inertia",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/teapot-inertia.vox.json",
+        "sha256": "7c3523884ca0907ab3f1f748ae612a8fc71101e007f488d50796e4fd03c71ce7"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 9 left",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 2.0,
+      "expected_void_components": 2,
+      "id": "teapot-lowering",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/teapot-lowering.vox.json",
+        "sha256": "7c3523884ca0907ab3f1f748ae612a8fc71101e007f488d50796e4fd03c71ce7"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 9 middle",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 2,
+      "id": "teapot-mass-reduction",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "mass_reduction_extension": true,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/teapot-mass-reduction.vox.json",
+        "sha256": "7c3523884ca0907ab3f1f748ae612a8fc71101e007f488d50796e4fd03c71ce7"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 9 right",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "cuboid-yoyo",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "maximum_octree_level": 4,
+      "mode": "YO_YO",
+      "occupancy": {
+        "path": "paper-assets/cuboid-yoyo.vox.json",
+        "sha256": "fdd9105440726f43020649ad790a9abd19e284710c9c3067e27673a44d302035"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 10 top",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 4
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "woven-ring-yoyo",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 4,
+      "maximum_octree_level": 4,
+      "mode": "YO_YO",
+      "occupancy": {
+        "path": "paper-assets/woven-ring-yoyo.vox.json",
+        "sha256": "9a2eaf359ddce80cad8f0e67cbbed0fdc190153d901c70ef141998f2c4042970"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 10 bottom",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 5
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "dancing-couple-hollowing",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 5,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/dancing-couple-hollowing.vox.json",
+        "sha256": "44ccfb488148aa11f2c4b37fad5360731421a5210661e4a1f8b0a6501f2d13cf"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 11",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 5
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "cage": {
+        "deformation_enabled": true,
+        "maximum_handle_count": 2,
+        "projected_gradient_tolerance": 1e-06,
+        "type": "AUTOMATIC_BBOX"
+      },
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "dancing-couple-deformation",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 5,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/dancing-couple-deformation.vox.json",
+        "sha256": "44ccfb488148aa11f2c4b37fad5360731421a5210661e4a1f8b0a6501f2d13cf"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 11",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "densities_g_cm3": {
+        "insert": 8.1,
+        "shell": 1.17
+      },
+      "expected_void_components": 1,
+      "id": "sumone-dual-density",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/sumone-dual-density.vox.json",
+        "sha256": "b52280d7b8c0c94a52242d4c147e2795cbd370379c53a9ce613bd2064cdc16f6"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 5",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 1
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 1,
+      "id": "trex-static",
+      "initial_fill": 1.0,
+      "initial_fill_evidence": "RECONSTRUCTED_PARAMETER",
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 1,
+      "maximum_octree_level": 4,
+      "mode": "STATIC_BALANCE",
+      "occupancy": {
+        "path": "paper-assets/trex-static.vox.json",
+        "sha256": "6525fee6d881eb67c0b7726ee1f7707808a0b3115050b3dcfcda7751b3452d25"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Figure 12",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "accessibility": {
+        "automatic_cut_optimization_in_paper": false,
+        "paper_reported_manual_cuts": 2
+      },
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "binary_constraint_tolerance": 0.005,
+      "center_of_mass_weight": 1.0,
+      "expected_void_components": 3,
+      "id": "elephant-accessibility",
+      "initial_fill": 0.5,
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "manual_planar_cuts": 2,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy": {
+        "path": "paper-assets/elephant-accessibility.vox.json",
+        "sha256": "9b86e69dbee9f6adedfa246ba4389e2d5af35b5d966f6c5b594ddb6ad9e4b858"
+      },
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_level_laplacian_weight": 1e-05,
+      "paper_maximum_octree_level": 9,
+      "paper_role": "Table 1",
+      "physical_validation": false,
+      "source_attribution": "project-generated structural counterpart; CC0-1.0",
+      "target_axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    }
+  ],
+  "paper_doi": "10.1145/2601097.2601157",
+  "paper_resolution_reproduced": false,
+  "physical_validation": false,
+  "schema": "spin-it-2014-paper-cases-v1",
+  "schema_version": 1
+}

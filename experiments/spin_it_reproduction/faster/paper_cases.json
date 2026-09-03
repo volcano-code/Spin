@@ -49,11 +49,11 @@
       "author_exact": false,
       "buoyancy": {
         "center_of_buoyancy_target": [
-          0.0,
-          0.0,
+          0.1849352704595321,
+          0.03698633309075461,
           0.0
         ],
-        "displaced_liquid_volume": 4.0,
+        "displaced_liquid_volume": 4.59625251660662,
         "liquid_density": 1.0,
         "waterline_area": 4.0,
         "waterline_central_second_moment": [
@@ -73,6 +73,18 @@
         "sha256": "90bdb0ea9866632cdb19be3f49c81bc7580c354ae8f8d5609ceb86b280c03f44"
       },
       "id": "floating-tea-infuser",
+      "known_feasible_quadric": [
+        0.2,
+        1.0,
+        0.2,
+        0.1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
       "license": "project-generated deterministic geometry; CC0-1.0",
       "mode": "BUOYANT_STABILITY",
       "outer": {
@@ -110,11 +122,11 @@
       "author_exact": false,
       "buoyancy": {
         "center_of_buoyancy_target": [
-          0.0,
-          0.0,
+          0.08558581166706312,
+          0.005404338280521669,
           0.0
         ],
-        "displaced_liquid_volume": 4.0,
+        "displaced_liquid_volume": 3.5121711334769143,
         "liquid_density": 1.0,
         "waterline_area": 4.0,
         "waterline_central_second_moment": [
@@ -134,6 +146,18 @@
         "sha256": "14390982d45f62d0c3ebdcbdd02d1fe4636249054f51746e50dd1768b1b7ffa5"
       },
       "id": "floating-island-cat",
+      "known_feasible_quadric": [
+        0.2,
+        1.0,
+        0.2,
+        0.1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
       "license": "project-generated deterministic geometry; CC0-1.0",
       "mode": "BUOYANT_STABILITY",
       "outer": {
@@ -171,11 +195,11 @@
       "author_exact": false,
       "buoyancy": {
         "center_of_buoyancy_target": [
-          0.0,
-          0.0,
+          0.09129467930121796,
+          0.0002290752576555812,
           0.0
         ],
-        "displaced_liquid_volume": 4.0,
+        "displaced_liquid_volume": 4.325410392245944,
         "liquid_density": 1.0,
         "waterline_area": 4.0,
         "waterline_central_second_moment": [
@@ -195,6 +219,18 @@
         "sha256": "8047bdffa3b931e13aed605ff9a39437f2d2a19ae61fd7490976bfa98d7b1917"
       },
       "id": "floating-island-dog-human",
+      "known_feasible_quadric": [
+        0.2,
+        1.0,
+        0.2,
+        0.1,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
       "license": "project-generated deterministic geometry; CC0-1.0",
       "mode": "BUOYANT_STABILITY",
       "outer": {
@@ -247,25 +283,25 @@
       "physical_validation": false,
       "target_axes": [
         [
-          1.0,
-          0.0,
-          0.0
+          0.9418358198519111,
+          3.1392484655341483e-16,
+          0.33607333789498767
         ],
         [
-          0.0,
-          1.0,
-          0.0
+          -6.106226635438361e-16,
+          1.0000000000000002,
+          7.771561172376096e-16
         ],
         [
-          0.0,
-          0.0,
-          1.0
+          -0.33607333789498767,
+          -9.37167465562917e-16,
+          0.9418358198519112
         ]
       ],
       "target_origin": [
-        0.0,
-        0.0,
-        0.0
+        -0.5492066981089954,
+        -1.2976157764712145e-15,
+        -1.616538440729317
       ],
       "units": "normalized_unit"
     },
@@ -289,76 +325,76 @@
       "physical_validation": false,
       "target_axes": [
         [
-          1.0,
-          0.0,
-          0.0
+          -0.7070274376323334,
+          0.7071067811854888,
+          -0.01059256515459353
         ],
         [
-          0.0,
-          1.0,
-          0.0
+          -0.7070274376302155,
+          -0.7071067811876064,
+          -0.010592565154593503
         ],
         [
-          0.0,
-          0.0,
-          1.0
+          -0.01498014930194681,
+          -2.2415229394834313e-14,
+          0.9998877912680461
         ]
       ],
       "target_origin": [
-        0.0,
-        0.0,
-        0.0
+        0.0031494769558033306,
+        0.025822652389806577,
+        -1.3674156352558091
       ],
       "units": "normalized_unit"
     },
     {
       "asset_class": "RECONSTRUCTED_ASSET",
       "author_exact": false,
-      "construction": "axis-oriented jellyfish-like yo-yo",
+      "construction": "faceted elongated jellyfish-like yo-yo counterpart",
       "design_domain": {
         "path": "paper-assets/jellyfish-yoyo-design.obj",
-        "sha256": "548192ec2cccd096d3728298d4903dc15e5f97c016ca57e3bc7fa1a5a8105fe3"
+        "sha256": "7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"
       },
       "id": "jellyfish-yoyo",
       "license": "project-generated deterministic geometry; CC0-1.0",
       "mode": "YO_YO",
       "outer": {
         "path": "paper-assets/jellyfish-yoyo-outer.obj",
-        "sha256": "3f94406ecf98cdc92869d22f90782d95845eee9efae874b7de98a7a2b971a69e"
+        "sha256": "2e66f91b1d999101747b5f2b99720d7243a142714c74b78886653299e5ea5fa2"
       },
       "paper_section": "6.2",
       "physical_validation": false,
       "target_axes": [
         [
-          1.0,
-          0.0,
-          0.0
+          -0.9990946458216409,
+          0.042542786586329685,
+          1.3107145688801461e-16
         ],
         [
-          0.0,
-          1.0,
-          0.0
+          -0.042542786586329685,
+          -0.9990946458216409,
+          -2.0057854960837795e-16
         ],
         [
-          0.0,
-          0.0,
+          1.2241962036707268e-16,
+          -2.059730999983469e-16,
           1.0
         ]
       ],
       "target_origin": [
-        0.0,
-        0.0,
-        0.0
+        -6.342996451977302e-17,
+        3.367097235520991e-17,
+        -0.05945409203477498
       ],
       "units": "normalized_unit"
     },
     {
       "asset_class": "RECONSTRUCTED_ASSET",
       "author_exact": false,
-      "construction": "seven-lobed planar spinner",
+      "construction": "seven-lobed planar spinner with a protected cuboid core",
       "design_domain": {
         "path": "paper-assets/flower-fidget-spinner-design.obj",
-        "sha256": "c264084cc43b09227091aadc855cd08a767b826cdf956c099ed89f56c12fe7b6"
+        "sha256": "30881e098d42f0b8f6258f2fe4cafaa204aa076a68b3e529bceccb859c37beac"
       },
       "id": "flower-fidget-spinner",
       "license": "project-generated deterministic geometry; CC0-1.0",

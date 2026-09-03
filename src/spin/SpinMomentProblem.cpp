@@ -212,12 +212,14 @@ SpinMomentProblem::SpinMomentProblem(
     SpinMode mode,
     StaticObjective staticObjective,
     double centerOfMassWeight,
+    double staticParetoWeight,
     double targetMass,
     const Eigen::Vector2d& horizontalCenterOfBuoyancy
 )
     : mode_(mode),
       staticObjective_(staticObjective),
       centerOfMassWeight_(centerOfMassWeight),
+      staticParetoWeight_(staticParetoWeight),
       targetMass_(targetMass),
       horizontalCenterOfBuoyancy_(horizontalCenterOfBuoyancy)
 {
@@ -242,6 +244,7 @@ SpinMomentProblem SpinMomentProblem::buoyantStability(
         SpinMode::BuoyantStability,
         StaticObjective::MaximumMass,
         0.0,
+        0.0,
         targetMass,
         horizontalCenterOfBuoyancy
     );
@@ -250,7 +253,30 @@ SpinMomentProblem SpinMomentProblem::buoyantStability(
 
 SpinMomentProblem SpinMomentProblem::staticBalance(StaticObjective objective)
 {
-    return SpinMomentProblem(SpinMode::StaticBalance, objective, 0.0);
+    if (objective == StaticObjective::ParetoTradeoff)
+    {
+        throw std::invalid_argument(
+            "Pareto static balance requires an explicit mass weight"
+        );
+    }
+    return SpinMomentProblem(SpinMode::StaticBalance, objective, 0.0, 0.0);
+}
+
+
+SpinMomentProblem SpinMomentProblem::staticBalancePareto(double massWeight)
+{
+    if (!std::isfinite(massWeight) || massWeight < 0.0 || massWeight > 1.0)
+    {
+        throw std::invalid_argument(
+            "static Pareto mass weight must lie in [0,1]"
+        );
+    }
+    return SpinMomentProblem(
+        SpinMode::StaticBalance,
+        StaticObjective::ParetoTradeoff,
+        0.0,
+        massWeight
+    );
 }
 
 
@@ -259,6 +285,7 @@ SpinMomentProblem SpinMomentProblem::fidgetSpinner()
     return SpinMomentProblem(
         SpinMode::FidgetSpinner,
         StaticObjective::MaximumMass,
+        0.0,
         0.0
     );
 }
@@ -269,6 +296,7 @@ SpinMomentProblem SpinMomentProblem::yoYo()
     return SpinMomentProblem(
         SpinMode::YoYo,
         StaticObjective::MaximumMass,
+        0.0,
         0.0
     );
 }
@@ -287,7 +315,8 @@ SpinMomentProblem SpinMomentProblem::spinningTop(
     return SpinMomentProblem(
         SpinMode::SpinningTop,
         StaticObjective::MaximumMass,
-        centerOfMassWeight
+        centerOfMassWeight,
+        0.0
     );
 }
 
@@ -307,6 +336,12 @@ StaticObjective SpinMomentProblem::staticObjective() const noexcept
 double SpinMomentProblem::centerOfMassWeight() const noexcept
 {
     return centerOfMassWeight_;
+}
+
+
+double SpinMomentProblem::staticParetoWeight() const noexcept
+{
+    return staticParetoWeight_;
 }
 
 
@@ -343,8 +378,14 @@ SpinMomentEvaluation SpinMomentProblem::evaluate(
             objective = -r[0];
         }
         else
+        if (staticObjective_ == StaticObjective::LowerCenterOfMass)
         {
             objective = r[3] / r[0];
+        }
+        else
+        {
+            objective = -staticParetoWeight_ * r[0] +
+                (1.0 - staticParetoWeight_) * (r[3] / r[0]);
         }
         break;
 

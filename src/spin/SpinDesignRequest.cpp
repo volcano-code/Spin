@@ -122,6 +122,8 @@ const char* staticObjectiveToken(StaticObjective objective) noexcept
         return "MAXIMUM_MASS";
     case StaticObjective::LowerCenterOfMass:
         return "LOWER_CENTER_OF_MASS";
+    case StaticObjective::ParetoTradeoff:
+        return "PARETO_TRADEOFF";
     }
     return "UNKNOWN";
 }
@@ -193,6 +195,7 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
     );
     requireFinite(request.minimumWallThickness, "minimum wall thickness");
     requireFinite(request.centerOfMassWeight, "center-of-mass weight");
+    requireFinite(request.staticParetoWeight, "static Pareto weight");
     if (request.materialDensity <= 0.0)
     {
         throw std::invalid_argument("material density must be positive");
@@ -230,6 +233,22 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
     {
         throw std::invalid_argument(
             "static objective is supported only in static-balance mode"
+        );
+    }
+    if (
+        request.staticObjective == StaticObjective::ParetoTradeoff &&
+        (request.staticParetoWeight < 0.0 || request.staticParetoWeight > 1.0)
+    )
+    {
+        throw std::invalid_argument("static Pareto weight must lie in [0,1]");
+    }
+    if (
+        request.staticObjective != StaticObjective::ParetoTradeoff &&
+        request.staticParetoWeight != 0.0
+    )
+    {
+        throw std::invalid_argument(
+            "static Pareto weight is supported only for PARETO_TRADEOFF"
         );
     }
 
@@ -369,9 +388,10 @@ std::string computeSpinDesignRequestHash(const SpinDesignRequest& request)
     validateSpinDesignRequest(request);
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << "SpinDesignRequest-v2;";
+    stream << "SpinDesignRequest-v3;";
     stream << spinModeToken(request.mode) << ';';
     stream << staticObjectiveToken(request.staticObjective) << ';';
+    appendScalar(stream, request.staticParetoWeight);
     appendMatrix(stream, request.outerSurface.vertices);
     appendMatrix(stream, request.outerSurface.faces);
     appendMatrix(stream, request.designDomain.vertices);

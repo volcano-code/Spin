@@ -79,11 +79,14 @@ def generate_initial_quadrics(
             cx = center[0] + generator.uniform(-0.2, 0.2) * half[0]
             cy = center[1] + generator.uniform(-0.2, 0.2) * half[1]
             radius = generator.uniform(0.25, 0.75) * min(half[0], half[1])
-            values[0] = radius * radius - cx * cx - cy * cy
-            values[1] = 2.0 * cx
-            values[2] = 2.0 * cy
-            values[4] = -1.0
-            values[5] = -1.0
+            # The material evaluator retains q>=0.  The paper's fidget void
+            # is therefore initialized as the interior of a positive-curvature
+            # circular cylinder, not its complement.
+            values[0] = cx * cx + cy * cy - radius * radius
+            values[1] = -2.0 * cx
+            values[2] = -2.0 * cy
+            values[4] = 1.0
+            values[5] = 1.0
         elif mode == "YO_YO":
             radial_scale = 1.0 / max(half[0] * half[0], half[1] * half[1])
             axial_scale = generator.uniform(0.2, 1.2) / (half[2] * half[2])
@@ -141,6 +144,21 @@ def read_obj(path: Path) -> tuple[tuple[tuple[float, float, float], ...], tuple[
     return tuple(vertices), tuple(faces)
 
 
+def target_domain_points(
+    case: dict[str, Any],
+    design_points: tuple[tuple[float, float, float], ...],
+) -> tuple[tuple[float, float, float], ...]:
+    origin = tuple(float(value) for value in case["target_origin"])
+    axes = tuple(tuple(float(value) for value in row) for row in case["target_axes"])
+    return tuple(
+        tuple(
+            sum(axes[row][column] * (point[row] - origin[row]) for row in range(3))
+            for column in range(3)
+        )
+        for point in design_points
+    )
+
+
 def build_request(case: dict[str, Any]):
     from make_it_stand.spin import SpinItFasterRequest, SpinSolverConfig, integrate_raw_mass_moments
 
@@ -180,21 +198,19 @@ def build_request(case: dict[str, Any]):
     )
 
 
-def run_case(case: dict[str, Any], starts: int, max_restarts: int) -> dict[str, Any]:
+def run_case(
+    case: dict[str, Any],
+    starts: int,
+    max_restarts: int,
+    bundle_root: Path | None = None,
+) -> dict[str, Any]:
     from make_it_stand.spin import solve_spin_it_faster
 
     request = build_request(case)
     design = read_obj(ROOT / case["design_domain"]["path"])
-    origin = tuple(float(value) for value in case["target_origin"])
-    axes = tuple(tuple(float(value) for value in row) for row in case["target_axes"])
-    domain_points = tuple(
-        tuple(
-            sum(axes[row][column] * (point[row] - origin[row]) for row in range(3))
-            for column in range(3)
-        )
-        for point in design[0]
-    )
+    domain_points = target_domain_points(case, design[0])
     attempts: list[dict[str, Any]] = []
+    viewer_bundle: dict[str, str] | None = None
     for run in range(starts):
         initials = generate_initial_quadrics(
             case["mode"],
@@ -207,10 +223,18 @@ def run_case(case: dict[str, Any], starts: int, max_restarts: int) -> dict[str, 
             result = solve_spin_it_faster(request, initial_quadrics=(initial,))
             elapsed = time.perf_counter() - begin
             trace = result.trace
+            status = result.status
+            if (
+                status != "CONVERGED"
+                and trace
+                and trace[-1].normalized_equation_residual <= request.settings.equation_tolerance
+                and trace[-1].multiplier_mu <= 0.0
+            ):
+                status = "LOCAL_MAXIMUM"
             attempts.append({
                 "run": run,
                 "restart": restart,
-                "status": result.status,
+                "status": status,
                 "newton_iterations": max((entry.iteration for entry in trace), default=0),
                 "function_evaluations": max((entry.function_evaluations for entry in trace), default=0),
                 "normalized_equation_residual": result.diagnostics["normalized_equation_residual"],
@@ -232,14 +256,34 @@ def run_case(case: dict[str, Any], starts: int, max_restarts: int) -> dict[str, 
                 ],
             })
             if result.status == "CONVERGED":
+                if bundle_root is not None and viewer_bundle is None:
+                    directory = bundle_root / case["id"]
+                    paths = result.save_viewer_bundle(directory)
+                    viewer_bundle = {
+                        Path(path).name: hashlib.sha256(Path(path).read_bytes()).hexdigest()
+                        for path in paths
+                    }
                 break
     summary = summarize_attempts(attempts, starts)
+    run_ids = {int(row["run"]) for row in attempts}
+    converged = [row for row in attempts if row["status"] == "CONVERGED"]
+    passed = (
+        run_ids == set(range(starts))
+        and bool(converged)
+        and all(
+            row["normalized_equation_residual"] <= 1e-12
+            and row["physical_relative_residual"] <= 1e-6
+            for row in converged
+        )
+    )
     payload = {
         "id": case["id"],
         "mode": case["mode"],
         "asset_class": "RECONSTRUCTED_ASSET",
         "attempts": attempts,
         "summary": summary,
+        "viewer_bundle": viewer_bundle,
+        "passed": passed,
     }
     payload["scientific_hash"] = scientific_hash(payload)
     return payload
@@ -258,6 +302,10 @@ def plan_payload(cases: list[dict[str, Any]], starts: int) -> dict[str, Any]:
                     case["mode"],
                     seed=2024 + 7919 * sum(map(ord, case["id"])),
                     count=starts,
+                    domain_points=target_domain_points(
+                        case,
+                        read_obj(ROOT / case["design_domain"]["path"])[0],
+                    ),
                 ),
             }
             for case in cases
@@ -273,6 +321,7 @@ def main() -> int:
     parser.add_argument("--max-restarts", type=int, default=8)
     parser.add_argument("--case", action="append", default=[])
     parser.add_argument("--plan-only", action="store_true")
+    parser.add_argument("--bundle-root", type=Path)
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     cases = [case for case in manifest["cases"] if not args.case or case["id"] in args.case]
@@ -283,7 +332,10 @@ def main() -> int:
     if args.plan_only:
         payload = plan_payload(cases, args.starts)
     else:
-        rows = [run_case(case, args.starts, args.max_restarts) for case in cases]
+        rows = [
+            run_case(case, args.starts, args.max_restarts, args.bundle_root)
+            for case in cases
+        ]
         payload = {
             "schema": "spin-it-faster-table1-results-v1",
             "schema_version": 1,

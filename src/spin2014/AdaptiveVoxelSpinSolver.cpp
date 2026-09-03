@@ -68,7 +68,7 @@ spin2014::SpinIt2014MomentProblem momentProblem(
 
 std::string hashTrace(const std::vector<spin2014::AdaptiveSpinPass>& trace)
 {
-    std::string bytes("spin-it-2014-adaptive-trace-v1");
+    std::string bytes("spin-it-2014-adaptive-trace-v2");
     for (const spin2014::AdaptiveSpinPass& pass : trace)
     {
         appendInt(bytes, pass.pass);
@@ -76,11 +76,17 @@ std::string hashTrace(const std::vector<spin2014::AdaptiveSpinPass>& trace)
         appendInt(bytes, pass.fractionalLeafCount);
         appendInt(bytes, pass.splitLeafCount);
         appendInt(bytes, pass.mergedParentCount);
+        appendInt(bytes, static_cast<int>(pass.slqpStatus));
+        appendDouble(bytes, pass.finalEqualityInfinityNorm);
+        appendDouble(bytes, pass.finalProjectedGradientInfinityNorm);
+        appendInt(bytes, pass.totalLineSearchEvaluations);
+        appendInt(bytes, pass.activeSetTransitions);
         bytes += pass.partitionHash;
         bytes += pass.slqpTraceHash;
     }
     return manufacturing::computeContentSha256(bytes);
 }
+
 
 
 } // namespace
@@ -100,6 +106,8 @@ const char* adaptiveSpinStatusToken(AdaptiveSpinStatus status) noexcept
     case AdaptiveSpinStatus::AdaptivePassLimit: return "ADAPTIVE_PASS_LIMIT";
     case AdaptiveSpinStatus::BinaryValidationFailed:
         return "BINARY_VALIDATION_FAILED";
+    case AdaptiveSpinStatus::ResourceLimitReached:
+        return "RESOURCE_LIMIT_REACHED";
     case AdaptiveSpinStatus::InvalidRequest: return "INVALID_REQUEST";
     }
     return "INVALID_REQUEST";
@@ -123,6 +131,8 @@ void validateAdaptiveVoxelSpinRequest(const AdaptiveVoxelSpinRequest& request)
         request.maximumLevel < request.initialLevel ||
         request.maximumLevel >= 30 ||
         request.maximumAdaptivePasses <= 0 ||
+        request.maximumLeafCount <= 0 ||
+        request.maximumOutputCellCount == 0U ||
         !std::isfinite(request.initialFill) || request.initialFill < 0.0 ||
         request.initialFill > 1.0 ||
         !std::isfinite(request.fractionalEpsilon) ||
@@ -164,6 +174,8 @@ std::string computeAdaptiveVoxelSpinRequestHash(
     appendInt(bytes, request.initialLevel);
     appendInt(bytes, request.maximumLevel);
     appendInt(bytes, request.maximumAdaptivePasses);
+    appendInt(bytes, request.maximumLeafCount);
+    appendDouble(bytes, static_cast<double>(request.maximumOutputCellCount));
     appendDouble(bytes, request.initialFill);
     appendDouble(bytes, request.fractionalEpsilon);
     appendDouble(bytes, request.laplacianWeight);
@@ -191,6 +203,28 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
     validateAdaptiveVoxelSpinRequest(request);
     AdaptiveVoxelSpinResult result;
     result.inputHash = computeAdaptiveVoxelSpinRequestHash(request);
+    std::uint64_t initialCellBound = 1U;
+    for (int level = 0; level < request.initialLevel; ++level)
+    {
+        if (initialCellBound >
+            static_cast<std::uint64_t>(request.maximumLeafCount) / 8U)
+        {
+            initialCellBound =
+                static_cast<std::uint64_t>(request.maximumLeafCount) + 1U;
+            break;
+        }
+        initialCellBound *= 8U;
+    }
+    if (initialCellBound >
+        static_cast<std::uint64_t>(request.maximumLeafCount))
+    {
+        result.status = AdaptiveSpinStatus::ResourceLimitReached;
+        result.diagnostic = "initial octree leaf bound exceeds maximumLeafCount";
+        result.outputHash = manufacturing::computeContentSha256(
+            result.inputHash + result.diagnostic
+        );
+        return result;
+    }
     result.sourceBoundary = voxel::extractMaterialBoundaries(request.domain);
     const std::shared_ptr<const voxel::VoxelDomain> designDomain =
         voxel::VoxelDomain::create(
@@ -234,6 +268,26 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         pass.leafCountBefore = static_cast<int>(domain.leaves().size());
         pass.partitionHash = domain.partitionHash();
         pass.slqpTraceHash = relaxed.traceHash;
+        pass.slqpTrace = relaxed.trace;
+        pass.slqpStatus = relaxed.status;
+        if (!relaxed.trace.empty())
+        {
+            pass.finalEqualityInfinityNorm =
+                relaxed.trace.back().equalityInfinityNorm;
+            pass.finalProjectedGradientInfinityNorm =
+                relaxed.trace.back().projectedGradientInfinityNorm;
+            int previousActive = relaxed.trace.front().activeVariables;
+            for (const SlqpIteration& iteration : relaxed.trace)
+            {
+                pass.totalLineSearchEvaluations +=
+                    iteration.lineSearchEvaluations;
+                if (iteration.activeVariables != previousActive)
+                {
+                    ++pass.activeSetTransitions;
+                    previousActive = iteration.activeVariables;
+                }
+            }
+        }
         for (std::size_t index = 0; index < domain.leaves().size(); ++index)
         {
             const double value = beta(static_cast<Eigen::Index>(index));
@@ -252,6 +306,37 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
             result.status = AdaptiveSpinStatus::RelaxationDidNotConverge;
             result.diagnostic = std::string("adaptive pass failed: ") +
                 relaxed.diagnostic;
+            result.adaptiveTraceHash = hashTrace(result.adaptiveTrace);
+            result.outputHash = manufacturing::computeContentSha256(
+                result.inputHash + result.adaptiveTraceHash + result.diagnostic
+            );
+            return result;
+        }
+
+        int splittableFractional = 0;
+        for (std::size_t index = 0; index < domain.leaves().size(); ++index)
+        {
+            const double value = beta(static_cast<Eigen::Index>(index));
+            if (
+                value >= request.fractionalEpsilon &&
+                value <= 1.0 - request.fractionalEpsilon &&
+                domain.leaves()[index].level < request.maximumLevel
+            )
+            {
+                ++splittableFractional;
+            }
+        }
+        const std::uint64_t predictedLeafCount =
+            static_cast<std::uint64_t>(domain.leaves().size()) +
+            7U * static_cast<std::uint64_t>(splittableFractional);
+        if (predictedLeafCount >
+            static_cast<std::uint64_t>(request.maximumLeafCount))
+        {
+            result.adaptiveTrace.push_back(pass);
+            result.relaxedFill = beta;
+            result.status = AdaptiveSpinStatus::ResourceLimitReached;
+            result.diagnostic =
+                "adaptive split leaf bound exceeds maximumLeafCount";
             result.adaptiveTraceHash = hashTrace(result.adaptiveTrace);
             result.outputHash = manufacturing::computeContentSha256(
                 result.inputHash + result.adaptiveTraceHash + result.diagnostic
@@ -284,13 +369,6 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         return result;
     }
 
-    Eigen::VectorXd binary(beta.size());
-    result.binaryFill.resize(static_cast<std::size_t>(beta.size()));
-    for (Eigen::Index index = 0; index < beta.size(); ++index)
-    {
-        binary(index) = beta(index) >= 0.5 ? 1.0 : 0.0;
-        result.binaryFill[static_cast<std::size_t>(index)] = binary(index);
-    }
     const AdaptiveFillFunctional finalFunctional(
         domain,
         momentProblem(request),
@@ -298,6 +376,19 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         request.boundaryDensity,
         request.interiorDensity
     );
+    Eigen::VectorXd binary(beta.size());
+    result.binaryFill.resize(static_cast<std::size_t>(beta.size()));
+    for (Eigen::Index index = 0; index < beta.size(); ++index)
+    {
+        binary(index) = beta(index) >= 0.5 ? 1.0 : 0.0;
+        const double projectionDelta = std::abs(binary(index) - beta(index));
+        result.binaryProjectionMaxDelta = std::max(
+            result.binaryProjectionMaxDelta,
+            projectionDelta
+        );
+        result.binaryProjectionChangedLeaves += projectionDelta > 0.0;
+        result.binaryFill[static_cast<std::size_t>(index)] = binary(index);
+    }
     const AdaptiveFillEvaluation finalEvaluation =
         finalFunctional.evaluate(binary);
     result.finalMoments = finalEvaluation.finalMoments;
@@ -306,26 +397,24 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         ? result.binaryConstraints.lpNorm<Eigen::Infinity>()
         : 0.0;
     result.binaryVoidMask = domain.binaryVoidMask(binary);
-
-    std::vector<unsigned char> finalMaterial = request.domain->materialMask();
-    for (std::size_t index = 0; index < finalMaterial.size(); ++index)
+    const std::uint64_t outputSide = 1ULL << request.maximumLevel;
+    if (outputSide > request.maximumOutputCellCount / outputSide ||
+        outputSide * outputSide > request.maximumOutputCellCount / outputSide)
     {
-        if (result.binaryVoidMask[index] != 0U)
-        {
-            finalMaterial[index] = 0U;
-        }
+        result.status = AdaptiveSpinStatus::ResourceLimitReached;
+        result.diagnostic = "maximum-resolution output grid exceeds resource limit";
+        result.outputHash = manufacturing::computeContentSha256(
+            result.inputHash + result.adaptiveTraceHash + result.diagnostic
+        );
+        return result;
     }
     const std::shared_ptr<const voxel::VoxelDomain> finalDomain =
-        voxel::VoxelDomain::create(
-            request.domain->grid(),
-            finalMaterial,
-            finalMaterial,
-            finalMaterial
-        );
+        domain.maximumResolutionMaterialDomain(binary);
+    result.outputGridDimensions = finalDomain->grid().dimensions;
     result.materialBoundary = voxel::extractMaterialBoundaries(finalDomain);
     AdaptiveVoxelDomain finalMomentDomain(
         finalDomain,
-        request.maximumLevel,
+        0,
         request.maximumLevel
     );
     const physics::RawMassMoments10 boundaryMoments =

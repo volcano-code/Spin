@@ -125,6 +125,14 @@ std::string diagnostics(
            << "  \"output_hash\": \"" << result.outputHash << "\",\n"
            << "  \"binary_constraint_infinity_norm\": "
            << std::setprecision(17) << result.binaryConstraintInfinityNorm
+           << ",\n  \"binary_projection_changed_leaves\": "
+           << result.binaryProjectionChangedLeaves
+           << ",\n  \"binary_projection_max_delta\": "
+           << result.binaryProjectionMaxDelta
+           << ",\n  \"output_grid_dimensions\": ["
+           << result.outputGridDimensions(0) << ','
+           << result.outputGridDimensions(1) << ','
+           << result.outputGridDimensions(2) << ']'
            << ",\n  \"mass_properties_available\": "
            << (massPropertiesAvailable ? "true" : "false")
            << ",\n  \"center_of_mass_model\": ";
@@ -148,6 +156,16 @@ std::string diagnostics(
                << ",\"fractional\":" << pass.fractionalLeafCount
                << ",\"split\":" << pass.splitLeafCount
                << ",\"merged\":" << pass.mergedParentCount
+               << ",\"slqp_status\":\""
+               << spin2014::slqpStatusToken(pass.slqpStatus) << "\""
+               << ",\"final_equality_infinity_norm\":"
+               << pass.finalEqualityInfinityNorm
+               << ",\"final_projected_gradient_infinity_norm\":"
+               << pass.finalProjectedGradientInfinityNorm
+               << ",\"line_search_evaluations\":"
+               << pass.totalLineSearchEvaluations
+               << ",\"active_set_transitions\":"
+               << pass.activeSetTransitions
                << ",\"partition_hash\":\"" << pass.partitionHash
                << "\",\"slqp_trace_hash\":\"" << pass.slqpTraceHash
                << "\"}";
@@ -293,10 +311,11 @@ SpinIt2014Artifact solveSpinIt2014(
             manufacturing::auditTriangleBoundary(
                 storage->result.materialBoundary.innerVertices,
                 storage->result.materialBoundary.innerFaces,
-                manufacturing::BoundaryOrientation::InwardNegative
+                manufacturing::BoundaryOrientation::InwardNegative,
+                true
             );
         storage->sealed = outer.strictBoundaryValid() &&
-            cavity.strictBoundaryValid() &&
+            (cavity.empty || cavity.strictBoundaryValid()) &&
             storage->result.inputHash.size() == 64U &&
             storage->result.adaptiveTraceHash.size() == 64U &&
             storage->result.geometryHash.size() == 64U &&

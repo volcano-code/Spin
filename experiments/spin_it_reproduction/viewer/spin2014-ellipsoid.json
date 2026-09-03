@@ -1,0 +1,74 @@
+{
+  "all_public_computational_cases_passed": true,
+  "asset_class": "RECONSTRUCTED_ASSET",
+  "author_exact": false,
+  "cage_deformation_executed": true,
+  "cases": [
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "automatic_cut_optimization": false,
+      "binary_constraint_tolerance": 0.005,
+      "cage_deformation_executed": true,
+      "cage_deformation_requested": false,
+      "deterministic": true,
+      "id": "ellipsoid-top",
+      "initial_fill": 0.5,
+      "initial_fill_evidence": "PAPER_DEFAULT",
+      "laplacian_weight": 0.001,
+      "laplacian_weight_evidence": "RECONSTRUCTED_PARAMETER",
+      "mass_reduction_extension": false,
+      "maximum_octree_level": 4,
+      "mode": "SPINNING_TOP",
+      "occupancy_sha256": "6036f03ff83777a636cbb8cf67bd57675caa44b90c40b3d2e442f5fb27d85983",
+      "paper_binary_constraint_tolerance": 1e-06,
+      "paper_maximum_octree_level": 9,
+      "paper_numerics_reproduced": false,
+      "paper_reported_manual_cuts": 1,
+      "paper_reported_void_components": 1,
+      "paper_resolution_reproduced": false,
+      "paper_role": "Figure 6",
+      "passed": true,
+      "physical_validation": false,
+      "repeats": [
+        {
+          "binary_constraint_infinity_norm": 0,
+          "cage_output_hash": "",
+          "cavity_components": 1,
+          "elapsed_seconds": 0.012299955124035478,
+          "geometry_hash": "b0ea711b9053f888f2897d2f77dbdf04cc0b7050f95db1e48f9d31647e6ac25b",
+          "geometry_sealed": true,
+          "input_hash": "4f25304b370c7e43e2fa0d68d074a7e89b8c06ca5e833bb4a6144e25efcf9a39",
+          "metrics": {
+            "axial_is_maximum_principal_moment": true,
+            "axis_alignment_error": 0.0,
+            "center_height": 1.0,
+            "constraint_infinity_norm": 0.0,
+            "mass": 0.53125,
+            "objective": 1.4250905624999954,
+            "principal_moment_ratio": 1.237623762376248
+          },
+          "output_hash": "5d425b9e998e9006aeed3c1adbfb6801117dd22b7e0684c11c7fc7392afde0ae",
+          "repeat": 1,
+          "status": "CONVERGED",
+          "trace_hash": "c7d083925cb87cb84848afd2f9c942a504e696a79bc93d83014b3f3983463f96",
+          "viewer_bundle": {
+            "cavity.obj": "ab03154a15f1446b3c6ac86c01d74e529a86b1c9d7eaa09dec9e395dbbae5663",
+            "design.obj": "bf1471cac1bf4a8e1781675957186e28838eab55f5fff9a6a01d9a9db2e274c1",
+            "diagnostics.json": "7fb4d52e920188b710af8e5999e594f086f92d20714db328d3be8f6967e64728",
+            "material.obj": "79c635bdef17b6e95ce0c7436bf24db238f65d26688eaee85f021b071585c45a",
+            "outer.obj": "79c635bdef17b6e95ce0c7436bf24db238f65d26688eaee85f021b071585c45a"
+          }
+        }
+      ],
+      "scientific_hash": "75811bbb1d75f8ac1887a46d3a213f4d9cb7e2c9c7c5660dbeb3502225ee93a6"
+    }
+  ],
+  "paper_doi": "10.1145/2601097.2601157",
+  "paper_numerics_reproduced": false,
+  "paper_resolution_reproduced": false,
+  "physical_validation": false,
+  "schema": "spin-it-2014-paper-results-v1",
+  "schema_version": 1,
+  "scientific_hash": "12b3348adda0cf495a896d7eb8897b13a27b4e710a74762d3385ceb903d45b63"
+}

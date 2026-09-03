@@ -510,6 +510,30 @@ if(BUILD_TESTING)
         )
 
         add_executable(
+            spin-it-2014-resolution-ladder
+            tests/spin_it_2014_resolution_ladder.cpp
+        )
+        target_compile_features(
+            spin-it-2014-resolution-ladder PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-resolution-ladder PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-resolution-ladder PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-resolution-ladder
+            COMMAND "$<TARGET_FILE:spin-it-2014-resolution-ladder>"
+        )
+        set_tests_properties(
+            spin-it-2014-resolution-ladder
+            PROPERTIES
+                LABELS "spin-it;spin-it-2014;solver;resolution;regression"
+                TIMEOUT 240
+        )
+
+        add_executable(
             spin-it-2014-dual-material-regression
             tests/spin_it_2014_dual_material_regression.cpp
         )
@@ -662,6 +686,19 @@ if(BUILD_TESTING)
                 PROPERTIES
                     LABELS "spin-it;spin-it-2014;python;regression"
                     TIMEOUT 60
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+            )
+            add_test(
+                NAME spin-it-2014-paper-miniature
+                COMMAND "${Python3_EXECUTABLE}" -m unittest
+                    test_spin_it_2014_paper_runner.SpinIt2014PaperRunnerNativeTests
+                    -v
+            )
+            set_tests_properties(
+                spin-it-2014-paper-miniature
+                PROPERTIES
+                    LABELS "spin-it;spin-it-2014;python;paper;regression"
+                    TIMEOUT 180
                     ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
             )
         endif()
@@ -1101,6 +1138,10 @@ if(BUILD_TESTING)
                 test_spin_it_paper_inventory.SpinItPaperInventoryTests
                 test_spin_it_faster_paper_assets.SpinItFasterPaperAssetTests
                 test_spin_it_faster_table1_runner.SpinItFasterTable1RunnerTests
+                test_spin_it_faster_paper_figures.SpinItFasterPaperFigureTests
+                test_spin_it_2014_paper_assets.SpinIt2014PaperAssetTests
+                test_spin_it_2014_paper_runner.SpinIt2014PaperRunnerTests
+                test_spin_it_complete_release_gate.SpinItCompleteReleaseGateTests
                 -v
         )
         set_tests_properties(
@@ -1280,6 +1321,19 @@ if(BUILD_TESTING)
                 PROPERTIES
                     LABELS "spin-it;spin-it-faster;python;paper;regression"
                     TIMEOUT 180
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+            )
+            add_test(
+                NAME spin-faster-paper-figures-miniature
+                COMMAND "${Python3_EXECUTABLE}" -m unittest
+                    test_spin_it_faster_paper_figures.SpinItFasterPaperFigureNativeTests
+                    -v
+            )
+            set_tests_properties(
+                spin-faster-paper-figures-miniature
+                PROPERTIES
+                    LABELS "spin-it;spin-it-faster;python;paper;regression"
+                    TIMEOUT 240
                     ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
             )
         endif()

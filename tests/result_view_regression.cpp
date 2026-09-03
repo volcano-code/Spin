@@ -165,6 +165,27 @@ int main()
         return fail("Spin-It target plane does not face along the target axis");
     }
 
+    result_view::SpinResultViewMetadata buoyantMetadata = metadata;
+    buoyantMetadata.mode = "BUOYANT_STABILITY";
+    buoyantMetadata.planeLayerName = "Waterline / buoyancy plane";
+    buoyantMetadata.buoyancyAvailable = true;
+    buoyantMetadata.displacedLiquidVolume = 4.5;
+    buoyantMetadata.buoyantMetacenterHeight = 0.75;
+    buoyantMetadata.buoyantStabilityMargin = 0.25;
+    const auto buoyantGeometry = result_view::prepareSpinResultViewGeometry(
+        outer, outerFaces, outer, outerFaces,
+        inner, innerFaces, inner, innerFaces, buoyantMetadata
+    );
+    if (!buoyantGeometry.metadata.buoyancyAvailable ||
+        buoyantGeometry.metadata.planeLayerName !=
+            "Waterline / buoyancy plane" ||
+        std::abs(buoyantGeometry.metadata.displacedLiquidVolume - 4.5) > 1e-15 ||
+        std::abs(buoyantGeometry.metadata.buoyantMetacenterHeight - 0.75) > 1e-15 ||
+        std::abs(buoyantGeometry.metadata.buoyantStabilityMargin - 0.25) > 1e-15)
+    {
+        return fail("buoyant waterline metadata was not preserved");
+    }
+
     std::cout << "[PASS] result-view preserves all sealed layer registrations\n";
     return 0;
 }

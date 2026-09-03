@@ -1,0 +1,24 @@
+{
+  "schema": "spin-it-real-desktop-smoke-v1",
+  "display": ":1",
+  "session_type": "x11",
+  "viewer_executable_sha256": "a1243455d7a3ebea592efad1d3d9f94551414dccff8fe51e370f395158c80ed8",
+  "windows": [
+    {
+      "title": "Spin-It Faster — Floating Island Cat",
+      "bundle": "faster-buoyant/floating-island-cat",
+      "waterline_overlay": true,
+      "launched": true,
+      "screenshot": "screenshots/real-desktop-spin-it-faster-buoyant.png",
+      "screenshot_sha256": "9959fcb4bf2395dfa4e251dfb13fe99dceb47fafcdc2423d39088bd6f7fcd4d5"
+    },
+    {
+      "title": "Spin-It 2014 — Ellipsoid Top (proxy)",
+      "bundle": "spin2014/ellipsoid-top/repeat-1",
+      "waterline_overlay": false,
+      "launched": true,
+      "screenshot": "screenshots/real-desktop-spin-it-2014-window.png",
+      "screenshot_sha256": "274070d7498eed5412f3bafb9c12642b2e6167aa0016f1001ddccf2a501ca407"
+    }
+  ]
+}
