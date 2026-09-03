@@ -712,6 +712,80 @@ const char* quadricSurfaceTypeToken(QuadricSurfaceType type) noexcept
 }
 
 
+const char* quadricSurfaceSubtypeToken(QuadricSurfaceSubtype type) noexcept
+{
+    switch (type)
+    {
+    case QuadricSurfaceSubtype::Plane:
+        return "PLANE";
+    case QuadricSurfaceSubtype::EllipticCylinder:
+        return "ELLIPTIC_CYLINDER";
+    case QuadricSurfaceSubtype::Ellipsoid:
+        return "ELLIPSOID";
+    case QuadricSurfaceSubtype::OneSheetHyperboloid:
+        return "ONE_SHEET_HYPERBOLOID";
+    case QuadricSurfaceSubtype::TwoSheetHyperboloid:
+        return "TWO_SHEET_HYPERBOLOID";
+    case QuadricSurfaceSubtype::Paraboloid:
+        return "PARABOLOID";
+    }
+    return "UNKNOWN";
+}
+
+
+QuadricSurfaceSubtype classifyQuadricSurfaceSubtype(
+    const QuadricCoefficients10& quadric
+)
+{
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen;
+    const QuadricSurfaceType coarse = classify(quadric, &eigen);
+    switch (coarse)
+    {
+    case QuadricSurfaceType::Plane:
+        return QuadricSurfaceSubtype::Plane;
+    case QuadricSurfaceType::EllipticCylinder:
+        return QuadricSurfaceSubtype::EllipticCylinder;
+    case QuadricSurfaceType::Ellipsoid:
+        return QuadricSurfaceSubtype::Ellipsoid;
+    case QuadricSurfaceType::Paraboloid:
+        return QuadricSurfaceSubtype::Paraboloid;
+    case QuadricSurfaceType::Hyperboloid:
+        break;
+    }
+
+    const Eigen::Matrix3d a = quadric.quadraticMatrix();
+    const double shiftedConstant = quadric.constant() -
+        0.25 * quadric.linearVector().dot(
+            a.inverse() * quadric.linearVector()
+        );
+    const double rightHandSide = -shiftedConstant;
+    const double tolerance = 1e-12 * std::max(1.0, a.norm());
+    if (std::abs(rightHandSide) <= tolerance)
+    {
+        throw std::invalid_argument(
+            "degenerate quadric cone has no hyperboloid sheet subtype"
+        );
+    }
+    int matchingSigns = 0;
+    for (int index = 0; index < 3; ++index)
+    {
+        if (eigen.eigenvalues()(index) * rightHandSide > 0.0)
+        {
+            ++matchingSigns;
+        }
+    }
+    if (matchingSigns == 2)
+    {
+        return QuadricSurfaceSubtype::OneSheetHyperboloid;
+    }
+    if (matchingSigns == 1)
+    {
+        return QuadricSurfaceSubtype::TwoSheetHyperboloid;
+    }
+    throw std::invalid_argument("quadric has no real hyperboloid subtype");
+}
+
+
 QuadricTriangulation triangulateQuadric(
     const QuadricCoefficients10& quadric,
     const Eigen::MatrixXd& designDomainVertices,

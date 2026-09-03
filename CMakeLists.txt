@@ -861,6 +861,28 @@ if(BUILD_TESTING)
             spin-faster-end-to-end
             PROPERTIES LABELS "spin-it;spin-it-faster;solver;geometry;regression"
         )
+
+        add_executable(
+            spin-it-faster-interface-types
+            tests/spin_it_faster_interface_types.cpp
+        )
+        target_compile_features(
+            spin-it-faster-interface-types PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-faster-interface-types PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-faster-interface-types PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-interface-types
+            COMMAND "$<TARGET_FILE:spin-it-faster-interface-types>"
+        )
+        set_tests_properties(
+            spin-faster-interface-types
+            PROPERTIES LABELS "spin-it;spin-it-faster;geometry;regression"
+        )
     endif()
 
     add_test(

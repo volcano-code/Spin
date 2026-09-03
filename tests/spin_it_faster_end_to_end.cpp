@@ -148,6 +148,20 @@ bool solveAndCheck(
                   << " diagnostic=" << result.diagnostic << '\n';
         return false;
     }
+    if (request.mode == spin::SpinMode::BuoyantStability)
+    {
+        if (
+            !std::isfinite(result.buoyantMetacenterHeight) ||
+            !std::isfinite(result.buoyantStabilityMargin) ||
+            result.buoyantStabilityMargin <= 0.0
+        )
+        {
+            std::cerr << name << " invalid buoyancy audit: metacenter="
+                      << result.buoyantMetacenterHeight << " margin="
+                      << result.buoyantStabilityMargin << '\n';
+            return false;
+        }
+    }
     *outputHash = result.outputHash;
     return true;
 }
@@ -184,6 +198,80 @@ int main()
         ))
     {
         return fail("static planar fixture failed");
+    }
+
+    values.setZero();
+    values(0) = 0.2;
+    values(1) = 0.12;
+    values(2) = -0.08;
+    values(3) = -1.0;
+    const Quadric staticLowPlane = Quadric::fromUnnormalized(values);
+    spin::SpinDesignRequest staticLowRequest =
+        baseRequest(spin::SpinMode::StaticBalance);
+    staticLowRequest.staticObjective =
+        spin::StaticObjective::LowerCenterOfMass;
+    const spin::QuadricMomentEvaluation staticLowVariable =
+        spin::evaluateQuadricMaterialMoments(
+            staticLowRequest,
+            staticLowPlane
+        );
+    staticLowRequest.fixedShellMoments = rawMoments(
+        10.0 - staticLowVariable.variableMomentsTarget.mass(),
+        Eigen::Vector3d(0.0, 0.0, 2.0) -
+            staticLowVariable.variableMomentsTarget.toMassMoments().firstMoment,
+        Eigen::Vector3d::Constant(20.0)
+    );
+    hashes.emplace_back();
+    if (!solveAndCheck(
+            "static-lower-center",
+            staticLowRequest,
+            staticLowPlane,
+            spin::QuadricSurfaceType::Plane,
+            &hashes.back()
+        ))
+    {
+        return fail("static lower-center planar fixture failed");
+    }
+
+    values.setZero();
+    values(0) = 0.2;
+    values(1) = 0.2;
+    values(2) = -0.1;
+    values(3) = -1.0;
+    const Quadric buoyantPlane = Quadric::fromUnnormalized(values);
+    spin::SpinDesignRequest buoyantRequest =
+        baseRequest(spin::SpinMode::BuoyantStability);
+    buoyantRequest.buoyancy.liquidDensity = 1.0;
+    buoyantRequest.buoyancy.displacedLiquidVolume = 20.0;
+    buoyantRequest.buoyancy.centerOfBuoyancyTarget =
+        Eigen::Vector3d(0.02, -0.03, 0.0);
+    buoyantRequest.buoyancy.waterlineArea = 4.0;
+    buoyantRequest.buoyancy.waterlineCentralSecondMoment =
+        2.0 * Eigen::Matrix2d::Identity();
+    const spin::QuadricMomentEvaluation buoyantVariable =
+        spin::evaluateQuadricMaterialMoments(
+            buoyantRequest,
+            buoyantPlane
+        );
+    const physics::RawMassMoments10 buoyantTarget = rawMoments(
+        20.0,
+        Eigen::Vector3d(0.4, -0.6, 0.0),
+        Eigen::Vector3d::Constant(100.0)
+    );
+    buoyantRequest.fixedShellMoments =
+        buoyantTarget - buoyantVariable.variableMomentsTarget;
+    buoyantRequest.buoyancy.fixedShellVolume =
+        buoyantRequest.fixedShellMoments.mass();
+    hashes.emplace_back();
+    if (!solveAndCheck(
+            "buoyant",
+            buoyantRequest,
+            buoyantPlane,
+            spin::QuadricSurfaceType::Plane,
+            &hashes.back()
+        ))
+    {
+        return fail("buoyant planar fixture failed");
     }
 
     values.setZero();

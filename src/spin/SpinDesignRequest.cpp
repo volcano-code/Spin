@@ -133,6 +133,8 @@ const char* spinSolverStatusToken(SpinSolverStatus status) noexcept
     {
     case SpinSolverStatus::Converged:
         return "CONVERGED";
+    case SpinSolverStatus::Infeasible:
+        return "INFEASIBLE";
     case SpinSolverStatus::InvalidRequest:
         return "INVALID_REQUEST";
     case SpinSolverStatus::OptimizationDidNotConverge:

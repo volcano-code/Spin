@@ -211,6 +211,7 @@ class SpinQuadricEvaluation:
     geometry_hash: str
     topology_hash: str
     interface_type: str
+    interface_subtype: str
 
 
 @dataclass(frozen=True)
@@ -393,6 +394,7 @@ def evaluate_spin_it_faster_quadric(
         geometry_hash=str(evaluated["geometry_hash"]),
         topology_hash=str(evaluated["topology_hash"]),
         interface_type=str(evaluated["interface_type"]),
+        interface_subtype=str(evaluated["interface_subtype"]),
     )
 
 

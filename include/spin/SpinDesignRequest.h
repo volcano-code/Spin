@@ -4,6 +4,7 @@
 
 #include <Eigen/Core>
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -107,6 +108,7 @@ struct SpinDesignRequest
 enum class SpinSolverStatus
 {
     Converged,
+    Infeasible,
     InvalidRequest,
     OptimizationDidNotConverge,
     LineSearchExhausted,
@@ -153,6 +155,10 @@ struct QuadricHollowingResult
     TriangleMesh cavityBoundary;
     double normalizedEquationResidual = 0.0;
     double physicalRelativeResidual = 0.0;
+    double buoyantMetacenterHeight =
+        std::numeric_limits<double>::quiet_NaN();
+    double buoyantStabilityMargin =
+        std::numeric_limits<double>::quiet_NaN();
     std::vector<SpinIterationTrace> trace;
 };
 

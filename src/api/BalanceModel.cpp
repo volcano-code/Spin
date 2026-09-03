@@ -1809,6 +1809,18 @@ std::string spinDiagnosticsJson(
     appendNumber(output, result.normalizedEquationResidual);
     output << ",\n  \"physical_relative_residual\": ";
     appendNumber(output, result.physicalRelativeResidual);
+    if (request.mode == spin::SpinMode::BuoyantStability)
+    {
+        output << ",\n  \"buoyant_metacenter_height\": ";
+        appendNumber(output, result.buoyantMetacenterHeight);
+        output << ",\n  \"buoyant_stability_margin\": ";
+        appendNumber(output, result.buoyantStabilityMargin);
+    }
+    else
+    {
+        output << ",\n  \"buoyant_metacenter_height\": null"
+               << ",\n  \"buoyant_stability_margin\": null";
+    }
     output << ",\n  \"quadric_coefficients\": ";
     appendSpinVector(output, result.quadricCoefficients);
     output << ",\n  \"final_raw_moments\": ";

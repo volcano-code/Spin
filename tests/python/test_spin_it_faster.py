@@ -109,6 +109,7 @@ class SpinNativeArtifactTests(unittest.TestCase):
         )
         evaluated = evaluate_spin_it_faster_quadric(request, quadric)
         self.assertEqual(evaluated.interface_type, "PLANE")
+        self.assertEqual(evaluated.interface_subtype, "PLANE")
         fixed = (
             10.0,
             -evaluated.variable_raw_moments[1],

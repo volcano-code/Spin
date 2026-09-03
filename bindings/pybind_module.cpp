@@ -704,6 +704,15 @@ PYBIND11_MODULE(_make_it_stand, module)
                     evaluation.quadricTriangulation.type
                 )
             );
+            result["interface_subtype"] = std::string(
+                spin::quadricSurfaceSubtypeToken(
+                    spin::classifyQuadricSurfaceSubtype(
+                        spin::QuadricCoefficients10::fromUnnormalized(
+                            coefficients
+                        )
+                    )
+                )
+            );
             return result;
         },
         py::arg("request"),

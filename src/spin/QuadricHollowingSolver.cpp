@@ -244,6 +244,15 @@ std::string hollowingOutputHash(
            << spin::spinSolverStatusToken(result.status) << ';'
            << std::hexfloat << result.normalizedEquationResidual << ';'
            << result.physicalRelativeResidual << ';';
+    if (std::isfinite(result.buoyantMetacenterHeight))
+    {
+        stream << result.buoyantMetacenterHeight << ';'
+               << result.buoyantStabilityMargin << ';';
+    }
+    else
+    {
+        stream << "not-buoyant;";
+    }
     for (int index = 0; index < result.quadricCoefficients.size(); ++index)
     {
         stream << result.quadricCoefficients(index) << ';';
@@ -609,6 +618,22 @@ QuadricHollowingResult solveQuadricHollowing(
                     evaluatorSettings
                 );
             result.finalMoments = finalEvaluation.totalMomentsTarget;
+            if (request.mode == SpinMode::BuoyantStability)
+            {
+                result.buoyantMetacenterHeight =
+                    buoyantMetacenterHeight(request.buoyancy);
+                result.buoyantStabilityMargin = buoyantStabilityMargin(
+                    result.finalMoments.values(),
+                    request.buoyancy
+                );
+                if (result.buoyantStabilityMargin <= 0.0)
+                {
+                    result.status = SpinSolverStatus::Infeasible;
+                    result.diagnostic =
+                        "equilibrium center of mass is not below the "
+                        "prescribed-waterline metacenter";
+                }
+            }
             result.materialBoundary = finalEvaluation.materialBoundary;
             const QuadricCoefficients10 complement =
                 QuadricCoefficients10::fromUnnormalized(

@@ -22,7 +22,25 @@ enum class QuadricSurfaceType
 };
 
 
+/** Euclidean subtype used by the paper's Pareto-front analysis. */
+enum class QuadricSurfaceSubtype
+{
+    Plane,
+    EllipticCylinder,
+    Ellipsoid,
+    OneSheetHyperboloid,
+    TwoSheetHyperboloid,
+    Paraboloid
+};
+
+
 const char* quadricSurfaceTypeToken(QuadricSurfaceType type) noexcept;
+const char* quadricSurfaceSubtypeToken(QuadricSurfaceSubtype type) noexcept;
+
+
+QuadricSurfaceSubtype classifyQuadricSurfaceSubtype(
+    const QuadricCoefficients10& quadric
+);
 
 
 struct QuadricTriangulationSettings
