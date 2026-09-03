@@ -586,6 +586,14 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_property_readonly("succeeded", &api::SpinItFasterArtifact::succeeded)
         .def_property_readonly("geometry_sealed", &api::SpinItFasterArtifact::geometrySealed)
         .def_property_readonly(
+            "residual_evaluation_seconds",
+            &api::SpinItFasterArtifact::residualEvaluationSeconds
+        )
+        .def_property_readonly(
+            "derivative_evaluation_seconds",
+            &api::SpinItFasterArtifact::derivativeEvaluationSeconds
+        )
+        .def_property_readonly(
             "outer_vertices",
             [](const api::SpinItFasterArtifact& value)
             {

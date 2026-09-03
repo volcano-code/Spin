@@ -145,6 +145,8 @@ class SpinNativeArtifactTests(unittest.TestCase):
         )
         self.assertRegex(first.diagnostics["trace_hash"], r"^[0-9a-f]{64}$")
         self.assertGreaterEqual(len(first.trace), 1)
+        self.assertGreaterEqual(first.residual_evaluation_seconds, 0.0)
+        self.assertGreaterEqual(first.derivative_evaluation_seconds, 0.0)
 
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

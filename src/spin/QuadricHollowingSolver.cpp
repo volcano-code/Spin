@@ -302,6 +302,10 @@ SpinNewtonResult solveSpinMomentSystem(
         try
         {
             state = evaluateState(problem, evaluator, current);
+            result.residualEvaluationSeconds +=
+                state.map.residualEvaluationSeconds;
+            result.derivativeEvaluationSeconds +=
+                state.map.derivativeEvaluationSeconds;
             ++evaluationsThisRestart;
             ++result.functionEvaluations;
         }
@@ -434,6 +438,10 @@ SpinNewtonResult solveSpinMomentSystem(
                         evaluator,
                         candidate
                     );
+                    result.residualEvaluationSeconds +=
+                        candidateState.map.residualEvaluationSeconds;
+                    result.derivativeEvaluationSeconds +=
+                        candidateState.map.derivativeEvaluationSeconds;
                     ++evaluationsThisRestart;
                     ++result.functionEvaluations;
                     if (candidateState.normalizedResidual <
@@ -586,6 +594,10 @@ QuadricHollowingResult solveQuadricHollowing(
             map.rawMoments = evaluation.totalMomentsTarget.values();
             map.momentJacobian = evaluation.momentJacobian;
             map.derivativeDefined = evaluation.derivativeDefined;
+            map.residualEvaluationSeconds =
+                evaluation.residualEvaluationSeconds;
+            map.derivativeEvaluationSeconds =
+                evaluation.derivativeEvaluationSeconds;
             map.geometryHash = evaluation.geometryHash;
             map.topologyHash = evaluation.topologyHash;
             return map;
@@ -606,6 +618,8 @@ QuadricHollowingResult solveQuadricHollowing(
     result.physicalRelativeResidual = solved.physicalRelativeResidual;
     result.trace = solved.trace;
     result.traceHash = solved.traceHash;
+    result.residualEvaluationSeconds = solved.residualEvaluationSeconds;
+    result.derivativeEvaluationSeconds = solved.derivativeEvaluationSeconds;
     if (solved.quadric.has_value())
     {
         result.quadricCoefficients = solved.quadric->values();

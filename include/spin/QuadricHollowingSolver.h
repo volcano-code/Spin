@@ -25,6 +25,8 @@ struct SpinMomentMapEvaluation
     Eigen::Matrix<double, 10, 10> momentJacobian =
         Eigen::Matrix<double, 10, 10>::Zero();
     bool derivativeDefined = false;
+    double residualEvaluationSeconds = 0.0;
+    double derivativeEvaluationSeconds = 0.0;
     std::string geometryHash;
     std::string topologyHash;
 };
@@ -48,6 +50,8 @@ struct SpinNewtonResult
     Eigen::VectorXd multipliers;
     int functionEvaluations = 0;
     int restartCount = 0;
+    double residualEvaluationSeconds = 0.0;
+    double derivativeEvaluationSeconds = 0.0;
     std::vector<SpinIterationTrace> trace;
     std::string traceHash;
 };

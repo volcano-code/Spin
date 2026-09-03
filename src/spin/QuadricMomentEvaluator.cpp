@@ -11,6 +11,7 @@
 #include <Eigen/Geometry>
 
 #include <algorithm>
+#include <chrono>
 #include <array>
 #include <cmath>
 #include <iomanip>
@@ -393,6 +394,7 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
     const QuadricMomentEvaluatorSettings& settings
 )
 {
+    const auto evaluationStart = std::chrono::steady_clock::now();
     validateSpinDesignRequest(request);
     if (
         !std::isfinite(settings.minimumInterfaceGradient) ||
@@ -529,6 +531,7 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
         );
     result.totalMomentsTarget = result.variableMomentsTarget + fixedTarget;
 
+    const auto residualEnd = std::chrono::steady_clock::now();
     accumulateInterfaceDerivative(
         result.materialBoundaryTarget,
         birthFaces,
@@ -541,6 +544,11 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
         &result.interfaceTriangleCount,
         &result.derivativeDefined
     );
+    const auto derivativeEnd = std::chrono::steady_clock::now();
+    result.residualEvaluationSeconds =
+        std::chrono::duration<double>(residualEnd - evaluationStart).count();
+    result.derivativeEvaluationSeconds =
+        std::chrono::duration<double>(derivativeEnd - residualEnd).count();
     result.materialBoundary =
         toModel(result.materialBoundaryTarget, request.targetFrame);
     result.geometryHash = meshHash(

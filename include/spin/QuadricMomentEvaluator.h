@@ -33,6 +33,8 @@ struct QuadricMomentEvaluation
     int interfaceTriangleCount = 0;
     bool derivativeDefined = false;
     bool quadricSolidIsPositiveRegion = false;
+    double residualEvaluationSeconds = 0.0;
+    double derivativeEvaluationSeconds = 0.0;
     std::string geometryHash;
     std::string topologyHash;
 };

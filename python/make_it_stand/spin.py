@@ -262,6 +262,14 @@ class SpinItFasterResult:
         return bool(self._native.geometry_sealed)
 
     @property
+    def residual_evaluation_seconds(self) -> float:
+        return float(self._native.residual_evaluation_seconds)
+
+    @property
+    def derivative_evaluation_seconds(self) -> float:
+        return float(self._native.derivative_evaluation_seconds)
+
+    @property
     def diagnostics(self) -> dict[str, Any]:
         return json.loads(json.dumps(self._diagnostics))
 

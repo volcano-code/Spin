@@ -159,6 +159,8 @@ struct QuadricHollowingResult
         std::numeric_limits<double>::quiet_NaN();
     double buoyantStabilityMargin =
         std::numeric_limits<double>::quiet_NaN();
+    double residualEvaluationSeconds = 0.0;
+    double derivativeEvaluationSeconds = 0.0;
     std::vector<SpinIterationTrace> trace;
 };
 

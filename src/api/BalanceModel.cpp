@@ -1943,6 +1943,18 @@ bool SpinItFasterArtifact::geometrySealed() const
 }
 
 
+double SpinItFasterArtifact::residualEvaluationSeconds() const
+{
+    return storage_->result.residualEvaluationSeconds;
+}
+
+
+double SpinItFasterArtifact::derivativeEvaluationSeconds() const
+{
+    return storage_->result.derivativeEvaluationSeconds;
+}
+
+
 const spin::QuadricHollowingResult& SpinItFasterArtifact::result() const
 {
     return storage_->result;

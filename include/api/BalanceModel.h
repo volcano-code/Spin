@@ -47,6 +47,8 @@ public:
     std::string evidenceToken() const;
     bool succeeded() const;
     bool geometrySealed() const;
+    double residualEvaluationSeconds() const;
+    double derivativeEvaluationSeconds() const;
 
     const spin::QuadricHollowingResult& result() const;
     const Eigen::MatrixXd& outerVertices() const;

@@ -1100,6 +1100,7 @@ if(BUILD_TESTING)
                 test_stability_oracle.StabilityOracleTests
                 test_spin_it_paper_inventory.SpinItPaperInventoryTests
                 test_spin_it_faster_paper_assets.SpinItFasterPaperAssetTests
+                test_spin_it_faster_table1_runner.SpinItFasterTable1RunnerTests
                 -v
         )
         set_tests_properties(
@@ -1265,6 +1266,19 @@ if(BUILD_TESTING)
                 spin-faster-python-api
                 PROPERTIES
                     LABELS "spin-it;spin-it-faster;python;bindings;regression"
+                    TIMEOUT 180
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+            )
+            add_test(
+                NAME spin-faster-table1-miniature
+                COMMAND "${Python3_EXECUTABLE}" -m unittest
+                    test_spin_it_faster_table1_runner.SpinItFasterTable1NativeRunnerTests
+                    -v
+            )
+            set_tests_properties(
+                spin-faster-table1-miniature
+                PROPERTIES
+                    LABELS "spin-it;spin-it-faster;python;paper;regression"
                     TIMEOUT 180
                     ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
             )
