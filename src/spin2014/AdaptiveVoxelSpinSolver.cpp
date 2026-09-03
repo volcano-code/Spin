@@ -55,6 +55,10 @@ spin2014::SpinIt2014MomentProblem momentProblem(
         );
     case spin::SpinMode::FidgetSpinner:
         break;
+    case spin::SpinMode::BuoyantStability:
+        throw std::invalid_argument(
+            "Spin-It 2014 does not define buoyant-stability mode"
+        );
     }
     throw std::invalid_argument(
         "the 2014 paper does not define a fidget-spinner objective"

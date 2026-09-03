@@ -1,6 +1,7 @@
 #include "spin/SpinMomentProblem.h"
 
 #include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 #include <cmath>
 #include <stdexcept>
@@ -210,12 +211,40 @@ namespace spin
 SpinMomentProblem::SpinMomentProblem(
     SpinMode mode,
     StaticObjective staticObjective,
-    double centerOfMassWeight
+    double centerOfMassWeight,
+    double targetMass,
+    const Eigen::Vector2d& horizontalCenterOfBuoyancy
 )
     : mode_(mode),
       staticObjective_(staticObjective),
-      centerOfMassWeight_(centerOfMassWeight)
+      centerOfMassWeight_(centerOfMassWeight),
+      targetMass_(targetMass),
+      horizontalCenterOfBuoyancy_(horizontalCenterOfBuoyancy)
 {
+}
+
+
+SpinMomentProblem SpinMomentProblem::buoyantStability(
+    double targetMass,
+    const Eigen::Vector2d& horizontalCenterOfBuoyancy
+)
+{
+    if (
+        !std::isfinite(targetMass) || targetMass <= 0.0 ||
+        !horizontalCenterOfBuoyancy.allFinite()
+    )
+    {
+        throw std::invalid_argument(
+            "buoyant target mass must be positive and center must be finite"
+        );
+    }
+    return SpinMomentProblem(
+        SpinMode::BuoyantStability,
+        StaticObjective::MaximumMass,
+        0.0,
+        targetMass,
+        horizontalCenterOfBuoyancy
+    );
 }
 
 
@@ -319,6 +348,19 @@ SpinMomentEvaluation SpinMomentProblem::evaluate(
         }
         break;
 
+    case SpinMode::BuoyantStability:
+    {
+        SecondOrderScalar prescribedMass;
+        prescribedMass.value = targetMass_;
+        objective = r[3] / r[0];
+        constraints = {
+            r[1] - horizontalCenterOfBuoyancy_.x() * r[0],
+            r[2] - horizontalCenterOfBuoyancy_.y() * r[0],
+            r[0] - prescribedMass
+        };
+        break;
+    }
+
     case SpinMode::FidgetSpinner:
         constraints = {r[1], r[2]};
         objective = -(r[4] + r[5]);
@@ -354,6 +396,53 @@ SpinMomentEvaluation SpinMomentProblem::evaluate(
     }
     }
     return package(objective, constraints);
+}
+
+
+double buoyantMetacenterHeight(const BuoyantStabilityData& buoyancy)
+{
+    if (
+        !std::isfinite(buoyancy.displacedLiquidVolume) ||
+        buoyancy.displacedLiquidVolume <= 0.0 ||
+        !buoyancy.centerOfBuoyancyTarget.allFinite() ||
+        !buoyancy.waterlineCentralSecondMoment.allFinite() ||
+        !buoyancy.waterlineCentralSecondMoment.isApprox(
+            buoyancy.waterlineCentralSecondMoment.transpose(),
+            1e-12)
+    )
+    {
+        throw std::invalid_argument("invalid buoyant metacenter inputs");
+    }
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> eigen(
+        buoyancy.waterlineCentralSecondMoment
+    );
+    if (
+        eigen.info() != Eigen::Success ||
+        eigen.eigenvalues().minCoeff() <= 0.0
+    )
+    {
+        throw std::invalid_argument(
+            "waterline central second moment must be positive definite"
+        );
+    }
+    return buoyancy.centerOfBuoyancyTarget.z() +
+        eigen.eigenvalues().minCoeff() /
+        buoyancy.displacedLiquidVolume;
+}
+
+
+double buoyantStabilityMargin(
+    const Eigen::Matrix<double, 10, 1>& rawMoments,
+    const BuoyantStabilityData& buoyancy
+)
+{
+    if (!rawMoments.allFinite() || rawMoments(0) <= 0.0)
+    {
+        throw std::invalid_argument(
+            "buoyant stability requires positive finite mass moments"
+        );
+    }
+    return buoyantMetacenterHeight(buoyancy) - rawMoments(3) / rawMoments(0);
 }
 
 

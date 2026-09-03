@@ -80,6 +80,18 @@ int main()
     {
         return fail("mode-aware deterministic restart sequence is invalid");
     }
+    const std::vector<spin::QuadricCoefficients10> buoyantInitial =
+        spin::deterministicInitialQuadrics(
+            spin::SpinMode::BuoyantStability,
+            settings
+        );
+    if (
+        buoyantInitial.size() != 1 ||
+        buoyantInitial.front().values().tail<6>().norm() != 0.0
+    )
+    {
+        return fail("buoyant restart does not use the published planar family");
+    }
     const spin::SpinNewtonResult solved = spin::solveSpinMomentSystem(
         problem,
         settings,

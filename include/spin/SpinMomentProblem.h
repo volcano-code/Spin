@@ -37,6 +37,10 @@ public:
     using Vector10 = Eigen::Matrix<double, 10, 1>;
 
     static SpinMomentProblem staticBalance(StaticObjective objective);
+    static SpinMomentProblem buoyantStability(
+        double targetMass,
+        const Eigen::Vector2d& horizontalCenterOfBuoyancy
+    );
     static SpinMomentProblem fidgetSpinner();
     static SpinMomentProblem yoYo();
     static SpinMomentProblem spinningTop(double centerOfMassWeight);
@@ -51,13 +55,29 @@ private:
     SpinMomentProblem(
         SpinMode mode,
         StaticObjective staticObjective,
-        double centerOfMassWeight
+        double centerOfMassWeight,
+        double targetMass = 0.0,
+        const Eigen::Vector2d& horizontalCenterOfBuoyancy =
+            Eigen::Vector2d::Zero()
     );
 
     SpinMode mode_ = SpinMode::StaticBalance;
     StaticObjective staticObjective_ = StaticObjective::MaximumMass;
     double centerOfMassWeight_ = 0.0;
+    double targetMass_ = 0.0;
+    Eigen::Vector2d horizontalCenterOfBuoyancy_ = Eigen::Vector2d::Zero();
 };
+
+
+/** Height of the lower metacenter in target-frame coordinates. */
+double buoyantMetacenterHeight(const BuoyantStabilityData& buoyancy);
+
+
+/** Positive exactly when the center of mass lies below the metacenter. */
+double buoyantStabilityMargin(
+    const Eigen::Matrix<double, 10, 1>& rawMoments,
+    const BuoyantStabilityData& buoyancy
+);
 
 
 } // namespace spin

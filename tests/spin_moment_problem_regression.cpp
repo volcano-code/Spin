@@ -184,6 +184,41 @@ int main()
         return fail("fidget-spinner formula is incorrect");
     }
 
+    const spin::SpinMomentProblem buoyant =
+        spin::SpinMomentProblem::buoyantStability(
+            8.0,
+            Eigen::Vector2d(0.05, -0.0375)
+        );
+    evaluation = buoyant.evaluate(r);
+    if (
+        std::abs(evaluation.objective - 0.125) > 1e-14 ||
+        evaluation.constraints.size() != 3 ||
+        evaluation.constraints.norm() > 1e-14
+    )
+    {
+        return fail("buoyant-stability objective or constraints are incorrect");
+    }
+
+    spin::BuoyantStabilityData waterline;
+    waterline.displacedLiquidVolume = 2.0;
+    waterline.centerOfBuoyancyTarget = Eigen::Vector3d(0.0, 0.0, -0.1);
+    waterline.waterlineCentralSecondMoment =
+        (Eigen::Matrix2d() << 0.5, 0.0, 0.0, 0.25).finished();
+    const double metacenter = spin::buoyantMetacenterHeight(waterline);
+    if (std::abs(metacenter - 0.025) > 1e-14)
+    {
+        return fail("buoyant metacenter formula is incorrect");
+    }
+    Vector10 floating = r;
+    floating(3) = 0.16;
+    if (
+        std::abs(spin::buoyantStabilityMargin(floating, waterline) - 0.005) >
+        1e-14
+    )
+    {
+        return fail("buoyant stability margin is incorrect");
+    }
+
     Vector10 symmetric;
     symmetric << 8.0, 0.0, 0.0, 0.0, 3.0, 3.0, 1.0,
         0.0, 0.0, 0.0;
@@ -218,6 +253,7 @@ int main()
     const std::vector<spin::SpinMomentProblem> problems = {
         staticMass,
         staticLow,
+        buoyant,
         fidget,
         yoyo,
         top

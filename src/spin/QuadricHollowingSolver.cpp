@@ -214,6 +214,12 @@ spin::SpinMomentProblem problemForRequest(
         return spin::SpinMomentProblem::staticBalance(
             request.staticObjective
         );
+    case spin::SpinMode::BuoyantStability:
+        return spin::SpinMomentProblem::buoyantStability(
+            request.buoyancy.liquidDensity *
+                request.buoyancy.displacedLiquidVolume,
+            request.buoyancy.centerOfBuoyancyTarget.head<2>()
+        );
     case spin::SpinMode::FidgetSpinner:
         return spin::SpinMomentProblem::fidgetSpinner();
     case spin::SpinMode::YoYo:
@@ -520,6 +526,10 @@ std::vector<QuadricCoefficients10> deterministicInitialQuadrics(
         switch (mode)
         {
         case SpinMode::StaticBalance:
+            values(0) = std::abs(values(0)) + 0.25;
+            break;
+        case SpinMode::BuoyantStability:
+            values.tail<6>().setZero();
             values(0) = std::abs(values(0)) + 0.25;
             break;
         case SpinMode::FidgetSpinner:
