@@ -1099,6 +1099,7 @@ if(BUILD_TESTING)
                 test_experiment_drivers.ExperimentDriverTests
                 test_stability_oracle.StabilityOracleTests
                 test_spin_it_paper_inventory.SpinItPaperInventoryTests
+                test_spin_it_faster_paper_assets.SpinItFasterPaperAssetTests
                 -v
         )
         set_tests_properties(

@@ -1,0 +1,401 @@
+{
+  "asset_class": "RECONSTRUCTED_ASSET",
+  "author_exact": false,
+  "cases": [
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "construction": "sheared tapered vessel",
+      "design_domain": {
+        "path": "paper-assets/static-tilted-vase-design.obj",
+        "sha256": "60ce2c441719197d743dc106b808260d792f1619adab0ec9a3dbe6563a2979d5"
+      },
+      "id": "static-tilted-vase",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "STATIC_BALANCE",
+      "outer": {
+        "path": "paper-assets/static-tilted-vase-outer.obj",
+        "sha256": "8171810d7f142c158b9c9658a45ef14f02681f081ca0d534ee140a63a0dd4690"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "static_objective": "MAXIMUM_MASS",
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "buoyancy": {
+        "center_of_buoyancy_target": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "displaced_liquid_volume": 4.0,
+        "liquid_density": 1.0,
+        "waterline_area": 4.0,
+        "waterline_central_second_moment": [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "construction": "toroidal body with nonzero genus",
+      "design_domain": {
+        "path": "paper-assets/floating-tea-infuser-design.obj",
+        "sha256": "90bdb0ea9866632cdb19be3f49c81bc7580c354ae8f8d5609ceb86b280c03f44"
+      },
+      "id": "floating-tea-infuser",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "BUOYANT_STABILITY",
+      "outer": {
+        "path": "paper-assets/floating-tea-infuser-outer.obj",
+        "sha256": "8da0e702338f98a53ab7e674ec42fd12da5ebad5fa022b86cae457f12059d33b"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "buoyancy": {
+        "center_of_buoyancy_target": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "displaced_liquid_volume": 4.0,
+        "liquid_density": 1.0,
+        "waterline_area": 4.0,
+        "waterline_central_second_moment": [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "construction": "asymmetric floating platform A",
+      "design_domain": {
+        "path": "paper-assets/floating-island-cat-design.obj",
+        "sha256": "14390982d45f62d0c3ebdcbdd02d1fe4636249054f51746e50dd1768b1b7ffa5"
+      },
+      "id": "floating-island-cat",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "BUOYANT_STABILITY",
+      "outer": {
+        "path": "paper-assets/floating-island-cat-outer.obj",
+        "sha256": "47fedc5de4eb79d4ad9cae628e5232e6fba0cdf0f0a3537a4a820586baf1d85c"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "buoyancy": {
+        "center_of_buoyancy_target": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "displaced_liquid_volume": 4.0,
+        "liquid_density": 1.0,
+        "waterline_area": 4.0,
+        "waterline_central_second_moment": [
+          [
+            1.0,
+            0.0
+          ],
+          [
+            0.0,
+            1.0
+          ]
+        ]
+      },
+      "construction": "attachable asymmetric platform B",
+      "design_domain": {
+        "path": "paper-assets/floating-island-dog-human-design.obj",
+        "sha256": "8047bdffa3b931e13aed605ff9a39437f2d2a19ae61fd7490976bfa98d7b1917"
+      },
+      "id": "floating-island-dog-human",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "BUOYANT_STABILITY",
+      "outer": {
+        "path": "paper-assets/floating-island-dog-human-outer.obj",
+        "sha256": "796c51cb25db4065032658865341fce7a2d4e991e717bc9fb6489d4e844a729d"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "center_of_mass_weight": 0.25,
+      "construction": "asymmetric heart-like top body",
+      "design_domain": {
+        "path": "paper-assets/heart-spinning-top-design.obj",
+        "sha256": "cb45928002bcb737649d4805d1b40e6a6a415517c64a2fac265ca0af887aab9b"
+      },
+      "id": "heart-spinning-top",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "SPINNING_TOP",
+      "outer": {
+        "path": "paper-assets/heart-spinning-top-outer.obj",
+        "sha256": "3f0247d24f233e086f591414d52b95c26b09cef0bde910149f1ed46f2faabb9d"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "center_of_mass_weight": 0.25,
+      "construction": "twisted high-complexity proxy",
+      "design_domain": {
+        "path": "paper-assets/noodles-spinning-top-design.obj",
+        "sha256": "d8db1de729a498e737bf91827c313c663bae6c72ae0cd47c537bbc42158561ed"
+      },
+      "id": "noodles-spinning-top",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "SPINNING_TOP",
+      "outer": {
+        "path": "paper-assets/noodles-spinning-top-outer.obj",
+        "sha256": "918867f8aa1b5e269632f226dc64b3cf98267cb09d65549489ff890674ff089f"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "construction": "axis-oriented jellyfish-like yo-yo",
+      "design_domain": {
+        "path": "paper-assets/jellyfish-yoyo-design.obj",
+        "sha256": "548192ec2cccd096d3728298d4903dc15e5f97c016ca57e3bc7fa1a5a8105fe3"
+      },
+      "id": "jellyfish-yoyo",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "YO_YO",
+      "outer": {
+        "path": "paper-assets/jellyfish-yoyo-outer.obj",
+        "sha256": "3f94406ecf98cdc92869d22f90782d95845eee9efae874b7de98a7a2b971a69e"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    },
+    {
+      "asset_class": "RECONSTRUCTED_ASSET",
+      "author_exact": false,
+      "construction": "seven-lobed planar spinner",
+      "design_domain": {
+        "path": "paper-assets/flower-fidget-spinner-design.obj",
+        "sha256": "c264084cc43b09227091aadc855cd08a767b826cdf956c099ed89f56c12fe7b6"
+      },
+      "id": "flower-fidget-spinner",
+      "license": "project-generated deterministic geometry; CC0-1.0",
+      "mode": "FIDGET_SPINNER",
+      "outer": {
+        "path": "paper-assets/flower-fidget-spinner-outer.obj",
+        "sha256": "67b6cedb0a594dc5598ed2e88f3fe248d5feb052ae7299b275081bcf366f4f38"
+      },
+      "paper_section": "6.2",
+      "physical_validation": false,
+      "target_axes": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "target_origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "normalized_unit"
+    }
+  ],
+  "paper_doi": "10.1145/3658194",
+  "physical_validation": false,
+  "schema": "spin-it-faster-paper-cases-v1",
+  "schema_version": 1
+}
