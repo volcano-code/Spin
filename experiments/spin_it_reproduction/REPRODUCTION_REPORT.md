@@ -43,3 +43,13 @@ equivalence with unreleased author code, CAD/voxel assets, user interaction
 histories, or hidden parameter files. It also does not reproduce the papers'
 fabricated-object measurements. Those two stronger claims remain explicitly
 false in the machine-readable release gate.
+
+## Correction — 2026-09-05
+
+The public-complete PASS claim above is superseded and is **not valid evidence
+of complete computational reproduction**. Simplified assets, preconstructed
+solutions, and an insufficient aggregate gate were used. Historical results
+are preserved, with their corrected scope documented in
+[STRICT_CORRECTION.md](STRICT_CORRECTION.md). The strict project status is
+`PARTIAL_BLOCKED`; no original-paper experiment is completed by relabelling
+these synthetic regression results.
