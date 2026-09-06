@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 import unittest
 
@@ -19,7 +22,7 @@ def load_builder():
 
 
 class SpinItCompleteReleaseGateTests(unittest.TestCase):
-    def test_public_gate_requires_both_computational_matrices(self) -> None:
+    def test_synthetic_all_true_payload_cannot_publish(self) -> None:
         builder = load_builder()
         faster = {"cases": [{"passed": True}], "author_exact": False, "physical_validation": False}
         spin2014 = {
@@ -36,31 +39,36 @@ class SpinItCompleteReleaseGateTests(unittest.TestCase):
             "figure13": {"result": {"rows": [{"status": "CONVERGED"}]}},
         }
         gate = builder.aggregate(faster, spin2014, figures, tests_passed=True)
-        self.assertTrue(gate["public_complete_reproduction"])
+        self.assertFalse(gate["public_complete_reproduction"])
         self.assertFalse(gate["author_exact"])
         self.assertFalse(gate["physical_validation"])
-        self.assertTrue(gate["formula_coverage"])
-        self.assertTrue(gate["experiment_coverage"])
+        self.assertFalse(gate["formula_coverage"])
+        self.assertFalse(gate["experiment_coverage"])
+        self.assertEqual(gate["status"], "SUPERSEDED_BLOCKED")
+        self.assertIn("strict requirements audit", " ".join(gate["limitations"]))
+        report = builder.report(gate)
+        self.assertIn("superseded legacy compatibility report", report)
+        self.assertIn("cannot grant strict reproduction claims", report)
 
-        faster["cases"][0]["passed"] = False
-        self.assertFalse(
-            builder.aggregate(faster, spin2014, figures, tests_passed=True)[
-                "public_complete_reproduction"
-            ]
-        )
-
-        faster["cases"][0]["passed"] = True
-        spin2014["paper_resolution_reproduced"] = False
-        blocked = builder.aggregate(faster, spin2014, figures, tests_passed=True)
-        self.assertFalse(blocked["public_complete_reproduction"])
-        self.assertFalse(blocked["requirements"]["spin_it_2014_paper_resolution"])
-
-        spin2014["paper_resolution_reproduced"] = True
-        spin2014["paper_numerics_reproduced"] = True
-        spin2014["cage_deformation_executed"] = False
-        blocked = builder.aggregate(faster, spin2014, figures, tests_passed=True)
-        self.assertFalse(blocked["public_complete_reproduction"])
-        self.assertFalse(blocked["requirements"]["spin_it_2014_cage_deformation"])
+    def test_legacy_cli_rejects_removed_tests_passed_switch(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(BUILDER),
+                    "--tests-passed",
+                    "--faster", str(root / "faster.json"),
+                    "--spin2014", str(root / "spin2014.json"),
+                    "--figures", str(root / "figures.json"),
+                    "--output", str(root / "gate.json"),
+                ],
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("unrecognized arguments: --tests-passed", result.stderr)
 
     def test_missing_claim_dimensions_fail_closed(self) -> None:
         builder = load_builder()
