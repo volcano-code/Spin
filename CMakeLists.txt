@@ -15,6 +15,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(CompilerObservation)
 
 option(MAKE_IT_STAND_BUILD_VIEWER "Build the interactive GLFW viewer" ON)
 option(MAKE_IT_STAND_BUILD_PYTHON "Build the pybind11 Python extension" OFF)
@@ -1216,6 +1217,26 @@ if(BUILD_TESTING)
             PROPERTIES
                 LABELS "paper;python;spin-it;verification"
                 TIMEOUT 30
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+        )
+
+        add_test(
+            NAME compiler-observer-contract
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_compiler_observer.CompilerObserverTests -v
+        )
+        add_test(
+            NAME compiler-observer-cmake-fixture
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_compiler_observer.CompilerObserverCMakeTests -v
+        )
+        set_tests_properties(
+            compiler-observer-contract compiler-observer-cmake-fixture
+            PROPERTIES
+                LABELS "paper;python;spin-it;verification;compiler-observation"
+                RESOURCE_LOCK "compiler-observation-fixtures"
+                TIMEOUT 60
                 ENVIRONMENT
                     "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
         )
