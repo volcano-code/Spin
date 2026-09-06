@@ -409,6 +409,27 @@ print('runtime replacements detected')
                 seal(value)
                 self.assertEqual(self.api.check_freshness(value).status, "INVALID_EVIDENCE")
 
+    def test_git_diff_paths_require_canonical_repository_relative_identity(self):
+        def seal(value):
+            value.pop("integrity_sha256", None)
+            payload = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
+            value["integrity_sha256"] = hashlib.sha256(payload.encode()).hexdigest()
+
+        original = self.finish().to_json()
+        for malformed in ("src/../CMakeLists.txt", "src/./solver.cpp", "src//solver.cpp",
+                          "src/solver.cpp/", "/src/solver.cpp"):
+            with self.subTest(path=malformed):
+                value = json.loads(original)
+                for stage in ("begin", "end"):
+                    paths = value[stage]["observation"]["source"]["git"]["diff_paths"]
+                    paths.append(malformed)
+                    paths.sort()
+                    seal(value[stage])
+                seal(value)
+                self.assertEqual(self.api.check_freshness(value).status, "INVALID_EVIDENCE")
+                with self.assertRaises(ValueError):
+                    self.api.PaperRunEvidenceV2.from_json(json.dumps(value))
+
 
 if __name__ == "__main__":
     unittest.main()

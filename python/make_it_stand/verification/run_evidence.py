@@ -357,7 +357,9 @@ def _validate_begin(value):
     _keys(context, {"head", "diff_paths", "head_to_worktree_diff_base64", "head_to_index_diff_base64", "index_to_worktree_diff_base64"}, "Git context")
     _require(_valid_revision(context["head"]), "invalid observed Git HEAD")
     _require(type(context["diff_paths"]) is list and bool(context["diff_paths"]) and
-             all(type(path) is str and _selected(path) for path in context["diff_paths"]), "invalid Git diff paths")
+             all(type(path) is str and not Path(path).is_absolute() and
+                 ".." not in Path(path).parts and Path(path).as_posix() == path and
+                 _selected(path) for path in context["diff_paths"]), "invalid Git diff paths")
     _require(context["diff_paths"] == sorted(set(context["diff_paths"])), "duplicate or unordered Git diff paths")
     for key in context:
         if key.endswith("_base64"):
