@@ -1234,8 +1234,10 @@ bool trianglesHaveDisallowedSelfIntersection(
          * otherwise report that endpoint as a tiny outgoing intersection for
          * decimal, nearly coplanar sphere facets.  Remove a 1e-6 barycentric
          * neighborhood of the shared vertex from each triangle and test the
-         * remaining interiors.  A crossing that actually leaves the common
-         * vertex is preserved; endpoint-only contact is not.
+         * remaining interiors. LIMITATION: short nonzero crossings confined
+         * to the removed neighborhood can be missed. This historical floating
+         * diagnostic is not an exact represented-boundary certificate; use
+         * verification::auditExactTriangleBoundary for the optional exact path.
          */
         const Eigen::Vector3d firstNormal =
             (first.points[1] - first.points[0]).cross(

@@ -1,4 +1,7 @@
 #include "api/BalanceModel.h"
+#if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+#include "verification/ExactBoundaryAudit.h"
+#endif
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014
 #include "api/SpinIt2014.h"
 #include "spin2014/AutomaticCageBinding.h"
@@ -99,6 +102,38 @@ Eigen::MatrixXd verticesFromPython(const py::handle& value)
     return vertices;
 }
 
+
+#if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+Eigen::MatrixXd exactVerticesFromPython(const py::handle& value)
+{
+    const py::array original=requireArray(value,"vertices");
+    requireTriangleMatrixShape(original,"vertices");
+    const char kind=original.dtype().kind();
+    if(original.itemsize()>8)
+        throw py::type_error("exact boundary accepts at most binary64 coordinates; higher precision must not be silently rounded");
+    Eigen::MatrixXd result=verticesFromPython(original);
+    // Float16/32 -> binary64 is exact. For integer inputs verify that conversion
+    // preserved the integer before geometry or hashing; never cast out of range.
+    if(kind=='i') {
+        const auto integers=py::array_t<std::int64_t,py::array::c_style|py::array::forcecast>::ensure(original);
+        const auto input=integers.unchecked<2>();
+        for(Eigen::Index i=0;i<result.rows();++i) for(int j=0;j<3;++j) {
+            const double d=result(i,j);
+            if(d < -0x1p63 || d >= 0x1p63 || static_cast<std::int64_t>(d)!=input(i,j))
+                throw py::value_error("integer coordinate is not exactly representable as binary64");
+        }
+    } else if(kind=='u') {
+        const auto integers=py::array_t<std::uint64_t,py::array::c_style|py::array::forcecast>::ensure(original);
+        const auto input=integers.unchecked<2>();
+        for(Eigen::Index i=0;i<result.rows();++i) for(int j=0;j<3;++j) {
+            const double d=result(i,j);
+            if(d >= 0x1p64 || static_cast<std::uint64_t>(d)!=input(i,j))
+                throw py::value_error("integer coordinate is not exactly representable as binary64");
+        }
+    }
+    return result;
+}
+#endif
 
 template <typename Integer>
 Eigen::MatrixXi checkedFaceConversion(
@@ -325,6 +360,52 @@ std::vector<spin::QuadricCoefficients10> quadricsFromRows(
 
 PYBIND11_MODULE(_make_it_stand, module)
 {
+#if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+    module.def("audit_exact_triangle_boundary",
+        [](const py::object& vertices, const py::object& faces, const std::string& orientation) {
+            using Mode=verification::ExactBoundaryOrientation;
+            Mode mode;
+            if(orientation=="OutwardPositive") mode=Mode::OutwardPositive;
+            else if(orientation=="InwardNegative") mode=Mode::InwardNegative;
+            else if(orientation=="AnyNonzero") mode=Mode::AnyNonzero;
+            else throw py::value_error("orientation must be OutwardPositive, InwardNegative, or AnyNonzero");
+            const auto audit=verification::auditExactTriangleBoundary(
+                exactVerticesFromPython(vertices), facesFromPython(faces), mode);
+            const auto& r=audit.facts();
+            py::dict out;
+            out["algorithm"]=r.algorithm; out["backend"]=r.backend;
+            out["input_digest"]=r.inputDigest; out["input_digest_algorithm"]="sha256";
+            out["input_encoding"]="exact-boundary-input-v1/binary64-row-major/u64-big-endian";
+            out["orientation"]=r.orientation;
+            out["boundary_valid"]=r.boundaryValid;
+            out["closed"]=r.closed; out["edge_manifold"]=r.edgeManifold;
+            out["vertex_manifold"]=r.vertexManifold;
+            out["consistently_oriented"]=r.consistentlyOriented;
+            out["component_orientations_valid"]=r.componentOrientationsValid;
+            out["unreferenced_vertices"]=r.unreferencedVertices;
+            out["degenerate_faces"]=r.degenerateFaces;
+            out["boundary_edges"]=r.boundaryEdges; out["non_manifold_edges"]=r.nonManifoldEdges;
+            out["inconsistent_edges"]=r.inconsistentEdges;
+            out["non_manifold_vertices"]=r.nonManifoldVertices;
+            out["face_components"]=r.faceComponents;
+            out["component_volume_signs"]=r.componentVolumeSigns;
+            out["component_signed_volumes_exact"]=r.componentSignedVolumesExact;
+            out["self_intersection_completed"]=r.intersectionCompleted;
+            out["self_intersection_free"]=r.intersectionFree;
+            out["intersection_error"]=r.intersectionError;
+            out["intersecting_pairs"]=r.intersectingPairs;
+            out["intersecting_pair_count"]=r.intersectingPairs.size();
+            out["exact_pair_tests"]=r.exactPairTests;
+            out["scope"]="single-represented-boundary-only";
+            out["material_domain_status"]="NOT_VERIFIED";
+            return out;
+        }, py::arg("vertices"), py::arg("faces"), py::arg("orientation"),
+        "Exact audit of the binary64 represented indexed boundary. No repair or welding. "
+        "Float16/32 promote exactly; integer coordinates must be exactly binary64-representable. "
+        "Wider floats are rejected. "
+        "AnyNonzero is a boundary orientation mode only. Does not verify containment, "
+        "nesting, thickness, material union, CAD, source/build identity, or artifact sealing.");
+#endif
     module.def(
         "audit_triangle_boundary",
         [](
@@ -373,7 +454,10 @@ PYBIND11_MODULE(_make_it_stand, module)
         },
         py::arg("vertices"),
         py::arg("faces"),
-        py::arg("geometric_tolerance") = 0.0
+        py::arg("geometric_tolerance") = 0.0,
+        "Legacy floating boundary diagnostic: shared-corner trimming can miss short "
+        "crossings. Its historical strict_boundary_valid flag is not an exact "
+        "represented-boundary or full artifact certificate."
     );
 
     module.def(

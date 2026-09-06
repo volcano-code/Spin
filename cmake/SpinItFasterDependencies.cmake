@@ -1,5 +1,16 @@
 include_guard(GLOBAL)
 
+# Shared optional geometry backend for Faster and exact boundary verification.
+# Keep the historical filename and compatibility entrypoint for downstream users.
+
+if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS AND NOT EXISTS
+   "${MAKE_IT_STAND_LIBIGL_DIR}/external/cgal/Number_types/include/CGAL/Gmpq.h")
+    message(FATAL_ERROR
+        "Exact geometry checks require the existing pinned CGAL checkout; "
+        "no download or alternate geometry backend is used by this feature."
+    )
+endif()
+
 set(
     MAKE_IT_STAND_CGAL_PINNED_REVISION
     "f7c3c8212b56c0d6dae63787efc99093f4383415"
@@ -8,12 +19,12 @@ set(
     MAKE_IT_STAND_CGAL_GIT_TAG
     "${MAKE_IT_STAND_CGAL_PINNED_REVISION}"
     CACHE STRING
-    "Exact CGAL revision used by Spin-It Faster mesh Booleans"
+    "Exact CGAL revision used by the optional common geometry backend"
 )
 if(NOT MAKE_IT_STAND_CGAL_GIT_TAG STREQUAL
        MAKE_IT_STAND_CGAL_PINNED_REVISION)
     message(FATAL_ERROR
-        "Spin-It Faster requires pinned CGAL revision "
+        "Optional geometry backend requires pinned CGAL revision "
         "${MAKE_IT_STAND_CGAL_PINNED_REVISION}; received "
         "${MAKE_IT_STAND_CGAL_GIT_TAG}"
     )
@@ -45,13 +56,13 @@ endif()
 set(LIBIGL_WITH_CGAL ON CACHE BOOL "Use pinned CGAL" FORCE)
 
 
-function(make_it_stand_verify_spin_it_faster_dependencies)
+function(make_it_stand_verify_pinned_geometry_dependencies)
     if(NOT TARGET igl::cgal)
-        message(FATAL_ERROR "Spin-It Faster requires target igl::cgal")
+        message(FATAL_ERROR "Optional geometry backend requires target igl::cgal")
     endif()
     if(NOT TARGET CGAL::CGAL OR NOT TARGET CGAL::CGAL_Core)
         message(FATAL_ERROR
-            "Spin-It Faster requires CGAL::CGAL and CGAL::CGAL_Core"
+            "Optional geometry backend requires CGAL::CGAL and CGAL::CGAL_Core"
         )
     endif()
 
@@ -103,7 +114,7 @@ function(make_it_stand_verify_spin_it_faster_dependencies)
     if(NOT MAKE_IT_STAND_GMP_VERSION STREQUAL "6.3.0" OR
        NOT MAKE_IT_STAND_MPFR_VERSION STREQUAL "4.2.1")
         message(FATAL_ERROR
-            "Spin-It Faster requires audited GMP 6.3.0 and MPFR 4.2.1; "
+            "Optional geometry backend requires audited GMP 6.3.0 and MPFR 4.2.1; "
             "found GMP ${MAKE_IT_STAND_GMP_VERSION}, "
             "MPFR ${MAKE_IT_STAND_MPFR_VERSION}"
         )
@@ -112,7 +123,7 @@ function(make_it_stand_verify_spin_it_faster_dependencies)
     set(
         MAKE_IT_STAND_CGAL_RESOLVED_REVISION
         "${MAKE_IT_STAND_CGAL_HEAD}"
-        CACHE INTERNAL "Resolved Spin-It Faster CGAL revision" FORCE
+        CACHE INTERNAL "Resolved common geometry CGAL revision" FORCE
     )
     set(
         MAKE_IT_STAND_GMP_RESOLVED_VERSION
@@ -124,4 +135,8 @@ function(make_it_stand_verify_spin_it_faster_dependencies)
         "${MAKE_IT_STAND_MPFR_VERSION}"
         CACHE INTERNAL "Resolved MPFR version" FORCE
     )
+endfunction()
+
+function(make_it_stand_verify_spin_it_faster_dependencies)
+    make_it_stand_verify_pinned_geometry_dependencies()
 endfunction()

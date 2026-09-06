@@ -19,6 +19,8 @@ include(CompilerObservation)
 
 option(MAKE_IT_STAND_BUILD_VIEWER "Build the interactive GLFW viewer" ON)
 option(MAKE_IT_STAND_BUILD_PYTHON "Build the pybind11 Python extension" OFF)
+option(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS
+    "Build the common pinned-CGAL exact represented-boundary auditor" OFF)
 option(
     MAKE_IT_STAND_BUILD_REACHABILITY
     "Build the HiGHS-backed carving reachability analyzer"
@@ -71,7 +73,7 @@ set(LIBIGL_DIR "${MAKE_IT_STAND_LIBIGL_DIR}" CACHE PATH "libigl root" FORCE)
 option(LIBIGL_WITH_OPENGL "Use OpenGL" ${MAKE_IT_STAND_BUILD_VIEWER})
 option(LIBIGL_WITH_OPENGL_GLFW "Use GLFW" ${MAKE_IT_STAND_BUILD_VIEWER})
 option(LIBIGL_WITH_OPENGL_GLFW_IMGUI "Use ImGui" ${MAKE_IT_STAND_BUILD_VIEWER})
-if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER OR MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
     include(SpinItFasterDependencies)
 else()
     set(LIBIGL_WITH_CGAL OFF CACHE BOOL "Use CGAL" FORCE)
@@ -88,8 +90,8 @@ set(
 
 find_package(LIBIGL REQUIRED QUIET)
 
-if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
-    make_it_stand_verify_spin_it_faster_dependencies()
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER OR MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+    make_it_stand_verify_pinned_geometry_dependencies()
 endif()
 
 if(MAKE_IT_STAND_BUILD_REACHABILITY)
@@ -239,6 +241,11 @@ if(MAKE_IT_STAND_BUILD_REACHABILITY)
     )
 endif()
 
+if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+    list(APPEND MAKE_IT_STAND_CORE_SOURCES src/verification/ExactBoundaryAudit.cpp)
+    list(APPEND MAKE_IT_STAND_CORE_HEADERS include/verification/ExactBoundaryAudit.h)
+endif()
+
 add_library(
     make_it_stand_core
     STATIC
@@ -265,9 +272,10 @@ target_compile_definitions(
         MAKE_IT_STAND_HAS_REACHABILITY=$<BOOL:${MAKE_IT_STAND_BUILD_REACHABILITY}>
         MAKE_IT_STAND_HAS_SPIN_IT_FASTER=$<BOOL:${MAKE_IT_STAND_BUILD_SPIN_IT_FASTER}>
         MAKE_IT_STAND_HAS_SPIN_IT_2014=$<BOOL:${MAKE_IT_STAND_BUILD_SPIN_IT_2014}>
+        MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS=$<BOOL:${MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS}>
 )
 target_link_libraries(make_it_stand_core PUBLIC igl::core)
-if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER OR MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
     target_link_libraries(make_it_stand_core PUBLIC igl::cgal)
 endif()
 if(MAKE_IT_STAND_BUILD_REACHABILITY)
@@ -390,6 +398,23 @@ endif()
 include(CTest)
 
 if(BUILD_TESTING)
+    if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+        add_executable(exact-boundary-audit-regression tests/exact_boundary_audit_regression.cpp)
+        target_link_libraries(exact-boundary-audit-regression PRIVATE make_it_stand::core)
+        add_test(NAME exact-boundary-audit-native COMMAND exact-boundary-audit-regression)
+        set_tests_properties(exact-boundary-audit-native PROPERTIES LABELS "verification;exact-geometry;native" TIMEOUT 60)
+        add_test(NAME exact-geometry-dependency-contract
+            COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_exact_geometry_dependency.cmake")
+        set_tests_properties(exact-geometry-dependency-contract PROPERTIES
+            LABELS "verification;exact-geometry;cmake" TIMEOUT 120)
+        if(MAKE_IT_STAND_BUILD_PYTHON)
+            add_test(NAME exact-boundary-audit-python
+                COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_boundary_audit -v)
+            set_tests_properties(exact-boundary-audit-python PROPERTIES
+                LABELS "verification;exact-geometry;python;native" TIMEOUT 60
+                ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}")
+        endif()
+    endif()
     if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         add_executable(
             spin-it-2014-adaptive-domain-regression
