@@ -87,6 +87,7 @@ from .spin import (
 )
 from .spin2014 import (
     SPIN_2014_ARTIFACT_SCHEMA,
+    SPIN_2014_OBJECTIVES,
     SpinIt2014Request,
     SpinIt2014Result,
     solve_spin_it_2014,
@@ -127,6 +128,7 @@ __all__ = [
     "StandingConstraintConfig",
     "SPIN_ARTIFACT_SCHEMA",
     "SPIN_2014_ARTIFACT_SCHEMA",
+    "SPIN_2014_OBJECTIVES",
     "SpinIt2014Request",
     "SpinIt2014Result",
     "SpinItFasterRequest",

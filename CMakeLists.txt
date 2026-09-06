@@ -510,6 +510,28 @@ if(BUILD_TESTING)
         )
 
         add_executable(
+            spin-it-2014-objectives-regression
+            tests/spin_it_2014_objectives_regression.cpp
+        )
+        target_compile_features(
+            spin-it-2014-objectives-regression PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            spin-it-2014-objectives-regression PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            spin-it-2014-objectives-regression PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-it-2014-objectives
+            COMMAND "$<TARGET_FILE:spin-it-2014-objectives-regression>"
+        )
+        set_tests_properties(
+            spin-it-2014-objectives
+            PROPERTIES LABELS "spin-it;spin-it-2014;objective;regression"
+        )
+
+        add_executable(
             spin-it-2014-resolution-ladder
             tests/spin_it_2014_resolution_ladder.cpp
         )

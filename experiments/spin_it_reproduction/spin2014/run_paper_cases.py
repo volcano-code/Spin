@@ -23,6 +23,17 @@ ROOT = Path(__file__).resolve().parent
 DEFAULT_CASES = ROOT / "paper_cases.json"
 TIMING_KEYS = {"elapsed_seconds"}
 
+MODE_DEFAULT_OBJECTIVES = {
+    "STATIC_BALANCE": "STATIC_LOWERING",
+    "YO_YO": "YOYO",
+    "SPINNING_TOP": "TOP_MASS_AND_LOWERING",
+}
+LEGACY_CASE_OBJECTIVES = {
+    "teapot-inertia": "TOP_INERTIA_ONLY",
+    "teapot-lowering": "TOP_LOWERING_ONLY",
+    "teapot-mass-reduction": "TOP_MASS_AND_LOWERING",
+}
+
 
 def _without_timings(value: Any) -> Any:
     if isinstance(value, dict):
@@ -99,20 +110,54 @@ def _central_inertia(raw: Iterable[float]) -> np.ndarray:
     return inertia - mass * ((center @ center) * np.eye(3) - np.outer(center, center))
 
 
-def paper_metrics(mode: str, raw: Iterable[float], center_weight: float) -> dict[str, float]:
+def objective_for_case(case: dict[str, Any]) -> str:
+    """Resolve selectors for immutable legacy case manifests."""
+    return str(case.get(
+        "objective",
+        LEGACY_CASE_OBJECTIVES.get(case.get("id"), MODE_DEFAULT_OBJECTIVES.get(case["mode"])),
+    ))
+
+
+def paper_metrics(
+    mode: str,
+    raw: Iterable[float],
+    center_weight: float,
+    objective: str | None = None,
+    inertia_weight: float = 1.0,
+) -> dict[str, float]:
     r = np.asarray(tuple(raw), dtype=float)
+    selected = objective if objective is not None else MODE_DEFAULT_OBJECTIVES.get(mode)
+    if selected is None:
+        raise ValueError(f"unsupported Spin-It 2014 mode: {mode}")
+    expected_mode = (
+        "YO_YO" if selected == "YOYO"
+        else "STATIC_BALANCE" if selected == "STATIC_LOWERING"
+        else "SPINNING_TOP"
+    )
+    if mode != expected_mode:
+        raise ValueError(f"Spin-It 2014 objective {selected} does not match mode {mode}")
+    if (
+        selected not in {*MODE_DEFAULT_OBJECTIVES.values(), "TOP_INERTIA_ONLY", "TOP_LOWERING_ONLY"}
+        or not math.isfinite(float(inertia_weight))
+        or float(inertia_weight) < 0.0
+        or not math.isfinite(float(center_weight))
+        or float(center_weight) < 0.0
+    ):
+        raise ValueError("invalid Spin-It 2014 objective or weights")
     inertia = _central_inertia(r)
     lateral = inertia[:2, :2]
     axial = float(inertia[2, 2])
-    yoyo = float(np.sum(lateral * lateral) / (axial * axial))
-    if mode == "YO_YO":
+    yoyo = float(inertia_weight) * float(np.sum(lateral * lateral) / (axial * axial))
+    if selected in {"YOYO", "TOP_INERTIA_ONLY"}:
         objective = yoyo
-    elif mode == "SPINNING_TOP":
+    elif selected == "TOP_LOWERING_ONLY":
+        objective = yoyo + float(center_weight) * float((r[3] / r[0]) ** 2)
+    elif selected == "TOP_MASS_AND_LOWERING":
         objective = yoyo + float(center_weight) * float(r[3] * r[3])
-    elif mode == "STATIC_BALANCE":
+    elif selected == "STATIC_LOWERING":
         objective = float(center_weight) * float((r[3] / r[0]) ** 2)
     else:
-        raise ValueError(f"unsupported Spin-It 2014 mode: {mode}")
+        raise AssertionError("validated objective was not dispatched")
     eigenvalues, eigenvectors = np.linalg.eigh(inertia)
     # The equality constraints make the requested z axis a principal axis.
     # Identify that eigenpair by direction, then separately audit whether its
@@ -219,6 +264,8 @@ def run_case(
 
     asset = load_asset(case)
     density = case.get("densities_g_cm3", {})
+    objective = objective_for_case(case)
+    inertia_weight = float(case.get("inertia_weight", 1.0))
     effective_level = int(
         maximum_level if maximum_level is not None else case["maximum_octree_level"]
     )
@@ -251,6 +298,8 @@ def run_case(
         interior_density=float(density.get("insert", 1.0)),
         binary_constraint_tolerance=effective_binary_tolerance,
         slqp_maximum_iterations=600 if effective_level >= 9 else 240,
+        objective=objective,
+        inertia_weight=inertia_weight,
     )
     rows: list[dict[str, Any]] = []
     for repeat in range(1, repeats + 1):
@@ -259,7 +308,13 @@ def run_case(
         elapsed = time.perf_counter() - begin
         diagnostics = result.diagnostics
         metrics = (
-            paper_metrics(case["mode"], diagnostics["final_raw_moments"], case["center_of_mass_weight"])
+            paper_metrics(
+                case["mode"],
+                diagnostics["final_raw_moments"],
+                case["center_of_mass_weight"],
+                objective=objective,
+                inertia_weight=inertia_weight,
+            )
             if diagnostics.get("mass_properties_available")
             else None
         )
@@ -336,6 +391,13 @@ def run_case(
         "id": case["id"],
         "paper_role": case["paper_role"],
         "mode": case["mode"],
+        "objective": objective,
+        "objective_resolution": (
+            "EXPLICIT" if "objective" in case else "LEGACY_CASE_MAPPING"
+            if case["id"] in LEGACY_CASE_OBJECTIVES else "MODE_DEFAULT_LEGACY"
+        ),
+        "inertia_weight": inertia_weight,
+        "center_of_mass_weight": float(case["center_of_mass_weight"]),
         "asset_class": "RECONSTRUCTED_ASSET",
         "author_exact": False,
         "physical_validation": False,

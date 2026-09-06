@@ -14,6 +14,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -755,6 +756,25 @@ PYBIND11_MODULE(_make_it_stand, module)
             api::SpinIt2014Evidence::ReconstructedAsset
         );
 
+    py::enum_<spin2014::Spin2014Objective>(module, "Spin2014Objective")
+        .value("YOYO", spin2014::Spin2014Objective::YoYo)
+        .value(
+            "TOP_INERTIA_ONLY",
+            spin2014::Spin2014Objective::TopInertiaOnly
+        )
+        .value(
+            "TOP_LOWERING_ONLY",
+            spin2014::Spin2014Objective::TopLoweringOnly
+        )
+        .value(
+            "TOP_MASS_AND_LOWERING",
+            spin2014::Spin2014Objective::TopMassAndLowering
+        )
+        .value(
+            "STATIC_LOWERING",
+            spin2014::Spin2014Objective::StaticLowering
+        );
+
     py::class_<api::SpinIt2014Artifact>(module, "SpinIt2014Artifact")
         .def_property_readonly("status", &api::SpinIt2014Artifact::statusToken)
         .def_property_readonly("evidence", &api::SpinIt2014Artifact::evidenceToken)
@@ -853,7 +873,9 @@ PYBIND11_MODULE(_make_it_stand, module)
             int maximumLeafCount,
             double binaryConstraintTolerance,
             int slqpMaximumIterations,
-            double slqpProjectedGradientTolerance
+            double slqpProjectedGradientTolerance,
+            const std::optional<spin2014::Spin2014Objective>& objective,
+            double inertiaWeight
         )
         {
             voxel::GridSpec grid;
@@ -865,6 +887,7 @@ PYBIND11_MODULE(_make_it_stand, module)
                 grid, materialMask, {}, carveableMask
             );
             request.mode = mode;
+            request.objective = objective;
             request.initialLevel = initialLevel;
             request.maximumLevel = maximumLevel;
             request.maximumAdaptivePasses = maximumAdaptivePasses;
@@ -872,6 +895,7 @@ PYBIND11_MODULE(_make_it_stand, module)
             request.fractionalEpsilon = fractionalEpsilon;
             request.laplacianWeight = laplacianWeight;
             request.centerOfMassWeight = centerOfMassWeight;
+            request.inertiaWeight = inertiaWeight;
             request.boundaryDensity = boundaryDensity;
             request.interiorDensity = interiorDensity;
             request.maximumLeafCount = maximumLeafCount;
@@ -903,7 +927,9 @@ PYBIND11_MODULE(_make_it_stand, module)
         py::arg("maximum_leaf_count") = 1000000,
         py::arg("binary_constraint_tolerance") = 1e-6,
         py::arg("slqp_maximum_iterations") = 120,
-        py::arg("slqp_projected_gradient_tolerance") = 1e-7
+        py::arg("slqp_projected_gradient_tolerance") = 1e-7,
+        py::arg("objective") = py::none(),
+        py::arg("inertia_weight") = 1.0
     );
 
     module.def(
@@ -916,7 +942,9 @@ PYBIND11_MODULE(_make_it_stand, module)
             const std::vector<unsigned char>& materialMask,
             const std::vector<unsigned char>& carveableMask,
             double centerOfMassWeight,
-            int maximumHandleCount
+            int maximumHandleCount,
+            const std::optional<spin2014::Spin2014Objective>& objective,
+            double inertiaWeight
         )
         {
             voxel::GridSpec grid;
@@ -962,10 +990,13 @@ PYBIND11_MODULE(_make_it_stand, module)
                 cageRequest.outerWeights = binding.outerWeights;
                 cageRequest.voidCellWeights = binding.voidCellWeights;
                 cageRequest.handles = binding.handles;
-                cageRequest.problem =
-                    spin2014::SpinIt2014MomentProblem::spinningTop(
-                        centerOfMassWeight
-                    );
+                cageRequest.problem = objective.has_value()
+                    ? spin2014::SpinIt2014MomentProblem::fromObjective(
+                          *objective, inertiaWeight, centerOfMassWeight
+                      )
+                    : spin2014::SpinIt2014MomentProblem::spinningTop(
+                          centerOfMassWeight
+                      );
                 cageRequest.fillLaplacian = Eigen::MatrixXd::Zero(1, 1);
                 cageRequest.fillLaplacianWeight = 1e-3;
                 cageRequest.biharmonicWeight = 1e-3;
@@ -1014,7 +1045,9 @@ PYBIND11_MODULE(_make_it_stand, module)
         py::arg("material_mask"),
         py::arg("carveable_mask"),
         py::arg("center_of_mass_weight") = 1.0,
-        py::arg("maximum_handle_count") = 12
+        py::arg("maximum_handle_count") = 12,
+        py::arg("objective") = py::none(),
+        py::arg("inertia_weight") = 1.0
     );
 #endif
 

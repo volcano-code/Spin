@@ -41,27 +41,19 @@ spin2014::SpinIt2014MomentProblem momentProblem(
     const spin2014::AdaptiveVoxelSpinRequest& request
 )
 {
-    switch (request.mode)
+    const spin2014::Spin2014Objective objective = request.objective.value_or(
+        spin2014::defaultSpin2014Objective(request.mode)
+    );
+    if (spin2014::spin2014ObjectiveMode(objective) != request.mode)
     {
-    case spin::SpinMode::StaticBalance:
-        return spin2014::SpinIt2014MomentProblem::staticBalance(
-            request.centerOfMassWeight
-        );
-    case spin::SpinMode::YoYo:
-        return spin2014::SpinIt2014MomentProblem::yoYo();
-    case spin::SpinMode::SpinningTop:
-        return spin2014::SpinIt2014MomentProblem::spinningTop(
-            request.centerOfMassWeight
-        );
-    case spin::SpinMode::FidgetSpinner:
-        break;
-    case spin::SpinMode::BuoyantStability:
         throw std::invalid_argument(
-            "Spin-It 2014 does not define buoyant-stability mode"
+            "Spin-It 2014 objective does not match request mode"
         );
     }
-    throw std::invalid_argument(
-        "the 2014 paper does not define a fidget-spinner objective"
+    return spin2014::SpinIt2014MomentProblem::fromObjective(
+        objective,
+        request.inertiaWeight,
+        request.centerOfMassWeight
     );
 }
 
@@ -142,6 +134,8 @@ void validateAdaptiveVoxelSpinRequest(const AdaptiveVoxelSpinRequest& request)
         request.laplacianWeight < 0.0 ||
         !std::isfinite(request.centerOfMassWeight) ||
         request.centerOfMassWeight < 0.0 ||
+        !std::isfinite(request.inertiaWeight) ||
+        request.inertiaWeight < 0.0 ||
         !std::isfinite(request.boundaryDensity) ||
         request.boundaryDensity <= 0.0 ||
         !std::isfinite(request.interiorDensity) ||
@@ -168,9 +162,13 @@ std::string computeAdaptiveVoxelSpinRequestHash(
 )
 {
     validateAdaptiveVoxelSpinRequest(request);
-    std::string bytes("spin-it-2014-adaptive-request-v1");
+    std::string bytes("spin-it-2014-adaptive-request-v2");
     bytes += request.domain->artifactId();
     appendInt(bytes, static_cast<int>(request.mode));
+    appendInt(bytes, request.objective.has_value() ? 1 : 0);
+    appendInt(bytes, static_cast<int>(request.objective.value_or(
+        defaultSpin2014Objective(request.mode)
+    )));
     appendInt(bytes, request.initialLevel);
     appendInt(bytes, request.maximumLevel);
     appendInt(bytes, request.maximumAdaptivePasses);
@@ -180,6 +178,7 @@ std::string computeAdaptiveVoxelSpinRequestHash(
     appendDouble(bytes, request.fractionalEpsilon);
     appendDouble(bytes, request.laplacianWeight);
     appendDouble(bytes, request.centerOfMassWeight);
+    appendDouble(bytes, request.inertiaWeight);
     appendDouble(bytes, request.boundaryDensity);
     appendDouble(bytes, request.interiorDensity);
     appendDouble(bytes, request.binaryConstraintTolerance);

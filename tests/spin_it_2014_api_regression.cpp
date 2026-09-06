@@ -44,6 +44,16 @@ int main()
         artifact.diagnosticsJson().find("spin-it-2014-artifact-v1") ==
             std::string::npos ||
         artifact.diagnosticsJson().find("\"geometry_sealed\": true") ==
+            std::string::npos ||
+        artifact.diagnosticsJson().find("\"objective\": \"STATIC_LOWERING\"") ==
+            std::string::npos ||
+        artifact.diagnosticsJson().find(
+            "\"objective_resolution\": \"MODE_DEFAULT_LEGACY\""
+        ) == std::string::npos ||
+        artifact.diagnosticsJson().find(
+            "\"objective_semantics\": \"ANGLE_ELIMINATED_TRANSVERSE_INERTIA\""
+        ) == std::string::npos ||
+        artifact.diagnosticsJson().find("\"original_phi_trajectory\": false") ==
             std::string::npos
     )
     {

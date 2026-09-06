@@ -14,7 +14,27 @@ import numpy as np
 
 SPIN_2014_ARTIFACT_SCHEMA = "spin-it-2014-artifact-v1"
 SPIN_2014_MODES = frozenset({"STATIC_BALANCE", "YO_YO", "SPINNING_TOP"})
+SPIN_2014_OBJECTIVES = frozenset({
+    "YOYO",
+    "TOP_INERTIA_ONLY",
+    "TOP_LOWERING_ONLY",
+    "TOP_MASS_AND_LOWERING",
+    "STATIC_LOWERING",
+})
 SPIN_2014_EVIDENCE = frozenset({"PAPER_FORMULA_REPRODUCTION", "RECONSTRUCTED_ASSET"})
+
+_SPIN_2014_OBJECTIVE_MODES = {
+    "YOYO": "YO_YO",
+    "TOP_INERTIA_ONLY": "SPINNING_TOP",
+    "TOP_LOWERING_ONLY": "SPINNING_TOP",
+    "TOP_MASS_AND_LOWERING": "SPINNING_TOP",
+    "STATIC_LOWERING": "STATIC_BALANCE",
+}
+_SPIN_2014_MODE_DEFAULT_OBJECTIVES = {
+    "STATIC_BALANCE": "STATIC_LOWERING",
+    "YO_YO": "YOYO",
+    "SPINNING_TOP": "TOP_MASS_AND_LOWERING",
+}
 
 
 def _native_module() -> Any:
@@ -52,6 +72,8 @@ class SpinIt2014Request:
     binary_constraint_tolerance: float = 1e-6
     slqp_maximum_iterations: int = 120
     slqp_projected_gradient_tolerance: float = 1e-7
+    objective: str | None = None
+    inertia_weight: float = 1.0
 
     def __post_init__(self) -> None:
         if len(self.dimensions) != 3 or any(
@@ -69,6 +91,11 @@ class SpinIt2014Request:
             raise ValueError("carveable_mask must be a subset of material_mask")
         if self.mode not in SPIN_2014_MODES:
             raise ValueError("mode is not part of the Spin-It 2014 objective set")
+        if self.objective is not None:
+            if self.objective not in SPIN_2014_OBJECTIVES:
+                raise ValueError("objective is not part of the Spin-It 2014 objective set")
+            if _SPIN_2014_OBJECTIVE_MODES[self.objective] != self.mode:
+                raise ValueError("Spin-It 2014 objective does not match mode")
         if self.evidence not in SPIN_2014_EVIDENCE:
             raise ValueError("unsupported Spin-It 2014 evidence class")
         if len(self.minimum) != 3 or len(self.maximum) != 3:
@@ -100,6 +127,10 @@ class SpinIt2014Request:
             or self.slqp_projected_gradient_tolerance <= 0.0
         ):
             raise ValueError("slqp_projected_gradient_tolerance must be positive and finite")
+        for name in ("inertia_weight", "center_of_mass_weight"):
+            value = float(getattr(self, name))
+            if not math.isfinite(value) or value < 0.0:
+                raise ValueError(f"{name} must be finite and nonnegative")
 
 
 class SpinIt2014Result:
@@ -194,6 +225,12 @@ def solve_spin_it_2014(request: SpinIt2014Request) -> SpinIt2014Result:
         request.binary_constraint_tolerance,
         request.slqp_maximum_iterations,
         request.slqp_projected_gradient_tolerance,
+        (
+            getattr(native.Spin2014Objective, request.objective)
+            if request.objective is not None
+            else None
+        ),
+        request.inertia_weight,
     )
     return SpinIt2014Result(artifact)
 
@@ -223,4 +260,9 @@ def solve_spin_it_2014_cage(
         list(request.carveable_mask),
         request.center_of_mass_weight,
         maximum_handle_count,
+        getattr(
+            native.Spin2014Objective,
+            request.objective or _SPIN_2014_MODE_DEFAULT_OBJECTIVES[request.mode],
+        ),
+        request.inertia_weight,
     ))

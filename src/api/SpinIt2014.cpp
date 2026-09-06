@@ -117,7 +117,20 @@ std::string diagnostics(
            << "  \"status\": \""
            << spin2014::adaptiveSpinStatusToken(result.status) << "\",\n"
            << "  \"mode\": \"" << spin::spinModeToken(request.mode)
-           << "\",\n  \"geometry_sealed\": "
+           << "\",\n  \"objective\": \""
+           << spin2014::spin2014ObjectiveToken(request.objective.value_or(
+                  spin2014::defaultSpin2014Objective(request.mode)
+              ))
+           << "\",\n  \"objective_resolution\": \""
+           << (request.objective.has_value() ? "EXPLICIT" : "MODE_DEFAULT_LEGACY")
+           << "\",\n  \"objective_semantics\": "
+              "\"ANGLE_ELIMINATED_TRANSVERSE_INERTIA\",\n"
+           << "  \"original_phi_trajectory\": false,\n"
+           << "  \"inertia_weight\": " << std::setprecision(17)
+           << request.inertiaWeight
+           << ",\n  \"center_of_mass_weight\": "
+           << request.centerOfMassWeight
+           << ",\n  \"geometry_sealed\": "
            << (sealed ? "true" : "false") << ",\n"
            << "  \"input_hash\": \"" << result.inputHash << "\",\n"
            << "  \"trace_hash\": \"" << result.adaptiveTraceHash << "\",\n"

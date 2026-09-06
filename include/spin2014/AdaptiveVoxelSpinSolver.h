@@ -3,6 +3,7 @@
 #include "physics/RawMassMoments10.h"
 #include "spin/SpinDesignRequest.h"
 #include "spin2014/SlqpLbfgsSolver.h"
+#include "spin2014/SpinIt2014MomentProblem.h"
 #include "voxel/MaterialOccupancy.h"
 #include "voxel/VoxelDomain.h"
 
@@ -10,6 +11,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,6 +38,7 @@ struct AdaptiveVoxelSpinRequest
 {
     std::shared_ptr<const voxel::VoxelDomain> domain;
     spin::SpinMode mode = spin::SpinMode::SpinningTop;
+    std::optional<Spin2014Objective> objective;
     int initialLevel = 3;
     int maximumLevel = 7;
     int maximumAdaptivePasses = 8;
@@ -45,6 +48,7 @@ struct AdaptiveVoxelSpinRequest
     double fractionalEpsilon = 0.05;
     double laplacianWeight = 1e-3;
     double centerOfMassWeight = 1.0;
+    double inertiaWeight = 1.0;
     double boundaryDensity = 1.0;
     double interiorDensity = 1.0;
     double binaryConstraintTolerance = 1e-6;
