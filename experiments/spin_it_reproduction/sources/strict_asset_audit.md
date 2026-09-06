@@ -89,3 +89,39 @@ understood up to equality almost everywhere, as appropriate for integral data.
 
 The next external coordination step, if authorized, is the
 [author-material request draft](author_material_request.md).
+
+## Public acquisition follow-up (2026-09-06)
+
+The user confirmed that no separate original assets were available and requested
+public acquisition. This authorizes public downloads, not contacting authors,
+buying models or accessing private accounts. No such external action was taken.
+
+Rechecked the [2014 project page](https://igl.ethz.ch/projects/spin-it/),
+[2024 project page](https://visualcomputing.ist.ac.at/publications/2024/SIF/),
+[ISTA record](https://research-explorer.ista.ac.at/record/17203), public author
+homepages/repository lists, and title/model/CAD searches. No complete original
+experiment model/pose/domain/CAD package was obtained or authenticated. This
+does not establish that none exists publicly or that the authors cannot share it.
+
+The 2014 acknowledgments explicitly credit the skinning demo for Armadillo
+poses. Following the [official FAST page](https://igl.ethz.ch/projects/fast/)
+recovered the following source leads in ignored `build/strict-author-assets/`:
+
+| Item | Download/source identity | Result |
+|---|---|---|
+| FAST repository | `https://github.com/alecjacobson/FAST.git`, commit `74852c04200be5ff2423f7381f8d1ae6718c185c` | Shallow clone without submodules; only README, LICENSE and Armadillo example files materialized. No author code executed. |
+| Armadillo mesh | `FAST-74852c0/examples/armadillo-disconnected-ears/mesh.mesh`, SHA-256 `abcc4667c3237d26299b9a2c7907459ee62d10444194b66faa00229144c20f1a` | Source mesh contains 47,162 vertices; not an authenticated Spin-It final pose. |
+| Armadillo skinning weights | Same directory, `weights.dmat`, SHA-256 `3ab0ce560d8ea247443ef75b733a0f2de81454e8e20c58a16d635b9141f1351f` | Weights plus multiple `.bf` pose/bone files and `.rbr` settings recovered. No mapping to paper hand/shell cases established. |
+| Selected-file checksum list | `FAST-armadillo-SHA256SUMS`, SHA-256 `236bff467d5539cd2bb70990430b630fd775821264efa3a4f196fe547bddcb04` | Paths relative to `FAST-74852c0`; generated from materialized non-hidden example files. The pinned Git tree additionally identifies all original blobs, including `.DS_Store`. |
+| Historical official demo archive | `https://igl.ethz.ch/projects/fast/skinning.zip`, local `fast-skinning-2013.zip`, 61,952,724 bytes, SHA-256 `a2dec891e7755a0496748db2939040420a24098b805ab600997082a9e5d35d71` | ZIP CRC test passed, 505 entries; 252 have parent-traversal prefixes. **Not extracted or executed.** Listing contains no Armadillo/Elephant-named assets. Local filename is a label, not verified publication-date evidence. |
+
+These files are `SOURCE_MODEL_ONLY` leads relative to Spin-It; **no original
+case is upgraded or admitted**. The repository's top-level LICENSE identifies
+MPL 2.0 for covered software; this is not an independently established blanket
+redistribution license for every third-party model. Downloads stay separate
+from tracked implementation and are not re-licensed or published here.
+
+Missing information still includes the exact final hand/shell surfaces or pose
+mapping, target frame, design domain and experiment parameters. Faster's original
+Onshape document/version and CAD/domain inputs remain missing. The existing
+author-material request is still **NOT SENT**.
