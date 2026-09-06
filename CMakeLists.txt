@@ -416,6 +416,11 @@ if(BUILD_TESTING)
         set_tests_properties(exact-geometry-dependency-contract PROPERTIES
             LABELS "verification;exact-geometry;cmake" TIMEOUT 120)
         if(MAKE_IT_STAND_BUILD_PYTHON)
+            add_test(NAME sealed-spin-artifact-python
+                COMMAND "${Python3_EXECUTABLE}" -m unittest test_sealed_spin_artifact test_spin_bundle -v)
+            set_tests_properties(sealed-spin-artifact-python PROPERTIES
+                LABELS "verification;exact-geometry;python;native" TIMEOUT 300
+                ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}")
             add_test(NAME exact-partition-clearance-python
                 COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_partition_clearance -v)
             set_tests_properties(exact-partition-clearance-python PROPERTIES
