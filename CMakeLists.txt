@@ -1205,6 +1205,21 @@ if(BUILD_TESTING)
                     "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
         )
 
+        add_test(
+            NAME run-evidence-v2-contract
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_run_evidence_v2
+                -v
+        )
+        set_tests_properties(
+            run-evidence-v2-contract
+            PROPERTIES
+                LABELS "paper;python;spin-it;verification"
+                TIMEOUT 30
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+        )
+
         if(MAKE_IT_STAND_BUILD_PYTHON)
             add_test(
                 NAME paper-native-pipeline-contract
