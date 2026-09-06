@@ -28,14 +28,14 @@ foreach(mode IN ITEMS disabled exact-only bad-pin)
         endif()
         file(READ "${root}/${mode}/build.ninja" graph)
         if(mode STREQUAL "disabled")
-            if(graph MATCHES "igl_cgal|external/cgal|libgmp|libmpfr|ExactBoundaryAudit.cpp")
+            if(graph MATCHES "igl_cgal|external/cgal|libgmp|libmpfr|ExactBoundaryAudit.cpp|ExactMaterialRegion.cpp")
                 message(FATAL_ERROR "disabled exact feature acquired geometry dependencies")
             endif()
         else()
             # A static-library-only graph has no final link step; CGAL header
             # paths establish its backend here. Runtime linkage is tested in the
             # separate 2014=ON/Faster=OFF/Python=ON/exact=ON build.
-            if(NOT graph MATCHES "ExactBoundaryAudit.cpp" OR NOT graph MATCHES "external/cgal")
+            if(NOT graph MATCHES "ExactBoundaryAudit.cpp" OR NOT graph MATCHES "ExactMaterialRegion.cpp" OR NOT graph MATCHES "external/cgal")
                 message(FATAL_ERROR "exact-only feature did not acquire the common exact backend")
             endif()
             if(graph MATCHES "src/spin/Quadric|src/spin2014/")

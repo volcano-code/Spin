@@ -242,8 +242,8 @@ if(MAKE_IT_STAND_BUILD_REACHABILITY)
 endif()
 
 if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
-    list(APPEND MAKE_IT_STAND_CORE_SOURCES src/verification/ExactBoundaryAudit.cpp)
-    list(APPEND MAKE_IT_STAND_CORE_HEADERS include/verification/ExactBoundaryAudit.h)
+    list(APPEND MAKE_IT_STAND_CORE_SOURCES src/verification/ExactBoundaryAudit.cpp src/verification/ExactMaterialRegion.cpp)
+    list(APPEND MAKE_IT_STAND_CORE_HEADERS include/verification/ExactBoundaryAudit.h include/verification/ExactMaterialRegion.h)
 endif()
 
 add_library(
@@ -399,6 +399,10 @@ include(CTest)
 
 if(BUILD_TESTING)
     if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+        add_executable(exact-material-region-regression tests/exact_material_region_regression.cpp)
+        target_link_libraries(exact-material-region-regression PRIVATE make_it_stand::core)
+        add_test(NAME exact-material-region-native COMMAND exact-material-region-regression)
+        set_tests_properties(exact-material-region-native PROPERTIES LABELS "verification;exact-geometry;native" TIMEOUT 120)
         add_executable(exact-boundary-audit-regression tests/exact_boundary_audit_regression.cpp)
         target_link_libraries(exact-boundary-audit-regression PRIVATE make_it_stand::core)
         add_test(NAME exact-boundary-audit-native COMMAND exact-boundary-audit-regression)
@@ -408,6 +412,11 @@ if(BUILD_TESTING)
         set_tests_properties(exact-geometry-dependency-contract PROPERTIES
             LABELS "verification;exact-geometry;cmake" TIMEOUT 120)
         if(MAKE_IT_STAND_BUILD_PYTHON)
+            add_test(NAME exact-material-region-python
+                COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_material_region -v)
+            set_tests_properties(exact-material-region-python PROPERTIES
+                LABELS "verification;exact-geometry;python;native" TIMEOUT 180
+                ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}")
             add_test(NAME exact-boundary-audit-python
                 COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_boundary_audit -v)
             set_tests_properties(exact-boundary-audit-python PROPERTIES

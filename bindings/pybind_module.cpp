@@ -1,6 +1,7 @@
 #include "api/BalanceModel.h"
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
 #include "verification/ExactBoundaryAudit.h"
+#include "verification/ExactMaterialRegion.h"
 #endif
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014
 #include "api/SpinIt2014.h"
@@ -361,6 +362,43 @@ std::vector<spin::QuadricCoefficients10> quadricsFromRows(
 PYBIND11_MODULE(_make_it_stand, module)
 {
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+    py::class_<verification::ExactMaterialRegion>(module, "ExactMaterialRegion",
+        "Immutable exact represented material set; no public constructor or physical/seal authority.")
+        .def_property_readonly("facts", [](const verification::ExactMaterialRegion& region) {
+            const auto& r=region.facts();
+            py::dict out;
+            out["algorithm"]=r.algorithm; out["backend"]=r.backend; out["semantics"]=r.semantics;
+            out["input_digest"]=r.inputDigest; out["region_digest"]=r.regionDigest;
+            out["completed"]=r.completed; out["valid"]=r.valid; out["error"]=r.error;
+            out["explicit_empty"]=r.explicitEmpty;
+            out["parents"]=r.parents; out["depths"]=r.depths; out["original_signs"]=r.originalSigns;
+            out["checker_reversed_components"]=r.checkerReversedComponents;
+            out["material_components"]=r.materialComponents; out["bounded_void_components"]=r.boundedVoidComponents;
+            out["scope"]="exact-represented-polyhedral-set-only";
+            return out;
+        });
+    module.def("make_exact_material_region", [](const py::object& v,const py::object& f) {
+        return verification::makeExactMaterialRegion(exactVerticesFromPython(v),facesFromPython(f));
+    },py::arg("vertices"),py::arg("faces"),
+       "Authenticate an oriented finite regular closed region from exact binary64 indexed triangles. "
+       "Negative checker copies only; input geometry is preserved. Empty mesh is malformed.");
+    module.def("empty_exact_material_region", &verification::emptyExactMaterialRegion,
+               "Explicit empty algebra operand, never a valid physical outer artifact.");
+    module.def("relate_exact_material_regions", [](const verification::ExactMaterialRegion& a,
+                                                  const verification::ExactMaterialRegion& b) {
+        const auto r=verification::relateExactMaterialRegions(a,b);
+        py::dict out;
+        out["algorithm"]=r.algorithm; out["semantics"]=r.semantics;
+        out["a_digest"]=r.aDigest; out["b_digest"]=r.bDigest; out["relation_digest"]=r.relationDigest;
+        out["a_explicit_empty"]=r.aExplicitEmpty; out["b_explicit_empty"]=r.bExplicitEmpty;
+        out["completed"]=r.completed; out["error"]=r.error;
+        out["intersection_nonempty"]=r.intersectionNonempty; out["positive_volume_overlap"]=r.positiveVolumeOverlap;
+        out["a_subset_b"]=r.aSubsetB; out["b_subset_a"]=r.bSubsetA; out["equal"]=r.equal;
+        out["scope"]="exact-represented-polyhedral-set-only";
+        return out;
+    },py::arg("a"),py::arg("b"),
+       "Exact inclusive contact/containment and positive-volume overlap. Invalid operands throw; "
+       "failed Booleans return unknown facts. Touching does not imply volume overlap or invalid density regions.");
     module.def("audit_exact_triangle_boundary",
         [](const py::object& vertices, const py::object& faces, const std::string& orientation) {
             using Mode=verification::ExactBoundaryOrientation;
