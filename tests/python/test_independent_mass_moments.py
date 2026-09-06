@@ -207,6 +207,59 @@ class IndependentMassMomentOracleTests(unittest.TestCase):
             ((1.0, 0.0, 0.0), (0.0, 19.0 / 3.0, 0.0), (0.0, 0.0, 19.0 / 3.0)),
         )
 
+    def test_extreme_density_aggregate_is_permutation_and_translation_stable(self) -> None:
+        epsilon = 1.0e-30
+        distance = 1.0e8
+        translated = transformed_mesh(
+            TETRAHEDRON,
+            lambda vertex: (vertex[0] + distance, vertex[1], vertex[2]),
+        )
+        tiny = DensityRegion(TETRAHEDRON, epsilon)
+        dominant = DensityRegion(translated, 1.0)
+
+        total_mass = 1.0 + epsilon
+        parallel_axis = epsilon * distance**2 / total_mass
+        expected = (
+            (
+                (39.0 / 80.0) * total_mass,
+                (1.0 / 40.0) * total_mass,
+                (3.0 / 80.0) * total_mass,
+            ),
+            (
+                (1.0 / 40.0) * total_mass,
+                (3.0 / 8.0) * total_mass + parallel_axis,
+                (3.0 / 40.0) * total_mass,
+            ),
+            (
+                (3.0 / 80.0) * total_mass,
+                (3.0 / 40.0) * total_mass,
+                (3.0 / 16.0) * total_mass + parallel_axis,
+            ),
+        )
+        for name, regions in (
+            ("tiny-first", (tiny, dominant)),
+            ("dominant-first", (dominant, tiny)),
+        ):
+            with self.subTest(order=name):
+                properties = aggregate_mass_properties(regions)
+                self.assertMatrixAlmostEqual(
+                    properties.central_inertia,
+                    expected,
+                    places=10,
+                )
+                self.assertAlmostEqual(
+                    properties.central_inertia[1][1]
+                    - (3.0 / 8.0) * total_mass,
+                    parallel_axis,
+                    places=15,
+                )
+                self.assertAlmostEqual(
+                    properties.central_inertia[2][2]
+                    - (3.0 / 16.0) * total_mass,
+                    parallel_axis,
+                    places=15,
+                )
+
     def test_scale_and_density_covariance_is_stable_across_units(self) -> None:
         density = 2.5
         for scale in (1.0e-6, 1.0e6):

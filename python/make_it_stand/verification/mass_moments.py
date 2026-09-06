@@ -72,6 +72,14 @@ class _PreparedMesh:
     scale: float
 
 
+@dataclass(frozen=True)
+class _PreparedRegion:
+    mesh: _PreparedMesh
+    mass: float
+    center_local: Vector3
+    centered_second: Matrix3
+
+
 def _cross(left: Vector3, right: Vector3) -> Vector3:
     return (
         left[1] * right[2] - left[2] * right[1],
@@ -270,24 +278,15 @@ def integrate_geometric_moments(mesh: TriangleMesh) -> GeometricMoments:
     return GeometricMoments(local_volume, first, second)
 
 
-def _mass_properties_from_anchor(
+def _mass_properties_from_centered(
     mass: float,
-    first_at_anchor: Vector3,
-    second_at_anchor: Matrix3,
+    center_at_anchor: Vector3,
+    centered_second: Matrix3,
     anchor: Vector3,
 ) -> MassProperties:
     if not math.isfinite(mass) or mass <= 0.0:
         raise GeometryValidationError("total material mass must be finite and positive")
-    center_at_anchor = tuple(value / mass for value in first_at_anchor)
     center = tuple(anchor[axis] + center_at_anchor[axis] for axis in range(3))
-    centered_second = tuple(
-        tuple(
-            second_at_anchor[row][column]
-            - mass * center_at_anchor[row] * center_at_anchor[column]
-            for column in range(3)
-        )
-        for row in range(3)
-    )
     trace = sum(centered_second[axis][axis] for axis in range(3))
     inertia = tuple(
         tuple(
@@ -296,8 +295,15 @@ def _mass_properties_from_anchor(
         )
         for row in range(3)
     )
-    first = tuple(
-        first_at_anchor[axis] + mass * anchor[axis] for axis in range(3)
+    first_at_anchor = tuple(mass * value for value in center_at_anchor)
+    first = tuple(first_at_anchor[axis] + mass * anchor[axis] for axis in range(3))
+    second_at_anchor = tuple(
+        tuple(
+            centered_second[row][column]
+            + mass * center_at_anchor[row] * center_at_anchor[column]
+            for column in range(3)
+        )
+        for row in range(3)
     )
     second = tuple(
         tuple(
@@ -326,7 +332,7 @@ def aggregate_mass_properties(regions: Iterable[DensityRegion]) -> MassPropertie
     region_list = tuple(regions)
     if not region_list:
         raise GeometryValidationError("at least one density region is required")
-    prepared_regions: list[tuple[float, _PreparedMesh, float, Vector3, Matrix3]] = []
+    prepared_regions: list[_PreparedRegion] = []
     for region_index, region in enumerate(region_list):
         if not isinstance(region, DensityRegion):
             raise TypeError(f"region {region_index} must be a DensityRegion")
@@ -338,39 +344,68 @@ def aggregate_mass_properties(regions: Iterable[DensityRegion]) -> MassPropertie
             raise GeometryValidationError(f"region {region_index} density must be finite and positive")
         prepared = _prepare(region.mesh)
         volume, local_first, local_second = _scaled_local_moments(prepared)
-        prepared_regions.append((density, prepared, volume, local_first, local_second))
-
-    anchor = prepared_regions[0][1].reference
-    masses: list[float] = []
-    first_terms = [[], [], []]
-    second_terms = [[[] for _ in range(3)] for _ in range(3)]
-    for density, prepared, volume, local_first, local_second in prepared_regions:
-        offset = tuple(prepared.reference[axis] - anchor[axis] for axis in range(3))
-        first_at_anchor = tuple(
-            local_first[axis] + volume * offset[axis] for axis in range(3)
-        )
-        second_at_anchor = tuple(
+        mass = density * volume
+        if not math.isfinite(mass) or mass <= 0.0:
+            raise GeometryValidationError(
+                f"region {region_index} material mass must be finite and positive"
+            )
+        center_local = tuple(value / volume for value in local_first)
+        centered_second = tuple(
             tuple(
-                local_second[row][column]
-                + offset[row] * local_first[column]
-                + local_first[row] * offset[column]
-                + volume * offset[row] * offset[column]
+                density
+                * (
+                    local_second[row][column]
+                    - volume * center_local[row] * center_local[column]
+                )
                 for column in range(3)
             )
             for row in range(3)
         )
-        masses.append(density * volume)
-        for row in range(3):
-            first_terms[row].append(density * first_at_anchor[row])
-            for column in range(3):
-                second_terms[row][column].append(density * second_at_anchor[row][column])
-    return _mass_properties_from_anchor(
-        math.fsum(masses),
-        tuple(math.fsum(terms) for terms in first_terms),
+        prepared_regions.append(
+            _PreparedRegion(prepared, mass, center_local, centered_second)
+        )
+
+    dominant = max(prepared_regions, key=lambda prepared_region: prepared_region.mass)
+    anchor = dominant.mesh.reference
+    total_mass = math.fsum(region.mass for region in prepared_regions)
+    centers_at_anchor = tuple(
         tuple(
-            tuple(math.fsum(second_terms[row][column]) for column in range(3))
-            for row in range(3)
-        ),
+            region.mesh.reference[axis]
+            - anchor[axis]
+            + region.center_local[axis]
+            for axis in range(3)
+        )
+        for region in prepared_regions
+    )
+    center_at_anchor = tuple(
+        math.fsum(
+            region.mass * center[axis]
+            for region, center in zip(prepared_regions, centers_at_anchor)
+        )
+        / total_mass
+        for axis in range(3)
+    )
+    centered_terms = [[[] for _ in range(3)] for _ in range(3)]
+    for region, region_center in zip(prepared_regions, centers_at_anchor):
+        delta = tuple(
+            region_center[axis] - center_at_anchor[axis] for axis in range(3)
+        )
+        for row in range(3):
+            for column in range(3):
+                centered_terms[row][column].append(
+                    region.centered_second[row][column]
+                    + region.mass * delta[row] * delta[column]
+                )
+    centered_second = tuple(
+        tuple(
+            math.fsum(centered_terms[row][column]) for column in range(3)
+        )
+        for row in range(3)
+    )
+    return _mass_properties_from_centered(
+        total_mass,
+        center_at_anchor,
+        centered_second,
         anchor,
     )
 
