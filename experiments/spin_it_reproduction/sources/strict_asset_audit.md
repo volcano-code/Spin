@@ -24,6 +24,20 @@ This is not an exhaustive inspection of differently named archives. Additional
 model-source/CAD repository investigation remains open. No email has been sent,
 no model purchased, and no non-public account accessed.
 
+Follow-up inspection of the Faster PDF's embedded URL annotations (`pdfinfo -url`)
+found ORCID and bibliographic links, but no Onshape document or input-CAD download
+link. Its text describes modeling in Onshape without identifying a document
+version. This finding is limited to that authenticated PDF; it is not a claim
+that no public CAD document exists elsewhere.
+
+The 2014 acknowledgments identify useful leads, not ready experimental inputs:
+Carlo H. Sequin's Sculpture Generator 1 for Woven Ring; De Espona / Robert Sumner
+for Elephant, with a posed model credited to Alec Jacobson; TurboSquid for T-Rex;
+Stanford for Armadillo, with poses from the cited skinning demo; and Martin
+Newell's Utah Teapot. No generator settings, licensed purchase, or final posed
+surface was recovered merely from these credits. They cannot upgrade the rows
+below to `AUTHOR_ORIGINAL`.
+
 ## Per-case readiness gaps
 
 `MISSING` means not obtained and authenticated for this experiment, not
