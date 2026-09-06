@@ -1,0 +1,38 @@
+{
+  "schema": "published-analytic-experiment-spec-v1",
+  "paper": "Spin-It Faster, ACM TOG 43(4), article 78, 2024",
+  "source_url": "https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf",
+  "source_sha256": "e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc",
+  "paper_locator": "Section 6.6, printed pages 78:12-78:13",
+  "asset_class": "PUBLISHED_EXACT_SPECIFICATION",
+  "parameter_evidence": "PUBLISHED",
+  "implementation_status": "NOT_VERIFIED",
+  "formal_run_status": "NOT_RUN",
+  "units": "dimensionless",
+  "variable": "measurable chi: Omega -> [0,1]",
+  "volume_definition": "v(chi) = integral_Omega chi(x) dx",
+  "objective": "(v(chi) - 1/2)^2",
+  "constraints": [],
+  "cases": [
+    {
+      "case_id": "faster.section6_6.nonunique",
+      "domain": {"dimension": 1, "lower": 0, "upper": 1, "endpoints": "open"},
+      "expected_outcome": "NONUNIQUE_ZERO_SENSITIVITY",
+      "expected_volume": "1/2",
+      "expected_objective": 0,
+      "expected_p": 0,
+      "interpretation": "Uncountably many optima, including binary and nonbinary distributions. Ordinary nondegenerate Newton convergence is not the acceptance criterion."
+    },
+    {
+      "case_id": "faster.section6_6.full_boundary",
+      "domain": {"dimension": 1, "lower": 0, "upper": "1/2", "endpoints": "open"},
+      "expected_outcome": "FULL_DOMAIN_ZERO_SENSITIVITY",
+      "expected_volume": "1/2",
+      "expected_objective": 0,
+      "expected_p": 0,
+      "interpretation": "The optimum is chi=1 almost everywhere. It is a boundary solution, not an infeasible problem and not a nondegenerate quadric interface."
+    }
+  ],
+  "independent_check_to_implement": "Verify objective nonnegativity, exact witness integrals, zero derivative at v=1/2, and uniqueness/nonuniqueness properties without calling the ordinary sphere Newton solver.",
+  "caveat": "This extracted specification does not grant a requirement pass or reproduce any three-dimensional CAD case."
+}
