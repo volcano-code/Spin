@@ -11,6 +11,38 @@ from .spin_common import (SCOPE, TOLERANCE, byte_digest, canonical, digest, keys
                           native, parse, require, scalar, text_label, vector)
 
 
+def _mesh_input_array(value, *, indices=False):
+    """Freeze sequence scalars before common dtype inference can erase types.
+
+    Existing arrays retain their supplied dtype for native lossless validation.
+    Sequences need scalar-level checks first: np.array on a mixed sequence can
+    erase bools, round integers, or promote signed/unsigned indices to floats.
+    The staging arrays below contain only values already checked losslessly.
+    """
+    if isinstance(value, np.ndarray):
+        return np.array(value, copy=True, order='C')
+    label = 'triangle indices' if indices else 'vertices'
+    require(isinstance(value, (list, tuple)), label + ': expected array, list or tuple')
+    checked = []
+    for row in tuple(value):
+        require(isinstance(row, (list, tuple, np.ndarray)), label + ': expected rows of three scalars')
+        if isinstance(row, np.ndarray):
+            kinds = ('i', 'u') if indices else ('i', 'u', 'f')
+            require(row.ndim == 1 and row.dtype.kind in kinds and row.dtype.itemsize <= 8,
+                    label + ': unsupported row array shape or dtype')
+        values = tuple(row)
+        require(len(values) == 3, label + ': expected rows of three scalars')
+        if indices:
+            require(all(isinstance(x, (int, np.integer)) and not isinstance(x, (bool, np.bool_))
+                        for x in values), label + ': expected integer scalars; bool is invalid')
+            converted = tuple(int(x) for x in values)
+            require(all(-(2**31) <= x < 2**31 for x in converted), label + ': exceeds signed32 range')
+        else:
+            converted = tuple(scalar(x, 'vertex coordinate') for x in values)
+        checked.append(converted)
+    return np.array(checked, dtype=np.int64 if indices else np.float64, order='C')
+
+
 @dataclass(frozen=True, init=False)
 class MeshSnapshot:
     """Canonical little-endian binary64/int32 bytes, without repair or reordering.
@@ -33,9 +65,10 @@ class MeshSnapshot:
         else:
             require(isinstance(mesh, (tuple, list)) and len(mesh) == 2,
                     'mesh must be a (vertices, triangles) pair or explicit None')
-            # Copies retain the original dtype; do not let the two checkers observe
-            # different caller mutations or conceal lossy inputs with astype first.
-            v, f = (np.array(a, copy=True, order='C') for a in mesh)
+            # Freeze and validate supplied scalar types before sequence inference;
+            # then validate both actual staging arrays with the native checker.
+            v = _mesh_input_array(mesh[0])
+            f = _mesh_input_array(mesh[1], indices=True)
             region = native().make_exact_material_region(v, f)
             require(region.facts['completed'] and region.facts['valid'],
                     'invalid material boundary: ' + region.facts['error'])

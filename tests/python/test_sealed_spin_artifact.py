@@ -280,4 +280,103 @@ class SpinSealTests(unittest.TestCase):
                     final_material=r, newly_carved=c, solver_claim=self.claim(p,[(r,2.)]))
 
 
+class SpinSequenceIngestionTests(unittest.TestCase):
+    """Inspect supplied scalar types before NumPy can erase their provenance."""
+    def setUp(self):
+        from make_it_stand.verification.spin_problem import MeshSnapshot
+        self.snapshot = MeshSnapshot
+
+    def assert_snapshot_bytes(self, mesh, expected):
+        try:
+            saved = self.snapshot(mesh).arrays()
+        except (TypeError, ValueError) as exc:
+            self.fail('representable mixed mesh was rejected: ' + str(exc))
+        self.assertEqual(saved[0].tobytes(), np.asarray(expected[0], dtype='<f8').tobytes())
+        self.assertEqual(saved[1].tobytes(), np.asarray(expected[1], dtype='<i4').tobytes())
+
+    def test_mixed_list_tuple_python_numpy_bools_rejected(self):
+        for boolean in (False, True, np.bool_(False), np.bool_(True)):
+            for sequence in (list, tuple):
+                for field in (0, 1):
+                    v, f = (a.tolist() for a in box())
+                    if field == 0:
+                        v[1 if boolean else 0][0] = boolean
+                    else:
+                        f[0][2 if boolean else 0] = boolean
+                    mesh = sequence((sequence(sequence(row) for row in v),
+                                     sequence(sequence(row) for row in f)))
+                    with self.subTest(type=type(boolean).__name__, sequence=sequence.__name__, field=field), \
+                         self.assertRaises((ValueError, TypeError)):
+                        self.snapshot(mesh)
+
+    def test_lossy_mixed_python_numpy_integers_rejected(self):
+        for lower in (9007199254740993, np.int64(9007199254740993),
+                      np.uint64(9007199254740993), -9007199254740993):
+            for sequence in (list, tuple):
+                v, f = box()
+                upper = float(int(lower) + 4)
+                vertices = sequence(sequence((lower if x == 0 else upper, float(y), float(z)))
+                                    for x, y, z in v)
+                with self.subTest(lower=lower, sequence=sequence.__name__), \
+                     self.assertRaises((ValueError, TypeError)):
+                    self.snapshot((vertices, f.tolist()))
+
+    def test_representable_mixed_rows_and_integer_index_types_preserved(self):
+        v, f = box(); v[0, 0] = -0.
+        vertices = v.tolist()
+        vertices[0] = (np.float32(-0.), np.int64(0), 0.)
+        vertices[1] = [1, np.float16(0.), np.uint32(0)]
+        vertices[2] = np.array(vertices[2], dtype=np.float32)
+        faces = f.tolist()
+        faces[0] = (np.uint64(0), np.int64(2), 1)
+        faces[1] = np.array(faces[1], dtype=np.int16)
+        for sequence in (list, tuple):
+            self.assert_snapshot_bytes(sequence((sequence(vertices), sequence(faces))), (v, f))
+        self.assertIsInstance(vertices[0][0], np.float32)
+        self.assertTrue(np.signbit(vertices[0][0]))
+        self.assertIsInstance(faces[0][0], np.uint64)
+
+    def test_large_exactly_representable_integer_float_mixtures_preserved(self):
+        v, f = box((9007199254740994, 0, 0), (9007199254740998, 1, 1))
+        vertices = [(np.uint64(9007199254740994) if x == 9007199254740994 else float(x),
+                     np.float32(y), int(z)) for x, y, z in v]
+        self.assert_snapshot_bytes((vertices, f.tolist()), (v, f))
+
+    def test_unsupported_sequence_scalars_precision_and_index_bounds_rejected(self):
+        from decimal import Decimal
+        bad_vertices = [Decimal('0'), Q(0), '0', 0j, None, float('nan'), float('inf')]
+        if np.dtype(np.longdouble).itemsize > 8:
+            bad_vertices.append(np.longdouble(0))
+        for value in bad_vertices:
+            v, f = (a.tolist() for a in box()); v[0][0] = value
+            with self.subTest(value=value), self.assertRaises((ValueError, TypeError)):
+                self.snapshot((v, f))
+        for value in (0., np.float32(0), -1, 2**31, np.uint64(2**64-1), '0', None):
+            v, f = (a.tolist() for a in box()); f[0][0] = value
+            with self.subTest(index=value), self.assertRaises((ValueError, TypeError)):
+                self.snapshot((v, f))
+
+    def test_direct_arrays_and_noncontiguous_views_keep_native_validation(self):
+        v, f = box(); v[0, 0] = -0.
+        for dtype in (np.float16, np.float32, np.float64):
+            coordinates = np.asfortranarray(v.astype(dtype))
+            self.assert_snapshot_bytes((coordinates, f[:, ::-1][:, ::-1]), (v, f))
+        for dtype in (np.int16, np.int64, np.uint64):
+            coordinates = box()[0].astype(dtype)
+            self.assert_snapshot_bytes((coordinates, f.astype(dtype)), box())
+        for bad in ((v.astype(bool), f), (v.astype(object), f), (v, f.astype(float)),
+                    (v, f.astype(bool)), (v, f.astype(object))):
+            with self.subTest(), self.assertRaises((ValueError, TypeError)):
+                self.snapshot(bad)
+
+    def test_problem_and_final_output_reject_erased_boolean_type(self):
+        fixture = SpinSealTests(); fixture.setUp()
+        v, f = box(); coordinates = v.tolist(); coordinates[0][0] = False
+        with self.assertRaises((ValueError, TypeError)):
+            fixture.problem((coordinates, f.tolist()))
+        p = fixture.problem((v, f))
+        with self.assertRaises((ValueError, TypeError)):
+            fixture.seal(p, (coordinates, f.tolist()), (v, f), None, (v, f), None)
+
+
 if __name__ == '__main__': unittest.main()
