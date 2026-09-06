@@ -2790,8 +2790,8 @@ void BalanceModel::clearConstraints()
 
 
 #if MAKE_IT_STAND_HAS_REACHABILITY
-reachability::CarvingReachabilityResult
-BalanceModel::analyzeCarvingReachability(std::size_t standingIndex) const
+reachability::CarvingReachabilitySnapshot
+BalanceModel::carvingReachabilitySnapshot(std::size_t standingIndex) const
 {
     const Impl::Snapshot snapshot = impl_->captureSnapshot();
     if (standingIndex >= snapshot.standings.size())
@@ -2868,22 +2868,34 @@ BalanceModel::analyzeCarvingReachability(std::size_t standingIndex) const
     reachability::CarvingReachabilityInput input;
     input.fixedMass = fixedMass;
     input.fixedFirstMoment2D = fixedFirstMoment2D;
-    input.variableCells = variableCells;
+    input.variableCells = std::move(variableCells);
     input.safePolygon2D = target.safeRegion2D();
-    if (!target.requestedMarginAttainable() || target.safeRegion2D().rows() < 3)
+    reachability::CarvingReachabilitySnapshot result;
+    result.inputHash = reachability::computeInputHash(input);
+    result.preparationStatus =
+        !target.requestedMarginAttainable() || target.safeRegion2D().rows() < 3
+        ? "DEGENERATE_OR_UNATTAINABLE_SAFE_REGION" : "READY";
+    result.input = std::move(input);
+    return result;
+}
+
+reachability::CarvingReachabilityResult
+BalanceModel::analyzeCarvingReachability(std::size_t standingIndex) const
+{
+    const reachability::CarvingReachabilitySnapshot snapshot =
+        carvingReachabilitySnapshot(standingIndex);
+    if (snapshot.preparationStatus != "READY")
     {
         reachability::CarvingReachabilityResult result;
-        result.inputHash = reachability::computeInputHash(input);
+        result.inputHash = snapshot.inputHash;
         result.status = reachability::ReachabilityStatus::Indeterminate;
-        result.inputCellCount = static_cast<int>(variableCells.size());
+        result.inputCellCount = static_cast<int>(snapshot.input.variableCells.size());
         result.variableCellCount = result.inputCellCount;
-        result.fixedMass = fixedMass;
-        result.primalSolverStatus = "DEGENERATE_OR_UNATTAINABLE_SAFE_REGION";
+        result.fixedMass = snapshot.input.fixedMass;
+        result.primalSolverStatus = snapshot.preparationStatus;
         return result;
     }
-
-    input.variableCells = std::move(variableCells);
-    return reachability::CarvingReachabilityAnalyzer().analyze(input);
+    return reachability::CarvingReachabilityAnalyzer().analyze(snapshot.input);
 }
 #endif
 

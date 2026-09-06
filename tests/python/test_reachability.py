@@ -11,6 +11,12 @@ from make_it_stand.reachability import ReachabilityResult
 
 
 class ReachabilitySchemaTests(unittest.TestCase):
+    def test_legacy_classifications_do_not_claim_physical_infeasibility(self):
+        for status in reachability.STATUSES:
+            classification = reachability.classify_result(status, 'FAILED')
+            self.assertTrue(classification.startswith('LEGACY_FLOATING_RELAXATION'))
+            self.assertNotIn('PHYSICALLY_UNREACHABLE', classification)
+
     def test_native_result_has_strict_deterministic_schema(self) -> None:
         native = SimpleNamespace(
             input_hash="a" * 64,
@@ -37,6 +43,7 @@ class ReachabilitySchemaTests(unittest.TestCase):
         )
         result = ReachabilityResult.from_native(native)
         payload = result.to_dict()
+        self.assertEqual(payload.get('status_scope'), 'LEGACY_FLOATING_RELAXATION')
         self.assertEqual(
             payload["schema"],
             "make-it-stand-carving-reachability-v1",
@@ -128,10 +135,11 @@ class ReachabilitySchemaTests(unittest.TestCase):
             payload_a = reachability.run_manifest(manifest, first, evaluator)
             payload_b = reachability.run_manifest(manifest, second, evaluator)
             self.assertEqual(payload_a, payload_b)
+            self.assertEqual(payload_a.get('status_scope'), 'LEGACY_FLOATING_RELAXATION')
             self.assertEqual(payload_a["case_order"], ["alpha", "zeta"])
             self.assertEqual(
                 payload_a["cases"][1]["classification"],
-                "CURRENT_PLANE_CARVER_SOLVER_GAP",
+                "LEGACY_FLOATING_RELAXATION_CURRENT_PLANE_CARVER_SOLVER_GAP",
             )
             self.assertFalse(payload_a["release_gate_passed"])
             compact_certificate = payload_a["cases"][0]["result"]["certificate"]

@@ -333,10 +333,15 @@ public:
 
 #if MAKE_IT_STAND_HAS_REACHABILITY
     /**
-     * Classify static balance under a continuous relaxation of carving only.
-     * A reachable result is not a discrete or manufacturable cavity proof.
+     * Legacy floating relaxation: continuous retained fractions on fixed cells.
+     * This result is not an exact or manufacturable geometry proof.
      */
     reachability::CarvingReachabilityResult analyzeCarvingReachability(
+        std::size_t standingIndex = 0
+    ) const;
+
+    /** Copy the numeric input used by analyzeCarvingReachability. */
+    reachability::CarvingReachabilitySnapshot carvingReachabilitySnapshot(
         std::size_t standingIndex = 0
     ) const;
 #endif

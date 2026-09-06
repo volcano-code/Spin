@@ -1074,6 +1074,47 @@ PYBIND11_MODULE(_make_it_stand, module)
 #endif
 
 #if MAKE_IT_STAND_HAS_REACHABILITY
+    py::class_<reachability::ReachabilityCell>(module, "ReachabilityCell")
+        .def(py::init([](int id, double mass, const Eigen::Vector2d& moment) {
+            return reachability::ReachabilityCell{id, mass, moment};
+        }), py::arg("cell_id"), py::arg("mass"), py::arg("first_moment_2d"))
+        .def_readonly("cell_id", &reachability::ReachabilityCell::cellIndex)
+        .def_readonly("mass", &reachability::ReachabilityCell::mass)
+        .def_property_readonly("first_moment_2d", [](const reachability::ReachabilityCell& value) {
+            return Eigen::Vector2d(value.firstMoment2D);
+        });
+    py::class_<reachability::CarvingReachabilityInput>(module, "CarvingReachabilityInput")
+        .def(py::init([](double mass, const Eigen::Vector2d& moment,
+                        const std::vector<reachability::ReachabilityCell>& cells,
+                        const Eigen::MatrixXd& polygon, double tolerance) {
+            // Shape is checked before hashing; semantic validation belongs to
+            // the analyzer/checker, so adversarial finite fixtures are possible.
+            if (polygon.cols() != 2) throw std::invalid_argument("polygon must have two columns");
+            return reachability::CarvingReachabilityInput{mass, moment, cells, polygon, tolerance};
+        }), py::arg("fixed_mass"), py::arg("fixed_first_moment_2d"),
+            py::arg("variable_cells"), py::arg("safe_polygon_2d"), py::arg("feasibility_tolerance") = 1e-9)
+        .def_readonly("fixed_mass", &reachability::CarvingReachabilityInput::fixedMass)
+        .def_readonly("feasibility_tolerance", &reachability::CarvingReachabilityInput::feasibilityTolerance)
+        .def_property_readonly("fixed_first_moment_2d", [](const reachability::CarvingReachabilityInput& value) {
+            return Eigen::Vector2d(value.fixedFirstMoment2D);
+        })
+        .def_property_readonly("variable_cells", [](const reachability::CarvingReachabilityInput& value) {
+            return value.variableCells;
+        })
+        .def_property_readonly("safe_polygon_2d", [](const reachability::CarvingReachabilityInput& value) {
+            return Eigen::MatrixXd(value.safePolygon2D);
+        })
+        .def_property_readonly("input_hash", &reachability::computeInputHash);
+    py::class_<reachability::CarvingReachabilitySnapshot>(module, "CarvingReachabilitySnapshot")
+        .def_property_readonly("input", [](const reachability::CarvingReachabilitySnapshot& value) {
+            return value.input;
+        })
+        .def_readonly("input_hash", &reachability::CarvingReachabilitySnapshot::inputHash)
+        .def_readonly("preparation_status", &reachability::CarvingReachabilitySnapshot::preparationStatus);
+    module.def("analyze_carving_reachability_input", [](const reachability::CarvingReachabilityInput& input) {
+        return reachability::CarvingReachabilityAnalyzer().analyze(input);
+    }, py::arg("input"));
+
     py::class_<reachability::ReachabilityCertificate>(
         module,
         "ReachabilityCertificate"
@@ -1618,6 +1659,11 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def("clear_handles", &api::BalanceModel::clearHandles)
         .def("clear_constraints", &api::BalanceModel::clearConstraints)
 #if MAKE_IT_STAND_HAS_REACHABILITY
+        .def(
+            "carving_reachability_snapshot",
+            &api::BalanceModel::carvingReachabilitySnapshot,
+            py::arg("standing_index") = 0
+        )
         .def(
             "analyze_carving_reachability",
             [](const api::BalanceModel& model, std::size_t standingIndex)

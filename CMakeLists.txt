@@ -1207,6 +1207,18 @@ if(BUILD_TESTING)
         )
 
         add_test(
+            NAME independent-exact-feasibility-contract
+            COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_feasibility -v
+        )
+        set_tests_properties(
+            independent-exact-feasibility-contract
+            PROPERTIES
+                LABELS "paper;python;reachability;independent-verification"
+                TIMEOUT 30
+                ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+        )
+
+        add_test(
             NAME run-evidence-v2-contract
             COMMAND "${Python3_EXECUTABLE}" -m unittest
                 test_run_evidence_v2
@@ -1439,6 +1451,17 @@ if(BUILD_TESTING)
             )
         endif()
         if(MAKE_IT_STAND_BUILD_REACHABILITY)
+            add_test(
+                NAME independent-exact-feasibility-native
+                COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_feasibility_native -v
+            )
+            set_tests_properties(
+                independent-exact-feasibility-native
+                PROPERTIES
+                    LABELS "spin-it;reachability;python;native;independent-verification"
+                    TIMEOUT 120
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+            )
             add_test(
                 NAME reachability-python-bindings
                 COMMAND "${Python3_EXECUTABLE}" -m unittest

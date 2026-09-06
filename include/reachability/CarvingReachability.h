@@ -30,6 +30,15 @@ struct CarvingReachabilityInput
     double feasibilityTolerance = 1e-9;
 };
 
+// A copied numeric input, not a geometry/source attestation. Preparation
+// status preserves BalanceModel's degenerate-target early-return semantics.
+struct CarvingReachabilitySnapshot
+{
+    CarvingReachabilityInput input;
+    std::string inputHash;
+    std::string preparationStatus;
+};
+
 enum class ReachabilityStatus
 {
     AlreadySafe,

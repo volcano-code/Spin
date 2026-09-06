@@ -1,4 +1,4 @@
-"""Strict, deterministic carving-reachability result schema."""
+"""Legacy floating-relaxation schema; no physical infeasibility proof."""
 
 from __future__ import annotations
 
@@ -181,6 +181,7 @@ class ReachabilityResult:
         return {
             "schema": SCHEMA,
             "schema_version": SCHEMA_VERSION,
+            "status_scope": "LEGACY_FLOATING_RELAXATION",
             "input_hash": self.input_hash,
             "status": self.status,
             "input_cell_count": self.input_cell_count,
@@ -201,18 +202,18 @@ class ReachabilityResult:
 
 
 def classify_result(status: str, observed_optimizer_outcome: str) -> str:
-    """Classify a result while preserving the relaxation's exact scope."""
+    """Label historical status names without upgrading floating evidence."""
 
     if status == "INDETERMINATE":
-        return "INDETERMINATE_REQUIRES_NUMERICAL_INVESTIGATION"
+        return "LEGACY_FLOATING_RELAXATION_INDETERMINATE_REQUIRES_NUMERICAL_INVESTIGATION"
     if status == "PROVEN_UNREACHABLE":
-        return "PHYSICALLY_UNREACHABLE_UNDER_CONTINUOUS_CARVING_RELAXATION"
+        return "LEGACY_FLOATING_RELAXATION_REPORTED_UNREACHABLE"
     if observed_optimizer_outcome == "FAILED" and status in {
         "ALREADY_SAFE",
         "RELAXATION_REACHABLE",
     }:
-        return "CURRENT_PLANE_CARVER_SOLVER_GAP"
-    return "ALREADY_SAFE_OR_EXISTING_SUCCESS"
+        return "LEGACY_FLOATING_RELAXATION_CURRENT_PLANE_CARVER_SOLVER_GAP"
+    return "LEGACY_FLOATING_RELAXATION_ALREADY_SAFE_OR_EXISTING_SUCCESS"
 
 
 def _canonical_hash(value: Any) -> str:
@@ -230,10 +231,11 @@ def _report_markdown(summary: Mapping[str, Any]) -> str:
     rows = [
         "# Carving reachability classification",
         "",
-        "This report classifies reconstructed orientations against a fixed ",
-        "safe-region continuous-carving relaxation. `PROVEN_UNREACHABLE` does ",
-        "not rule out deformation, another support region, discrete manufacturing ",
-        "choices, or changing the external pose.",
+        "All statuses here are `LEGACY_FLOATING_RELAXATION` observations. ",
+        "Retained fractions are continuous variables on discrete fixed cells; ",
+        "they do not describe continuous geometric carving. `PROVEN_UNREACHABLE` ",
+        "is a legacy solver label, not an independently exact or physical ",
+        "infeasibility certificate. Geometry feasibility remains unknown.",
         "",
         "| Case | Prior optimizer outcome | Reachability | Cells | Certificate residual | Classification |",
         "|---|---|---|---:|---:|---|",
@@ -254,7 +256,7 @@ def _report_markdown(summary: Mapping[str, Any]) -> str:
     rows.extend([
         "",
         f"Deterministic classification complete: `{str(summary['classification_complete']).lower()}`.",
-        f"Local reachability release gate: `{str(summary['release_gate_passed']).lower()}`.",
+        f"Legacy floating-relaxation release gate (not strict completion): `{str(summary['release_gate_passed']).lower()}`.",
         "",
     ])
     return "\n".join(rows)
@@ -332,15 +334,16 @@ def run_manifest(
 
     classifications = {record["classification"] for record in records}
     classification_complete = (
-        "INDETERMINATE_REQUIRES_NUMERICAL_INVESTIGATION" not in classifications
+        "LEGACY_FLOATING_RELAXATION_INDETERMINATE_REQUIRES_NUMERICAL_INVESTIGATION" not in classifications
     )
     release_gate_passed = classification_complete and not any(
-        record["classification"] == "CURRENT_PLANE_CARVER_SOLVER_GAP"
+        record["classification"] == "LEGACY_FLOATING_RELAXATION_CURRENT_PLANE_CARVER_SOLVER_GAP"
         for record in records
     )
     summary = {
         "schema": "make-it-stand-reachability-report-v1",
         "schema_version": 1,
+        "status_scope": "LEGACY_FLOATING_RELAXATION",
         "manifest_hash": _canonical_hash(manifest),
         "case_order": [record["id"] for record in records],
         "result_hashes": [record["result_hash"] for record in records],
