@@ -1168,6 +1168,21 @@ if(BUILD_TESTING)
                     "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
         )
 
+        add_test(
+            NAME independent-mass-moments-contract
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_independent_mass_moments
+                -v
+        )
+        set_tests_properties(
+            independent-mass-moments-contract
+            PROPERTIES
+                LABELS "paper;python;spin-it;verification"
+                TIMEOUT 30
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+        )
+
         if(MAKE_IT_STAND_BUILD_PYTHON)
             add_test(
                 NAME paper-native-pipeline-contract
