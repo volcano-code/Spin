@@ -1242,6 +1242,19 @@ if(BUILD_TESTING)
         )
 
         if(MAKE_IT_STAND_BUILD_PYTHON)
+            if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
+                add_test(
+                    NAME independent-surface-derivatives-contract
+                    COMMAND "${Python3_EXECUTABLE}" -m unittest test_surface_derivatives -v
+                )
+                set_tests_properties(
+                    independent-surface-derivatives-contract
+                    PROPERTIES
+                        LABELS "paper;python;native;spin-it-2014;independent-verification"
+                        TIMEOUT 60
+                        ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}"
+                )
+            endif()
             add_test(
                 NAME paper-native-pipeline-contract
                 COMMAND "${Python3_EXECUTABLE}" -m unittest

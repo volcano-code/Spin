@@ -4,6 +4,7 @@
 #include "spin2014/AutomaticCageBinding.h"
 #include "spin2014/CageSpinDeformation.h"
 #include "spin2014/CageSpinDeformationSolver.h"
+#include "spin2014/SurfaceRawMomentDifferential.h"
 #endif
 
 #include <pybind11/eigen.h>
@@ -738,6 +739,27 @@ PYBIND11_MODULE(_make_it_stand, module)
 #endif
 
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014
+    module.def(
+        "differentiate_surface_raw_moments",
+        [](const py::object& vertices, const py::object& faces, double density)
+        {
+            const auto value = spin2014::differentiateSurfaceRawMoments(
+                verticesFromPython(vertices), facesFromPython(faces), density
+            );
+            py::dict result;
+            result["moments"] = Eigen::VectorXd(value.moments.values());
+            result["jacobian"] = value.jacobian;
+            result["order"] = py::make_tuple(
+                "M", "LX", "LY", "LZ", "QXX", "QYY", "QZZ", "QYZ", "QXZ", "QXY"
+            );
+            result["algorithm"] =
+                "spin-it-2014-supplement-algorithms-1-2-surface-polynomial";
+            result["coordinates"] = "interleaved-vertex-xyz";
+            return result;
+        },
+        py::arg("vertices"), py::arg("faces"), py::arg("density") = 1.0
+    );
+
     #if !MAKE_IT_STAND_HAS_SPIN_IT_FASTER
     py::enum_<spin::SpinMode>(module, "SpinMode")
         .value("STATIC_BALANCE", spin::SpinMode::StaticBalance)

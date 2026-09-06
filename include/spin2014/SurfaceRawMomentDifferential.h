@@ -17,7 +17,9 @@ struct SurfaceRawMomentDifferential
 };
 
 
-/** Analytic differential of all ten degree-two volume moments. */
+/** Spin-It 2014 supplement surface-polynomial Algorithms 1 and 2.
+ * Signed components are preserved; this is not a material-legality check.
+ */
 SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
