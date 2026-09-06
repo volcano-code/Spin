@@ -6,6 +6,19 @@ Prévost et al., *Make It Stand: Balancing Shapes for 3D Fabrication*
 [`helloxinw/make-it-balance`](https://github.com/helloxinw/make-it-balance)
 carving prototype. It is not yet a complete reproduction of the paper.
 
+### Spin-It strict reproduction branch
+
+Spin-It (2014) and Spin-It Faster (2024) are currently **PARTIAL_BLOCKED**, not
+complete computational reproductions. The historical
+`PUBLIC_COMPLETE_REPRODUCTION` claim is
+[superseded](experiments/spin_it_reproduction/STRICT_CORRECTION.md).
+The [strict execution plan](docs/superpowers/plans/2026-09-05-spin-it-strict-computational-v2.md)
+retains all original computational requirements; missing
+[author inputs and critical parameters](experiments/spin_it_reproduction/sources/strict_asset_audit.md)
+are not replaced by synthetic models. The strict audit and independent
+mass-moment checker are verification foundations, not proof that the original
+experiments have been reproduced. Physical validation is `NOT_IN_SCOPE`.
+
 ## Source hierarchy
 
 Implementation decisions follow this order:
