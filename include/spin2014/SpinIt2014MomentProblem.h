@@ -20,7 +20,7 @@ enum class Spin2014Objective
 
 
 const char* spin2014ObjectiveToken(Spin2014Objective objective) noexcept;
-spin::SpinMode spin2014ObjectiveMode(Spin2014Objective objective) noexcept;
+spin::SpinMode spin2014ObjectiveMode(Spin2014Objective objective);
 Spin2014Objective defaultSpin2014Objective(spin::SpinMode mode);
 
 

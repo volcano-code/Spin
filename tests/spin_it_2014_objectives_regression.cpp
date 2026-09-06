@@ -178,22 +178,19 @@ int main()
             return fail(std::string("formula/API mismatch for ") + item.token);
         }
         const double steps[] = {1e-3, 3e-4, 1e-4};
-        double bestGradientError = std::numeric_limits<double>::infinity();
-        double bestHessianError = std::numeric_limits<double>::infinity();
         for (double step : steps)
         {
-            bestGradientError = std::min(
-                bestGradientError,
-                maximumGradientError(problem, raw, step)
-            );
-            bestHessianError = std::min(
-                bestHessianError,
-                maximumHessianError(problem, raw, step)
-            );
-        }
-        if (bestGradientError > 2e-7 || bestHessianError > 2e-6)
-        {
-            return fail(std::string("finite differences disagree for ") + item.token);
+            const double gradientError =
+                maximumGradientError(problem, raw, step);
+            const double hessianError =
+                maximumHessianError(problem, raw, step);
+            if (gradientError > 2e-7 || hessianError > 2e-6)
+            {
+                return fail(
+                    std::string("finite differences disagree for ") +
+                    item.token + " at step " + std::to_string(step)
+                );
+            }
         }
     }
 
@@ -292,6 +289,29 @@ int main()
     if (!throwsInvalid(request))
     {
         return fail("nonfinite inertia weight was accepted");
+    }
+
+    const Objective invalid = static_cast<Objective>(-1);
+    bool factoryRejected = false;
+    try
+    {
+        (void)Problem::fromObjective(invalid, 1.0, 1.0);
+    }
+    catch (const std::invalid_argument&)
+    {
+        factoryRejected = true;
+    }
+    request.inertiaWeight = 1.0;
+    request.mode = spin::SpinMode::StaticBalance;
+    request.objective = invalid;
+    const bool requestRejected = throwsInvalid(request);
+    if (!factoryRejected || !requestRejected)
+    {
+        return fail(
+            std::string("unknown selector rejection missing for") +
+            (factoryRejected ? "" : " factory") +
+            (requestRejected ? "" : " adaptive-request")
+        );
     }
 
     std::cout << "[PASS] scenario=spin-it-2014-objectives five-objective API"

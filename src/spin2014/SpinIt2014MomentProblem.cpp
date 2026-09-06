@@ -23,7 +23,7 @@ const char* spin2014ObjectiveToken(Spin2014Objective objective) noexcept
 }
 
 
-spin::SpinMode spin2014ObjectiveMode(Spin2014Objective objective) noexcept
+spin::SpinMode spin2014ObjectiveMode(Spin2014Objective objective)
 {
     switch (objective)
     {
@@ -36,7 +36,7 @@ spin::SpinMode spin2014ObjectiveMode(Spin2014Objective objective) noexcept
     case Spin2014Objective::StaticLowering:
         return spin::SpinMode::StaticBalance;
     }
-    return spin::SpinMode::StaticBalance;
+    throw std::invalid_argument("unknown Spin-It 2014 objective selector");
 }
 
 
@@ -67,6 +67,7 @@ SpinIt2014MomentProblem::SpinIt2014MomentProblem(
       inertiaWeight_(inertiaWeight),
       centerWeight_(centerWeight)
 {
+    (void)spin2014ObjectiveMode(objective);
     if (
         !std::isfinite(inertiaWeight) || inertiaWeight < 0.0 ||
         !std::isfinite(centerWeight) || centerWeight < 0.0
