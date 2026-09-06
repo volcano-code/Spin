@@ -105,6 +105,27 @@ Eigen::MatrixXd verticesFromPython(const py::handle& value)
 
 
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+double exactClearanceFromPython(const py::handle& value) {
+    const py::array original=requireArray(value,"minimum clearance");
+    const char kind=original.dtype().kind();
+    if (original.ndim()!=0 || original.itemsize()>8 || (kind!='f' && kind!='i' && kind!='u'))
+        throw py::type_error("minimum clearance must be a real scalar losslessly representable as binary64; bool is invalid");
+    const auto converted=py::array_t<double,py::array::forcecast>::ensure(original);
+    const double result=*converted.data();
+    if (!std::isfinite(result) || result<0)
+        throw py::value_error("minimum clearance must be finite and nonnegative");
+    if (kind=='i') {
+        const auto integers=py::array_t<std::int64_t,py::array::forcecast>::ensure(original);
+        if (result>=0x1p63 || static_cast<std::int64_t>(result)!=*integers.data())
+            throw py::value_error("minimum clearance integer is not exactly representable as binary64");
+    } else if (kind=='u') {
+        const auto integers=py::array_t<std::uint64_t,py::array::forcecast>::ensure(original);
+        if (result>=0x1p64 || static_cast<std::uint64_t>(result)!=*integers.data())
+            throw py::value_error("minimum clearance integer is not exactly representable as binary64");
+    }
+    return result;
+}
+
 Eigen::MatrixXd exactVerticesFromPython(const py::handle& value)
 {
     const py::array original=requireArray(value,"vertices");
@@ -399,6 +420,42 @@ PYBIND11_MODULE(_make_it_stand, module)
     },py::arg("a"),py::arg("b"),
        "Exact inclusive contact/containment and positive-volume overlap. Invalid operands throw; "
        "failed Booleans return unknown facts. Touching does not imply volume overlap or invalid density regions.");
+    module.def("check_exact_material_partition", [](const verification::ExactMaterialRegion& whole,
+                                                    const std::vector<verification::ExactMaterialRegion>& parts) {
+        const auto r=verification::checkExactMaterialPartition(whole,parts);
+        py::dict out;
+        out["algorithm"]=r.algorithm; out["backend"]=r.backend; out["semantics"]=r.semantics;
+        out["empty_protocol"]=r.emptyProtocol; out["whole_digest"]=r.wholeDigest;
+        out["part_digests"]=r.partDigests; out["partition_digest"]=r.partitionDigest;
+        out["whole_explicit_empty"]=r.wholeExplicitEmpty; out["part_explicit_empty"]=r.partExplicitEmpty;
+        out["completed"]=r.completed; out["error"]=r.error;
+        out["union_equals_whole"]=r.unionEqualsWhole; out["no_positive_volume_overlap"]=r.noPositiveVolumeOverlap;
+        out["missing_whole_content"]=r.missingWholeContent; out["excess_union_content"]=r.excessUnionContent;
+        out["part_subset_whole"]=r.partSubsetWhole; out["positive_volume_overlap_pairs"]=r.positiveVolumeOverlapPairs;
+        out["complete_partition"]=r.completePartition;
+        out["scope"]="exact-represented-polyhedral-partition-only";
+        return out;
+    },py::arg("whole"),py::arg("parts"),
+       "Authenticate inclusive union equality and pairwise disjoint interiors of ordered region handles. "
+       "Empty list is missing evidence; explicit empty parts are permitted. No seal or physical authority.");
+    module.def("check_exact_boundary_clearance", [](const verification::ExactMaterialRegion& a,
+                                                    const verification::ExactMaterialRegion& b,const py::object& threshold) {
+        const auto r=verification::checkExactBoundaryClearance(a,b,exactClearanceFromPython(threshold));
+        py::dict out;
+        out["algorithm"]=r.algorithm; out["backend"]=r.backend; out["semantics"]=r.semantics;
+        out["a_digest"]=r.aDigest; out["b_digest"]=r.bDigest;
+        out["a_input_digest"]=r.aInputDigest; out["b_input_digest"]=r.bInputDigest;
+        out["a_explicit_empty"]=r.aExplicitEmpty; out["b_explicit_empty"]=r.bExplicitEmpty;
+        out["minimum_clearance_exact"]=r.minimumClearanceExact; out["clearance_digest"]=r.clearanceDigest;
+        out["completed"]=r.completed; out["applicable"]=r.applicable; out["state"]=r.state; out["error"]=r.error;
+        out["squared_distance_exact"]=r.squaredDistanceExact; out["witness_faces"]=r.witnessFaces;
+        out["at_least_minimum"]=r.atLeastMinimum; out["contact"]=r.contact;
+        out["scope"]="exact-represented-boundary-distance-only";
+        return out;
+    },py::arg("a"),py::arg("b"),py::arg("minimum_clearance"),
+       "Exact boundary distance >= explicitly supplied represented threshold; equality passes and contact is distinct. "
+       "Explicit empty operands are NOT_APPLICABLE with absent distance/witness/comparison. "
+       "This alone does not establish containment, valid shell thickness or a seal.");
     module.def("audit_exact_triangle_boundary",
         [](const py::object& vertices, const py::object& faces, const std::string& orientation) {
             using Mode=verification::ExactBoundaryOrientation;

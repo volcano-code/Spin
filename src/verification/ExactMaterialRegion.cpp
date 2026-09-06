@@ -1,11 +1,13 @@
 #include "verification/ExactMaterialRegion.h"
 #include "verification/Sha256.h"
+#include "ExactBoundaryDistance.h"
 #include <CGAL/Gmpq.h>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 #include <CGAL/Nef_polyhedron_3.h>
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -236,6 +238,100 @@ ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion&
         r.completed=true;
     } catch (const std::exception& e) { r.error=e.what(); }
     catch (...) { r.error="unknown exact relation operation failure"; }
+    return r;
+}
+
+ExactMaterialPartitionFacts checkExactMaterialPartition(
+    const ExactMaterialRegion& whole,const std::vector<ExactMaterialRegion>& parts) {
+    if (parts.empty()) throw std::invalid_argument("partition requires a nonempty ordered list of parts");
+    const auto validate=[](const ExactMaterialRegion& region) {
+        if (!region.facts_.valid || !region.facts_.completed || !region.data_)
+            throw std::invalid_argument("invalid exact material operand: "+region.facts_.error);
+    };
+    validate(whole);
+    for (const auto& part : parts) validate(part);
+    ExactMaterialPartitionFacts r;
+    r.backend=whole.facts_.backend;
+    r.wholeDigest=whole.facts_.regionDigest; r.wholeExplicitEmpty=whole.facts_.explicitEmpty;
+    // Fixed-field prefix plus count binds the ordered operand chain, including
+    // repetitions and explicit empties; no caller facts are trusted.
+    std::string identity=digest({r.algorithm,r.backend,r.semantics,r.emptyProtocol,r.wholeDigest,
+        r.wholeExplicitEmpty?"empty":"nonempty",std::to_string(parts.size())});
+    for (const auto& part : parts) {
+        r.partDigests.push_back(part.facts_.regionDigest);
+        r.partExplicitEmpty.push_back(part.facts_.explicitEmpty);
+        identity=digest({"partition-ordered-operand-v1",identity,part.facts_.regionDigest,
+                         part.facts_.explicitEmpty?"empty":"nonempty"});
+    }
+    r.partitionDigest=identity;
+    try {
+        Nef united;
+        std::vector<bool> subsets;
+        std::vector<std::array<std::size_t,2>> overlaps;
+        for (std::size_t i=0;i<parts.size();++i) {
+            Nef next=united.join(parts[i].data_->solid); checked(next,"partition union");
+            united=std::move(next);
+            Nef excess=parts[i].data_->solid.difference(whole.data_->solid);
+            checked(excess,"partition inclusive part subset");
+            subsets.push_back(excess.is_empty());
+            for (std::size_t j=0;j<i;++j) {
+                Nef intersection=parts[j].data_->solid.intersection(parts[i].data_->solid);
+                checked(intersection,"partition pair intersection");
+                Nef volume=intersection.regularization(); checked(volume,"partition positive volume");
+                if (!volume.is_empty()) overlaps.push_back({j,i});
+            }
+        }
+        // Do not regularize differences: boundary-only missing/excess content
+        // is significant for inclusive equality.
+        Nef missing=whole.data_->solid.difference(united); checked(missing,"partition missing whole content");
+        Nef excess=united.difference(whole.data_->solid); checked(excess,"partition excess union content");
+        const bool hasMissing=!missing.is_empty(),hasExcess=!excess.is_empty();
+        const bool equal=!hasMissing && !hasExcess,disjoint=overlaps.empty();
+        std::sort(overlaps.begin(),overlaps.end());
+        // Construct a completed copy before publishing optional facts: even an
+        // allocation failure leaves the returned incomplete result all unknown.
+        auto complete=r;
+        complete.partSubsetWhole=std::move(subsets); complete.positiveVolumeOverlapPairs=std::move(overlaps);
+        complete.missingWholeContent=hasMissing; complete.excessUnionContent=hasExcess;
+        complete.unionEqualsWhole=equal; complete.noPositiveVolumeOverlap=disjoint;
+        complete.completePartition=equal && disjoint; complete.completed=true;
+        return complete;
+    } catch (const std::exception& e) { r.error=e.what(); }
+    catch (...) { r.error="unknown exact partition operation failure"; }
+    return r;
+}
+
+ExactBoundaryClearanceFacts checkExactBoundaryClearance(
+    const ExactMaterialRegion& a,const ExactMaterialRegion& b,double minimumClearance) {
+    if (!std::isfinite(minimumClearance) || minimumClearance<0)
+        throw std::invalid_argument("minimum clearance must be a finite nonnegative binary64 value");
+    for (const auto* operand : {&a,&b})
+        if (!operand->facts_.valid || !operand->facts_.completed || !operand->data_)
+            throw std::invalid_argument("invalid exact material operand: "+operand->facts_.error);
+    ExactBoundaryClearanceFacts r;
+    r.backend=a.facts_.backend+"/Distance_3/Intersections_3";
+    r.aDigest=a.facts_.regionDigest; r.bDigest=b.facts_.regionDigest;
+    r.aInputDigest=a.facts_.inputDigest; r.bInputDigest=b.facts_.inputDigest;
+    r.aExplicitEmpty=a.facts_.explicitEmpty; r.bExplicitEmpty=b.facts_.explicitEmpty;
+    std::ostringstream threshold; threshold << CGAL::Gmpq(minimumClearance);
+    r.minimumClearanceExact=threshold.str();
+    r.clearanceDigest=digest({r.algorithm,r.backend,r.semantics,r.aDigest,r.bDigest,
+        r.aInputDigest,r.bInputDigest,r.minimumClearanceExact,
+        r.aExplicitEmpty?"empty":"nonempty",r.bExplicitEmpty?"empty":"nonempty"});
+    if (r.aExplicitEmpty || r.bExplicitEmpty) {
+        r.state="NOT_APPLICABLE"; r.applicable=false; r.completed=true;
+        return r;
+    }
+    try {
+        const auto measured=detail::exactBoundaryDistance(a.data_->vertices,a.data_->faces,
+            b.data_->vertices,b.data_->faces,minimumClearance);
+        auto complete=r;
+        complete.squaredDistanceExact=measured.squaredExact; complete.witnessFaces=measured.witness;
+        complete.atLeastMinimum=measured.atLeastMinimum; complete.contact=measured.contact;
+        complete.applicable=true; complete.state="COMPLETE"; complete.completed=true;
+        return complete;
+    } catch (const std::exception& e) { r.error=e.what(); }
+    catch (...) { r.error="unknown exact boundary distance failure"; }
     return r;
 }
 } // namespace verification

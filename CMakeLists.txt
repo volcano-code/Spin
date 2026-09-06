@@ -242,7 +242,7 @@ if(MAKE_IT_STAND_BUILD_REACHABILITY)
 endif()
 
 if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
-    list(APPEND MAKE_IT_STAND_CORE_SOURCES src/verification/ExactBoundaryAudit.cpp src/verification/ExactMaterialRegion.cpp)
+    list(APPEND MAKE_IT_STAND_CORE_SOURCES src/verification/ExactBoundaryAudit.cpp src/verification/ExactMaterialRegion.cpp src/verification/ExactBoundaryDistance.cpp)
     list(APPEND MAKE_IT_STAND_CORE_HEADERS include/verification/ExactBoundaryAudit.h include/verification/ExactMaterialRegion.h)
 endif()
 
@@ -399,6 +399,10 @@ include(CTest)
 
 if(BUILD_TESTING)
     if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+        add_executable(exact-partition-clearance-regression tests/exact_partition_clearance_regression.cpp)
+        target_link_libraries(exact-partition-clearance-regression PRIVATE make_it_stand::core)
+        add_test(NAME exact-partition-clearance-native COMMAND exact-partition-clearance-regression)
+        set_tests_properties(exact-partition-clearance-native PROPERTIES LABELS "verification;exact-geometry;native" TIMEOUT 120)
         add_executable(exact-material-region-regression tests/exact_material_region_regression.cpp)
         target_link_libraries(exact-material-region-regression PRIVATE make_it_stand::core)
         add_test(NAME exact-material-region-native COMMAND exact-material-region-regression)
@@ -412,6 +416,11 @@ if(BUILD_TESTING)
         set_tests_properties(exact-geometry-dependency-contract PROPERTIES
             LABELS "verification;exact-geometry;cmake" TIMEOUT 120)
         if(MAKE_IT_STAND_BUILD_PYTHON)
+            add_test(NAME exact-partition-clearance-python
+                COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_partition_clearance -v)
+            set_tests_properties(exact-partition-clearance-python PROPERTIES
+                LABELS "verification;exact-geometry;python;native" TIMEOUT 180
+                ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}")
             add_test(NAME exact-material-region-python
                 COMMAND "${Python3_EXECUTABLE}" -m unittest test_exact_material_region -v)
             set_tests_properties(exact-material-region-python PROPERTIES

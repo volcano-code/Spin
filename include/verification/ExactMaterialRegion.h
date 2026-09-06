@@ -1,5 +1,6 @@
 #pragma once
 #include "verification/ExactBoundaryAudit.h"
+#include <array>
 #include <memory>
 #include <optional>
 
@@ -26,6 +27,33 @@ struct ExactMaterialRelationFacts {
     std::optional<bool> aSubsetB, bSubsetA, equal;
 };
 
+struct ExactMaterialPartitionFacts {
+    std::string algorithm = "nef-inclusive-union-interior-disjoint-partition-v1";
+    std::string backend, semantics = "finite-regular-closed-polyhedral-set-v1";
+    std::string emptyProtocol = "explicit-empty-allowed-nonempty-ordered-part-list-v1";
+    std::string wholeDigest, partitionDigest, error;
+    std::vector<std::string> partDigests;
+    bool completed = false, wholeExplicitEmpty = false;
+    std::vector<bool> partExplicitEmpty;
+    // All computed facts absent until every exact operation succeeds.
+    std::optional<bool> unionEqualsWhole, noPositiveVolumeOverlap;
+    std::optional<bool> missingWholeContent, excessUnionContent, completePartition;
+    std::optional<std::vector<bool>> partSubsetWhole;
+    std::optional<std::vector<std::array<std::size_t,2>>> positiveVolumeOverlapPairs;
+};
+
+struct ExactBoundaryClearanceFacts {
+    std::string algorithm = "exact-triangle-features-rational-dual-bvh-v1";
+    std::string backend;
+    std::string semantics = "indexed-triangle-boundaries-exact-squared-distance-ge-v1";
+    std::string aDigest, bDigest, aInputDigest, bInputDigest, minimumClearanceExact;
+    std::string clearanceDigest, error, state = "INCOMPLETE";
+    bool completed = false, aExplicitEmpty = false, bExplicitEmpty = false;
+    std::optional<bool> applicable, atLeastMinimum, contact;
+    std::optional<std::string> squaredDistanceExact;
+    std::optional<std::array<std::size_t,2>> witnessFaces;
+};
+
 class ExactMaterialRegion {
 public:
     const ExactMaterialRegionFacts& facts() const { return facts_; }
@@ -39,6 +67,8 @@ private:
     friend ExactMaterialRegion makeExactMaterialRegion(const Eigen::MatrixXd&, const Eigen::MatrixXi&);
     friend ExactMaterialRegion emptyExactMaterialRegion();
     friend ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion&, const ExactMaterialRegion&);
+    friend ExactMaterialPartitionFacts checkExactMaterialPartition(const ExactMaterialRegion&, const std::vector<ExactMaterialRegion>&);
+    friend ExactBoundaryClearanceFacts checkExactBoundaryClearance(const ExactMaterialRegion&, const ExactMaterialRegion&, double);
 };
 
 // Malformed input throws invalid_argument; invalid boundaries/nesting retain
@@ -49,5 +79,16 @@ ExactMaterialRegion emptyExactMaterialRegion();
 // Invalid operands throw invalid_argument. Boolean failures return all facts
 // unknown and completed=false. No thickness, provenance, seal or solve authority.
 ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion&, const ExactMaterialRegion&);
+
+// Inclusive union equality AND pairwise disjoint interiors. An empty part list
+// is missing evidence and throws; explicit-empty regions are algebra operands.
+ExactMaterialPartitionFacts checkExactMaterialPartition(
+    const ExactMaterialRegion& whole, const std::vector<ExactMaterialRegion>& parts);
+// Exact represented boundary distance, never containment or shell validity.
+// Threshold is a finite nonnegative binary64, converted to rational exactly.
+// Empty operands yield completed NOT_APPLICABLE with absent measured facts.
+// Invalid operands/thresholds throw; operation failure publishes no clear facts.
+ExactBoundaryClearanceFacts checkExactBoundaryClearance(
+    const ExactMaterialRegion& a, const ExactMaterialRegion& b, double minimumClearance);
 
 } // namespace verification
