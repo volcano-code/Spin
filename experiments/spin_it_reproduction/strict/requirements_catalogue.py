@@ -106,9 +106,9 @@ _ROWS += [
 _ROWS += [
     _row("faster.moments.raw", "Spin-It Faster, Sections 3-4", "FORMULA", "MATCH_RAW_MOMENTS", "Independent raw-moment values and convention audit."),
     _row("faster.moments.coefficient_duality", "Spin-It Faster, Sections 3-4", "THEOREM", "MATCH_COEFFICIENT_MOMENT_DUALITY", "Independent symbolic and numerical duality check."),
-    _row("faster.theorem.quadric_reduction", "Spin-It Faster, main reduction theorem", "THEOREM", "MATCH_THEOREM_CONDITIONS", "Independent evaluation of hypotheses, conclusion, and numerical instances."),
-    _row("faster.theorem.optimality", "Spin-It Faster, optimality theorem", "THEOREM", "MATCH_THEOREM_CONDITIONS", "Independent optimality and boundary-condition checks."),
-    _row("faster.theorem.degenerate_conditions", "Spin-It Faster, degenerate conditions", "THEOREM", "MATCH_DEGENERATE_CONDITIONS", "Explicit audit of every stated degenerate precondition and outcome."),
+    _row("faster.theorem.quadric_reduction", "Spin-It Faster, Theorem 1, Section 3.3", "THEOREM", "MATCH_THEOREM_CONDITIONS", "Independent evaluation of hypotheses, conclusion, and numerical instances."),
+    _row("faster.theorem.optimality", "Spin-It Faster, Theorem 2, Section 3.4", "THEOREM", "MATCH_THEOREM_CONDITIONS", "Independent optimality and boundary-condition checks."),
+    _row("faster.theorem.degenerate_conditions", "Spin-It Faster, Theorem 2, Section 3.4 (p = 0 branch)", "THEOREM", "MATCH_DEGENERATE_CONDITIONS", "Explicit audit of every stated degenerate precondition and outcome."),
     _row("faster.eq14.newton", "Spin-It Faster, Equation 14", "ALGORITHM", "MATCH_NEWTON_UPDATE", "Independent residual and Newton-step trace."),
     _row("faster.eq14.geodesic", "Spin-It Faster, Equation 14", "ALGORITHM", "MATCH_GEODESIC_UPDATE", "Independent sphere-geodesic and step-cap audit.", ("faster.eq14.newton",)),
     _row("faster.eq14.multiplier", "Spin-It Faster, Equation 14", "ALGORITHM", "MATCH_MULTIPLIER_UPDATE", "Independent per-step multiplier computation audit.", ("faster.eq14.newton",)),
@@ -167,8 +167,20 @@ _ROWS += [
 ]
 
 
-REQUIREMENTS = tuple(_ROWS)
-REQUIRED_REQUIREMENT_IDS = tuple(row["requirement_id"] for row in REQUIREMENTS)
+_FROZEN_REQUIREMENTS = tuple(
+    (
+        row["requirement_id"],
+        row["paper_locator"],
+        row["requirement_kind"],
+        row["expected_outcome"],
+        tuple(row["dependencies"]),
+        row["required_evidence"],
+    )
+    for row in _ROWS
+)
+del _ROWS
+
+REQUIRED_REQUIREMENT_IDS = tuple(row[0] for row in _FROZEN_REQUIREMENTS)
 
 
 def catalogue() -> dict[str, Any]:
@@ -179,9 +191,20 @@ def catalogue() -> dict[str, Any]:
         "schema_version": CATALOGUE_VERSION,
         "requirements": [
             {
-                **row,
-                "dependencies": list(row["dependencies"]),
+                "requirement_id": requirement_id,
+                "paper_locator": paper_locator,
+                "requirement_kind": requirement_kind,
+                "expected_outcome": expected_outcome,
+                "dependencies": list(dependencies),
+                "required_evidence": required_evidence,
             }
-            for row in REQUIREMENTS
+            for (
+                requirement_id,
+                paper_locator,
+                requirement_kind,
+                expected_outcome,
+                dependencies,
+                required_evidence,
+            ) in _FROZEN_REQUIREMENTS
         ],
     }

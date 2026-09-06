@@ -127,6 +127,51 @@ class SpinItStrictCatalogueTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, label):
                     audit.validate_catalogue(mutated)
 
+    def test_caller_mutation_cannot_change_canonical_catalogue(self) -> None:
+        audit = load_audit()
+        exposed = getattr(audit, "REQUIREMENTS", ())
+        if exposed:
+            first = exposed[0]
+            dependent = next(row for row in exposed if row["dependencies"])
+            original_outcome = first["expected_outcome"]
+            original_evidence = first["required_evidence"]
+            try:
+                first["expected_outcome"] = "CALLER_ALTERED"
+                first["required_evidence"] = "Caller replacement."
+                dependent["dependencies"].append("caller.invented")
+                fresh = audit.load_catalogue()["requirements"]
+                self.assertEqual(fresh[0]["expected_outcome"], original_outcome)
+                self.assertEqual(fresh[0]["required_evidence"], original_evidence)
+                self.assertNotIn(
+                    "caller.invented",
+                    next(
+                        row["dependencies"]
+                        for row in fresh
+                        if row["requirement_id"] == dependent["requirement_id"]
+                    ),
+                )
+            finally:
+                first["expected_outcome"] = original_outcome
+                first["required_evidence"] = original_evidence
+                dependent["dependencies"].remove("caller.invented")
+
+        first_copy = audit.load_catalogue()
+        first_copy["requirements"][0]["required_evidence"] = "Caller replacement."
+        dependent_copy = next(
+            row for row in first_copy["requirements"] if row["dependencies"]
+        )
+        dependent_copy["dependencies"].append("caller.invented")
+        fresh_copy = audit.load_catalogue()["requirements"]
+        self.assertNotEqual(fresh_copy[0]["required_evidence"], "Caller replacement.")
+        self.assertNotIn(
+            "caller.invented",
+            next(
+                row["dependencies"]
+                for row in fresh_copy
+                if row["requirement_id"] == dependent_copy["requirement_id"]
+            ),
+        )
+
     def test_physical_measurements_cannot_be_dropped(self) -> None:
         audit = load_audit()
         rows = [
@@ -195,6 +240,25 @@ class SpinItStrictCatalogueTests(unittest.TestCase):
             "FULL_DOMAIN_ZERO_SENSITIVITY",
         )
 
+    def test_faster_theorems_use_authenticated_numbered_locators(self) -> None:
+        audit = load_audit()
+        rows = {
+            row["requirement_id"]: row
+            for row in audit.load_catalogue()["requirements"]
+        }
+        self.assertEqual(
+            rows["faster.theorem.quadric_reduction"]["paper_locator"],
+            "Spin-It Faster, Theorem 1, Section 3.3",
+        )
+        self.assertEqual(
+            rows["faster.theorem.optimality"]["paper_locator"],
+            "Spin-It Faster, Theorem 2, Section 3.4",
+        )
+        self.assertEqual(
+            rows["faster.theorem.degenerate_conditions"]["paper_locator"],
+            "Spin-It Faster, Theorem 2, Section 3.4 (p = 0 branch)",
+        )
+
 
 class SpinItStrictAssetPreflightTests(unittest.TestCase):
     def test_exact_specification_asset_can_be_ready(self) -> None:
@@ -252,6 +316,47 @@ class SpinItStrictAssetPreflightTests(unittest.TestCase):
                 with self.subTest(message=message):
                     with self.assertRaisesRegex(ValueError, message):
                         audit.preflight_assets([asset], root)
+
+    def test_asset_preflight_rejects_empty_or_boolean_parameter_values(self) -> None:
+        audit = load_audit()
+        invalid_values = {
+            "null": None,
+            "boolean true": True,
+            "boolean false": False,
+            "empty text": "",
+            "whitespace text": "   ",
+            "empty array": [],
+            "empty object": {},
+            "nested null": {"published": None},
+            "nested boolean": ["published", False],
+            "nested empty text": {"published": "  "},
+            "nested empty array": {"published": []},
+            "nested empty object": ["published", {}],
+        }
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            baseline = exact_asset(root)
+            for label, invalid_value in invalid_values.items():
+                with self.subTest(label=label):
+                    asset = copy.deepcopy(baseline)
+                    asset["parameter_evidence"][0]["value"] = invalid_value
+                    with self.assertRaisesRegex(ValueError, "parameter value"):
+                        audit.preflight_assets([asset], root)
+
+            zero = copy.deepcopy(baseline)
+            zero["parameter_evidence"][0]["value"] = 0
+            self.assertTrue(audit.preflight_assets([zero], root)["ready"])
+
+            structured = copy.deepcopy(baseline)
+            structured["parameter_evidence"][0]["value"] = {
+                "components": [0, "published zero"]
+            }
+            self.assertTrue(audit.preflight_assets([structured], root)["ready"])
+
+            missing = copy.deepcopy(baseline)
+            del missing["parameter_evidence"][0]["value"]
+            with self.assertRaisesRegex(ValueError, "missing fields.*value"):
+                audit.preflight_assets([missing], root)
 
 
 class SpinItStrictAuditTests(unittest.TestCase):

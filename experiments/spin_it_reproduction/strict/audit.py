@@ -19,7 +19,6 @@ from typing import Any, NoReturn
 from requirements_catalogue import (
     CATALOGUE_SCHEMA,
     CATALOGUE_VERSION,
-    REQUIREMENTS,
     REQUIRED_REQUIREMENT_IDS,
     catalogue,
 )
@@ -79,6 +78,40 @@ def _reject_nonfinite(value: Any, location: str) -> None:
             _reject_nonfinite(child, f"{location}[{index}]")
 
 
+def _validate_parameter_value(value: Any, location: str) -> None:
+    if value is None:
+        raise ValueError(f"invalid parameter value at {location}: null is not evidence")
+    if isinstance(value, bool):
+        raise ValueError(f"invalid parameter value at {location}: booleans are not evidence")
+    if isinstance(value, (int, float)):
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError(f"nonfinite parameter value at {location}")
+        return
+    if isinstance(value, str):
+        if not value.strip():
+            raise ValueError(f"invalid parameter value at {location}: text is empty")
+        return
+    if isinstance(value, list):
+        if not value:
+            raise ValueError(f"invalid parameter value at {location}: array is empty")
+        for index, child in enumerate(value):
+            _validate_parameter_value(child, f"{location}[{index}]")
+        return
+    if isinstance(value, dict):
+        if not value:
+            raise ValueError(f"invalid parameter value at {location}: object is empty")
+        for key, child in value.items():
+            if not isinstance(key, str) or not key.strip():
+                raise ValueError(
+                    f"invalid parameter value at {location}: object key is empty"
+                )
+            _validate_parameter_value(child, f"{location}.{key}")
+        return
+    raise ValueError(
+        f"invalid parameter value at {location}: unsupported type {type(value).__name__}"
+    )
+
+
 def _mapping(value: Any, location: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"malformed {location}: expected an object")
@@ -107,6 +140,14 @@ def _exact_fields(row: dict[str, Any], expected: set[str], location: str) -> Non
         if unknown:
             parts.append(f"unknown fields {unknown}")
         raise ValueError(f"malformed {location}: {'; '.join(parts)}")
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def load_catalogue() -> dict[str, Any]:
@@ -147,7 +188,9 @@ def validate_catalogue(rows: Any) -> None:
     if missing:
         raise ValueError(f"missing catalogue requirement IDs: {missing}")
 
-    canonical = {row["requirement_id"]: row for row in REQUIREMENTS}
+    canonical = {
+        row["requirement_id"]: row for row in catalogue()["requirements"]
+    }
     for row in entries:
         requirement_id = row["requirement_id"]
         if row != canonical[requirement_id]:
@@ -188,7 +231,9 @@ def _validated_parameter_evidence(
             row["evidence_description"],
             f"asset {asset_id} parameter {name}.evidence_description",
         )
-        _reject_nonfinite(row["value"], f"asset {asset_id} parameter {name}.value")
+        _validate_parameter_value(
+            row["value"], f"asset {asset_id} parameter {name}.value"
+        )
         evidence.append(dict(row))
 
     duplicates = sorted({name for name in names if names.count(name) > 1})
@@ -276,7 +321,7 @@ def preflight_assets(assets: Any, asset_root: Path) -> dict[str, Any]:
             int(declared_digest, 16)
         except ValueError as error:
             raise ValueError(f"malformed SHA-256 digest for asset {asset_id}") from error
-        actual_digest = hashlib.sha256(resolved.read_bytes()).hexdigest()
+        actual_digest = _sha256_file(resolved)
         if actual_digest != declared_digest.lower():
             raise ValueError(
                 f"digest mismatch for asset {asset_id}: expected {declared_digest.lower()}, "
@@ -322,7 +367,8 @@ def _validate_requirement_evidence(raw_requirements: Any) -> list[dict[str, Any]
     ids: list[str] = []
     validated: list[dict[str, Any]] = []
     requirement_kinds = {
-        row["requirement_id"]: row["requirement_kind"] for row in REQUIREMENTS
+        row["requirement_id"]: row["requirement_kind"]
+        for row in catalogue()["requirements"]
     }
     for index, raw_row in enumerate(rows):
         row = _mapping(raw_row, f"requirement evidence {index}")
