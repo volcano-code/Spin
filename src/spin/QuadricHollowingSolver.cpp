@@ -38,6 +38,13 @@ struct NewtonState
 };
 
 
+class InvalidNumericalState : public std::runtime_error
+{
+public:
+    using std::runtime_error::runtime_error;
+};
+
+
 void validateSettings(const spin::SpinSolverSettings& settings)
 {
     if (
@@ -69,7 +76,20 @@ NewtonState evaluateState(
         !state.map.momentJacobian.allFinite()
     )
     {
-        throw std::runtime_error("moment evaluator returned non-finite data");
+        throw InvalidNumericalState(
+            "moment evaluator returned non-finite data"
+        );
+    }
+    const double rawMomentNorm = state.map.rawMoments.norm();
+    const double momentJacobianNorm = state.map.momentJacobian.norm();
+    if (
+        !std::isfinite(rawMomentNorm) ||
+        !std::isfinite(momentJacobianNorm)
+    )
+    {
+        throw InvalidNumericalState(
+            "moment evaluator data overflowed its numerical scale"
+        );
     }
     if (!state.map.derivativeDefined)
     {
@@ -86,6 +106,25 @@ NewtonState evaluateState(
     {
         throw std::runtime_error("moment problem derivative shape is invalid");
     }
+    bool finiteConstraintHessians = true;
+    for (const auto& hessian : state.problem.constraintHessians)
+    {
+        finiteConstraintHessians =
+            finiteConstraintHessians && hessian.allFinite();
+    }
+    if (
+        !std::isfinite(state.problem.objective) ||
+        !state.problem.objectiveGradient.allFinite() ||
+        !state.problem.objectiveHessian.allFinite() ||
+        !state.problem.constraints.allFinite() ||
+        !state.problem.constraintJacobian.allFinite() ||
+        !finiteConstraintHessians
+    )
+    {
+        throw InvalidNumericalState(
+            "moment problem produced a non-finite objective or derivative"
+        );
+    }
 
     Eigen::MatrixXd projection(momentDimension, constraintCount + 1);
     if (constraintCount > 0)
@@ -98,6 +137,12 @@ NewtonState evaluateState(
         projection.completeOrthogonalDecomposition().solve(
             -state.problem.objectiveGradient
         );
+    if (!coefficients.allFinite())
+    {
+        throw InvalidNumericalState(
+            "moment multiplier solve produced non-finite coefficients"
+        );
+    }
     state.lambda = coefficients.head(constraintCount);
     state.mu = coefficients(constraintCount);
     state.optimalityResidual =
@@ -108,24 +153,48 @@ NewtonState evaluateState(
             state.problem.constraintJacobian.transpose() * state.lambda;
     }
 
-    const double combinedSquared =
-        state.optimalityResidual.squaredNorm() +
-        state.problem.constraints.squaredNorm();
+    if (!state.optimalityResidual.allFinite())
+    {
+        throw InvalidNumericalState(
+            "optimality residual produced non-finite coefficients"
+        );
+    }
+    const double optimalitySquared =
+        state.optimalityResidual.squaredNorm();
+    const double constraintSquared = state.problem.constraints.squaredNorm();
+    const double combinedSquared = optimalitySquared + constraintSquared;
+    const double objectiveGradientNorm =
+        state.problem.objectiveGradient.norm();
+    const double constraintJacobianNorm =
+        state.problem.constraintJacobian.norm();
     const double equationScale = std::max({
         1.0,
-        state.problem.objectiveGradient.norm(),
-        state.problem.constraintJacobian.norm()
+        objectiveGradientNorm,
+        constraintJacobianNorm
     });
-    const double physicalScale = std::max(1.0, state.map.rawMoments.norm());
+    const double physicalScale = std::max(1.0, rawMomentNorm);
+    if (
+        !std::isfinite(optimalitySquared) ||
+        !std::isfinite(constraintSquared) ||
+        !std::isfinite(combinedSquared) ||
+        !std::isfinite(objectiveGradientNorm) ||
+        !std::isfinite(constraintJacobianNorm) ||
+        !std::isfinite(equationScale) ||
+        !std::isfinite(physicalScale)
+    )
+    {
+        throw InvalidNumericalState(
+            "Eq. 14 residual normalization overflowed"
+        );
+    }
     state.normalizedResidual = std::sqrt(combinedSquared) / equationScale;
-    state.physicalResidual =
-        state.problem.constraints.norm() / physicalScale;
+    state.physicalResidual = std::sqrt(constraintSquared) / physicalScale;
     if (
         !std::isfinite(state.normalizedResidual) ||
         !std::isfinite(state.physicalResidual) || !std::isfinite(state.mu)
     )
     {
-        throw std::runtime_error("Eq. 14 evaluation overflowed");
+        throw InvalidNumericalState("Eq. 14 evaluation overflowed");
     }
     return state;
 }
@@ -414,6 +483,7 @@ SpinNewtonResult solveSpinMomentSystem(
         {
             std::optional<NewtonState> state;
             std::string error;
+            bool invalidNumericalState = false;
         };
         const auto evaluateAttempt = [&](const QuadricCoefficients10& quadric,
                                          int iteration,
@@ -435,6 +505,27 @@ SpinNewtonResult solveSpinMomentSystem(
             timing.restart = restart;
             timing.restartEvaluationIndex = evaluationsThisRestart;
             const auto started = std::chrono::steady_clock::now();
+            const auto recordFailure = [&](const std::exception& error,
+                                           const char* reason,
+                                           bool invalidNumericalState) {
+                const auto failed = std::chrono::steady_clock::now();
+                if (!timing.evaluatorReturned)
+                {
+                    timing.wallSeconds = std::chrono::duration<double>(
+                        failed - started
+                    ).count();
+                    result.evaluatorWallSeconds += timing.wallSeconds;
+                }
+                event.reason = reason;
+                event.detail = error.what();
+                result.evaluationTimings.push_back(std::move(timing));
+                result.events.push_back(std::move(event));
+                return EvaluationResult{
+                    std::nullopt,
+                    error.what(),
+                    invalidNumericalState
+                };
+            };
             try
             {
                 SpinMomentMapEvaluation map = evaluator(quadric);
@@ -474,22 +565,17 @@ SpinNewtonResult solveSpinMomentSystem(
                 event.multiplierMu = finiteMetric(state.mu);
                 result.evaluationTimings.push_back(std::move(timing));
                 result.events.push_back(std::move(event));
-                return EvaluationResult{std::move(state), ""};
+                return EvaluationResult{std::move(state), "", false};
+            }
+            catch (const InvalidNumericalState& error)
+            {
+                return recordFailure(
+                    error, "invalid_numerical_state", true
+                );
             }
             catch (const std::exception& error)
             {
-                const auto failed = std::chrono::steady_clock::now();
-                if (!timing.evaluatorReturned)
-                {
-                    timing.wallSeconds = std::chrono::duration<double>(
-                        failed - started
-                    ).count();
-                    result.evaluatorWallSeconds += timing.wallSeconds;
-                }
-                event.detail = error.what();
-                result.evaluationTimings.push_back(std::move(timing));
-                result.events.push_back(std::move(event));
-                return EvaluationResult{std::nullopt, error.what()};
+                return recordFailure(error, "evaluation_exception", false);
             }
             catch (...)
             {
@@ -515,7 +601,12 @@ SpinNewtonResult solveSpinMomentSystem(
         {
             sawGeometryFailure = true;
             result.diagnostic = initial.error;
-            terminate(0, "initial_evaluation_failed");
+            terminate(
+                0,
+                initial.invalidNumericalState
+                    ? "initial_numerical_state_invalid"
+                    : "initial_evaluation_failed"
+            );
             continue;
         }
         NewtonState state = std::move(*initial.state);
@@ -562,6 +653,14 @@ SpinNewtonResult solveSpinMomentSystem(
                         static_cast<std::size_t>(constraint)
                     ];
             }
+            if (!hessianL.allFinite())
+            {
+                result.status = SpinSolverStatus::OptimizationDidNotConverge;
+                result.diagnostic =
+                    "Eq. 14 Lagrangian Hessian overflowed";
+                terminate(iteration, "newton_system_invalid");
+                break;
+            }
 
             const Eigen::Index systemSize =
                 momentDimension + constraintCount + 1;
@@ -607,6 +706,13 @@ SpinNewtonResult solveSpinMomentSystem(
                 rightHandSide.segment(momentDimension, constraintCount) =
                     -state.problem.constraints;
             }
+            if (!system.allFinite() || !rightHandSide.allFinite())
+            {
+                result.status = SpinSolverStatus::OptimizationDidNotConverge;
+                result.diagnostic = "Eq. 14 bordered Newton system overflowed";
+                terminate(iteration, "newton_system_invalid");
+                break;
+            }
 
             Eigen::FullPivLU<Eigen::MatrixXd> factorization(system);
             if (factorization.rank() < systemSize)
@@ -620,7 +726,14 @@ SpinNewtonResult solveSpinMomentSystem(
                 factorization.solve(rightHandSide).head(momentDimension);
             direction = current.projectToTangent(direction);
             const double directionNorm = direction.norm();
-            if (!direction.allFinite() || directionNorm <= 1e-15)
+            if (!direction.allFinite() || !std::isfinite(directionNorm))
+            {
+                result.status = SpinSolverStatus::OptimizationDidNotConverge;
+                result.diagnostic = "Newton direction is non-finite";
+                terminate(iteration, "newton_direction_invalid");
+                break;
+            }
+            if (directionNorm <= 1e-15)
             {
                 result.status = SpinSolverStatus::OptimizationDidNotConverge;
                 result.diagnostic = "Newton direction vanished before convergence";

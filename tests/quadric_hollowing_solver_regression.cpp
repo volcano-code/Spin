@@ -40,6 +40,47 @@ spin::SpinMomentMapEvaluation identityMoments(
 }
 
 
+spin::SpinMomentMapEvaluation overflowedFidgetObjective()
+{
+    spin::SpinMomentMapEvaluation value;
+    value.rawMoments(0) = 1.0;
+    value.rawMoments(4) = 1e308;
+    value.rawMoments(5) = 1e308;
+    value.momentJacobian.setIdentity();
+    value.derivativeDefined = true;
+    value.geometryHash = "overflowed-fidget-geometry";
+    value.topologyHash = "overflowed-fidget-topology";
+    return value;
+}
+
+
+spin::SpinMomentMapEvaluation finiteFidgetSolutionMoments()
+{
+    spin::SpinMomentMapEvaluation value;
+    value.rawMoments(0) = 1.0;
+    value.rawMoments(4) = 1.0;
+    value.rawMoments(5) = 1.0;
+    value.momentJacobian.setIdentity();
+    value.derivativeDefined = true;
+    return value;
+}
+
+
+spin::SpinMomentMapEvaluation overflowedResidualNormalization()
+{
+    spin::SpinMomentMapEvaluation value;
+    value.rawMoments(0) = 1.0;
+    value.rawMoments(1) = 1.0;
+    value.rawMoments(4) = 1e308;
+    value.rawMoments(5) = 1e308;
+    value.momentJacobian.setIdentity();
+    value.derivativeDefined = true;
+    value.geometryHash = "overflowed-normalization-geometry";
+    value.topologyHash = "overflowed-normalization-topology";
+    return value;
+}
+
+
 spin::QuadricCoefficients10 initialPoint()
 {
     Vector10 values;
@@ -463,24 +504,21 @@ int main()
     Vector10 overflowQuadricValues = Vector10::Zero();
     overflowQuadricValues(4) = 1.0;
     overflowQuadricValues(5) = 1.0;
+    const spin::QuadricCoefficients10 fidgetSolution =
+        spin::QuadricCoefficients10::fromUnnormalized(
+            overflowQuadricValues
+        );
     const spin::SpinNewtonResult overflowObjective =
         spin::solveSpinMomentSystem(
             spin::SpinMomentProblem::fidgetSpinner(),
             settings,
             [](const spin::QuadricCoefficients10&) {
-                spin::SpinMomentMapEvaluation value;
-                value.rawMoments(0) = 1.0;
-                value.rawMoments(4) = 1e308;
-                value.rawMoments(5) = 1e308;
-                value.momentJacobian.setIdentity();
-                value.derivativeDefined = true;
-                return value;
+                return overflowedFidgetObjective();
             },
-            {spin::QuadricCoefficients10::fromUnnormalized(
-                overflowQuadricValues
-            )}
+            {fidgetSolution}
         );
-    bool sawOverflowEvaluation = false;
+    bool sawRejectedOverflowEvaluation = false;
+    bool numericalStateContractFailed = false;
     for (const spin::SpinSolverEvent& event : overflowObjective.events)
     {
         if (!allPresentMetricsAreFinite(event))
@@ -489,19 +527,266 @@ int main()
         }
         if (event.type == "evaluation")
         {
-            sawOverflowEvaluation = true;
-            if (event.objective.has_value())
-            {
-                return fail("overflowed objective was marked available");
-            }
+            sawRejectedOverflowEvaluation =
+                event.outcome == "failed" &&
+                event.reason == "invalid_numerical_state" &&
+                !event.normalizedEquationResidual.has_value() &&
+                !event.physicalRelativeResidual.has_value() &&
+                !event.objective.has_value() &&
+                !event.multiplierMu.has_value();
         }
     }
     if (
-        overflowObjective.status != spin::SpinSolverStatus::Converged ||
-        !sawOverflowEvaluation
+        overflowObjective.status !=
+            spin::SpinSolverStatus::GeometryEvaluationFailed ||
+        overflowObjective.quadric.has_value() ||
+        overflowObjective.functionEvaluations != 1 ||
+        overflowObjective.trace.size() != 0 ||
+        !sawRejectedOverflowEvaluation ||
+        overflowObjective.events.back().reason !=
+            "initial_numerical_state_invalid"
     )
     {
-        return fail("event-only overflow fixture changed legacy solve behavior");
+        std::cerr << "[DETAIL] overflowed initial objective was accepted\n";
+        numericalStateContractFailed = true;
+    }
+    const spin::SpinNewtonResult overflowObjectiveRepeated =
+        spin::solveSpinMomentSystem(
+            spin::SpinMomentProblem::fidgetSpinner(),
+            settings,
+            [](const spin::QuadricCoefficients10&) {
+                return overflowedFidgetObjective();
+            },
+            {fidgetSolution}
+        );
+    if (
+        overflowObjectiveRepeated.eventHash != overflowObjective.eventHash ||
+        overflowObjectiveRepeated.events.size() !=
+            overflowObjective.events.size()
+    )
+    {
+        std::cerr << "[DETAIL] invalid-state event hash is not deterministic\n";
+        numericalStateContractFailed = true;
+    }
+    else
+    {
+        for (std::size_t index = 0; index < overflowObjective.events.size();
+             ++index)
+        {
+            if (!sameScientificEvent(
+                    overflowObjective.events[index],
+                    overflowObjectiveRepeated.events[index]))
+            {
+                std::cerr << "[DETAIL] invalid-state event content changed\n";
+                numericalStateContractFailed = true;
+                break;
+            }
+        }
+    }
+
+    int overflowRestartCalls = 0;
+    const spin::SpinNewtonResult overflowRestartRecovered =
+        spin::solveSpinMomentSystem(
+            spin::SpinMomentProblem::fidgetSpinner(),
+            restartSettings,
+            [&overflowRestartCalls](const spin::QuadricCoefficients10&) {
+                ++overflowRestartCalls;
+                return overflowRestartCalls == 1
+                    ? overflowedFidgetObjective()
+                    : finiteFidgetSolutionMoments();
+            },
+            {fidgetSolution, fidgetSolution}
+        );
+    if (
+        overflowRestartRecovered.status != spin::SpinSolverStatus::Converged ||
+        overflowRestartCalls != 2 ||
+        overflowRestartRecovered.functionEvaluations != 2 ||
+        overflowRestartRecovered.restartFunctionEvaluations !=
+            std::vector<int>({1, 1}) ||
+        overflowRestartRecovered.events.size() != 6 ||
+        overflowRestartRecovered.events[1].outcome != "failed" ||
+        overflowRestartRecovered.events[1].reason !=
+            "invalid_numerical_state" ||
+        overflowRestartRecovered.events[2].reason !=
+            "initial_numerical_state_invalid" ||
+        overflowRestartRecovered.events.back().reason != "converged"
+    )
+    {
+        std::cerr << "[DETAIL] invalid initial state bypassed restart recovery"
+                  << " status=" << spin::spinSolverStatusToken(
+                         overflowRestartRecovered.status)
+                  << " calls=" << overflowRestartCalls
+                  << " events=" << overflowRestartRecovered.events.size()
+                  << " last=" << overflowRestartRecovered.events.back().reason
+                  << '\n';
+        numericalStateContractFailed = true;
+    }
+
+    int overflowTrialCalls = 0;
+    const spin::SpinNewtonResult overflowTrialRecovered =
+        spin::solveSpinMomentSystem(
+            problem,
+            settings,
+            [&overflowTrialCalls](const spin::QuadricCoefficients10& quadric) {
+                ++overflowTrialCalls;
+                return overflowTrialCalls == 2
+                    ? overflowedResidualNormalization()
+                    : identityMoments(quadric);
+            },
+            {initialPoint()}
+        );
+    bool sawRejectedOverflowTrial = false;
+    for (const spin::SpinSolverEvent& event : overflowTrialRecovered.events)
+    {
+        if (!allPresentMetricsAreFinite(event))
+        {
+            std::cerr << "[DETAIL] recovery event contains non-finite metric\n";
+            numericalStateContractFailed = true;
+        }
+        sawRejectedOverflowTrial = sawRejectedOverflowTrial ||
+            (event.type == "evaluation" && event.iteration == 1 &&
+             event.outcome == "failed" &&
+             event.reason == "invalid_numerical_state" &&
+             event.step.has_value() &&
+             !event.normalizedEquationResidual.has_value() &&
+             !event.physicalRelativeResidual.has_value() &&
+             !event.objective.has_value() &&
+             !event.multiplierMu.has_value() &&
+             event.materialGeometryHash ==
+                 "overflowed-normalization-geometry" &&
+             event.materialTopologyHash ==
+                 "overflowed-normalization-topology");
+    }
+    if (
+        overflowTrialRecovered.status != spin::SpinSolverStatus::Converged ||
+        overflowTrialCalls <= 2 || !sawRejectedOverflowTrial ||
+        overflowTrialRecovered.functionEvaluations != overflowTrialCalls ||
+        overflowTrialRecovered.restartFunctionEvaluations !=
+            std::vector<int>({overflowTrialCalls}) ||
+        overflowTrialRecovered.events.back().reason != "converged"
+    )
+    {
+        std::cerr << "[DETAIL] line-search recovery status="
+                  << spin::spinSolverStatusToken(overflowTrialRecovered.status)
+                  << " calls=" << overflowTrialCalls
+                  << " events=" << overflowTrialRecovered.events.size()
+                  << " last=" << overflowTrialRecovered.events.back().reason
+                  << '\n';
+        for (const spin::SpinSolverEvent& event : overflowTrialRecovered.events)
+        {
+            if (event.type == "evaluation" && event.iteration == 1)
+            {
+                std::cerr << "[DETAIL] line-search numerical state outcome="
+                          << event.outcome << " reason=" << event.reason
+                          << " objective_present="
+                          << event.objective.has_value() << '\n';
+            }
+        }
+        numericalStateContractFailed = true;
+    }
+
+    const auto rejectedInitialNumericalState = [&](
+        const spin::SpinMomentProblem& numericalProblem,
+        const spin::SpinMomentEvaluator& numericalEvaluator,
+        const char* scenario
+    ) {
+        const spin::SpinNewtonResult numericalResult =
+            spin::solveSpinMomentSystem(
+                numericalProblem,
+                settings,
+                numericalEvaluator,
+                {initialPoint()}
+            );
+        const bool rejected =
+            numericalResult.status ==
+                spin::SpinSolverStatus::GeometryEvaluationFailed &&
+            numericalResult.functionEvaluations == 1 &&
+            numericalResult.trace.empty() &&
+            numericalResult.events.size() == 3 &&
+            numericalResult.events[1].outcome == "failed" &&
+            numericalResult.events[1].reason == "invalid_numerical_state" &&
+            numericalResult.events[2].reason ==
+                "initial_numerical_state_invalid";
+        if (!rejected)
+        {
+            std::cerr << "[DETAIL] invalid " << scenario
+                      << " state was not rejected at evaluation\n";
+        }
+        return rejected;
+    };
+
+    numericalStateContractFailed =
+        !rejectedInitialNumericalState(
+            problem,
+            [](const spin::QuadricCoefficients10&) {
+                return overflowedResidualNormalization();
+            },
+            "residual normalization"
+        ) || numericalStateContractFailed;
+    numericalStateContractFailed =
+        !rejectedInitialNumericalState(
+            problem,
+            [](const spin::QuadricCoefficients10& quadric) {
+                spin::SpinMomentMapEvaluation value = identityMoments(quadric);
+                value.momentJacobian(0, 0) = 1e308;
+                value.momentJacobian(0, 1) = 1e308;
+                return value;
+            },
+            "moment-Jacobian norm"
+        ) || numericalStateContractFailed;
+    numericalStateContractFailed =
+        !rejectedInitialNumericalState(
+            spin::SpinMomentProblem::staticBalance(
+                spin::StaticObjective::LowerCenterOfMass
+            ),
+            [](const spin::QuadricCoefficients10&) {
+                spin::SpinMomentMapEvaluation value;
+                value.rawMoments(0) = 1e-309;
+                value.rawMoments(3) = 1.0;
+                value.momentJacobian.setIdentity();
+                value.derivativeDefined = true;
+                return value;
+            },
+            "derived objective/derivative"
+        ) || numericalStateContractFailed;
+
+    const spin::SpinNewtonResult overflowedNewtonSystem =
+        spin::solveSpinMomentSystem(
+            spin::SpinMomentProblem::staticBalance(
+                spin::StaticObjective::LowerCenterOfMass
+            ),
+            settings,
+            [](const spin::QuadricCoefficients10&) {
+                spin::SpinMomentMapEvaluation value;
+                value.rawMoments(0) = 3.162277660168379e-78;
+                value.momentJacobian.setIdentity();
+                value.momentJacobian(0, 0) = 1e154;
+                value.derivativeDefined = true;
+                return value;
+            },
+            {initialPoint()}
+        );
+    if (
+        overflowedNewtonSystem.status !=
+            spin::SpinSolverStatus::OptimizationDidNotConverge ||
+        overflowedNewtonSystem.functionEvaluations != 1 ||
+        overflowedNewtonSystem.trace.size() != 1 ||
+        overflowedNewtonSystem.events.back().reason !=
+            "newton_system_invalid"
+    )
+    {
+        std::cerr << "[DETAIL] overflowed Newton system was not rejected before factorization"
+                  << " status=" << spin::spinSolverStatusToken(
+                         overflowedNewtonSystem.status)
+                  << " evals=" << overflowedNewtonSystem.functionEvaluations
+                  << " trace=" << overflowedNewtonSystem.trace.size()
+                  << " last=" << overflowedNewtonSystem.events.back().reason
+                  << '\n';
+        numericalStateContractFailed = true;
+    }
+    if (numericalStateContractFailed)
+    {
+        return fail("non-finite numerical states crossed acceptance boundaries");
     }
 
     spin::SpinSolverSettings limited = settings;

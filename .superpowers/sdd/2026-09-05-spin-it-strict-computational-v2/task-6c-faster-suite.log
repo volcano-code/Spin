@@ -1,0 +1,45 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+      Start 24: spin-faster-request
+ 1/14 Test #24: spin-faster-request ...................   Passed    0.00 sec
+      Start 25: spin-faster-moment-problems
+ 2/14 Test #25: spin-faster-moment-problems ...........   Passed    0.00 sec
+      Start 26: spin-faster-quadric-coefficients
+ 3/14 Test #26: spin-faster-quadric-coefficients ......   Passed    0.00 sec
+      Start 27: spin-faster-boolean
+ 4/14 Test #27: spin-faster-boolean ...................   Passed    0.01 sec
+      Start 28: spin-faster-quadric-triangulator
+ 5/14 Test #28: spin-faster-quadric-triangulator ......   Passed    0.02 sec
+      Start 29: spin-faster-inverse-gauss-map
+ 6/14 Test #29: spin-faster-inverse-gauss-map .........   Passed    0.00 sec
+      Start 30: spin-faster-quadric-moments
+ 7/14 Test #30: spin-faster-quadric-moments ...........   Passed    0.40 sec
+      Start 31: spin-faster-newton
+ 8/14 Test #31: spin-faster-newton ....................   Passed    0.00 sec
+      Start 32: spin-faster-end-to-end
+ 9/14 Test #32: spin-faster-end-to-end ................   Passed    1.37 sec
+      Start 33: spin-faster-interface-types
+10/14 Test #33: spin-faster-interface-types ...........   Passed    0.00 sec
+      Start 35: spin-faster-dependency-contract
+11/14 Test #35: spin-faster-dependency-contract .......   Passed    0.29 sec
+      Start 63: spin-faster-python-api
+12/14 Test #63: spin-faster-python-api ................   Passed    0.15 sec
+      Start 64: spin-faster-table1-miniature
+13/14 Test #64: spin-faster-table1-miniature ..........   Passed    0.78 sec
+      Start 65: spin-faster-paper-figures-miniature
+14/14 Test #65: spin-faster-paper-figures-miniature ...   Passed   15.81 sec
+
+100% tests passed, 0 tests failed out of 14
+
+Label Time Summary:
+bindings          =   0.15 sec*proc (1 test)
+build-system      =   0.29 sec*proc (1 test)
+geometry          =   1.79 sec*proc (6 tests)
+paper             =  16.59 sec*proc (2 tests)
+python            =  16.74 sec*proc (3 tests)
+regression        =  18.54 sec*proc (13 tests)
+solver            =   1.37 sec*proc (2 tests)
+spin-it           =  18.83 sec*proc (14 tests)
+spin-it-faster    =  18.83 sec*proc (14 tests)
+
+Total Test time (real) =  18.83 sec

@@ -1,0 +1,18 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+  Test #24: spin-faster-request
+  Test #25: spin-faster-moment-problems
+  Test #26: spin-faster-quadric-coefficients
+  Test #27: spin-faster-boolean
+  Test #28: spin-faster-quadric-triangulator
+  Test #29: spin-faster-inverse-gauss-map
+  Test #30: spin-faster-quadric-moments
+  Test #31: spin-faster-newton
+  Test #32: spin-faster-end-to-end
+  Test #33: spin-faster-interface-types
+  Test #35: spin-faster-dependency-contract
+  Test #63: spin-faster-python-api
+  Test #64: spin-faster-table1-miniature
+  Test #65: spin-faster-paper-figures-miniature
+
+Total Tests: 14
