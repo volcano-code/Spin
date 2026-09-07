@@ -1,0 +1,255 @@
+[1/2] Building CXX object CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o
+FAILED: [code=1] CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o
+/usr/bin/c++ -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_NO_LIB -DCGAL_HEADER_ONLY=1 -DCGAL_USE_CORE=1 -DMAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS=0 -DMAKE_IT_STAND_HAS_REACHABILITY=1 -DMAKE_IT_STAND_HAS_SPIN_IT_2014=1 -DMAKE_IT_STAND_HAS_SPIN_IT_FASTER=1 -I/home/lin/xvxinyao/make-it-balance-paper-sim/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../AABB_tree/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Advancing_front_surface_reconstruction/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Algebraic_foundations/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Algebraic_kernel_d/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Algebraic_kernel_for_circles/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Algebraic_kernel_for_spheres/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Alpha_shapes_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Alpha_shapes_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Apollonius_graph_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Arithmetic_kernel/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Arrangement_on_surface_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../BGL/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Barycentric_coordinates_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Boolean_set_operations_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Bounding_volumes/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Box_intersection_d/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../CGAL_Core/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../CGAL_ImageIO/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../CGAL_ipelets/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Circular_kernel_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Circular_kernel_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Circulator/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Classification/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Combinatorial_map/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cone_spanners_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Convex_decomposition_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Convex_hull_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Convex_hull_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Convex_hull_d/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Distance_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Distance_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Envelope_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Envelope_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Filtered_kernel/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Generalized_map/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Generator/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Geomview/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../GraphicsView/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../HalfedgeDS/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Hash_map/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Homogeneous_kernel/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Inscribed_areas/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Installation/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Interpolation/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Interval_skip_list/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Interval_support/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Inventor/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Jet_fitting_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_d/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../LEDA/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Linear_cell_complex/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Matrix_search/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Mesh_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Mesh_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Mesher_level/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Minkowski_sum_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Minkowski_sum_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Modifier/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Modular_arithmetic/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Nef_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Nef_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Nef_S2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../NewKernel_d/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Number_types/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../OpenNL/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Operations_on_polyhedra/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Optimal_transportation_reconstruction_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Optimisation_basic/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Partition_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Periodic_2_triangulation_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Periodic_3_triangulation_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Point_set_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Point_set_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Point_set_processing_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Point_set_shape_detection_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Poisson_surface_reconstruction_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Polygon/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Polygon_mesh_processing/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Polyhedron/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Polyhedron_IO/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Polyline_simplification_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Polynomial/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Polytope_distance_d/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Principal_component_analysis/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Principal_component_analysis_LGPL/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Profiling_tools/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Property_map/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../QP_solver/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Random_numbers/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Ridges_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Scale_space_reconstruction_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../SearchStructures/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Segment_Delaunay_graph_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Segment_Delaunay_graph_Linf_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Set_movable_separability_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Skin_surface_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Snap_rounding_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Solver_interface/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Spatial_searching/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Spatial_sorting/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Straight_skeleton_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Stream_lines_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Stream_support/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Subdivision_method_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh_deformation/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh_parameterization/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh_segmentation/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh_shortest_path/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh_simplification/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh_skeletonization/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesher/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_sweep_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../TDS_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../TDS_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Testsuite/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Three/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Triangulation/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Triangulation_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Triangulation_3/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Union_find/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Visibility_2/include -I/home/lin/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Voronoi_diagram_2/include -isystem /home/lin/xvxinyao/make-it-balance-paper-sim/libigl/cmake/../include -isystem /home/lin/xvxinyao/make-it-balance-paper-sim/libigl/cmake/../external/eigen -isystem /home/lin/anaconda3/include -fPIC -O2 -g -DNDEBUG -std=c++17 -frounding-math -MD -MT CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o -MF CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o.d -o CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o -c /home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:61:17: error: ‘SpinSolverEvent’ in namespace ‘spin’ does not name a type
+   61 |     const spin::SpinSolverEvent& left,
+      |                 ^~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:62:17: error: ‘SpinSolverEvent’ in namespace ‘spin’ does not name a type
+   62 |     const spin::SpinSolverEvent& right
+      |                 ^~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp: In function ‘bool {anonymous}::sameScientificEvent(const int&, const int&)’:
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:65:17: error: request for member ‘type’ in ‘left’, which is of non-class type ‘const int’
+   65 |     return left.type == right.type && left.restart == right.restart &&
+      |                 ^~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:65:31: error: request for member ‘type’ in ‘right’, which is of non-class type ‘const int’
+   65 |     return left.type == right.type && left.restart == right.restart &&
+      |                               ^~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:65:44: error: request for member ‘restart’ in ‘left’, which is of non-class type ‘const int’
+   65 |     return left.type == right.type && left.restart == right.restart &&
+      |                                            ^~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:65:61: error: request for member ‘restart’ in ‘right’, which is of non-class type ‘const int’
+   65 |     return left.type == right.type && left.restart == right.restart &&
+      |                                                             ^~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:66:14: error: request for member ‘iteration’ in ‘left’, which is of non-class type ‘const int’
+   66 |         left.iteration == right.iteration &&
+      |              ^~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:66:33: error: request for member ‘iteration’ in ‘right’, which is of non-class type ‘const int’
+   66 |         left.iteration == right.iteration &&
+      |                                 ^~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:67:14: error: request for member ‘evaluationIndex’ in ‘left’, which is of non-class type ‘const int’
+   67 |         left.evaluationIndex == right.evaluationIndex &&
+      |              ^~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:67:39: error: request for member ‘evaluationIndex’ in ‘right’, which is of non-class type ‘const int’
+   67 |         left.evaluationIndex == right.evaluationIndex &&
+      |                                       ^~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:68:14: error: request for member ‘restartEvaluationIndex’ in ‘left’, which is of non-class type ‘const int’
+   68 |         left.restartEvaluationIndex == right.restartEvaluationIndex &&
+      |              ^~~~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:68:46: error: request for member ‘restartEvaluationIndex’ in ‘right’, which is of non-class type ‘const int’
+   68 |         left.restartEvaluationIndex == right.restartEvaluationIndex &&
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:69:14: error: request for member ‘step’ in ‘left’, which is of non-class type ‘const int’
+   69 |         left.step == right.step && left.outcome == right.outcome &&
+      |              ^~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:69:28: error: request for member ‘step’ in ‘right’, which is of non-class type ‘const int’
+   69 |         left.step == right.step && left.outcome == right.outcome &&
+      |                            ^~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:69:41: error: request for member ‘outcome’ in ‘left’, which is of non-class type ‘const int’
+   69 |         left.step == right.step && left.outcome == right.outcome &&
+      |                                         ^~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:69:58: error: request for member ‘outcome’ in ‘right’, which is of non-class type ‘const int’
+   69 |         left.step == right.step && left.outcome == right.outcome &&
+      |                                                          ^~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:70:14: error: request for member ‘reason’ in ‘left’, which is of non-class type ‘const int’
+   70 |         left.reason == right.reason && left.detail == right.detail &&
+      |              ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:70:30: error: request for member ‘reason’ in ‘right’, which is of non-class type ‘const int’
+   70 |         left.reason == right.reason && left.detail == right.detail &&
+      |                              ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:70:45: error: request for member ‘detail’ in ‘left’, which is of non-class type ‘const int’
+   70 |         left.reason == right.reason && left.detail == right.detail &&
+      |                                             ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:70:61: error: request for member ‘detail’ in ‘right’, which is of non-class type ‘const int’
+   70 |         left.reason == right.reason && left.detail == right.detail &&
+      |                                                             ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:71:14: error: request for member ‘quadricCoefficients’ in ‘left’, which is of non-class type ‘const int’
+   71 |         left.quadricCoefficients == right.quadricCoefficients &&
+      |              ^~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:71:43: error: request for member ‘quadricCoefficients’ in ‘right’, which is of non-class type ‘const int’
+   71 |         left.quadricCoefficients == right.quadricCoefficients &&
+      |                                           ^~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:72:14: error: request for member ‘quadricHash’ in ‘left’, which is of non-class type ‘const int’
+   72 |         left.quadricHash == right.quadricHash &&
+      |              ^~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:72:35: error: request for member ‘quadricHash’ in ‘right’, which is of non-class type ‘const int’
+   72 |         left.quadricHash == right.quadricHash &&
+      |                                   ^~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:73:14: error: request for member ‘normalizedEquationResidual’ in ‘left’, which is of non-class type ‘const int’
+   73 |         left.normalizedEquationResidual == right.normalizedEquationResidual &&
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:73:50: error: request for member ‘normalizedEquationResidual’ in ‘right’, which is of non-class type ‘const int’
+   73 |         left.normalizedEquationResidual == right.normalizedEquationResidual &&
+      |                                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:74:14: error: request for member ‘physicalRelativeResidual’ in ‘left’, which is of non-class type ‘const int’
+   74 |         left.physicalRelativeResidual == right.physicalRelativeResidual &&
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:74:48: error: request for member ‘physicalRelativeResidual’ in ‘right’, which is of non-class type ‘const int’
+   74 |         left.physicalRelativeResidual == right.physicalRelativeResidual &&
+      |                                                ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:75:14: error: request for member ‘objective’ in ‘left’, which is of non-class type ‘const int’
+   75 |         left.objective == right.objective &&
+      |              ^~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:75:33: error: request for member ‘objective’ in ‘right’, which is of non-class type ‘const int’
+   75 |         left.objective == right.objective &&
+      |                                 ^~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:76:14: error: request for member ‘multiplierMu’ in ‘left’, which is of non-class type ‘const int’
+   76 |         left.multiplierMu == right.multiplierMu &&
+      |              ^~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:76:36: error: request for member ‘multiplierMu’ in ‘right’, which is of non-class type ‘const int’
+   76 |         left.multiplierMu == right.multiplierMu &&
+      |                                    ^~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:77:14: error: request for member ‘materialGeometryHash’ in ‘left’, which is of non-class type ‘const int’
+   77 |         left.materialGeometryHash == right.materialGeometryHash &&
+      |              ^~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:77:44: error: request for member ‘materialGeometryHash’ in ‘right’, which is of non-class type ‘const int’
+   77 |         left.materialGeometryHash == right.materialGeometryHash &&
+      |                                            ^~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:78:14: error: request for member ‘materialTopologyHash’ in ‘left’, which is of non-class type ‘const int’
+   78 |         left.materialTopologyHash == right.materialTopologyHash;
+      |              ^~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:78:44: error: request for member ‘materialTopologyHash’ in ‘right’, which is of non-class type ‘const int’
+   78 |         left.materialTopologyHash == right.materialTopologyHash;
+      |                                            ^~~~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp: In function ‘int main()’:
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:164:16: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘eventStreamVersion’
+  164 |         solved.eventStreamVersion != 1 || solved.events.empty() ||
+      |                ^~~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:164:50: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  164 |         solved.eventStreamVersion != 1 || solved.events.empty() ||
+      |                                                  ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:165:16: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘eventHash’
+  165 |         solved.eventHash.size() != 64 ||
+      |                ^~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:166:63: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘evaluationTimings’
+  166 |         solved.functionEvaluations != static_cast<int>(solved.evaluationTimings.size()) ||
+      |                                                               ^~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:167:16: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘restartFunctionEvaluations’; did you mean ‘functionEvaluations’?
+  167 |         solved.restartFunctionEvaluations != std::vector<int>{solved.functionEvaluations}
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                functionEvaluations
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:173:18: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  173 |         repeated.events.size() != solved.events.size() ||
+      |                  ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:173:42: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  173 |         repeated.events.size() != solved.events.size() ||
+      |                                          ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:174:18: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘eventHash’
+  174 |         repeated.eventHash != solved.eventHash
+      |                  ^~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:174:38: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘eventHash’
+  174 |         repeated.eventHash != solved.eventHash
+      |                                      ^~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:179:48: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  179 |     for (std::size_t index = 0; index < solved.events.size(); ++index)
+      |                                                ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:181:41: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  181 |         if (!sameScientificEvent(solved.events[index], repeated.events[index]))
+      |                                         ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:181:65: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  181 |         if (!sameScientificEvent(solved.events[index], repeated.events[index]))
+      |                                                                 ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:240:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘restartFunctionEvaluations’; did you mean ‘functionEvaluations’?
+  240 |         recovered.restartFunctionEvaluations != std::vector<int>({1, 1}) ||
+      |                   ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                   functionEvaluations
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:241:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  241 |         recovered.events.size() != 6 ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:242:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  242 |         recovered.events[1].type != "evaluation" ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:243:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  243 |         recovered.events[1].outcome != "failed" ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:244:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  244 |         recovered.events[1].reason != "evaluation_exception" ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:245:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  245 |         recovered.events[1].quadricHash != initialPoint().hash() ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:246:20: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  246 |         !recovered.events[1].quadricCoefficients.has_value() ||
+      |                    ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:247:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  247 |         recovered.events[1].normalizedEquationResidual.has_value() ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:248:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  248 |         recovered.events[1].materialGeometryHash.has_value() ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:249:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  249 |         recovered.events[2].reason != "initial_evaluation_failed" ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:250:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  250 |         recovered.events.back().reason != "converged" ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:251:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘evaluationTimings’
+  251 |         recovered.evaluationTimings.size() != 2 ||
+      |                   ^~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:252:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘evaluationTimings’
+  252 |         recovered.evaluationTimings[0].evaluatorReturned ||
+      |                   ^~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:253:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘evaluationTimings’
+  253 |         recovered.evaluationTimings[0].wallSeconds < 0.0 ||
+      |                   ^~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:254:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘evaluationTimings’
+  254 |         recovered.evaluationTimings[0].reportedResidualSeconds.has_value() ||
+      |                   ^~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:255:20: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘evaluationTimings’
+  255 |         !recovered.evaluationTimings[1].reportedResidualSeconds.has_value()
+      |                    ^~~~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:276:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘restartFunctionEvaluations’; did you mean ‘functionEvaluations’?
+  276 |         allFailed.restartFunctionEvaluations != std::vector<int>({1, 1}) ||
+      |                   ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                   functionEvaluations
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:277:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  277 |         allFailed.events.size() != 6 ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:278:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  278 |         allFailed.events[2].reason != "initial_evaluation_failed" ||
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:279:19: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  279 |         allFailed.events[5].reason != "initial_evaluation_failed"
+      |                   ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:302:55: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  302 |         singular.functionEvaluations != 1 || singular.events.size() != 3 ||
+      |                                                       ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:303:18: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  303 |         singular.events.back().reason != "initial_sensitivity_vanished"
+      |                  ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:327:22: error: ‘SpinSolverEvent’ in namespace ‘spin’ does not name a type
+  327 |     for (const spin::SpinSolverEvent& event : exceptionRecovered.events)
+      |                      ^~~~~~~~~~~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:334:6: error: expected ‘;’ before ‘if’
+  334 |     }
+      |      ^
+      |      ;
+  335 |     if (
+      |     ~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:335:5: error: expected primary-expression before ‘if’
+  335 |     if (
+      |     ^~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:334:6: error: expected ‘;’ before ‘if’
+  334 |     }
+      |      ^
+      |      ;
+  335 |     if (
+      |     ~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:335:5: error: expected primary-expression before ‘if’
+  335 |     if (
+      |     ^~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:334:6: error: expected ‘)’ before ‘if’
+  334 |     }
+      |      ^
+      |      )
+  335 |     if (
+      |     ~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:327:9: note: to match this ‘(’
+  327 |     for (const spin::SpinSolverEvent& event : exceptionRecovered.events)
+      |         ^
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:357:57: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  357 |         exhausted.functionEvaluations != 2 || exhausted.events.back().reason !=
+      |                                                         ^~~~~~
+/home/lin/xvxinyao/make-it-balance-paper-sim/tests/quadric_hollowing_solver_regression.cpp:376:28: error: ‘const struct spin::SpinNewtonResult’ has no member named ‘events’
+  376 |         iterationExhausted.events.back().reason != "maximum_iterations_reached"
+      |                            ^~~~~~
+ninja: build stopped: subcommand failed.

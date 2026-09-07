@@ -1,0 +1,164 @@
+[  1%] Built target r8-fake-slicer
+[ 54%] Built target highs
+[ 71%] Built target make_it_stand_core
+[ 71%] Built target _make_it_stand
+[ 71%] Building CXX object CMakeFiles/exact-material-region-regression.dir/tests/exact_material_region_regression.cpp.o
+[ 71%] Building CXX object CMakeFiles/exact-partition-clearance-regression.dir/tests/exact_partition_clearance_regression.cpp.o
+[ 72%] Linking CXX executable exact-material-region-regression
+[ 72%] Built target exact-material-region-regression
+[ 72%] Linking CXX executable exact-partition-clearance-regression
+[ 72%] Building CXX object CMakeFiles/exact-boundary-audit-regression.dir/tests/exact_boundary_audit_regression.cpp.o
+[ 72%] Built target exact-partition-clearance-regression
+[ 73%] Building CXX object CMakeFiles/spin-it-2014-adaptive-domain-regression.dir/tests/spin_it_2014_adaptive_domain_regression.cpp.o
+[ 73%] Linking CXX executable spin-it-2014-adaptive-domain-regression
+[ 73%] Built target spin-it-2014-adaptive-domain-regression
+[ 74%] Building CXX object CMakeFiles/spin-it-2014-fill-functional-regression.dir/tests/spin_it_2014_fill_functional_regression.cpp.o
+[ 74%] Linking CXX executable exact-boundary-audit-regression
+[ 74%] Built target exact-boundary-audit-regression
+[ 74%] Building CXX object CMakeFiles/spin-it-2014-slqp-regression.dir/tests/spin_it_2014_slqp_regression.cpp.o
+[ 74%] Linking CXX executable spin-it-2014-fill-functional-regression
+[ 74%] Built target spin-it-2014-fill-functional-regression
+[ 74%] Building CXX object CMakeFiles/spin-it-2014-end-to-end.dir/tests/spin_it_2014_end_to_end.cpp.o
+[ 74%] Linking CXX executable spin-it-2014-slqp-regression
+[ 74%] Linking CXX executable spin-it-2014-end-to-end
+[ 74%] Built target spin-it-2014-slqp-regression
+[ 74%] Building CXX object CMakeFiles/spin-it-2014-modes-regression.dir/tests/spin_it_2014_modes_regression.cpp.o
+[ 74%] Built target spin-it-2014-end-to-end
+[ 74%] Building CXX object CMakeFiles/spin-it-2014-objectives-regression.dir/tests/spin_it_2014_objectives_regression.cpp.o
+[ 75%] Linking CXX executable spin-it-2014-modes-regression
+[ 75%] Built target spin-it-2014-modes-regression
+[ 76%] Building CXX object CMakeFiles/spin-it-2014-resolution-ladder.dir/tests/spin_it_2014_resolution_ladder.cpp.o
+[ 76%] Linking CXX executable spin-it-2014-objectives-regression
+[ 76%] Built target spin-it-2014-objectives-regression
+[ 77%] Building CXX object CMakeFiles/spin-it-2014-dual-material-regression.dir/tests/spin_it_2014_dual_material_regression.cpp.o
+[ 77%] Linking CXX executable spin-it-2014-resolution-ladder
+[ 77%] Linking CXX executable spin-it-2014-dual-material-regression
+[ 77%] Built target spin-it-2014-dual-material-regression
+[ 77%] Building CXX object CMakeFiles/spin-it-2014-api-regression.dir/tests/spin_it_2014_api_regression.cpp.o
+[ 77%] Built target spin-it-2014-resolution-ladder
+[ 78%] Building CXX object CMakeFiles/spin-it-2014-surface-differential-regression.dir/tests/spin_it_2014_surface_differential_regression.cpp.o
+[ 78%] Linking CXX executable spin-it-2014-surface-differential-regression
+[ 79%] Linking CXX executable spin-it-2014-api-regression
+[ 79%] Built target spin-it-2014-surface-differential-regression
+[ 79%] Building CXX object CMakeFiles/spin-it-2014-cage-functional-regression.dir/tests/spin_it_2014_cage_functional_regression.cpp.o
+[ 79%] Built target spin-it-2014-api-regression
+[ 79%] Building CXX object CMakeFiles/spin-it-2014-cage-solver-regression.dir/tests/spin_it_2014_cage_solver_regression.cpp.o
+[ 80%] Linking CXX executable spin-it-2014-cage-functional-regression
+[ 80%] Built target spin-it-2014-cage-functional-regression
+[ 80%] Building CXX object CMakeFiles/spin-it-2014-automatic-cage-regression.dir/tests/spin_it_2014_automatic_cage_regression.cpp.o
+[ 80%] Linking CXX executable spin-it-2014-cage-solver-regression
+[ 80%] Linking CXX executable spin-it-2014-automatic-cage-regression
+[ 80%] Built target spin-it-2014-cage-solver-regression
+[ 80%] Building CXX object CMakeFiles/spin-design-request-regression.dir/tests/spin_design_request_regression.cpp.o
+[ 80%] Built target spin-it-2014-automatic-cage-regression
+[ 80%] Building CXX object CMakeFiles/spin-moment-problem-regression.dir/tests/spin_moment_problem_regression.cpp.o
+[ 80%] Linking CXX executable spin-design-request-regression
+[ 81%] Linking CXX executable spin-moment-problem-regression
+[ 81%] Built target spin-design-request-regression
+[ 82%] Building CXX object CMakeFiles/quadric-coefficients-regression.dir/tests/quadric_coefficients_regression.cpp.o
+[ 82%] Built target spin-moment-problem-regression
+[ 83%] Building CXX object CMakeFiles/spin-boolean-regression.dir/tests/spin_boolean_regression.cpp.o
+[ 83%] Linking CXX executable quadric-coefficients-regression
+[ 83%] Built target quadric-coefficients-regression
+[ 83%] Building CXX object CMakeFiles/quadric-triangulator-regression.dir/tests/quadric_triangulator_regression.cpp.o
+[ 84%] Linking CXX executable quadric-triangulator-regression
+[ 84%] Built target quadric-triangulator-regression
+[ 84%] Building CXX object CMakeFiles/quadric-moment-evaluator-regression.dir/tests/quadric_moment_evaluator_regression.cpp.o
+[ 84%] Linking CXX executable quadric-moment-evaluator-regression
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/Cartesian_base.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Simple_cartesian.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Exact_predicates_exact_constructions_kernel.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/assign.h:12,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.cpp:11,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.h:226,
+                 from /data/xvxinyao/make-it-balance-paper-sim/tests/spin_boolean_regression.cpp:4:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+[ 84%] Built target quadric-moment-evaluator-regression
+[ 85%] Built target quadric-hollowing-solver-regression
+[ 85%] Building CXX object CMakeFiles/spin-it-faster-end-to-end.dir/tests/spin_it_faster_end_to_end.cpp.o
+[ 86%] Linking CXX executable spin-it-faster-end-to-end
+[ 86%] Built target spin-it-faster-end-to-end
+[ 86%] Building CXX object CMakeFiles/spin-it-faster-interface-types.dir/tests/spin_it_faster_interface_types.cpp.o
+[ 86%] Linking CXX executable spin-it-faster-interface-types
+[ 86%] Built target spin-it-faster-interface-types
+[ 86%] Building CXX object CMakeFiles/carving-reachability-regression.dir/tests/carving_reachability_regression.cpp.o
+[ 87%] Linking CXX executable carving-reachability-regression
+[ 87%] Built target carving-reachability-regression
+[ 88%] Building CXX object CMakeFiles/balance-model-reachability-regression.dir/tests/balance_model_reachability_regression.cpp.o
+[ 88%] Linking CXX executable balance-model-reachability-regression
+[ 88%] Built target balance-model-reachability-regression
+[ 88%] Building CXX object CMakeFiles/result-view-regression.dir/tests/result_view_regression.cpp.o
+[ 89%] Linking CXX executable result-view-regression
+[ 89%] Built target result-view-regression
+[ 90%] Building CXX object CMakeFiles/released-beta-archive-regression.dir/tests/released_beta_archive_regression.cpp.o
+[ 90%] Linking CXX executable released-beta-archive-regression
+[ 90%] Built target released-beta-archive-regression
+[ 90%] Building CXX object CMakeFiles/voxel-domain-regression.dir/tests/voxel_domain_regression.cpp.o
+[ 91%] Linking CXX executable voxel-domain-regression
+[ 91%] Built target voxel-domain-regression
+[ 91%] Building CXX object CMakeFiles/balance-model-regression.dir/tests/balance_model_regression.cpp.o
+[ 91%] Linking CXX executable balance-model-regression
+[ 91%] Built target balance-model-regression
+[ 91%] Building CXX object CMakeFiles/mass-properties-regression.dir/tests/mass_properties_regression.cpp.o
+[ 92%] Linking CXX executable mass-properties-regression
+[ 92%] Built target mass-properties-regression
+[ 92%] Building CXX object CMakeFiles/raw-mass-moments-regression.dir/tests/raw_mass_moments_regression.cpp.o
+[ 92%] Linking CXX executable raw-mass-moments-regression
+[ 92%] Built target raw-mass-moments-regression
+[ 92%] Building CXX object CMakeFiles/stability-regression.dir/tests/stability_regression.cpp.o
+[ 92%] Linking CXX executable stability-regression
+[ 92%] Built target stability-regression
+[ 92%] Building CXX object CMakeFiles/objective-integration-regression.dir/tests/objective_integration_regression.cpp.o
+[ 92%] Linking CXX executable objective-integration-regression
+[ 92%] Built target objective-integration-regression
+[ 92%] Building CXX object CMakeFiles/plane-carving-policy-regression.dir/tests/plane_carving_policy_regression.cpp.o
+[ 92%] Linking CXX executable plane-carving-policy-regression
+[ 92%] Built target plane-carving-policy-regression
+[ 92%] Building CXX object CMakeFiles/deformation-regression.dir/tests/deformation_regression.cpp.o
+[ 92%] Linking CXX executable deformation-regression
+[ 92%] Linking CXX executable spin-boolean-regression
+[ 92%] Built target deformation-regression
+[ 92%] Building CXX object CMakeFiles/deformation-optimization-regression.dir/tests/deformation_optimization_regression.cpp.o
+[ 92%] Built target spin-boolean-regression
+[ 92%] Building CXX object CMakeFiles/deformed-voxel-mass-field-regression.dir/tests/deformed_voxel_mass_field_regression.cpp.o
+[ 93%] Linking CXX executable deformation-optimization-regression
+[ 94%] Linking CXX executable deformed-voxel-mass-field-regression
+[ 94%] Built target deformation-optimization-regression
+[ 94%] Built target deformed-voxel-mass-field-regression
+[ 96%] Building CXX object CMakeFiles/deformed-carving-solver-regression.dir/tests/deformed_carving_solver_regression.cpp.o
+[ 96%] Building CXX object CMakeFiles/balance-target-schedule-regression.dir/tests/balance_target_schedule_regression.cpp.o
+[ 96%] Linking CXX executable balance-target-schedule-regression
+[ 96%] Built target balance-target-schedule-regression
+[ 96%] Linking CXX executable deformed-carving-solver-regression
+[ 96%] Building CXX object CMakeFiles/alternating-block-semantics-regression.dir/tests/alternating_block_semantics_regression.cpp.o
+[ 96%] Built target deformed-carving-solver-regression
+[ 96%] Linking CXX executable alternating-block-semantics-regression
+[ 96%] Built target alternating-block-semantics-regression
+[ 96%] Building CXX object CMakeFiles/r10-ablation-regression.dir/tests/r10_ablation_regression.cpp.o
+[ 96%] Building CXX object CMakeFiles/alternating-balance-optimizer-regression.dir/tests/alternating_balance_optimizer_regression.cpp.o
+[ 96%] Linking CXX executable r10-ablation-regression
+[ 96%] Built target r10-ablation-regression
+[ 97%] Building CXX object CMakeFiles/voxel-constraints-regression.dir/tests/voxel_constraints_regression.cpp.o
+[ 98%] Linking CXX executable alternating-balance-optimizer-regression
+[ 98%] Linking CXX executable voxel-constraints-regression
+[ 98%] Built target voxel-constraints-regression
+[ 98%] Built target alternating-balance-optimizer-regression
+[ 98%] Linking CXX executable slicer-validation-regression
+[ 99%] Building CXX object CMakeFiles/manufacturing-geometry-regression.dir/tests/manufacturing_geometry_regression.cpp.o
+[ 99%] Built target slicer-validation-regression
+[ 99%] Building CXX object CMakeFiles/partition-manifest-regression.dir/tests/partition_manifest_regression.cpp.o
+[100%] Linking CXX executable partition-manifest-regression
+[100%] Built target partition-manifest-regression
+[100%] Building CXX object CMakeFiles/carving-regression.dir/tests/carving_regression.cpp.o
+[100%] Linking CXX executable manufacturing-geometry-regression
+[100%] Built target manufacturing-geometry-regression
+[100%] Linking CXX executable carving-regression
+[100%] Built target carving-regression

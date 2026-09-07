@@ -240,10 +240,31 @@ class SpinIteration:
     material_topology_hash: str
 
 
+@dataclass(frozen=True)
+class SpinSolverEvent:
+    type: str
+    restart: int
+    iteration: int
+    evaluation_index: int
+    restart_evaluation_index: int
+    step: float | None
+    outcome: str
+    reason: str
+    detail: str
+    quadric_coefficients: tuple[float, ...] | None
+    quadric_hash: str
+    normalized_equation_residual: float | None
+    physical_relative_residual: float | None
+    objective: float | None
+    multiplier_mu: float | None
+    material_geometry_hash: str | None
+    material_topology_hash: str | None
+
+
 class SpinItFasterResult:
     """Read-only Python view over an immutable native result snapshot."""
 
-    __slots__ = ("_native", "_diagnostics", "_trace")
+    __slots__ = ("_native", "_diagnostics", "_trace", "_events")
 
     def __init__(self, native: Any):
         diagnostics = json.loads(str(native.diagnostics_json))
@@ -252,6 +273,11 @@ class SpinItFasterResult:
         object.__setattr__(self, "_native", native)
         object.__setattr__(self, "_diagnostics", diagnostics)
         object.__setattr__(self, "_trace", tuple(SpinIteration(**entry) for entry in diagnostics["trace"]))
+        object.__setattr__(
+            self,
+            "_events",
+            tuple(SpinSolverEvent(**entry) for entry in diagnostics["events"]),
+        )
 
     def __setattr__(self, name: str, value: Any) -> None:
         raise AttributeError("SpinItFasterResult is immutable")
@@ -281,12 +307,40 @@ class SpinItFasterResult:
         return float(self._native.derivative_evaluation_seconds)
 
     @property
+    def solve_evaluator_wall_seconds(self) -> float:
+        return float(self._native.solve_evaluator_wall_seconds)
+
+    @property
+    def solve_function_evaluations(self) -> int:
+        return int(self._native.solve_function_evaluations)
+
+    @property
+    def post_solve_material_evaluation_count(self) -> int:
+        return int(self._native.post_solve_material_evaluation_count)
+
+    @property
+    def post_solve_material_evaluation_wall_seconds(self) -> float:
+        return float(self._native.post_solve_material_evaluation_wall_seconds)
+
+    @property
+    def event_hash(self) -> str:
+        return str(self._native.event_hash)
+
+    @property
+    def evaluation_timings(self) -> tuple[dict[str, Any], ...]:
+        return tuple(dict(entry) for entry in self._native.evaluation_timings)
+
+    @property
     def diagnostics(self) -> dict[str, Any]:
         return json.loads(json.dumps(self._diagnostics))
 
     @property
     def trace(self) -> tuple[SpinIteration, ...]:
         return self._trace
+
+    @property
+    def events(self) -> tuple[SpinSolverEvent, ...]:
+        return self._events
 
     @property
     def outer_vertices(self) -> np.ndarray:

@@ -52,7 +52,14 @@ struct SpinNewtonResult
     int restartCount = 0;
     double residualEvaluationSeconds = 0.0;
     double derivativeEvaluationSeconds = 0.0;
+    double evaluatorWallSeconds = 0.0;
+    std::vector<int> restartFunctionEvaluations;
+    int eventStreamVersion = 1;
+    std::vector<SpinSolverEvent> events;
+    std::vector<SpinEvaluationTiming> evaluationTimings;
+    std::string eventHash;
     std::vector<SpinIterationTrace> trace;
+    /** Legacy v1 hash over accepted initial/iterate states only. */
     std::string traceHash;
 };
 

@@ -807,6 +807,54 @@ PYBIND11_MODULE(_make_it_stand, module)
             &api::SpinItFasterArtifact::derivativeEvaluationSeconds
         )
         .def_property_readonly(
+            "solve_evaluator_wall_seconds",
+            &api::SpinItFasterArtifact::solveEvaluatorWallSeconds
+        )
+        .def_property_readonly(
+            "solve_function_evaluations",
+            &api::SpinItFasterArtifact::solveFunctionEvaluations
+        )
+        .def_property_readonly(
+            "post_solve_material_evaluation_count",
+            &api::SpinItFasterArtifact::postSolveMaterialEvaluationCount
+        )
+        .def_property_readonly(
+            "post_solve_material_evaluation_wall_seconds",
+            &api::SpinItFasterArtifact::postSolveMaterialEvaluationWallSeconds
+        )
+        .def_property_readonly(
+            "event_hash",
+            &api::SpinItFasterArtifact::eventHash
+        )
+        .def_property_readonly(
+            "evaluation_timings",
+            [](const api::SpinItFasterArtifact& value)
+            {
+                py::list timings;
+                for (const spin::SpinEvaluationTiming& timing :
+                     value.result().evaluationTimings)
+                {
+                    py::dict entry;
+                    entry["evaluation_index"] = timing.evaluationIndex;
+                    entry["restart"] = timing.restart;
+                    entry["restart_evaluation_index"] =
+                        timing.restartEvaluationIndex;
+                    entry["evaluator_returned"] = timing.evaluatorReturned;
+                    entry["wall_seconds"] = timing.wallSeconds;
+                    entry["reported_residual_seconds"] =
+                        timing.reportedResidualSeconds
+                        ? py::cast(*timing.reportedResidualSeconds)
+                        : py::none();
+                    entry["reported_derivative_seconds"] =
+                        timing.reportedDerivativeSeconds
+                        ? py::cast(*timing.reportedDerivativeSeconds)
+                        : py::none();
+                    timings.append(std::move(entry));
+                }
+                return timings;
+            }
+        )
+        .def_property_readonly(
             "outer_vertices",
             [](const api::SpinItFasterArtifact& value)
             {

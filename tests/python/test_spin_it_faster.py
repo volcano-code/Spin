@@ -113,6 +113,42 @@ class SpinNativeArtifactTests(unittest.TestCase):
             atol=1e-14,
         )
 
+    def test_failed_evaluation_events_are_strict_json_safe(self) -> None:
+        outer_vertices, outer_faces = cube(-5.0, 5.0)
+        design_vertices, design_faces = cube(-1.0, 1.0)
+        request = SpinItFasterRequest(
+            outer_vertices=outer_vertices,
+            outer_faces=outer_faces,
+            design_vertices=design_vertices,
+            design_faces=design_faces,
+            minimum_wall_thickness=4.0,
+            settings=SpinSolverConfig(
+                maximum_iterations=1,
+                maximum_restarts=1,
+                maximum_function_evaluations_per_restart=1,
+            ),
+        )
+        failed = solve_spin_it_faster(
+            request,
+            initial_quadrics=((1.0, 0.0, 0.0, 0.0, 0.0,
+                               0.0, 0.0, 0.0, 0.0, 0.0),),
+        )
+        self.assertEqual(failed.status, "GEOMETRY_EVALUATION_FAILED")
+        self.assertEqual(failed.solve_function_evaluations, 1)
+        self.assertEqual(len(failed.evaluation_timings), 1)
+        self.assertFalse(failed.evaluation_timings[0]["evaluator_returned"])
+        evaluation = failed.events[1]
+        self.assertEqual(evaluation.outcome, "failed")
+        self.assertEqual(evaluation.reason, "evaluation_exception")
+        self.assertIsNotNone(evaluation.quadric_coefficients)
+        self.assertIsNone(evaluation.normalized_equation_residual)
+        self.assertIsNone(evaluation.material_geometry_hash)
+        self.assertEqual(
+            failed.events[-1].reason,
+            "initial_evaluation_failed",
+        )
+        json.dumps(failed.diagnostics, allow_nan=False)
+
     def test_planar_fixture_returns_immutable_sealed_artifact(self) -> None:
         outer_vertices, outer_faces = cube(-5.0, 5.0)
         design_vertices, design_faces = cube(-1.0, 1.0)
@@ -162,6 +198,34 @@ class SpinNativeArtifactTests(unittest.TestCase):
             second.diagnostics["output_hash"],
         )
         self.assertRegex(first.diagnostics["trace_hash"], r"^[0-9a-f]{64}$")
+        self.assertEqual(
+            first.diagnostics["trace_hash_semantics"],
+            "legacy_accepted_states_v1",
+        )
+        self.assertRegex(first.event_hash, r"^[0-9a-f]{64}$")
+        self.assertEqual(first.diagnostics["event_stream_version"], 1)
+        self.assertEqual(first.diagnostics["event_hash"], first.event_hash)
+        self.assertEqual(
+            first.solve_function_evaluations,
+            len(first.evaluation_timings),
+        )
+        self.assertEqual(
+            first.solve_function_evaluations,
+            first.diagnostics["solve_function_evaluations"],
+        )
+        self.assertEqual(first.post_solve_material_evaluation_count, 2)
+        self.assertEqual(
+            first.diagnostics["post_solve_material_evaluation_count"], 2
+        )
+        self.assertGreaterEqual(first.solve_evaluator_wall_seconds, 0.0)
+        self.assertGreaterEqual(
+            first.post_solve_material_evaluation_wall_seconds, 0.0
+        )
+        self.assertTrue(first.events)
+        self.assertEqual(first.events[0].type, "attempt_start")
+        self.assertEqual(first.events[-1].type, "attempt_terminal")
+        self.assertEqual(first.events[-1].reason, "converged")
+        json.dumps(first.diagnostics, allow_nan=False)
         self.assertGreaterEqual(len(first.trace), 1)
         self.assertGreaterEqual(first.residual_evaluation_seconds, 0.0)
         self.assertGreaterEqual(first.derivative_evaluation_seconds, 0.0)

@@ -1,0 +1,24 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/spin-faster-python
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/spin-faster-python
+    Start 22: spin-faster-newton
+1/2 Test #22: spin-faster-newton ...............***Failed    0.00 sec
+[FAIL] scenario=quadric-hollowing-solver rank-deficient terminal evidence is incomplete
+
+    Start 53: spin-faster-python-api
+2/2 Test #53: spin-faster-python-api ...........   Passed    0.14 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Label Time Summary:
+bindings          =   0.14 sec*proc (1 test)
+python            =   0.14 sec*proc (1 test)
+regression        =   0.14 sec*proc (2 tests)
+solver            =   0.00 sec*proc (1 test)
+spin-it           =   0.14 sec*proc (2 tests)
+spin-it-faster    =   0.14 sec*proc (2 tests)
+
+Total Test time (real) =   0.15 sec
+
+The following tests FAILED:
+	 22 - spin-faster-newton (Failed)
+Errors while running CTest

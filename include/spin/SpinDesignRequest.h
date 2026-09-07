@@ -4,7 +4,9 @@
 
 #include <Eigen/Core>
 
+#include <array>
 #include <limits>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -141,6 +143,42 @@ struct SpinIterationTrace
 };
 
 
+/** Deterministic scientific record; wall-clock timings are a separate sidecar. */
+struct SpinSolverEvent
+{
+    std::string type;
+    int restart = 0;
+    int iteration = 0;
+    int evaluationIndex = 0;
+    int restartEvaluationIndex = 0;
+    std::optional<double> step;
+    std::string outcome;
+    std::string reason;
+    std::string detail;
+    std::optional<std::array<double, 10>> quadricCoefficients;
+    std::string quadricHash;
+    std::optional<double> normalizedEquationResidual;
+    std::optional<double> physicalRelativeResidual;
+    std::optional<double> objective;
+    std::optional<double> multiplierMu;
+    std::optional<std::string> materialGeometryHash;
+    std::optional<std::string> materialTopologyHash;
+};
+
+
+/** Non-deterministic timing sidecar for one actual evaluator call. */
+struct SpinEvaluationTiming
+{
+    int evaluationIndex = 0;
+    int restart = 0;
+    int restartEvaluationIndex = 0;
+    bool evaluatorReturned = false;
+    double wallSeconds = 0.0;
+    std::optional<double> reportedResidualSeconds;
+    std::optional<double> reportedDerivativeSeconds;
+};
+
+
 /** Auditable terminal product; no field implies physical validation. */
 struct QuadricHollowingResult
 {
@@ -148,6 +186,7 @@ struct QuadricHollowingResult
     std::string diagnostic;
     std::string inputHash;
     std::string geometryHash;
+    /** Legacy v1 hash over accepted initial/iterate states only. */
     std::string traceHash;
     std::string outputHash;
     Eigen::Matrix<double, 10, 1> quadricCoefficients =
@@ -162,8 +201,20 @@ struct QuadricHollowingResult
         std::numeric_limits<double>::quiet_NaN();
     double buoyantStabilityMargin =
         std::numeric_limits<double>::quiet_NaN();
+    /** Evaluator-reported component totals for Eq. 14 solve calls only. */
     double residualEvaluationSeconds = 0.0;
     double derivativeEvaluationSeconds = 0.0;
+    int solveFunctionEvaluations = 0;
+    std::vector<int> solveRestartFunctionEvaluations;
+    double solveEvaluatorWallSeconds = 0.0;
+    int postSolveMaterialEvaluationCount = 0;
+    double postSolveMaterialEvaluationWallSeconds = 0.0;
+    double postSolveMaterialResidualEvaluationSeconds = 0.0;
+    double postSolveMaterialDerivativeEvaluationSeconds = 0.0;
+    int eventStreamVersion = 1;
+    std::string eventHash;
+    std::vector<SpinSolverEvent> events;
+    std::vector<SpinEvaluationTiming> evaluationTimings;
     std::vector<SpinIterationTrace> trace;
 };
 

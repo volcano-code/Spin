@@ -49,6 +49,11 @@ public:
     bool geometrySealed() const;
     double residualEvaluationSeconds() const;
     double derivativeEvaluationSeconds() const;
+    double solveEvaluatorWallSeconds() const;
+    int solveFunctionEvaluations() const;
+    int postSolveMaterialEvaluationCount() const;
+    double postSolveMaterialEvaluationWallSeconds() const;
+    const std::string& eventHash() const;
 
     const spin::QuadricHollowingResult& result() const;
     const Eigen::MatrixXd& outerVertices() const;

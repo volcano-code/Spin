@@ -889,6 +889,37 @@ void appendNumber(std::ostream& output, double value)
 }
 
 
+void appendJsonString(std::ostream& output, const std::string& value)
+{
+    output << '"';
+    for (const unsigned char character : value)
+    {
+        switch (character)
+        {
+        case '"': output << "\\\""; break;
+        case '\\': output << "\\\\"; break;
+        case '\b': output << "\\b"; break;
+        case '\f': output << "\\f"; break;
+        case '\n': output << "\\n"; break;
+        case '\r': output << "\\r"; break;
+        case '\t': output << "\\t"; break;
+        default:
+            if (character < 0x20U)
+            {
+                output << "\\u00" << std::hex << std::setw(2)
+                       << std::setfill('0') << static_cast<int>(character)
+                       << std::dec << std::setfill(' ');
+            }
+            else
+            {
+                output << static_cast<char>(character);
+            }
+        }
+    }
+    output << '"';
+}
+
+
 void appendVector3(
     std::ostream& output,
     const Eigen::Vector3d& value
@@ -1807,6 +1838,23 @@ std::string spinDiagnosticsJson(
            << "  \"input_hash\": \"" << result.inputHash << "\",\n"
            << "  \"geometry_hash\": \"" << result.geometryHash << "\",\n"
            << "  \"trace_hash\": \"" << result.traceHash << "\",\n"
+           << "  \"trace_hash_semantics\": "
+              "\"legacy_accepted_states_v1\",\n"
+           << "  \"event_stream_version\": "
+           << result.eventStreamVersion << ",\n"
+           << "  \"event_hash\": \"" << result.eventHash << "\",\n"
+           << "  \"solve_function_evaluations\": "
+           << result.solveFunctionEvaluations << ",\n"
+           << "  \"solve_restart_function_evaluations\": [";
+    for (std::size_t index = 0;
+         index < result.solveRestartFunctionEvaluations.size(); ++index)
+    {
+        if (index != 0U) output << ',';
+        output << result.solveRestartFunctionEvaluations[index];
+    }
+    output << "],\n"
+           << "  \"post_solve_material_evaluation_count\": "
+           << result.postSolveMaterialEvaluationCount << ",\n"
            << "  \"output_hash\": \"" << result.outputHash << "\",\n"
            << "  \"normalized_equation_residual\": ";
     appendNumber(output, result.normalizedEquationResidual);
@@ -1902,6 +1950,68 @@ std::string spinDiagnosticsJson(
                << "\",\"material_topology_hash\":\""
                << entry.materialTopologyHash << "\"}";
     }
+    output << "],\n  \"events\": [";
+    for (std::size_t index = 0; index < result.events.size(); ++index)
+    {
+        if (index != 0U) output << ',';
+        const spin::SpinSolverEvent& event = result.events[index];
+        output << "{\"type\":";
+        appendJsonString(output, event.type);
+        output << ",\"restart\":" << event.restart
+               << ",\"iteration\":" << event.iteration
+               << ",\"evaluation_index\":" << event.evaluationIndex
+               << ",\"restart_evaluation_index\":"
+               << event.restartEvaluationIndex << ",\"step\":";
+        if (event.step) appendNumber(output, *event.step);
+        else output << "null";
+        output << ",\"outcome\":";
+        appendJsonString(output, event.outcome);
+        output << ",\"reason\":";
+        appendJsonString(output, event.reason);
+        output << ",\"detail\":";
+        appendJsonString(output, event.detail);
+        output << ",\"quadric_coefficients\":";
+        if (event.quadricCoefficients)
+        {
+            output << '[';
+            for (std::size_t coefficient = 0;
+                 coefficient < event.quadricCoefficients->size(); ++coefficient)
+            {
+                if (coefficient != 0U) output << ',';
+                appendNumber(output, (*event.quadricCoefficients)[coefficient]);
+            }
+            output << ']';
+        }
+        else output << "null";
+        output << ",\"quadric_hash\":";
+        appendJsonString(output, event.quadricHash);
+        const auto appendOptional = [&output](
+            const char* name, const std::optional<double>& value
+        ) {
+            output << ",\"" << name << "\":";
+            if (value) appendNumber(output, *value);
+            else output << "null";
+        };
+        appendOptional(
+            "normalized_equation_residual",
+            event.normalizedEquationResidual
+        );
+        appendOptional(
+            "physical_relative_residual",
+            event.physicalRelativeResidual
+        );
+        appendOptional("objective", event.objective);
+        appendOptional("multiplier_mu", event.multiplierMu);
+        output << ",\"material_geometry_hash\":";
+        if (event.materialGeometryHash)
+            appendJsonString(output, *event.materialGeometryHash);
+        else output << "null";
+        output << ",\"material_topology_hash\":";
+        if (event.materialTopologyHash)
+            appendJsonString(output, *event.materialTopologyHash);
+        else output << "null";
+        output << '}';
+    }
     output << "]\n}\n";
     return output.str();
 }
@@ -1958,6 +2068,36 @@ double SpinItFasterArtifact::residualEvaluationSeconds() const
 double SpinItFasterArtifact::derivativeEvaluationSeconds() const
 {
     return storage_->result.derivativeEvaluationSeconds;
+}
+
+
+double SpinItFasterArtifact::solveEvaluatorWallSeconds() const
+{
+    return storage_->result.solveEvaluatorWallSeconds;
+}
+
+
+int SpinItFasterArtifact::solveFunctionEvaluations() const
+{
+    return storage_->result.solveFunctionEvaluations;
+}
+
+
+int SpinItFasterArtifact::postSolveMaterialEvaluationCount() const
+{
+    return storage_->result.postSolveMaterialEvaluationCount;
+}
+
+
+double SpinItFasterArtifact::postSolveMaterialEvaluationWallSeconds() const
+{
+    return storage_->result.postSolveMaterialEvaluationWallSeconds;
+}
+
+
+const std::string& SpinItFasterArtifact::eventHash() const
+{
+    return storage_->result.eventHash;
 }
 
 

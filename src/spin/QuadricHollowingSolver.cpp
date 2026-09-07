@@ -6,6 +6,7 @@
 #include <Eigen/QR>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <iomanip>
@@ -57,12 +58,12 @@ void validateSettings(const spin::SpinSolverSettings& settings)
 
 NewtonState evaluateState(
     const spin::SpinMomentProblem& problem,
-    const spin::SpinMomentEvaluator& evaluator,
-    const spin::QuadricCoefficients10& quadric
+    const spin::QuadricCoefficients10& quadric,
+    spin::SpinMomentMapEvaluation map
 )
 {
     NewtonState state;
-    state.map = evaluator(quadric);
+    state.map = std::move(map);
     if (
         !state.map.rawMoments.allFinite() ||
         !state.map.momentJacobian.allFinite()
@@ -175,6 +176,92 @@ std::string traceHash(const std::vector<spin::SpinIterationTrace>& trace)
 }
 
 
+std::array<double, momentDimension> coefficientArray(
+    const spin::QuadricCoefficients10& quadric
+)
+{
+    std::array<double, momentDimension> result{};
+    for (int index = 0; index < momentDimension; ++index)
+    {
+        result[static_cast<std::size_t>(index)] = quadric.values()(index);
+    }
+    return result;
+}
+
+
+spin::SpinSolverEvent restartEvent(
+    const char* type,
+    int restart,
+    int iteration,
+    int evaluationIndex,
+    int restartEvaluationIndex,
+    const char* outcome,
+    const char* reason
+)
+{
+    spin::SpinSolverEvent event;
+    event.type = type;
+    event.restart = restart;
+    event.iteration = iteration;
+    event.evaluationIndex = evaluationIndex;
+    event.restartEvaluationIndex = restartEvaluationIndex;
+    event.outcome = outcome;
+    event.reason = reason;
+    return event;
+}
+
+
+std::string solverEventHash(const std::vector<spin::SpinSolverEvent>& events)
+{
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << "SpinSolverEvents-v1;" << std::hexfloat;
+    const auto optionalDouble = [&stream](const std::optional<double>& value) {
+        if (value) stream << "some:" << *value;
+        else stream << "none";
+        stream << ';';
+    };
+    const auto optionalString = [&stream](
+        const std::optional<std::string>& value
+    ) {
+        if (value) stream << "some:" << value->size() << ':' << *value;
+        else stream << "none";
+        stream << ';';
+    };
+    for (const spin::SpinSolverEvent& event : events)
+    {
+        stream << event.type.size() << ':' << event.type << ';'
+               << event.restart << ';' << event.iteration << ';'
+               << event.evaluationIndex << ';'
+               << event.restartEvaluationIndex << ';';
+        optionalDouble(event.step);
+        stream << event.outcome.size() << ':' << event.outcome << ';'
+               << event.reason.size() << ':' << event.reason << ';'
+               << event.detail.size() << ':' << event.detail << ';';
+        if (event.quadricCoefficients)
+        {
+            stream << "some;";
+            for (double coefficient : *event.quadricCoefficients)
+            {
+                stream << coefficient << ';';
+            }
+        }
+        else
+        {
+            stream << "none;";
+        }
+        stream << event.quadricHash.size() << ':' << event.quadricHash << ';';
+        optionalDouble(event.normalizedEquationResidual);
+        optionalDouble(event.physicalRelativeResidual);
+        optionalDouble(event.objective);
+        optionalDouble(event.multiplierMu);
+        optionalString(event.materialGeometryHash);
+        optionalString(event.materialTopologyHash);
+    }
+    return manufacturing::computeContentSha256(stream.str());
+}
+
+
 bool converged(
     const NewtonState& state,
     const spin::SpinSolverSettings& settings
@@ -243,8 +330,9 @@ std::string hollowingOutputHash(
 {
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << "QuadricHollowingResult-v1;" << result.inputHash << ';'
+    stream << "QuadricHollowingResult-v2;" << result.inputHash << ';'
            << result.geometryHash << ';' << result.traceHash << ';'
+           << result.eventHash << ';'
            << spin::spinSolverStatusToken(result.status) << ';'
            << std::hexfloat << result.normalizedEquationResidual << ';'
            << result.physicalRelativeResidual << ';';
@@ -293,6 +381,10 @@ SpinNewtonResult solveSpinMomentSystem(
 
     SpinNewtonResult result;
     bool sawGeometryFailure = false;
+    const auto finish = [&result]() {
+        result.traceHash = ::traceHash(result.trace);
+        result.eventHash = ::solverEventHash(result.events);
+    };
     const int restartLimit = std::min(
         settings.maximumRestarts,
         static_cast<int>(initialGuesses.size())
@@ -300,25 +392,125 @@ SpinNewtonResult solveSpinMomentSystem(
     for (int restart = 0; restart < restartLimit; ++restart)
     {
         result.restartCount = restart + 1;
+        result.diagnostic.clear();
         QuadricCoefficients10 current = initialGuesses[restart];
         int evaluationsThisRestart = 0;
-        NewtonState state;
-        try
+        result.restartFunctionEvaluations.push_back(0);
+        SpinSolverEvent start = restartEvent(
+            "attempt_start", restart, 0, result.functionEvaluations, 0,
+            "started", "restart_started"
+        );
+        start.quadricCoefficients = coefficientArray(current);
+        start.quadricHash = current.hash();
+        result.events.push_back(std::move(start));
+
+        struct EvaluationResult
         {
-            state = evaluateState(problem, evaluator, current);
-            result.residualEvaluationSeconds +=
-                state.map.residualEvaluationSeconds;
-            result.derivativeEvaluationSeconds +=
-                state.map.derivativeEvaluationSeconds;
+            std::optional<NewtonState> state;
+            std::string error;
+        };
+        const auto evaluateAttempt = [&](const QuadricCoefficients10& quadric,
+                                         int iteration,
+                                         std::optional<double> step) {
             ++evaluationsThisRestart;
             ++result.functionEvaluations;
-        }
-        catch (const std::exception& error)
+            result.restartFunctionEvaluations.back() =
+                evaluationsThisRestart;
+            SpinSolverEvent event = restartEvent(
+                "evaluation", restart, iteration,
+                result.functionEvaluations, evaluationsThisRestart,
+                "failed", "evaluation_exception"
+            );
+            event.step = step;
+            event.quadricCoefficients = coefficientArray(quadric);
+            event.quadricHash = quadric.hash();
+            SpinEvaluationTiming timing;
+            timing.evaluationIndex = result.functionEvaluations;
+            timing.restart = restart;
+            timing.restartEvaluationIndex = evaluationsThisRestart;
+            const auto started = std::chrono::steady_clock::now();
+            try
+            {
+                SpinMomentMapEvaluation map = evaluator(quadric);
+                const auto returned = std::chrono::steady_clock::now();
+                timing.evaluatorReturned = true;
+                timing.wallSeconds =
+                    std::chrono::duration<double>(returned - started).count();
+                timing.reportedResidualSeconds =
+                    map.residualEvaluationSeconds;
+                timing.reportedDerivativeSeconds =
+                    map.derivativeEvaluationSeconds;
+                result.evaluatorWallSeconds += timing.wallSeconds;
+                result.residualEvaluationSeconds +=
+                    map.residualEvaluationSeconds;
+                result.derivativeEvaluationSeconds +=
+                    map.derivativeEvaluationSeconds;
+                if (!map.geometryHash.empty())
+                {
+                    event.materialGeometryHash = map.geometryHash;
+                }
+                if (!map.topologyHash.empty())
+                {
+                    event.materialTopologyHash = map.topologyHash;
+                }
+                NewtonState state = evaluateState(
+                    problem, quadric, std::move(map)
+                );
+                event.outcome = "evaluated";
+                event.reason = "evaluation_succeeded";
+                event.normalizedEquationResidual = state.normalizedResidual;
+                event.physicalRelativeResidual = state.physicalResidual;
+                event.objective = state.problem.objective;
+                event.multiplierMu = state.mu;
+                result.evaluationTimings.push_back(std::move(timing));
+                result.events.push_back(std::move(event));
+                return EvaluationResult{std::move(state), ""};
+            }
+            catch (const std::exception& error)
+            {
+                const auto failed = std::chrono::steady_clock::now();
+                if (!timing.evaluatorReturned)
+                {
+                    timing.wallSeconds = std::chrono::duration<double>(
+                        failed - started
+                    ).count();
+                    result.evaluatorWallSeconds += timing.wallSeconds;
+                }
+                event.detail = error.what();
+                result.evaluationTimings.push_back(std::move(timing));
+                result.events.push_back(std::move(event));
+                return EvaluationResult{std::nullopt, error.what()};
+            }
+            catch (...)
+            {
+                const auto failed = std::chrono::steady_clock::now();
+                timing.wallSeconds = std::chrono::duration<double>(
+                    failed - started
+                ).count();
+                result.evaluatorWallSeconds += timing.wallSeconds;
+                result.evaluationTimings.push_back(std::move(timing));
+                throw;
+            }
+        };
+        const auto terminate = [&](int iteration, const char* reason) {
+            result.events.push_back(restartEvent(
+                "attempt_terminal", restart, iteration,
+                result.functionEvaluations, evaluationsThisRestart,
+                "terminated", reason
+            ));
+        };
+
+        EvaluationResult initial = evaluateAttempt(current, 0, 0.0);
+        if (!initial.state)
         {
             sawGeometryFailure = true;
-            result.diagnostic = error.what();
+            result.diagnostic = initial.error;
+            terminate(0, "initial_evaluation_failed");
             continue;
         }
+        NewtonState state = std::move(*initial.state);
+        result.events.back().outcome = "accepted";
+        result.events.back().reason = "initial_evaluation_succeeded";
         result.trace.push_back(
             traceEntry(restart, 0, evaluationsThisRestart, 0.0, state)
         );
@@ -327,6 +519,7 @@ SpinNewtonResult solveSpinMomentSystem(
         {
             result.status = SpinSolverStatus::OptimizationDidNotConverge;
             result.diagnostic = "initial moment Jacobian vanishes";
+            terminate(0, "initial_sensitivity_vanished");
             continue;
         }
         if (converged(state, settings))
@@ -337,7 +530,9 @@ SpinNewtonResult solveSpinMomentSystem(
             result.physicalRelativeResidual = state.physicalResidual;
             result.multiplierMu = state.mu;
             result.multipliers = state.lambda;
-            result.traceHash = ::traceHash(result.trace);
+            result.diagnostic.clear();
+            terminate(0, "converged");
+            finish();
             return result;
         }
 
@@ -408,6 +603,7 @@ SpinNewtonResult solveSpinMomentSystem(
             {
                 result.status = SpinSolverStatus::OptimizationDidNotConverge;
                 result.diagnostic = "bordered Newton system is rank deficient";
+                terminate(iteration, "bordered_system_rank_deficient");
                 break;
             }
             Eigen::Matrix<double, momentDimension, 1> direction =
@@ -418,6 +614,7 @@ SpinNewtonResult solveSpinMomentSystem(
             {
                 result.status = SpinSolverStatus::OptimizationDidNotConverge;
                 result.diagnostic = "Newton direction vanished before convergence";
+                terminate(iteration, "newton_direction_vanished");
                 break;
             }
 
@@ -435,32 +632,27 @@ SpinNewtonResult solveSpinMomentSystem(
             )
             {
                 candidate = current.geodesicUpdate(direction, step);
-                try
+                EvaluationResult trial = evaluateAttempt(
+                    candidate, iteration, step
+                );
+                if (trial.state)
                 {
-                    candidateState = evaluateState(
-                        problem,
-                        evaluator,
-                        candidate
-                    );
-                    result.residualEvaluationSeconds +=
-                        candidateState.map.residualEvaluationSeconds;
-                    result.derivativeEvaluationSeconds +=
-                        candidateState.map.derivativeEvaluationSeconds;
-                    ++evaluationsThisRestart;
-                    ++result.functionEvaluations;
+                    candidateState = std::move(*trial.state);
                     if (candidateState.normalizedResidual <
                         state.normalizedResidual)
                     {
+                        result.events.back().outcome = "accepted";
+                        result.events.back().reason = "residual_decreased";
                         accepted = true;
                         break;
                     }
+                    result.events.back().outcome = "rejected";
+                    result.events.back().reason = "no_residual_decrease";
                 }
-                catch (const std::exception& error)
+                else
                 {
                     sawGeometryFailure = true;
-                    result.diagnostic = error.what();
-                    ++evaluationsThisRestart;
-                    ++result.functionEvaluations;
+                    result.diagnostic = trial.error;
                 }
                 step *= settings.lineSearchReduction;
             }
@@ -475,6 +667,13 @@ SpinNewtonResult solveSpinMomentSystem(
                 {
                     result.diagnostic = "Eq. 14 line search found no decrease";
                 }
+                terminate(
+                    iteration,
+                    evaluationsThisRestart >=
+                            settings.maximumFunctionEvaluationsPerRestart
+                        ? "maximum_evaluations_reached"
+                        : "line_search_exhausted"
+                );
                 break;
             }
 
@@ -496,13 +695,16 @@ SpinNewtonResult solveSpinMomentSystem(
                 result.physicalRelativeResidual = state.physicalResidual;
                 result.multiplierMu = state.mu;
                 result.multipliers = state.lambda;
-                result.traceHash = ::traceHash(result.trace);
+                result.diagnostic.clear();
+                terminate(iteration, "converged");
+                finish();
                 return result;
             }
             if (iteration == settings.maximumIterations)
             {
                 result.status = SpinSolverStatus::ResourceLimitReached;
                 result.diagnostic = "maximum Newton iterations reached";
+                terminate(iteration, "maximum_iterations_reached");
             }
         }
     }
@@ -521,7 +723,7 @@ SpinNewtonResult solveSpinMomentSystem(
         result.physicalRelativeResidual = final.physicalRelativeResidual;
         result.multiplierMu = final.multiplierMu;
     }
-    result.traceHash = ::traceHash(result.trace);
+    finish();
     return result;
 }
 
@@ -622,19 +824,52 @@ QuadricHollowingResult solveQuadricHollowing(
     result.physicalRelativeResidual = solved.physicalRelativeResidual;
     result.trace = solved.trace;
     result.traceHash = solved.traceHash;
+    result.solveFunctionEvaluations = solved.functionEvaluations;
+    result.solveRestartFunctionEvaluations =
+        solved.restartFunctionEvaluations;
+    result.solveEvaluatorWallSeconds = solved.evaluatorWallSeconds;
+    result.eventStreamVersion = solved.eventStreamVersion;
+    result.events = solved.events;
+    result.evaluationTimings = solved.evaluationTimings;
+    result.eventHash = solved.eventHash;
     result.residualEvaluationSeconds = solved.residualEvaluationSeconds;
     result.derivativeEvaluationSeconds = solved.derivativeEvaluationSeconds;
     if (solved.quadric.has_value())
     {
+        const auto evaluateForMaterialExport =
+            [&](const QuadricCoefficients10& quadric) {
+                ++result.postSolveMaterialEvaluationCount;
+                const auto started = std::chrono::steady_clock::now();
+                try
+                {
+                    QuadricMomentEvaluation evaluation =
+                        evaluateQuadricMaterialMoments(
+                            request, quadric, evaluatorSettings
+                        );
+                    result.postSolveMaterialEvaluationWallSeconds +=
+                        std::chrono::duration<double>(
+                            std::chrono::steady_clock::now() - started
+                        ).count();
+                    result.postSolveMaterialResidualEvaluationSeconds +=
+                        evaluation.residualEvaluationSeconds;
+                    result.postSolveMaterialDerivativeEvaluationSeconds +=
+                        evaluation.derivativeEvaluationSeconds;
+                    return evaluation;
+                }
+                catch (...)
+                {
+                    result.postSolveMaterialEvaluationWallSeconds +=
+                        std::chrono::duration<double>(
+                            std::chrono::steady_clock::now() - started
+                        ).count();
+                    throw;
+                }
+            };
         result.quadricCoefficients = solved.quadric->values();
         try
         {
             const QuadricMomentEvaluation finalEvaluation =
-                evaluateQuadricMaterialMoments(
-                    request,
-                    *solved.quadric,
-                    evaluatorSettings
-                );
+                evaluateForMaterialExport(*solved.quadric);
             result.finalMoments = finalEvaluation.totalMomentsTarget;
             if (request.mode == SpinMode::BuoyantStability)
             {
@@ -658,11 +893,7 @@ QuadricHollowingResult solveQuadricHollowing(
                     -solved.quadric->values()
                 );
             const QuadricMomentEvaluation cavityEvaluation =
-                evaluateQuadricMaterialMoments(
-                    request,
-                    complement,
-                    evaluatorSettings
-                );
+                evaluateForMaterialExport(complement);
             result.cavityBoundary = cavityEvaluation.materialBoundary;
             result.geometryHash = manufacturing::computeContentSha256(
                 std::string("QuadricHollowingGeometry-v2;") +
