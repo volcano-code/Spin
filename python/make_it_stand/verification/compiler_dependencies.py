@@ -41,7 +41,7 @@ def parse_command(argv: list[str]) -> CompileCommand:
              "-fvisibility=default", "-fvisibility-inlines-hidden", "-fwrapv", "-fno-strict-aliasing",
              "-fstrict-aliasing", "-fno-common", "-fcommon", "-fstack-protector", "-fstack-protector-strong",
              "-m32", "-m64", "-msse", "-msse2", "-msse3", "-mssse3", "-msse4.1", "-msse4.2",
-             "-mavx", "-mavx2", "-mfma"}
+             "-mavx", "-mavx2", "-mfma", "-mpopcnt"}
     i = 1
     while i < len(argv):
         a = argv[i]

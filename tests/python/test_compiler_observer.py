@@ -335,6 +335,20 @@ class CompilerObserverTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("forced.h", [r["logical_path"] for r in self.receipts()[0]["inputs_before"]])
 
+    def test_real_cxx_popcnt_flag_produces_observed_object_and_runnable_executable(self):
+        self.write("main.cpp", "int main() { return __builtin_popcount(0xf0f0u) != 8; }\n")
+        self.cc = shutil.which("c++")
+        args = self.argv(extra=["-mpopcnt", "-MMD", "-MF", "main.d"])
+        result = self.launch(args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.root / "main.o").is_file())
+        self.assertTrue((self.root / "main.d").is_file())
+        receipt, = self.receipts()
+        self.assertEqual(receipt["status"], "OBSERVED_SUCCESS")
+        self.assertEqual(receipt["object"]["sha256"], hashlib.sha256((self.root / "main.o").read_bytes()).hexdigest())
+        subprocess.run([self.cc, "main.o", "-o", "popcnt"], cwd=self.root, check=True, capture_output=True)
+        self.assertEqual(subprocess.run([str(self.root / "popcnt")]).returncode, 0)
+
     def test_existing_depfile_is_untouched_by_both_probes(self):
         self.write("original.d", "untouched before compilation\n")
         original = self.api._run
