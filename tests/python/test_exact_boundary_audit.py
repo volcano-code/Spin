@@ -254,6 +254,15 @@ class ExactSequenceIngestionTests(unittest.TestCase):
             # remains otherwise valid, so rejection cannot come from geometry.
             self.assert_rejected_by_both(vertices, F.tolist())
 
+    def test_rejects_zero_dimensional_array_elements_as_nonscalars(self):
+        vertices = V.tolist()
+        vertices[0][0] = np.array(0.0)
+        self.assert_rejected_by_both(vertices, F.tolist())
+
+        faces = F.tolist()
+        faces[0][0] = np.array(0, dtype=np.int64)
+        self.assert_rejected_by_both(V.tolist(), faces)
+
     def test_accepts_mixed_exact_scalars_and_supported_row_forms(self):
         vertices = [
             [np.int8(0), np.float32(-0.0), 0],

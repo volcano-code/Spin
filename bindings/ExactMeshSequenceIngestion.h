@@ -8,7 +8,6 @@
 #include <pybind11/pybind11.h>
 
 #include <cmath>
-#include <cstring>
 #include <limits>
 #include <string>
 
@@ -19,10 +18,19 @@ namespace exact_mesh_ingestion
 namespace py = pybind11;
 
 
-inline bool isNumpyScalar(const py::handle& value)
+inline py::object numpyScalarType()
 {
-    const char* typeName = Py_TYPE(value.ptr())->tp_name;
-    return typeName != nullptr && std::strncmp(typeName, "numpy.", 6) == 0;
+    return py::module_::import("numpy").attr("generic");
+}
+
+
+inline bool isNumpyScalar(
+    const py::handle& value,
+    const py::handle& scalarType
+)
+{
+    return !py::isinstance<py::array>(value) &&
+        py::isinstance(value, scalarType);
 }
 
 
@@ -65,7 +73,10 @@ inline double exactIntegerAsDouble(const py::handle& value)
 }
 
 
-inline double exactVertexScalar(const py::handle& value)
+inline double exactVertexScalar(
+    const py::handle& value,
+    const py::handle& numpyScalar
+)
 {
     if (PyBool_Check(value.ptr()))
     {
@@ -84,7 +95,11 @@ inline double exactVertexScalar(const py::handle& value)
         }
         return converted;
     }
-    if (!isNumpyScalar(value))
+    if (py::isinstance<py::array>(value))
+    {
+        throw py::type_error("array-valued vertex coordinates are invalid");
+    }
+    if (!isNumpyScalar(value, numpyScalar))
     {
         throw py::type_error(
             "vertex coordinates must be real Python or NumPy numeric scalars"
@@ -127,14 +142,21 @@ inline double exactVertexScalar(const py::handle& value)
 }
 
 
-inline int exactFaceScalar(const py::handle& value)
+inline int exactFaceScalar(
+    const py::handle& value,
+    const py::handle& numpyScalar
+)
 {
     if (PyBool_Check(value.ptr()))
     {
         throw py::type_error("boolean face indices are invalid");
     }
+    if (py::isinstance<py::array>(value))
+    {
+        throw py::type_error("array-valued face indices are invalid");
+    }
     bool integer = PyLong_Check(value.ptr());
-    if (!integer && isNumpyScalar(value))
+    if (!integer && isNumpyScalar(value, numpyScalar))
     {
         const py::array scalar = py::array::ensure(value);
         integer = scalar && scalar.ndim() == 0 &&
@@ -245,6 +267,7 @@ inline py::sequence matrixRow(
 inline Eigen::MatrixXd verticesFromSequence(const py::handle& value)
 {
     const py::sequence rows = matrixRows(value, "vertices");
+    const py::object numpyScalar = numpyScalarType();
     Eigen::MatrixXd result(static_cast<Eigen::Index>(py::len(rows)), 3);
     for (py::ssize_t row = 0; row < py::len(rows); ++row)
     {
@@ -256,7 +279,7 @@ inline Eigen::MatrixXd verticesFromSequence(const py::handle& value)
             result(
                 static_cast<Eigen::Index>(row),
                 static_cast<Eigen::Index>(column)
-            ) = exactVertexScalar(scalar);
+            ) = exactVertexScalar(scalar, numpyScalar);
         }
     }
     return result;
@@ -266,6 +289,7 @@ inline Eigen::MatrixXd verticesFromSequence(const py::handle& value)
 inline Eigen::MatrixXi facesFromSequence(const py::handle& value)
 {
     const py::sequence rows = matrixRows(value, "faces");
+    const py::object numpyScalar = numpyScalarType();
     Eigen::MatrixXi result(static_cast<Eigen::Index>(py::len(rows)), 3);
     for (py::ssize_t row = 0; row < py::len(rows); ++row)
     {
@@ -277,7 +301,7 @@ inline Eigen::MatrixXi facesFromSequence(const py::handle& value)
             result(
                 static_cast<Eigen::Index>(row),
                 static_cast<Eigen::Index>(column)
-            ) = exactFaceScalar(scalar);
+            ) = exactFaceScalar(scalar, numpyScalar);
         }
     }
     return result;
