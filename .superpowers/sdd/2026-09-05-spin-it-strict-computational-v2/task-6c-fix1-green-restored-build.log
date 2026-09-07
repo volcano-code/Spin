@@ -1,0 +1,6 @@
+[ 75%] Built target highs
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricHollowingSolver.cpp.o
+[ 75%] Linking CXX static library libmake_it_stand_core.a
+[100%] Built target make_it_stand_core
+[100%] Linking CXX executable quadric-hollowing-solver-regression
+[100%] Built target quadric-hollowing-solver-regression

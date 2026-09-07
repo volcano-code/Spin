@@ -1,0 +1,21 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+    Start 31: spin-faster-newton
+1/1 Test #31: spin-faster-newton ...............***Failed    0.00 sec
+[DETAIL] invalid derived objective Hessian state was not rejected at evaluation
+[FAIL] scenario=quadric-hollowing-solver non-finite numerical states crossed acceptance boundaries
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+regression        =   0.00 sec*proc (1 test)
+solver            =   0.00 sec*proc (1 test)
+spin-it           =   0.00 sec*proc (1 test)
+spin-it-faster    =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.00 sec
+
+The following tests FAILED:
+	 31 - spin-faster-newton (Failed)
+Errors while running CTest

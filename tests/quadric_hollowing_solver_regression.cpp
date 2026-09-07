@@ -66,7 +66,7 @@ spin::SpinMomentMapEvaluation finiteFidgetSolutionMoments()
 }
 
 
-spin::SpinMomentMapEvaluation overflowedResidualNormalization()
+spin::SpinMomentMapEvaluation overflowedRawMomentNorm()
 {
     spin::SpinMomentMapEvaluation value;
     value.rawMoments(0) = 1.0;
@@ -75,8 +75,8 @@ spin::SpinMomentMapEvaluation overflowedResidualNormalization()
     value.rawMoments(5) = 1e308;
     value.momentJacobian.setIdentity();
     value.derivativeDefined = true;
-    value.geometryHash = "overflowed-normalization-geometry";
-    value.topologyHash = "overflowed-normalization-topology";
+    value.geometryHash = "overflowed-raw-moment-norm-geometry";
+    value.topologyHash = "overflowed-raw-moment-norm-topology";
     return value;
 }
 
@@ -630,7 +630,7 @@ int main()
             [&overflowTrialCalls](const spin::QuadricCoefficients10& quadric) {
                 ++overflowTrialCalls;
                 return overflowTrialCalls == 2
-                    ? overflowedResidualNormalization()
+                    ? overflowedRawMomentNorm()
                     : identityMoments(quadric);
             },
             {initialPoint()}
@@ -653,9 +653,9 @@ int main()
              !event.objective.has_value() &&
              !event.multiplierMu.has_value() &&
              event.materialGeometryHash ==
-                 "overflowed-normalization-geometry" &&
+                 "overflowed-raw-moment-norm-geometry" &&
              event.materialTopologyHash ==
-                 "overflowed-normalization-topology");
+                 "overflowed-raw-moment-norm-topology");
     }
     if (
         overflowTrialRecovered.status != spin::SpinSolverStatus::Converged ||
@@ -688,14 +688,15 @@ int main()
     const auto rejectedInitialNumericalState = [&](
         const spin::SpinMomentProblem& numericalProblem,
         const spin::SpinMomentEvaluator& numericalEvaluator,
-        const char* scenario
+        const char* scenario,
+        const spin::QuadricCoefficients10& initial
     ) {
         const spin::SpinNewtonResult numericalResult =
             spin::solveSpinMomentSystem(
                 numericalProblem,
                 settings,
                 numericalEvaluator,
-                {initialPoint()}
+                {initial}
             );
         const bool rejected =
             numericalResult.status ==
@@ -719,9 +720,10 @@ int main()
         !rejectedInitialNumericalState(
             problem,
             [](const spin::QuadricCoefficients10&) {
-                return overflowedResidualNormalization();
+                return overflowedRawMomentNorm();
             },
-            "residual normalization"
+            "raw-moment norm",
+            initialPoint()
         ) || numericalStateContractFailed;
     numericalStateContractFailed =
         !rejectedInitialNumericalState(
@@ -732,7 +734,8 @@ int main()
                 value.momentJacobian(0, 1) = 1e308;
                 return value;
             },
-            "moment-Jacobian norm"
+            "moment-Jacobian norm",
+            initialPoint()
         ) || numericalStateContractFailed;
     numericalStateContractFailed =
         !rejectedInitialNumericalState(
@@ -747,7 +750,143 @@ int main()
                 value.derivativeDefined = true;
                 return value;
             },
-            "derived objective/derivative"
+            "derived objective/derivative (combined)",
+            initialPoint()
+        ) || numericalStateContractFailed;
+
+    Vector10 negativeHeightValues = Vector10::Zero();
+    negativeHeightValues(3) = -1.0;
+    const spin::QuadricCoefficients10 negativeHeight =
+        spin::QuadricCoefficients10::fromUnnormalized(
+            negativeHeightValues
+        );
+    const spin::SpinMomentProblem lowerCenterOfMass =
+        spin::SpinMomentProblem::staticBalance(
+            spin::StaticObjective::LowerCenterOfMass
+        );
+    spin::SpinMomentMapEvaluation hessianOnlyMap;
+    hessianOnlyMap.rawMoments(0) = 1e-110;
+    hessianOnlyMap.momentJacobian.setIdentity();
+    hessianOnlyMap.derivativeDefined = true;
+    const spin::SpinMomentEvaluation hessianOnlyProblem =
+        lowerCenterOfMass.evaluate(hessianOnlyMap.rawMoments);
+    bool hessianOnlyConstraintHessiansFinite = true;
+    for (const auto& hessian : hessianOnlyProblem.constraintHessians)
+    {
+        hessianOnlyConstraintHessiansFinite =
+            hessianOnlyConstraintHessiansFinite && hessian.allFinite();
+    }
+    if (
+        !hessianOnlyMap.rawMoments.allFinite() ||
+        !std::isfinite(hessianOnlyMap.rawMoments.norm()) ||
+        !hessianOnlyMap.momentJacobian.allFinite() ||
+        !std::isfinite(hessianOnlyMap.momentJacobian.norm()) ||
+        !std::isfinite(hessianOnlyProblem.objective) ||
+        !hessianOnlyProblem.objectiveGradient.allFinite() ||
+        !std::isfinite(hessianOnlyProblem.objectiveGradient.norm()) ||
+        hessianOnlyProblem.objectiveHessian.allFinite() ||
+        !hessianOnlyProblem.constraints.allFinite() ||
+        !hessianOnlyProblem.constraintJacobian.allFinite() ||
+        !hessianOnlyConstraintHessiansFinite
+    )
+    {
+        return fail("Hessian-only overflow fixture preconditions are invalid");
+    }
+    numericalStateContractFailed =
+        !rejectedInitialNumericalState(
+            lowerCenterOfMass,
+            [hessianOnlyMap](const spin::QuadricCoefficients10&) {
+                return hessianOnlyMap;
+            },
+            "derived objective Hessian",
+            negativeHeight
+        ) || numericalStateContractFailed;
+
+    const spin::SpinMomentProblem largeWeightSpinningTop =
+        spin::SpinMomentProblem::spinningTop(1e155);
+    spin::SpinMomentMapEvaluation gradientNormMap;
+    gradientNormMap.rawMoments(0) = 1.0;
+    gradientNormMap.rawMoments(4) = 0.5;
+    gradientNormMap.rawMoments(5) = 0.5;
+    gradientNormMap.rawMoments(6) = 0.5;
+    gradientNormMap.momentJacobian.setIdentity();
+    gradientNormMap.derivativeDefined = true;
+    const spin::SpinMomentEvaluation gradientNormProblem =
+        largeWeightSpinningTop.evaluate(gradientNormMap.rawMoments);
+    bool gradientNormConstraintHessiansFinite = true;
+    for (const auto& hessian : gradientNormProblem.constraintHessians)
+    {
+        gradientNormConstraintHessiansFinite =
+            gradientNormConstraintHessiansFinite && hessian.allFinite();
+    }
+    if (
+        !gradientNormMap.rawMoments.allFinite() ||
+        !std::isfinite(gradientNormMap.rawMoments.norm()) ||
+        !gradientNormMap.momentJacobian.allFinite() ||
+        !std::isfinite(gradientNormMap.momentJacobian.norm()) ||
+        !std::isfinite(gradientNormProblem.objective) ||
+        !gradientNormProblem.objectiveGradient.allFinite() ||
+        std::isfinite(gradientNormProblem.objectiveGradient.norm()) ||
+        !gradientNormProblem.objectiveHessian.allFinite() ||
+        !gradientNormProblem.constraints.allFinite() ||
+        !gradientNormProblem.constraintJacobian.allFinite() ||
+        !gradientNormConstraintHessiansFinite
+    )
+    {
+        return fail("gradient-norm overflow fixture preconditions are invalid");
+    }
+    numericalStateContractFailed =
+        !rejectedInitialNumericalState(
+            largeWeightSpinningTop,
+            [gradientNormMap](const spin::QuadricCoefficients10&) {
+                return gradientNormMap;
+            },
+            "objective-gradient norm",
+            negativeHeight
+        ) || numericalStateContractFailed;
+
+    const spin::SpinMomentProblem largeTargetBuoyancy =
+        spin::SpinMomentProblem::buoyantStability(
+            1e155,
+            Eigen::Vector2d::Zero()
+        );
+    spin::SpinMomentMapEvaluation constraintNormMap;
+    constraintNormMap.rawMoments(0) = 1.0;
+    constraintNormMap.momentJacobian.setIdentity();
+    constraintNormMap.derivativeDefined = true;
+    const spin::SpinMomentEvaluation constraintNormProblem =
+        largeTargetBuoyancy.evaluate(constraintNormMap.rawMoments);
+    bool constraintNormHessiansFinite = true;
+    for (const auto& hessian : constraintNormProblem.constraintHessians)
+    {
+        constraintNormHessiansFinite =
+            constraintNormHessiansFinite && hessian.allFinite();
+    }
+    if (
+        !constraintNormMap.rawMoments.allFinite() ||
+        !std::isfinite(constraintNormMap.rawMoments.norm()) ||
+        !constraintNormMap.momentJacobian.allFinite() ||
+        !std::isfinite(constraintNormMap.momentJacobian.norm()) ||
+        !std::isfinite(constraintNormProblem.objective) ||
+        !constraintNormProblem.objectiveGradient.allFinite() ||
+        !std::isfinite(constraintNormProblem.objectiveGradient.norm()) ||
+        !constraintNormProblem.objectiveHessian.allFinite() ||
+        !constraintNormProblem.constraints.allFinite() ||
+        std::isfinite(constraintNormProblem.constraints.squaredNorm()) ||
+        !constraintNormProblem.constraintJacobian.allFinite() ||
+        !constraintNormHessiansFinite
+    )
+    {
+        return fail("constraint-norm overflow fixture preconditions are invalid");
+    }
+    numericalStateContractFailed =
+        !rejectedInitialNumericalState(
+            largeTargetBuoyancy,
+            [constraintNormMap](const spin::QuadricCoefficients10&) {
+                return constraintNormMap;
+            },
+            "constraint residual norm",
+            negativeHeight
         ) || numericalStateContractFailed;
 
     const spin::SpinNewtonResult overflowedNewtonSystem =
