@@ -4,6 +4,8 @@ import importlib
 import json
 import struct
 import unittest
+from copy import deepcopy
+from decimal import Decimal
 from fractions import Fraction
 
 import numpy as np
@@ -196,6 +198,177 @@ class ExactBoundaryTests(unittest.TestCase):
                     self.audit(v, f)
         with self.assertRaises(ValueError):
             self.audit(orientation='caller-passed')
+
+
+class ExactSequenceIngestionTests(unittest.TestCase):
+    """Direct native exact APIs must inspect sequence scalars before coercion."""
+
+    def setUp(self):
+        self.native = importlib.import_module('_make_it_stand')
+
+    def calls(self, vertices, faces):
+        try:
+            return (
+                self.native.audit_exact_triangle_boundary(
+                    vertices, faces, 'OutwardPositive'
+                ),
+                self.native.make_exact_material_region(vertices, faces),
+            )
+        except (TypeError, ValueError) as error:
+            self.fail(f'direct native exact APIs rejected valid input: {error}')
+
+    def assert_rejected_by_both(self, vertices, faces):
+        for name, call in (
+            ('audit_exact_triangle_boundary',
+             lambda: self.native.audit_exact_triangle_boundary(
+                 vertices, faces, 'OutwardPositive'
+             )),
+            ('make_exact_material_region',
+             lambda: self.native.make_exact_material_region(vertices, faces)),
+        ):
+            with self.subTest(api=name):
+                with self.assertRaises((TypeError, ValueError)):
+                    call()
+
+    def test_rejects_boolean_scalars_before_mixed_sequence_inference(self):
+        for vertices, faces in (
+            ([[True, 0.0, 0.0], *V.tolist()[1:]], F.tolist()),
+            ([[np.bool_(False), 0.0, 0.0], *V.tolist()[1:]], F.tolist()),
+            (V.tolist(), [[False, 2, 1], *F.tolist()[1:]]),
+            (V.tolist(), [[np.bool_(True), 2, 1], *F.tolist()[1:]]),
+        ):
+            self.assert_rejected_by_both(vertices, faces)
+
+    def test_rejects_nonrepresentable_integer_scalars_before_mixed_inference(self):
+        for value in (
+            9007199254740993,
+            -9007199254740993,
+            np.int64(9007199254740993),
+            np.int64(-9007199254740993),
+            np.uint64(9007199254740993),
+        ):
+            vertices = V.tolist()
+            vertices[1][0] = value
+            # Without scalar-first validation, the surrounding floats infer
+            # float64 and silently accept a rounded coordinate. The tetrahedron
+            # remains otherwise valid, so rejection cannot come from geometry.
+            self.assert_rejected_by_both(vertices, F.tolist())
+
+    def test_accepts_mixed_exact_scalars_and_supported_row_forms(self):
+        vertices = [
+            [np.int8(0), np.float32(-0.0), 0],
+            (np.uint64(1), 0.0, np.int16(0)),
+            np.array([0, 2, 0], dtype=np.int32),
+            [np.float64(0), np.uint8(0), 3.0],
+        ]
+        faces = [
+            [np.uint8(0), np.int16(2), 1],
+            (np.int64(0), np.uint32(1), 3),
+            np.array([0, 3, 2], dtype=np.uint16),
+            [np.uint64(1), np.int8(2), 3],
+        ]
+        audit, region = self.calls(vertices, faces)
+        self.assertTrue(audit['boundary_valid'], audit)
+        self.assertTrue(region.facts['valid'], region.facts)
+        self.assertEqual(Fraction(audit['component_signed_volumes_exact'][0]), 1)
+
+    def test_accepts_large_exact_integer_without_changing_represented_bytes(self):
+        large = 2**60
+        vertices = [[0.0, 0, 0], [large, 0.0, 0],
+                    [0, np.uint8(2), 0.0], [0.0, 0, np.int8(3)]]
+        faces = F.tolist()
+        saved = deepcopy((vertices, faces))
+        audit, region = self.calls(vertices, faces)
+        self.assertTrue(audit['boundary_valid'], audit)
+        self.assertTrue(region.facts['valid'], region.facts)
+        self.assertEqual(
+            Fraction(audit['component_signed_volumes_exact'][0]), large
+        )
+        canonical = b'exact-boundary-input-v1\0' + bytes([0])
+        canonical += struct.pack('>QQ', 4, 4)
+        represented = [[0.0, 0.0, 0.0], [float(large), 0.0, 0.0],
+                       [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]]
+        canonical += b''.join(
+            struct.pack('>d', value)
+            for row in represented for value in row
+        )
+        canonical += b''.join(
+            struct.pack('>Q', value) for row in faces for value in row
+        )
+        self.assertEqual(
+            audit['input_digest'], hashlib.sha256(canonical).hexdigest()
+        )
+        self.assertEqual((vertices, faces), saved)
+
+    def test_preserves_signed_zero_order_hash_and_caller_sequences(self):
+        vertices = V.tolist()
+        vertices[0][0] = -0.0
+        faces = [row[:] for row in F.tolist()]
+        saved = deepcopy((vertices, faces))
+        audit, region = self.calls(vertices, faces)
+        positive = V.tolist()
+        audit_positive, region_positive = self.calls(positive, faces)
+        reversed_audit, reversed_region = self.calls(vertices, faces[::-1])
+        self.assertNotEqual(audit['input_digest'], audit_positive['input_digest'])
+        self.assertNotEqual(
+            region.facts['input_digest'], region_positive.facts['input_digest']
+        )
+        self.assertNotEqual(audit['input_digest'], reversed_audit['input_digest'])
+        self.assertNotEqual(
+            region.facts['input_digest'], reversed_region.facts['input_digest']
+        )
+        self.assertEqual((vertices, faces), saved)
+
+    def test_rejects_unsupported_sequence_scalars_indices_and_shapes(self):
+        unsupported_vertices = (
+            [[0j, 0.0, 0.0], *V.tolist()[1:]],
+            [[Decimal('0'), 0.0, 0.0], *V.tolist()[1:]],
+            [[Fraction(0), 0.0, 0.0], *V.tolist()[1:]],
+            [['0', 0.0, 0.0], *V.tolist()[1:]],
+            [[None, 0.0, 0.0], *V.tolist()[1:]],
+            [[np.longdouble(0), 0.0, 0.0], *V.tolist()[1:]],
+            [[float('nan'), 0.0, 0.0], *V.tolist()[1:]],
+            [[float('inf'), 0.0, 0.0], *V.tolist()[1:]],
+        )
+        for vertices in unsupported_vertices:
+            self.assert_rejected_by_both(vertices, F.tolist())
+        for faces in (
+            [[0.0, 2, 1], *F.tolist()[1:]],
+            [[-1, 2, 1], *F.tolist()[1:]],
+            [[2**31, 2, 1], *F.tolist()[1:]],
+            [[0, 2, 99], *F.tolist()[1:]],
+        ):
+            self.assert_rejected_by_both(V.tolist(), faces)
+        for vertices, faces in (
+            ([], []),
+            ([[0, 0], *V.tolist()[1:]], F.tolist()),
+            (V.tolist(), [[0, 1], *F.tolist()[1:]]),
+            ([0, 1, 2], F.tolist()),
+            (V.tolist(), [0, 1, 2]),
+        ):
+            self.assert_rejected_by_both(vertices, faces)
+
+    def test_typed_arrays_preserve_supported_numpy_behavior(self):
+        vertices_base = np.zeros((4, 6), dtype='>f8')
+        vertices_base[:, ::2] = V
+        vertices = vertices_base[:, ::2]
+        faces_base = np.zeros((4, 6), dtype='>i4')
+        faces_base[:, ::2] = F
+        faces = faces_base[:, ::2]
+        vertices.flags.writeable = False
+        faces.flags.writeable = False
+        audit, region = self.calls(vertices, faces)
+        self.assertTrue(audit['boundary_valid'], audit)
+        self.assertTrue(region.facts['valid'], region.facts)
+        for bad_vertices in (
+            V.astype(bool), V.astype(complex), V.astype(object),
+            V.astype(np.longdouble),
+        ):
+            self.assert_rejected_by_both(bad_vertices, F)
+        for bad_faces in (
+            F.astype(bool), F.astype(float), F.astype(complex), F.astype(object),
+        ):
+            self.assert_rejected_by_both(V, bad_faces)
 
 
 if __name__ == '__main__':

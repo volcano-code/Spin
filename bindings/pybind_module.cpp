@@ -2,6 +2,7 @@
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
 #include "verification/ExactBoundaryAudit.h"
 #include "verification/ExactMaterialRegion.h"
+#include "ExactMeshSequenceIngestion.h"
 #endif
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014
 #include "api/SpinIt2014.h"
@@ -128,6 +129,11 @@ double exactClearanceFromPython(const py::handle& value) {
 
 Eigen::MatrixXd exactVerticesFromPython(const py::handle& value)
 {
+    if (!py::isinstance<py::array>(value))
+    {
+        return exact_mesh_ingestion::verticesFromSequence(value);
+    }
+
     const py::array original=requireArray(value,"vertices");
     requireTriangleMatrixShape(original,"vertices");
     const char kind=original.dtype().kind();
@@ -153,8 +159,12 @@ Eigen::MatrixXd exactVerticesFromPython(const py::handle& value)
                 throw py::value_error("integer coordinate is not exactly representable as binary64");
         }
     }
+    if (!result.allFinite())
+        throw py::value_error("vertex coordinates must be finite");
     return result;
 }
+
+
 #endif
 
 template <typename Integer>
@@ -242,6 +252,18 @@ Eigen::MatrixXi facesFromPython(const py::handle& value)
         rangeMessage
     );
 }
+
+
+#if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+Eigen::MatrixXi exactFacesFromPython(const py::handle& value)
+{
+    if (!py::isinstance<py::array>(value))
+    {
+        return exact_mesh_ingestion::facesFromSequence(value);
+    }
+    return facesFromPython(value);
+}
+#endif
 
 
 std::vector<int> cellIdsFromPython(const py::handle& value)
@@ -399,9 +421,10 @@ PYBIND11_MODULE(_make_it_stand, module)
             return out;
         });
     module.def("make_exact_material_region", [](const py::object& v,const py::object& f) {
-        return verification::makeExactMaterialRegion(exactVerticesFromPython(v),facesFromPython(f));
+        return verification::makeExactMaterialRegion(exactVerticesFromPython(v),exactFacesFromPython(f));
     },py::arg("vertices"),py::arg("faces"),
        "Authenticate an oriented finite regular closed region from exact binary64 indexed triangles. "
+       "Inputs are NumPy matrices or nested list/tuple matrices whose rows may also be one-dimensional NumPy arrays. "
        "Negative checker copies only; input geometry is preserved. Empty mesh is malformed.");
     module.def("empty_exact_material_region", &verification::emptyExactMaterialRegion,
                "Explicit empty algebra operand, never a valid physical outer artifact.");
@@ -465,7 +488,7 @@ PYBIND11_MODULE(_make_it_stand, module)
             else if(orientation=="AnyNonzero") mode=Mode::AnyNonzero;
             else throw py::value_error("orientation must be OutwardPositive, InwardNegative, or AnyNonzero");
             const auto audit=verification::auditExactTriangleBoundary(
-                exactVerticesFromPython(vertices), facesFromPython(faces), mode);
+                exactVerticesFromPython(vertices), exactFacesFromPython(faces), mode);
             const auto& r=audit.facts();
             py::dict out;
             out["algorithm"]=r.algorithm; out["backend"]=r.backend;
@@ -496,6 +519,7 @@ PYBIND11_MODULE(_make_it_stand, module)
             return out;
         }, py::arg("vertices"), py::arg("faces"), py::arg("orientation"),
         "Exact audit of the binary64 represented indexed boundary. No repair or welding. "
+        "Inputs are NumPy matrices or nested list/tuple matrices whose rows may also be one-dimensional NumPy arrays. "
         "Float16/32 promote exactly; integer coordinates must be exactly binary64-representable. "
         "Wider floats are rejected. "
         "AnyNonzero is a boundary orientation mode only. Does not verify containment, "
