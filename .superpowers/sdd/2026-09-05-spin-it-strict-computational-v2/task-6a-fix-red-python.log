@@ -1,0 +1,40 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+    Start 62: spin-faster-python-api
+1/1 Test #62: spin-faster-python-api ...........***Failed    0.16 sec
+test_failed_evaluation_events_are_strict_json_safe (test_spin_it_faster.SpinNativeArtifactTests.test_failed_evaluation_events_are_strict_json_safe) ... FAIL
+test_planar_fixture_returns_immutable_sealed_artifact (test_spin_it_faster.SpinNativeArtifactTests.test_planar_fixture_returns_immutable_sealed_artifact) ... ok
+test_raw_moment_integration_matches_cube (test_spin_it_faster.SpinNativeArtifactTests.test_raw_moment_integration_matches_cube) ... ok
+test_buoyant_request_normalizes_public_paper_inputs (test_spin_it_faster.SpinSchemaTests.test_buoyant_request_normalizes_public_paper_inputs) ... ok
+test_request_is_frozen_and_rejects_unknown_mode (test_spin_it_faster.SpinSchemaTests.test_request_is_frozen_and_rejects_unknown_mode) ... ok
+test_static_pareto_weight_is_mode_checked (test_spin_it_faster.SpinSchemaTests.test_static_pareto_weight_is_mode_checked) ... ok
+
+======================================================================
+FAIL: test_failed_evaluation_events_are_strict_json_safe (test_spin_it_faster.SpinNativeArtifactTests.test_failed_evaluation_events_are_strict_json_safe)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_spin_it_faster.py", line 144, in test_failed_evaluation_events_are_strict_json_safe
+    self.assertIsInstance(evaluation.quadric_coefficients, tuple)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0] is not an instance of <class 'tuple'>
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.076s
+
+FAILED (failures=1)
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+bindings          =   0.16 sec*proc (1 test)
+python            =   0.16 sec*proc (1 test)
+regression        =   0.16 sec*proc (1 test)
+spin-it           =   0.16 sec*proc (1 test)
+spin-it-faster    =   0.16 sec*proc (1 test)
+
+Total Test time (real) =   0.16 sec
+
+The following tests FAILED:
+	 62 - spin-faster-python-api (Failed)
+Errors while running CTest

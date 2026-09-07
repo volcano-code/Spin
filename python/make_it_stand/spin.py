@@ -261,6 +261,23 @@ class SpinSolverEvent:
     material_topology_hash: str | None
 
 
+def _immutable_spin_solver_event(entry: dict[str, Any]) -> SpinSolverEvent:
+    coefficients = entry["quadric_coefficients"]
+    immutable_coefficients: tuple[float, ...] | None = None
+    if coefficients is not None:
+        immutable_coefficients = tuple(float(value) for value in coefficients)
+        if (
+            len(immutable_coefficients) != 10
+            or not all(math.isfinite(value) for value in immutable_coefficients)
+        ):
+            raise ValueError(
+                "native Spin-It Faster event coefficients must be 10 finite values"
+            )
+    return SpinSolverEvent(
+        **{**entry, "quadric_coefficients": immutable_coefficients}
+    )
+
+
 class SpinItFasterResult:
     """Read-only Python view over an immutable native result snapshot."""
 
@@ -276,7 +293,10 @@ class SpinItFasterResult:
         object.__setattr__(
             self,
             "_events",
-            tuple(SpinSolverEvent(**entry) for entry in diagnostics["events"]),
+            tuple(
+                _immutable_spin_solver_event(entry)
+                for entry in diagnostics["events"]
+            ),
         )
 
     def __setattr__(self, name: str, value: Any) -> None:

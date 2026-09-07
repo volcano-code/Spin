@@ -189,6 +189,12 @@ std::array<double, momentDimension> coefficientArray(
 }
 
 
+std::optional<double> finiteMetric(double value)
+{
+    return std::isfinite(value) ? std::optional<double>(value) : std::nullopt;
+}
+
+
 spin::SpinSolverEvent restartEvent(
     const char* type,
     int restart,
@@ -458,10 +464,14 @@ SpinNewtonResult solveSpinMomentSystem(
                 );
                 event.outcome = "evaluated";
                 event.reason = "evaluation_succeeded";
-                event.normalizedEquationResidual = state.normalizedResidual;
-                event.physicalRelativeResidual = state.physicalResidual;
-                event.objective = state.problem.objective;
-                event.multiplierMu = state.mu;
+                event.normalizedEquationResidual = finiteMetric(
+                    state.normalizedResidual
+                );
+                event.physicalRelativeResidual = finiteMetric(
+                    state.physicalResidual
+                );
+                event.objective = finiteMetric(state.problem.objective);
+                event.multiplierMu = finiteMetric(state.mu);
                 result.evaluationTimings.push_back(std::move(timing));
                 result.events.push_back(std::move(event));
                 return EvaluationResult{std::move(state), ""};

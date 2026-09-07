@@ -1,0 +1,18 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+    Start 30: spin-faster-newton
+1/2 Test #30: spin-faster-newton ...............   Passed    0.00 sec
+    Start 62: spin-faster-python-api
+2/2 Test #62: spin-faster-python-api ...........   Passed    0.15 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+bindings          =   0.15 sec*proc (1 test)
+python            =   0.15 sec*proc (1 test)
+regression        =   0.16 sec*proc (2 tests)
+solver            =   0.00 sec*proc (1 test)
+spin-it           =   0.16 sec*proc (2 tests)
+spin-it-faster    =   0.16 sec*proc (2 tests)
+
+Total Test time (real) =   0.16 sec

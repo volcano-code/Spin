@@ -141,8 +141,29 @@ class SpinNativeArtifactTests(unittest.TestCase):
         self.assertEqual(evaluation.outcome, "failed")
         self.assertEqual(evaluation.reason, "evaluation_exception")
         self.assertIsNotNone(evaluation.quadric_coefficients)
+        self.assertIsInstance(evaluation.quadric_coefficients, tuple)
+        self.assertEqual(len(evaluation.quadric_coefficients), 10)
+        original_event_hash = failed.event_hash
+        original_coefficient = evaluation.quadric_coefficients[0]
+        with self.assertRaises(TypeError):
+            evaluation.quadric_coefficients[0] = 42.0  # type: ignore[index]
+        copied_diagnostics = failed.diagnostics
+        copied_diagnostics["events"][1]["quadric_coefficients"][0] = 42.0
+        self.assertEqual(
+            failed.events[1].quadric_coefficients[0], original_coefficient
+        )
+        self.assertEqual(
+            failed.diagnostics["events"][1]["quadric_coefficients"][0],
+            original_coefficient,
+        )
+        self.assertEqual(failed.event_hash, original_event_hash)
+        self.assertEqual(
+            failed.events[1].quadric_hash,
+            failed.diagnostics["events"][1]["quadric_hash"],
+        )
         self.assertIsNone(evaluation.normalized_equation_residual)
         self.assertIsNone(evaluation.material_geometry_hash)
+        self.assertIsNone(failed.events[-1].quadric_coefficients)
         self.assertEqual(
             failed.events[-1].reason,
             "initial_evaluation_failed",

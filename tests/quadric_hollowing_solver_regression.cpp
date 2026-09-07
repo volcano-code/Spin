@@ -79,6 +79,18 @@ bool sameScientificEvent(
 }
 
 
+bool allPresentMetricsAreFinite(const spin::SpinSolverEvent& event)
+{
+    return (!event.step || std::isfinite(*event.step)) &&
+        (!event.normalizedEquationResidual ||
+         std::isfinite(*event.normalizedEquationResidual)) &&
+        (!event.physicalRelativeResidual ||
+         std::isfinite(*event.physicalRelativeResidual)) &&
+        (!event.objective || std::isfinite(*event.objective)) &&
+        (!event.multiplierMu || std::isfinite(*event.multiplierMu));
+}
+
+
 } // namespace
 
 
@@ -446,6 +458,50 @@ int main()
     if (!nonStandardPropagated)
     {
         return fail("non-standard evaluator exception was silently converted");
+    }
+
+    Vector10 overflowQuadricValues = Vector10::Zero();
+    overflowQuadricValues(4) = 1.0;
+    overflowQuadricValues(5) = 1.0;
+    const spin::SpinNewtonResult overflowObjective =
+        spin::solveSpinMomentSystem(
+            spin::SpinMomentProblem::fidgetSpinner(),
+            settings,
+            [](const spin::QuadricCoefficients10&) {
+                spin::SpinMomentMapEvaluation value;
+                value.rawMoments(0) = 1.0;
+                value.rawMoments(4) = 1e308;
+                value.rawMoments(5) = 1e308;
+                value.momentJacobian.setIdentity();
+                value.derivativeDefined = true;
+                return value;
+            },
+            {spin::QuadricCoefficients10::fromUnnormalized(
+                overflowQuadricValues
+            )}
+        );
+    bool sawOverflowEvaluation = false;
+    for (const spin::SpinSolverEvent& event : overflowObjective.events)
+    {
+        if (!allPresentMetricsAreFinite(event))
+        {
+            return fail("scientific event contains a non-finite metric");
+        }
+        if (event.type == "evaluation")
+        {
+            sawOverflowEvaluation = true;
+            if (event.objective.has_value())
+            {
+                return fail("overflowed objective was marked available");
+            }
+        }
+    }
+    if (
+        overflowObjective.status != spin::SpinSolverStatus::Converged ||
+        !sawOverflowEvaluation
+    )
+    {
+        return fail("event-only overflow fixture changed legacy solve behavior");
     }
 
     spin::SpinSolverSettings limited = settings;
