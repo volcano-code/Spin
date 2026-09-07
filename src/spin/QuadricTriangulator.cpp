@@ -1,6 +1,7 @@
 #include "spin/QuadricTriangulator.h"
 
 #include "manufacturing/SlicerValidation.h"
+#include "spin/QuadricInverseGaussMap.h"
 
 #include <Eigen/Eigenvalues>
 #include <Eigen/LU>
@@ -193,33 +194,6 @@ spin::QuadricSurfaceType classify(
         return spin::QuadricSurfaceType::Ellipsoid;
     }
     return spin::QuadricSurfaceType::Hyperboloid;
-}
-
-
-bool inverseGaussPoint(
-    const spin::QuadricCoefficients10& quadric,
-    const Eigen::Matrix3d& inverseA,
-    const Eigen::Vector3d& normal,
-    Eigen::Vector3d* point
-)
-{
-    const double denominator =
-        quadric.linearVector().dot(inverseA * quadric.linearVector()) -
-        4.0 * quadric.constant();
-    if (std::abs(denominator) <= 1e-15)
-    {
-        return false;
-    }
-    const double wSquared =
-        4.0 * normal.dot(inverseA * normal) / denominator;
-    if (!std::isfinite(wSquared) || wSquared <= 1e-14)
-    {
-        return false;
-    }
-    const double w = std::sqrt(wSquared);
-    *point = inverseA *
-        (normal / w - 0.5 * quadric.linearVector());
-    return point->allFinite();
 }
 
 
@@ -839,7 +813,9 @@ QuadricTriangulation triangulateQuadric(
         );
     }
 
-    const Eigen::Matrix3d inverseA = quadric.quadraticMatrix().inverse();
+    const QuadricInverseGaussMap inverseGaussMap(quadric);
+    const Eigen::Matrix3d& inverseA =
+        inverseGaussMap.inverseQuadraticMatrix();
     const SphereMesh sphere = icosphere(settings.icosphereSubdivisions);
     if (type == QuadricSurfaceType::Ellipsoid)
     {
@@ -847,14 +823,15 @@ QuadricTriangulation triangulateQuadric(
         vertices.reserve(sphere.vertices.size());
         for (const Eigen::Vector3d& normal : sphere.vertices)
         {
-            Eigen::Vector3d point;
-            if (!inverseGaussPoint(quadric, inverseA, normal, &point))
+            const QuadricInverseGaussPointResult mapped =
+                inverseGaussMap.point(normal);
+            if (!mapped.valid())
             {
                 throw std::runtime_error(
                     "ellipsoid inverse Gauss map unexpectedly failed"
                 );
             }
-            vertices.push_back(point);
+            vertices.push_back(*mapped.point);
         }
         std::vector<Face> faces = sphere.faces;
         for (Face& face : faces)
@@ -882,12 +859,14 @@ QuadricTriangulation triangulateQuadric(
         std::vector<Eigen::Vector3d> mapped(sphere.vertices.size());
         for (std::size_t index = 0; index < sphere.vertices.size(); ++index)
         {
-            inside[index] = inverseGaussPoint(
-                quadric,
-                inverseA,
-                sphere.vertices[index],
-                &mapped[index]
-            ) && mapped[index].norm() <= radius;
+            const QuadricInverseGaussPointResult point =
+                inverseGaussMap.point(sphere.vertices[index]);
+            inside[index] = point.valid();
+            if (inside[index])
+            {
+                mapped[index] = *point.point;
+                inside[index] = mapped[index].norm() <= radius;
+            }
         }
 
         std::vector<Eigen::Vector3d> vertices;
@@ -922,17 +901,14 @@ QuadricTriangulation triangulateQuadric(
                 Eigen::Vector3d middleNormal =
                     0.5 * (insideNormal + outsideNormal);
                 middleNormal.normalize();
-                Eigen::Vector3d middlePoint;
-                const bool middleInside = inverseGaussPoint(
-                    quadric,
-                    inverseA,
-                    middleNormal,
-                    &middlePoint
-                ) && middlePoint.norm() <= radius;
+                const QuadricInverseGaussPointResult middle =
+                    inverseGaussMap.point(middleNormal);
+                const bool middleInside = middle.valid() &&
+                    middle.point->norm() <= radius;
                 if (middleInside)
                 {
                     insideNormal = middleNormal;
-                    insidePoint = middlePoint;
+                    insidePoint = *middle.point;
                 }
                 else
                 {

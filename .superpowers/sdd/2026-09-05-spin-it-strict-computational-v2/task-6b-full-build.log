@@ -1,0 +1,208 @@
+f7c3c8212b56c0d6dae63787efc99093f4383415
+CMake Deprecation Warning at libigl/cmake/libigl.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  cmake/FindLIBIGL.cmake:34 (include)
+  CMakeLists.txt:91 (find_package)
+
+
+-- Creating target: igl::core (igl)
+BOOST_ROOT: 
+-- Using header-only CGAL
+-- Targetting Unix Makefiles
+-- Using /usr/bin/c++ compiler.
+-- __cplusplus is 201703
+--   --> Do not link with Boost.Thread
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48")  
+-- Boost include dirs: /home/lin/anaconda3/include
+-- Boost libraries:    
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48") found components: thread system 
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Creating target: igl::cgal (igl_cgal)
+-- HIGHS version: 1.14.0
+-- Git hash: 7df0786de3
+-- Build C++ library: ON
+-- Build C++ executable: OFF
+-- Build Fortran: OFF
+-- Build CSharp: OFF
+-- Build Python: OFF
+-- Build all tests: OFF
+-- ZLIB: ON
+-- Build examples: OFF
+-- Build pdlp with GPU: OFF
+-- Use FindCUDAConf: OFF
+-- Build GPU with delayed loading: OFF
+-- Build HIPO: OFF
+-- Build OpenBLAS: OFF
+-- Build type: RelWithDebInfo
+-- Found long size: 8
+-- Found long long size: 8
+-- Found int64_t size: 8
+-- Found unsigned long size: 8
+-- Found unsigned long long size: 8
+-- Found uint64_t size: 8
+-- Found int * size: 8
+-- IPO / LTO supported by compiler: YES
+-- IPO / LTO: disabled by default when building a static library; set CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON to enable
+-- FAST_BUILD set to on.
+-- Build C++ example: OFF
+-- Build CSharp example: OFF
+-- Build dotnet package: OFF
+-- No CSharp support
+-- .Net: Use .Net Framework 2.1 support: ON
+-- Found pybind11: /home/lin/anaconda3/lib/python3.13/site-packages/pybind11/include (found version "3.0.1")
+-- Configuring done (0.9s)
+-- Generating done (0.1s)
+-- Build files have been written to: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+  Test #182: carving-no-candidates
+
+Total Tests: 182
+[  1%] Built target r8-fake-slicer
+[ 54%] Built target highs
+[ 54%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricMomentEvaluator.cpp.o
+[ 54%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/verification/ExactBoundaryAudit.cpp.o
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/Cartesian_base.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Simple_cartesian.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Exact_predicates_exact_constructions_kernel.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/assign.h:12,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.cpp:11,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.h:226,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin/QuadricMomentEvaluator.cpp:8:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+[ 54%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/verification/ExactMaterialRegion.cpp.o
+[ 55%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/verification/ExactBoundaryDistance.cpp.o
+[ 55%] Linking CXX static library libmake_it_stand_core.a
+[ 71%] Built target make_it_stand_core
+[ 71%] Linking CXX executable exact-partition-clearance-regression
+[ 71%] Linking CXX shared module python/_make_it_stand.cpython-313-x86_64-linux-gnu.so
+[ 71%] Built target exact-partition-clearance-regression
+[ 72%] Linking CXX executable exact-material-region-regression
+[ 72%] Built target exact-material-region-regression
+[ 73%] Building CXX object CMakeFiles/exact-boundary-audit-regression.dir/tests/exact_boundary_audit_regression.cpp.o
+[ 73%] Built target _make_it_stand
+[ 73%] Linking CXX executable spin-it-2014-adaptive-domain-regression
+[ 73%] Linking CXX executable exact-boundary-audit-regression
+[ 73%] Built target exact-boundary-audit-regression
+[ 73%] Linking CXX executable spin-it-2014-fill-functional-regression
+[ 74%] Built target spin-it-2014-adaptive-domain-regression
+[ 74%] Linking CXX executable spin-it-2014-slqp-regression
+[ 74%] Built target spin-it-2014-fill-functional-regression
+[ 75%] Linking CXX executable spin-it-2014-end-to-end
+[ 75%] Built target spin-it-2014-slqp-regression
+[ 76%] Linking CXX executable spin-it-2014-modes-regression
+[ 76%] Built target spin-it-2014-end-to-end
+[ 76%] Linking CXX executable spin-it-2014-objectives-regression
+[ 76%] Built target spin-it-2014-modes-regression
+[ 76%] Linking CXX executable spin-it-2014-resolution-ladder
+[ 76%] Built target spin-it-2014-objectives-regression
+[ 76%] Linking CXX executable spin-it-2014-dual-material-regression
+[ 77%] Built target spin-it-2014-dual-material-regression
+[ 78%] Linking CXX executable spin-it-2014-api-regression
+[ 79%] Built target spin-it-2014-resolution-ladder
+[ 79%] Linking CXX executable spin-it-2014-surface-differential-regression
+[ 80%] Built target spin-it-2014-surface-differential-regression
+[ 80%] Linking CXX executable spin-it-2014-cage-functional-regression
+[ 81%] Built target spin-it-2014-cage-functional-regression
+[ 81%] Linking CXX executable spin-it-2014-cage-solver-regression
+[ 81%] Built target spin-it-2014-api-regression
+[ 81%] Linking CXX executable spin-it-2014-automatic-cage-regression
+[ 81%] Built target spin-it-2014-automatic-cage-regression
+[ 81%] Linking CXX executable spin-design-request-regression
+[ 81%] Built target spin-it-2014-cage-solver-regression
+[ 82%] Linking CXX executable spin-moment-problem-regression
+[ 82%] Built target spin-design-request-regression
+[ 83%] Linking CXX executable quadric-coefficients-regression
+[ 83%] Built target quadric-coefficients-regression
+[ 84%] Building CXX object CMakeFiles/spin-boolean-regression.dir/tests/spin_boolean_regression.cpp.o
+[ 84%] Built target spin-moment-problem-regression
+[ 84%] Linking CXX executable quadric-triangulator-regression
+[ 85%] Built target quadric-triangulator-regression
+[ 85%] Building CXX object CMakeFiles/quadric-inverse-gauss-map-regression.dir/tests/quadric_inverse_gauss_map_regression.cpp.o
+[ 86%] Linking CXX executable quadric-inverse-gauss-map-regression
+[ 86%] Built target quadric-inverse-gauss-map-regression
+[ 86%] Linking CXX executable quadric-moment-evaluator-regression
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/Cartesian_base.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Simple_cartesian.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Exact_predicates_exact_constructions_kernel.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/assign.h:12,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.cpp:11,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.h:226,
+                 from /data/xvxinyao/make-it-balance-paper-sim/tests/spin_boolean_regression.cpp:4:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+[ 86%] Built target quadric-moment-evaluator-regression
+[ 86%] Linking CXX executable quadric-hollowing-solver-regression
+[ 86%] Built target quadric-hollowing-solver-regression
+[ 87%] Linking CXX executable spin-it-faster-end-to-end
+[ 87%] Built target spin-it-faster-end-to-end
+[ 87%] Linking CXX executable spin-it-faster-interface-types
+[ 87%] Built target spin-it-faster-interface-types
+[ 88%] Linking CXX executable carving-reachability-regression
+[ 88%] Built target carving-reachability-regression
+[ 88%] Linking CXX executable balance-model-reachability-regression
+[ 89%] Built target balance-model-reachability-regression
+[ 90%] Linking CXX executable result-view-regression
+[ 90%] Built target result-view-regression
+[ 90%] Linking CXX executable released-beta-archive-regression
+[ 90%] Built target released-beta-archive-regression
+[ 91%] Linking CXX executable voxel-domain-regression
+[ 91%] Built target voxel-domain-regression
+[ 91%] Linking CXX executable balance-model-regression
+[ 91%] Built target balance-model-regression
+[ 91%] Linking CXX executable mass-properties-regression
+[ 91%] Built target mass-properties-regression
+[ 92%] Linking CXX executable raw-mass-moments-regression
+[ 92%] Built target raw-mass-moments-regression
+[ 92%] Linking CXX executable stability-regression
+[ 92%] Built target stability-regression
+[ 92%] Linking CXX executable objective-integration-regression
+[ 93%] Built target objective-integration-regression
+[ 93%] Linking CXX executable plane-carving-policy-regression
+[ 94%] Built target plane-carving-policy-regression
+[ 94%] Linking CXX executable deformation-regression
+[ 94%] Built target deformation-regression
+[ 95%] Linking CXX executable deformation-optimization-regression
+[ 95%] Built target deformation-optimization-regression
+[ 95%] Linking CXX executable deformed-voxel-mass-field-regression
+[ 95%] Built target deformed-voxel-mass-field-regression
+[ 95%] Linking CXX executable deformed-carving-solver-regression
+[ 96%] Built target deformed-carving-solver-regression
+[ 96%] Linking CXX executable balance-target-schedule-regression
+[ 97%] Built target balance-target-schedule-regression
+[ 97%] Linking CXX executable alternating-block-semantics-regression
+[ 97%] Built target alternating-block-semantics-regression
+[ 98%] Linking CXX executable alternating-balance-optimizer-regression
+[ 98%] Built target alternating-balance-optimizer-regression
+[ 98%] Linking CXX executable r10-ablation-regression
+[ 98%] Built target r10-ablation-regression
+[ 98%] Linking CXX executable voxel-constraints-regression
+[ 99%] Built target voxel-constraints-regression
+[ 99%] Linking CXX executable spin-boolean-regression
+[100%] Linking CXX executable manufacturing-geometry-regression
+[100%] Built target spin-boolean-regression
+[100%] Built target manufacturing-geometry-regression
+[100%] Linking CXX executable slicer-validation-regression
+[100%] Built target slicer-validation-regression
+[100%] Linking CXX executable carving-regression
+[100%] Linking CXX executable partition-manifest-regression
+[100%] Built target carving-regression
+[100%] Built target partition-manifest-regression

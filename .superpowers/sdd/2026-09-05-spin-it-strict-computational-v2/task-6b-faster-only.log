@@ -1,0 +1,140 @@
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Deprecation Warning at libigl/cmake/libigl.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  cmake/FindLIBIGL.cmake:34 (include)
+  CMakeLists.txt:91 (find_package)
+
+
+CMake Deprecation Warning at CMakeLists.txt:4 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE  
+-- Creating target: igl::core (igl)
+CMake Deprecation Warning at CMakeLists.txt:4 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+
+
+Cloning into 'cgal'...
+HEAD is now at f7c3c8212b5 The announcement draft
+BOOST_ROOT: 
+-- Using header-only CGAL
+-- Targetting Unix Makefiles
+-- Using /usr/bin/c++ compiler.
+-- Found GMP: /usr/lib/x86_64-linux-gnu/libgmp.so  
+-- Found MPFR: /usr/lib/x86_64-linux-gnu/libmpfr.so  
+-- __cplusplus is 201703
+--   --> Do not link with Boost.Thread
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48")  
+-- Boost include dirs: /home/lin/anaconda3/include
+-- Boost libraries:    
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48") found components: thread system 
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Creating target: igl::cgal (igl_cgal)
+-- Configuring done (46.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+[  4%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/carving/CarvingDiagnostics.cpp.o
+[  4%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/api/BalanceModel.cpp.o
+[  7%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/carving/PlaneCarvingPolicy.cpp.o
+[  9%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/carving/CarvingSolver.cpp.o
+[  9%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/center_of_mass.cpp.o
+[ 12%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/BoundedBiharmonicWeights.cpp.o
+[ 14%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/DeformedVoxelMassField.cpp.o
+[ 17%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/DeformationObjective.cpp.o
+[ 19%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/DeformationOptimizer.cpp.o
+[ 21%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/DeformationSystem.cpp.o
+[ 24%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/GridDeformationDomain.cpp.o
+[ 26%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/HandleSet.cpp.o
+[ 29%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/LaplacianEditingEnergy.cpp.o
+[ 31%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/deformation/LinearBlendSkinning.cpp.o
+[ 34%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/extraction/VoidMeshExtractor.cpp.o
+[ 34%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/grid_util.cpp.o
+[ 36%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/inner_void_mesh.cpp.o
+[ 39%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/make_it_stand.cpp.o
+[ 41%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/manufacturing/ManufacturingGeometry.cpp.o
+[ 43%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/manufacturing/PartitionManifest.cpp.o
+[ 46%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/manufacturing/SlicerValidation.cpp.o
+[ 48%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/optimization/AlternatingBalanceOptimizer.cpp.o
+[ 51%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/physics/BalanceEnergy.cpp.o
+[ 53%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/physics/BalanceObjective.cpp.o
+[ 56%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/physics/MassProperties.cpp.o
+[ 58%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/physics/RawMassMoments10.cpp.o
+[ 58%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/physics/SurfaceMassDifferential.cpp.o
+[ 60%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/stability/SupportRegion.cpp.o
+[ 63%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/stability/BalanceTargetSchedule.cpp.o
+[ 65%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/voxel/Voxel.cpp.o
+[ 68%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/voxel/VoxelDomain.cpp.o
+[ 70%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/voxel/VoxelGrid.cpp.o
+[ 73%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/voxel/MaterialOccupancy.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/voxel/VoxelSurface.cpp.o
+[ 78%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/voxel/VoxelTopology.cpp.o
+[ 80%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/viewer/ResultView.cpp.o
+[ 82%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/SpinDesignRequest.cpp.o
+[ 82%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/SpinMomentProblem.cpp.o
+[ 85%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricCoefficients.cpp.o
+[ 87%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricInverseGaussMap.cpp.o
+[ 90%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricMomentEvaluator.cpp.o
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/Cartesian_base.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Simple_cartesian.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Exact_predicates_exact_constructions_kernel.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/assign.h:12,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.cpp:11,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.h:226,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin/QuadricMomentEvaluator.cpp:8:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+[ 92%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricHollowingSolver.cpp.o
+[ 95%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricTriangulator.cpp.o
+[ 97%] Linking CXX static library libmake_it_stand_core.a
+[ 97%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/quadric-inverse-gauss-map-regression.dir/tests/quadric_inverse_gauss_map_regression.cpp.o
+[100%] Linking CXX executable quadric-inverse-gauss-map-regression
+[100%] Built target quadric-inverse-gauss-map-regression
+[ 95%] Built target make_it_stand_core
+[ 97%] Building CXX object CMakeFiles/quadric-triangulator-regression.dir/tests/quadric_triangulator_regression.cpp.o
+[100%] Linking CXX executable quadric-triangulator-regression
+[100%] Built target quadric-triangulator-regression
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+    Start 5: spin-faster-quadric-triangulator
+1/2 Test #5: spin-faster-quadric-triangulator ...   Passed    0.02 sec
+    Start 6: spin-faster-inverse-gauss-map
+2/2 Test #6: spin-faster-inverse-gauss-map ......   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+geometry          =   0.02 sec*proc (2 tests)
+regression        =   0.02 sec*proc (2 tests)
+spin-it           =   0.02 sec*proc (2 tests)
+spin-it-faster    =   0.02 sec*proc (2 tests)
+
+Total Test time (real) =   0.02 sec

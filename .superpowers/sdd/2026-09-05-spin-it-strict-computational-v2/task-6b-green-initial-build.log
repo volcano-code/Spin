@@ -1,0 +1,16 @@
+[ 74%] Built target highs
+[ 76%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricInverseGaussMap.cpp.o
+[ 76%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricTriangulator.cpp.o
+[ 76%] Linking CXX static library libmake_it_stand_core.a
+[ 98%] Built target make_it_stand_core
+[ 98%] Building CXX object CMakeFiles/quadric-inverse-gauss-map-regression.dir/tests/quadric_inverse_gauss_map_regression.cpp.o
+[100%] Linking CXX executable quadric-inverse-gauss-map-regression
+[100%] Built target quadric-inverse-gauss-map-regression
+[ 74%] Built target highs
+[ 98%] Built target make_it_stand_core
+[ 98%] Linking CXX executable quadric-triangulator-regression
+[100%] Built target quadric-triangulator-regression
+[ 75%] Built target highs
+[100%] Built target make_it_stand_core
+[100%] Linking CXX executable quadric-moment-evaluator-regression
+[100%] Built target quadric-moment-evaluator-regression

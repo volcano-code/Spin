@@ -1,0 +1,5 @@
+[PASS] scenario=quadric-inverse-gauss-map fd_h3e-4=4.31344e-07 fd_h1e-4=4.79273e-08 fd_h3e-5=4.31273e-09 hyperboloid_fd_h3e-4=1.69238e-07 hyperboloid_fd_h1e-4=1.88043e-08 hyperboloid_fd_h3e-5=1.69223e-09 analytic_zero_entries=23 analytic_zero_abs=0 radial_null=2.61846e-16
+[PASS] scenario=quadric-triangulator hash=e71f44edb04749919a3b2a3d2201ea1e21fc39b57bbef768fa2f768ba4cce847
+[PASS] scenario=quadric-moment-evaluator derivative_error=0.00658869 geometry=0f00208452856b310c3735782290374aeac11b185b640fe0a157d102ef387101
+-rwxrwxr-x 775 build/strict-v2-spin/quadric-triangulator-regression
+-rwxrwxr-x 775 build/strict-v2-spin/quadric-inverse-gauss-map-regression

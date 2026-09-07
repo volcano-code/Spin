@@ -191,12 +191,14 @@ endif()
 if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES
         src/spin/QuadricCoefficients.cpp
+        src/spin/QuadricInverseGaussMap.cpp
         src/spin/QuadricMomentEvaluator.cpp
         src/spin/QuadricHollowingSolver.cpp
         src/spin/QuadricTriangulator.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
         include/spin/QuadricCoefficients.h
+        include/spin/QuadricInverseGaussMap.h
         include/spin/QuadricMomentEvaluator.h
         include/spin/QuadricHollowingSolver.h
         include/spin/QuadricTriangulator.h
@@ -895,6 +897,31 @@ if(BUILD_TESTING)
         )
         set_tests_properties(
             spin-faster-quadric-triangulator
+            PROPERTIES LABELS "spin-it;spin-it-faster;geometry;regression"
+        )
+
+        add_executable(
+            quadric-inverse-gauss-map-regression
+            tests/quadric_inverse_gauss_map_regression.cpp
+        )
+        target_compile_features(
+            quadric-inverse-gauss-map-regression
+            PRIVATE cxx_std_17
+        )
+        set_target_properties(
+            quadric-inverse-gauss-map-regression
+            PROPERTIES CXX_EXTENSIONS OFF
+        )
+        target_link_libraries(
+            quadric-inverse-gauss-map-regression
+            PRIVATE make_it_stand::core
+        )
+        add_test(
+            NAME spin-faster-inverse-gauss-map
+            COMMAND "$<TARGET_FILE:quadric-inverse-gauss-map-regression>"
+        )
+        set_tests_properties(
+            spin-faster-inverse-gauss-map
             PROPERTIES LABELS "spin-it;spin-it-faster;geometry;regression"
         )
 
