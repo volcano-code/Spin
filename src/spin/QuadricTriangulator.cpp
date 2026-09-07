@@ -849,6 +849,12 @@ QuadricTriangulation triangulateQuadric(
         result.interfaceFaceCount = static_cast<int>(faces.size());
         result.truncationRadius = radius;
         result.hash = triangulationHash(result);
+        if (settings.retainFixedNormalProvenance)
+        {
+            result.fixedNormals.resize(static_cast<Eigen::Index>(sphere.vertices.size()), 3);
+            for (int i = 0; i < result.fixedNormals.rows(); ++i)
+                result.fixedNormals.row(i) = sphere.vertices[static_cast<std::size_t>(i)];
+        }
         return result;
     }
 

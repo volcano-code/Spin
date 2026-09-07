@@ -1,0 +1,114 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 28
+    Start 28: spin-faster-quadric-triangulator
+
+28: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-triangulator-regression
+28: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+28: Test timeout computed to be: 1500
+28: [PASS] scenario=quadric-triangulator hash=e71f44edb04749919a3b2a3d2201ea1e21fc39b57bbef768fa2f768ba4cce847
+1/5 Test #28: spin-faster-quadric-triangulator ...   Passed    0.02 sec
+test 29
+    Start 29: spin-faster-inverse-gauss-map
+
+29: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-inverse-gauss-map-regression
+29: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+29: Test timeout computed to be: 1500
+29: [PASS] scenario=quadric-inverse-gauss-map fd_h3e-4=4.31344e-07 fd_h1e-4=4.79273e-08 fd_h3e-5=4.31273e-09 hyperboloid_fd_h3e-4=1.69238e-07 hyperboloid_fd_h1e-4=1.88043e-08 hyperboloid_fd_h3e-5=1.69223e-09 analytic_zero_entries=23 analytic_zero_abs=0 radial_null=2.61846e-16
+2/5 Test #29: spin-faster-inverse-gauss-map ......   Passed    0.00 sec
+test 30
+    Start 30: spin-faster-discrete-moments
+
+30: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-discrete-moment-regression
+30: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+30: Test timeout computed to be: 1500
+30: historical-sphere intersections=0 coplanar_diagonal_intersections=0 constraint_residual=1.0331840194559672e-15 constraint_singular_ratio=0.63417537801865642 geometry=0f00208452856b310c3735782290374aeac11b185b640fe0a157d102ef387101 provenance=edfc3054dcab71d92a0230b56e7c8b348b9bce4cdba3d83d917eb5886130b31a scientific=bc2313298fd18f4f5813456040342917142c1856c3874af2aed76ea6ccb5fd50
+30: historical-sphere h=0.00029999999999999997 relative_norm=2.0414328021494352e-07 entry_relative=5.5125021166096028e-07 near_zero_absolute=3.7006971716534333e-13
+30: historical-sphere h=0.0001 relative_norm=2.2685084364861124e-08 entry_relative=6.1249214344230276e-08 near_zero_absolute=1.1102577868573119e-12
+30: historical-sphere h=3.0000000000000001e-05 relative_norm=2.0419271028008771e-09 entry_relative=5.5130208748451277e-09 near_zero_absolute=3.6998368055605564e-12
+30: sphere analytic-volume triangulation_relative_error=0.0086061573702495009
+30: contained-positive intersections=0 coplanar_diagonal_intersections=0 constraint_residual=5.3724826780244259e-16 constraint_singular_ratio=0.68036691539694172 geometry=cd992aa131d78023a3f59c9b06163453e95f2014d63b73aecc78fb847f8ffcb9 provenance=759ca8fddeb31f3690c268ed81a466dcc513860fdac9c72699db6f104efd4cdc scientific=08e7ea62a04d37ed0b580e73dc8a76afcaae24f21437e40fc87206df289141a3
+30: contained-positive h=0.00029999999999999997 relative_norm=9.5662311310986945e-07 entry_relative=2.0304317338751598e-06 near_zero_absolute=0
+30: contained-positive h=0.0001 relative_norm=1.0628935379966245e-07 entry_relative=2.2560535067247654e-07 near_zero_absolute=0
+30: contained-positive h=3.0000000000000001e-05 relative_norm=9.5412543313942613e-09 entry_relative=2.040820629028855e-08 near_zero_absolute=0
+30: clipped-positive intersections=60 coplanar_diagonal_intersections=8 constraint_residual=1.2071229572633428e-15 constraint_singular_ratio=0.040658789036594041 geometry=33fb27459843a67b006c0101914aeaa38da45ae461a1a1ce81d9c2a650085aae provenance=699ea8c02c881f1606e69d3358eac30368fcc3aa3797b568b0e7d2daf5aabfe1 scientific=f75163ddc25f90208a30757a108a78f8568ba279bf44be4f7f77e44ca72d7191
+30: clipped-positive h=0.00029999999999999997 relative_norm=6.0850095062030915e-07 entry_relative=0.00014389583703861323 near_zero_absolute=0
+30: clipped-positive h=0.0001 relative_norm=6.7611680544982892e-08 entry_relative=1.5991213943113645e-05 near_zero_absolute=0
+30: clipped-positive h=3.0000000000000001e-05 relative_norm=6.0879212151168996e-09 entry_relative=1.4392637411640616e-06 near_zero_absolute=0
+30: contained-negative intersections=0 coplanar_diagonal_intersections=0 constraint_residual=6.1660527500875087e-16 constraint_singular_ratio=0.68036691539694216 geometry=0c0503d1540efb988fa6619116617503daac1854ba22b21c3127bf927ed3b970 provenance=e8afc5c8231095ca718e48e242a7d6f9310ec4f47c44f541c4705f816719b99b scientific=c0877fb37ac7f452f09edf0fc65d4f14529a158a37a55651c650710c541fc410
+30: contained-negative h=0.00029999999999999997 relative_norm=9.5662428616136071e-07 entry_relative=2.0304386597657439e-06 near_zero_absolute=0
+30: contained-negative h=0.0001 relative_norm=1.0629157998727681e-07 entry_relative=2.2560718345301841e-07 near_zero_absolute=0
+30: contained-negative h=3.0000000000000001e-05 relative_norm=9.566801468057228e-09 entry_relative=2.0313473964036129e-08 near_zero_absolute=0
+30: clipped-negative intersections=60 coplanar_diagonal_intersections=8 constraint_residual=1.2071229572633428e-15 constraint_singular_ratio=0.040658789036594041 geometry=b5ec5d12b3cb24c69b3bb04c15732e5a5f122bc5cfa1328dc73bdb7bb23d8087 provenance=66c6e2f644aad99f7ec31b3d530b8b1c20a8e7edc78a6be09844cc1d46f40b2e scientific=795bc0258cd5c83dff4fc4ce8137fd5a0bbd8b5e806a2a72f296fc6e3a71f86b
+30: clipped-negative h=0.00029999999999999997 relative_norm=6.085013791302652e-07 entry_relative=0.00014389582087789423 near_zero_absolute=0
+30: clipped-negative h=0.0001 relative_norm=6.7610700880704114e-08 entry_relative=1.5990634970634609e-05 near_zero_absolute=0
+30: clipped-negative h=3.0000000000000001e-05 relative_norm=6.0893569585839762e-09 entry_relative=1.4387008325733803e-06 near_zero_absolute=0
+30: [PASS] discrete ellipsoid moment differential
+3/5 Test #30: spin-faster-discrete-moments .......   Passed    5.17 sec
+test 31
+    Start 31: spin-faster-quadric-moments
+
+31: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-moment-evaluator-regression
+31: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+31: Test timeout computed to be: 1500
+31: [PASS] scenario=quadric-moment-evaluator derivative_error=0.00658869 geometry=0f00208452856b310c3735782290374aeac11b185b640fe0a157d102ef387101
+4/5 Test #31: spin-faster-quadric-moments ........   Passed    0.41 sec
+test 32
+    Start 32: spin-faster-newton
+
+32: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression
+32: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+32: Test timeout computed to be: 1500
+32: [PASS] scenario=quadric-hollowing-solver iterations=4 residual=3.65566e-26 trace=4325d8f9b111a6925b47df38cd87e0f9023360b96efec3164a1fe20329e81d18
+5/5 Test #32: spin-faster-newton .................   Passed    0.00 sec
+
+The following tests passed:
+	spin-faster-quadric-triangulator
+	spin-faster-inverse-gauss-map
+	spin-faster-discrete-moments
+	spin-faster-quadric-moments
+	spin-faster-newton
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+geometry          =   5.60 sec*proc (4 tests)
+regression        =   5.60 sec*proc (5 tests)
+solver            =   0.00 sec*proc (1 test)
+spin-it           =   5.60 sec*proc (5 tests)
+spin-it-faster    =   5.60 sec*proc (5 tests)
+
+Total Test time (real) =   5.60 sec
+	Command being timed: "ctest --test-dir build/strict-v2-spin -R spin-faster-(discrete-moments|quadric-triangulator|inverse-gauss-map|quadric-moments|newton)$ --output-on-failure -V"
+	User time (seconds): 6.72
+	System time (seconds): 1.40
+	Percent of CPU this job got: 145%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.60
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18924
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 68627
+	Voluntary context switches: 264795
+	Involuntary context switches: 3285
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 64
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

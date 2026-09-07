@@ -1,0 +1,5 @@
+e6c283eff8bc29864e3ef9274bafb8a33e5a8869ca41d6d00532abd18d5345f8  build/task-6b-faster-only/quadric-discrete-moment-regression
+9570a4277763b58b2a2796241f9dfebf9d2bac45133145bffee79f641ae0f1b5  build/task-6b-faster-only/libmake_it_stand_core.a
+bf9ce45dc0aee97188c0bd023182f18bf0b1d7fc927ee08ad54d38be72718127  build/task-6b-faster-only/CMakeCache.txt
+cc43998f78b4d1d815019fb3f765dfcddc05a46f414d2c967b795559981207ed  include/spin/QuadricInverseGaussMap.h
+e0fe509b29afd11b55e24c0ea8212da9ae7721a92940b937cea1800c4e3d6b3c  src/spin/QuadricInverseGaussMap.cpp

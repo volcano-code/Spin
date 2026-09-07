@@ -93,7 +93,9 @@ NewtonState evaluateState(
     }
     if (!state.map.derivativeDefined)
     {
-        throw std::runtime_error("moment evaluator derivative is undefined");
+        throw std::runtime_error("moment evaluator derivative is undefined" +
+            (state.map.derivativeDiagnostic.empty() ? std::string() :
+                ": " + state.map.derivativeDiagnostic));
     }
     state.problem = problem.evaluate(state.map.rawMoments);
     const Eigen::Index constraintCount = state.problem.constraints.size();
@@ -911,6 +913,8 @@ QuadricHollowingResult solveQuadricHollowing(
         initialGuesses.empty()
         ? deterministicInitialQuadrics(request.mode, request.settings)
         : initialGuesses;
+    std::string lastDerivativeDiagnostic;
+    std::string lastDerivativeScientificHash;
     const SpinMomentEvaluator evaluator =
         [&](const QuadricCoefficients10& quadric) {
             const QuadricMomentEvaluation evaluation =
@@ -920,9 +924,12 @@ QuadricHollowingResult solveQuadricHollowing(
                     evaluatorSettings
                 );
             SpinMomentMapEvaluation map;
+            lastDerivativeDiagnostic = evaluation.derivativeDiagnostic;
+            lastDerivativeScientificHash = evaluation.derivativeScientificHash;
             map.rawMoments = evaluation.totalMomentsTarget.values();
             map.momentJacobian = evaluation.momentJacobian;
             map.derivativeDefined = evaluation.derivativeDefined;
+            map.derivativeDiagnostic = evaluation.derivativeDiagnostic;
             map.residualEvaluationSeconds =
                 evaluation.residualEvaluationSeconds;
             map.derivativeEvaluationSeconds =
@@ -939,6 +946,9 @@ QuadricHollowingResult solveQuadricHollowing(
     );
 
     QuadricHollowingResult result;
+    result.derivativeMethod = quadricMomentDerivativeMethodToken(evaluatorSettings.derivativeMethod);
+    result.derivativeDiagnostic = lastDerivativeDiagnostic;
+    result.derivativeScientificHash = lastDerivativeScientificHash;
     result.status = solved.status;
     result.diagnostic = solved.diagnostic;
     result.inputHash = computeSpinDesignRequestHash(request);
@@ -994,6 +1004,8 @@ QuadricHollowingResult solveQuadricHollowing(
             const QuadricMomentEvaluation finalEvaluation =
                 evaluateForMaterialExport(*solved.quadric);
             result.finalMoments = finalEvaluation.totalMomentsTarget;
+            result.derivativeDiagnostic = finalEvaluation.derivativeDiagnostic;
+            result.derivativeScientificHash = finalEvaluation.derivativeScientificHash;
             if (request.mode == SpinMode::BuoyantStability)
             {
                 result.buoyantMetacenterHeight =

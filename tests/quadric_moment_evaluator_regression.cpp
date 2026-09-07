@@ -72,7 +72,7 @@ spin::QuadricCoefficients10 sphere()
 } // namespace
 
 
-int main()
+int main(int argc, char** argv)
 {
     const spin::SpinDesignRequest input = request();
     spin::QuadricMomentEvaluatorSettings settings;
@@ -166,7 +166,10 @@ int main()
     const double relativeDerivativeError =
         (inside.momentJacobian - finiteDifference).norm() /
         std::max(1.0, finiteDifference.norm());
-    if (relativeDerivativeError > 0.08)
+    // Opt-in negative control preserves the historical fixture and legacy gate.
+    const bool strictNegativeControl = argc > 1 &&
+        std::string(argv[1]) == "--strict-discrete-negative-control";
+    if (relativeDerivativeError > (strictNegativeControl ? 1e-6 : 0.08))
     {
         return fail(
             "shape Jacobian disagrees with symmetric finite differences: " +

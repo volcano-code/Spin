@@ -25,6 +25,7 @@ struct SpinMomentMapEvaluation
     Eigen::Matrix<double, 10, 10> momentJacobian =
         Eigen::Matrix<double, 10, 10>::Zero();
     bool derivativeDefined = false;
+    std::string derivativeDiagnostic;
     double residualEvaluationSeconds = 0.0;
     double derivativeEvaluationSeconds = 0.0;
     std::string geometryHash;

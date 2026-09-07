@@ -1,4 +1,5 @@
 #include "spin/QuadricMomentEvaluator.h"
+#include "spin/QuadricDiscreteMomentDifferential.h"
 
 #include "manufacturing/ManufacturingGeometry.h"
 #include "manufacturing/SlicerValidation.h"
@@ -387,6 +388,17 @@ std::string topologyHash(
 namespace spin
 {
 
+const char* quadricMomentDerivativeMethodToken(QuadricMomentDerivativeMethod method) noexcept
+{
+    switch (method)
+    {
+    case QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape:
+        return "legacy-continuous-implicit-shape-v1";
+    case QuadricMomentDerivativeMethod::DiscreteEllipsoid:
+        return "discrete-ellipsoid-boolean-transport-v1";
+    }
+    return "unknown";
+}
 
 QuadricMomentEvaluation evaluateQuadricMaterialMoments(
     const SpinDesignRequest& request,
@@ -409,10 +421,17 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
     const TriangleMesh designTarget =
         toTarget(request.designDomain, request.targetFrame);
     QuadricMomentEvaluation result;
+    result.derivativeMethod = settings.derivativeMethod;
+    if (settings.derivativeMethod != QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape &&
+        settings.derivativeMethod != QuadricMomentDerivativeMethod::DiscreteEllipsoid)
+        throw std::invalid_argument("unknown quadric derivative method");
+    QuadricTriangulationSettings triangulationSettings = settings.triangulation;
+    if (settings.derivativeMethod == QuadricMomentDerivativeMethod::DiscreteEllipsoid)
+        triangulationSettings.retainFixedNormalProvenance = true;
     result.quadricTriangulation = triangulateQuadric(
         quadricTarget,
         designTarget.vertices,
-        settings.triangulation
+        triangulationSettings
     );
 
     const MassMoments quadricSolidMoments = computeSurfaceMassMoments(
@@ -532,18 +551,59 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
     result.totalMomentsTarget = result.variableMomentsTarget + fixedTarget;
 
     const auto residualEnd = std::chrono::steady_clock::now();
-    accumulateInterfaceDerivative(
-        result.materialBoundaryTarget,
-        birthFaces,
-        static_cast<int>(designTarget.faces.rows()),
-        result.quadricTriangulation.interfaceFaceCount,
-        quadricTarget,
-        request.materialDensity,
-        settings.minimumInterfaceGradient,
-        &result.momentJacobian,
-        &result.interfaceTriangleCount,
-        &result.derivativeDefined
-    );
+    if (settings.derivativeMethod == QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape)
+    {
+        accumulateInterfaceDerivative(
+            result.materialBoundaryTarget,
+            birthFaces,
+            static_cast<int>(designTarget.faces.rows()),
+            result.quadricTriangulation.interfaceFaceCount,
+            quadricTarget,
+            request.materialDensity,
+            settings.minimumInterfaceGradient,
+            &result.momentJacobian,
+            &result.interfaceTriangleCount,
+            &result.derivativeDefined
+        );
+        result.derivativeDiagnostic = result.derivativeDefined
+            ? "legacy continuous implicit-shape quadrature; not the discrete geometry derivative"
+            : "legacy interface derivative undefined";
+    }
+    else
+    {
+        const auto differential = differentiateDiscreteEllipsoidMoments(
+            designTarget, result.quadricTriangulation, quadricTarget,
+            result.materialBoundaryTarget, birthFaces, request.materialDensity);
+        result.momentJacobian = differential.jacobian;
+        result.derivativeDefined = differential.defined;
+        result.derivativeDiagnostic = differential.diagnostic;
+        result.vertexProvenance = differential.vertexProvenance;
+        result.constructedIntersectionVertexCount = differential.constructedIntersectionVertexCount;
+        result.maximumConstraintResidual = differential.maximumConstraintResidual;
+        result.minimumConstraintSingularRatio = differential.minimumConstraintSingularRatio;
+        for (int f = 0; f < birthFaces.size(); ++f)
+            if (birthFaces(f) >= designTarget.faces.rows()) ++result.interfaceTriangleCount;
+        if (differential.defined)
+        {
+            std::vector<std::string> vertices = result.vertexProvenance;
+            std::sort(vertices.begin(), vertices.end());
+            std::vector<std::string> faces;
+            for (int f = 0; f < result.materialBoundaryTarget.faces.rows(); ++f)
+            {
+                std::array<std::string,3> keys;
+                for (int k = 0; k < 3; ++k)
+                    keys[k] = result.vertexProvenance[result.materialBoundaryTarget.faces(f,k)];
+                const int first = static_cast<int>(std::min_element(keys.begin(),keys.end())-keys.begin());
+                faces.push_back(keys[first]+";"+keys[(first+1)%3]+";"+keys[(first+2)%3]+";"+std::to_string(birthFaces(f)));
+            }
+            std::sort(faces.begin(),faces.end());
+            std::ostringstream identity;
+            identity << "QuadricSourceFeatureTopology-v1;";
+            for (const auto& v : vertices) identity << v << '\n';
+            for (const auto& f : faces) identity << f << '\n';
+            result.provenanceTopologyHash = manufacturing::computeContentSha256(identity.str());
+        }
+    }
     const auto derivativeEnd = std::chrono::steady_clock::now();
     result.residualEvaluationSeconds =
         std::chrono::duration<double>(residualEnd - evaluationStart).count();
@@ -559,6 +619,17 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
         result.materialBoundaryTarget,
         birthFaces
     );
+    std::ostringstream scientific;
+    scientific.imbue(std::locale::classic());
+    scientific << "QuadricMomentDifferentialScientific-v2;"
+        << quadricMomentDerivativeMethodToken(result.derivativeMethod) << ';'
+        << result.derivativeDefined << ';' << result.derivativeDiagnostic << ';'
+        << computeSpinDesignRequestHash(request) << ';'
+        << result.quadricTriangulation.hash << ';' << result.geometryHash << ';'
+        << result.provenanceTopologyHash << ';' << std::hexfloat
+        << settings.minimumInterfaceGradient << ';';
+    for (int j = 0; j < 10; ++j) scientific << quadricTarget.values()(j) << ';';
+    result.derivativeScientificHash = manufacturing::computeContentSha256(scientific.str());
     return result;
 }
 

@@ -50,6 +50,8 @@ struct QuadricTriangulationSettings
     int cylinderAngularResolution = 96;
     double truncationRadius = 0.0;
     int maximumRadiusDoublings = 8;
+    /** Metadata only: does not alter triangulation or its legacy hash. */
+    bool retainFixedNormalProvenance = false;
 };
 
 
@@ -65,6 +67,9 @@ struct QuadricTriangulation
     int idealNormalEdgeIntersectionCount = 0;
     double truncationRadius = 0.0;
     std::string hash;
+    /** Row i is the fixed icosphere normal that generated vertex i.
+     * Empty for unsupported types or when metadata was not requested. */
+    Eigen::MatrixXd fixedNormals;
 };
 
 

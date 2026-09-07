@@ -193,6 +193,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
         src/spin/QuadricCoefficients.cpp
         src/spin/QuadricInverseGaussMap.cpp
         src/spin/QuadricMomentEvaluator.cpp
+        src/spin/QuadricDiscreteMomentDifferential.cpp
         src/spin/QuadricHollowingSolver.cpp
         src/spin/QuadricTriangulator.cpp
     )
@@ -200,6 +201,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
         include/spin/QuadricCoefficients.h
         include/spin/QuadricInverseGaussMap.h
         include/spin/QuadricMomentEvaluator.h
+        include/spin/QuadricDiscreteMomentDifferential.h
         include/spin/QuadricHollowingSolver.h
         include/spin/QuadricTriangulator.h
     )
@@ -929,6 +931,14 @@ if(BUILD_TESTING)
             quadric-moment-evaluator-regression
             tests/quadric_moment_evaluator_regression.cpp
         )
+        add_executable(quadric-discrete-moment-regression
+            tests/quadric_discrete_moment_regression.cpp)
+        target_compile_features(quadric-discrete-moment-regression PRIVATE cxx_std_17)
+        target_link_libraries(quadric-discrete-moment-regression PRIVATE make_it_stand::core)
+        add_test(NAME spin-faster-discrete-moments
+            COMMAND "$<TARGET_FILE:quadric-discrete-moment-regression>")
+        set_tests_properties(spin-faster-discrete-moments PROPERTIES
+            LABELS "spin-it;spin-it-faster;geometry;regression")
         target_compile_features(
             quadric-moment-evaluator-regression
             PRIVATE cxx_std_17

@@ -1,0 +1,5 @@
+[ 73%] Built target highs
+[ 98%] Built target make_it_stand_core
+[ 98%] Building CXX object CMakeFiles/quadric-discrete-moment-regression.dir/tests/quadric_discrete_moment_regression.cpp.o
+[100%] Linking CXX executable quadric-discrete-moment-regression
+[100%] Built target quadric-discrete-moment-regression

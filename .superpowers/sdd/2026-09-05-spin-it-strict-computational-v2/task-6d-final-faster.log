@@ -1,0 +1,70 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+      Start 24: spin-faster-request
+ 1/15 Test #24: spin-faster-request ...................   Passed    0.00 sec
+      Start 25: spin-faster-moment-problems
+ 2/15 Test #25: spin-faster-moment-problems ...........   Passed    0.00 sec
+      Start 26: spin-faster-quadric-coefficients
+ 3/15 Test #26: spin-faster-quadric-coefficients ......   Passed    0.00 sec
+      Start 27: spin-faster-boolean
+ 4/15 Test #27: spin-faster-boolean ...................   Passed    0.01 sec
+      Start 28: spin-faster-quadric-triangulator
+ 5/15 Test #28: spin-faster-quadric-triangulator ......   Passed    0.02 sec
+      Start 29: spin-faster-inverse-gauss-map
+ 6/15 Test #29: spin-faster-inverse-gauss-map .........   Passed    0.00 sec
+      Start 30: spin-faster-discrete-moments
+ 7/15 Test #30: spin-faster-discrete-moments ..........   Passed    5.27 sec
+      Start 31: spin-faster-quadric-moments
+ 8/15 Test #31: spin-faster-quadric-moments ...........   Passed    0.45 sec
+      Start 32: spin-faster-newton
+ 9/15 Test #32: spin-faster-newton ....................   Passed    0.00 sec
+      Start 33: spin-faster-end-to-end
+10/15 Test #33: spin-faster-end-to-end ................   Passed    1.39 sec
+      Start 34: spin-faster-interface-types
+11/15 Test #34: spin-faster-interface-types ...........   Passed    0.00 sec
+      Start 36: spin-faster-dependency-contract
+12/15 Test #36: spin-faster-dependency-contract .......   Passed    1.40 sec
+      Start 64: spin-faster-python-api
+13/15 Test #64: spin-faster-python-api ................   Passed    0.15 sec
+      Start 65: spin-faster-table1-miniature
+14/15 Test #65: spin-faster-table1-miniature ..........   Passed    0.90 sec
+      Start 66: spin-faster-paper-figures-miniature
+15/15 Test #66: spin-faster-paper-figures-miniature ...   Passed   16.34 sec
+
+100% tests passed, 0 tests failed out of 15
+
+Label Time Summary:
+bindings          =   0.15 sec*proc (1 test)
+build-system      =   1.40 sec*proc (1 test)
+geometry          =   7.14 sec*proc (7 tests)
+paper             =  17.24 sec*proc (2 tests)
+python            =  17.39 sec*proc (3 tests)
+regression        =  24.54 sec*proc (14 tests)
+solver            =   1.39 sec*proc (2 tests)
+spin-it           =  25.94 sec*proc (15 tests)
+spin-it-faster    =  25.94 sec*proc (15 tests)
+
+Total Test time (real) =  25.95 sec
+	Command being timed: "ctest --test-dir build/strict-v2-spin -L spin-it-faster --output-on-failure"
+	User time (seconds): 34.28
+	System time (seconds): 7.74
+	Percent of CPU this job got: 161%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:25.97
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 75868
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 257965
+	Voluntary context switches: 3797255
+	Involuntary context switches: 16519
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 1728
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

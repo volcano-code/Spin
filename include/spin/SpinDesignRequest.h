@@ -184,6 +184,12 @@ struct QuadricHollowingResult
 {
     SpinSolverStatus status = SpinSolverStatus::Indeterminate;
     std::string diagnostic;
+    /** Native evaluator identity; excluded from historical output hash.
+     * Diagnostic/hash describe the exported solution evaluation if available,
+     * otherwise the last returned solve evaluation. */
+    std::string derivativeMethod;
+    std::string derivativeDiagnostic;
+    std::string derivativeScientificHash;
     std::string inputHash;
     std::string geometryHash;
     /** Legacy v1 hash over accepted initial/iterate states only. */

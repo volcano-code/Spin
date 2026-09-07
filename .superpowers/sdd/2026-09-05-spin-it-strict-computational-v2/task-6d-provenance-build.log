@@ -1,0 +1,24 @@
+[ 73%] Built target highs
+[ 98%] Built target make_it_stand_core
+[ 98%] Building CXX object CMakeFiles/quadric-discrete-moment-regression.dir/tests/quadric_discrete_moment_regression.cpp.o
+[100%] Linking CXX executable quadric-discrete-moment-regression
+[100%] Built target quadric-discrete-moment-regression
+[ 73%] Built target highs
+[ 98%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/quadric-triangulator-regression.dir/tests/quadric_triangulator_regression.cpp.o
+[100%] Linking CXX executable quadric-triangulator-regression
+[100%] Built target quadric-triangulator-regression
+[ 73%] Built target highs
+[ 98%] Built target make_it_stand_core
+[ 98%] Linking CXX executable quadric-inverse-gauss-map-regression
+[100%] Built target quadric-inverse-gauss-map-regression
+[ 74%] Built target highs
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/quadric-moment-evaluator-regression.dir/tests/quadric_moment_evaluator_regression.cpp.o
+[100%] Linking CXX executable quadric-moment-evaluator-regression
+[100%] Built target quadric-moment-evaluator-regression
+[ 74%] Built target highs
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o
+[100%] Linking CXX executable quadric-hollowing-solver-regression
+[100%] Built target quadric-hollowing-solver-regression
