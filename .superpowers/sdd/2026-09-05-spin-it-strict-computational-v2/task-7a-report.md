@@ -143,13 +143,41 @@ ctest --test-dir build/strict-v2-spin --output-on-failure -j4
 - final all-target build: exit 0 with concurrency limited to four;
 - full primary suite, run once after final source: 188/188 passed, 0 failed, 65.90 s.
 
-Final verification summary and raw-log pointer: `task-7a-final-verification.log`.
-CTest complete raw per-test log:
-`build/strict-v2-spin/Testing/Temporary/LastTest.log`, SHA256
-`b9a4599ad670c92fa8aba343c4e9202e2ed9ec244fb688d6367390315b1e3231`.
-The all-target build console was not redirected; its exact live tool output remains in the
-task transcript, while the persisted verification log records the observed terminal lines,
-exit status, test total, and the complete CTest raw-log binding above.
+Final verification summary: `task-7a-final-verification.log`. The all-target build console
+was not redirected; its exact live tool output remains in the task transcript, while the
+persisted summary records its observed terminal lines and exit status.
+
+### Full-suite raw-capture correction and recovery
+
+The earlier statement that
+`build/strict-v2-spin/Testing/Temporary/LastTest.log` at SHA256
+`b9a4599ad670c92fa8aba343c4e9202e2ed9ec244fb688d6367390315b1e3231`
+was a complete per-test log is **superseded and incorrect**. Inspection showed that file
+contained only three lines: its start timestamp, a separator, and its end timestamp. Those
+exact observed bytes are retained without relabelling at
+`.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-7a-prior-lasttest-three-line.log`
+with the same SHA256. There is no `task-7a-final-full.log` claim or file.
+
+No authentic full capture of the original parallel run was recoverable. The precise reason
+CTest's mutable `LastTest.log` contained no per-test lines is unknown. A controller-authorized
+recovery ran one fresh suite without a rebuild, enumeration, or source change, with explicit
+capture, serial execution, 24 GiB virtual-memory limit, and 60-minute timeout:
+
+```sh
+timeout 60m bash -c 'ulimit -v 25165824; exec ctest --test-dir build/strict-v2-spin \
+  --output-on-failure --output-log \
+  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-7a-recovery-full.log -j1'
+```
+
+The recovery passed 188/188 with zero failures in 253.50 s. Its explicit output log has
+448 lines, contains 188 `Passed` result lines, and is committed byte-for-byte as
+`.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-7a-recovery-full.log`,
+SHA256 `299a086e7c7f2bc7275db26a55f1f92e9eb9787640df0c4acf845a1f018c8a78`.
+Immediately after recovery, CTest's mutable `LastTest.log` was again only three lines (now
+with the recovery timestamp), reinforcing that it is not the full capture; its omission
+mechanism remains unknown. The explicit `--output-log` is the authoritative retained raw
+full-suite evidence. This recovery supplements rather than hides the original successful
+parallel run, whose non-redirected observation and capture gap remain disclosed.
 
 ## Changed files and self-review
 
@@ -160,7 +188,7 @@ Source commit `266d835` changes only:
 - `experiments/spin_it_reproduction/strict/run_faster_section_6_6.py`
 - `tests/python/test_faster_section_6_6_exact.py`
 
-This report and three scoped logs are a separate documentation/evidence commit. Build
+This report and the scoped logs are separate documentation/evidence commits. Build
 outputs remain under ignored `build/` and are preserved for controller inspection.
 
 Self-review read every new file and the CMake diff; rechecked the exact formulas, a.e.

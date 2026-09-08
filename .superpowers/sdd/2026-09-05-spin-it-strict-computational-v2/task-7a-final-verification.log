@@ -22,6 +22,13 @@ spin-it-faster              =  90.07 sec*proc (20 tests)
 
 Total Test time (real) =  65.90 sec
 
-CTest's complete per-test raw log is retained at:
-/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/Testing/Temporary/LastTest.log
-SHA256: b9a4599ad670c92fa8aba343c4e9202e2ed9ec244fb688d6367390315b1e3231
+CORRECTION
+The earlier assertion below is superseded: the referenced LastTest.log contained only
+three lines, not complete per-test output. Its exact bytes are retained as
+task-7a-prior-lasttest-three-line.log, SHA256
+b9a4599ad670c92fa8aba343c4e9202e2ed9ec244fb688d6367390315b1e3231.
+The exact reason for the missing LastTest.log content is unknown.
+
+Controller-authorized recovery captured a fresh serial 188-test suite explicitly in
+task-7a-recovery-full.log: 188/188 passed, zero failed, 253.50 seconds, SHA256
+299a086e7c7f2bc7275db26a55f1f92e9eb9787640df0c4acf845a1f018c8a78.
