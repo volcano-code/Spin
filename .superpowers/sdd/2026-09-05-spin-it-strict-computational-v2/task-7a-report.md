@@ -200,3 +200,71 @@ Concern: the pre-existing configure step emits libigl's CMake deprecation warnin
 unrelated to this pure-Python formula checker and was not suppressed or broadened into
 dependency work. No correctness concern remains within the bounded Task7a scope;
 independent review belongs to the controller.
+
+## Review 1 fix report (round 1/5)
+
+Review findings are fixed in source commit `ffc9cad5815e2fbb21cae2d8a20908c20997556a`.
+Only `python/make_it_stand/verification/faster_section_6_6.py` and
+`tests/python/test_faster_section_6_6_exact.py` changed; no CMake/native source changed and
+no full native build/suite was repeated.
+
+- The shifted-interval certificate now constructs interval-measure `(L,0)` and overlap
+  `(L,-1)` polynomials from the supplied validated exact length, then obtains symmetric
+  difference by exact polynomial scaling/subtraction. For `L=1/2` the emitted overlap is
+  `(1/2,-1)` and the derived symmetric difference is `(0,2)`. No verification condition
+  initializes a hard-coded result and compares it to itself.
+- Full-domain uniqueness now derives the deficit range `[1-upper,1-lower]` from exact box
+  bounds. Lemma applicability is the conjunction of computed deficit nonnegativity and
+  computed zero deficit integral. The adversarial box `[0,2]` produces deficit range
+  `[-1,1]`, nonnegative `false`, zero integral `true`, and lemma applicability `false`.
+- Recursive type-sensitive JSON comparison no longer equates `1.0` with `1`, `0.0` with
+  `0`, or `True` with `1`; all three defining-domain mutations reject.
+- Freshness compares evidence records with canonical current checker and runner records,
+  and recomputes `source_content_sha256` over all inputs. Self-consistent substitution by
+  unrelated files and aggregate-digest corruption now produce `STALE_RESULT`.
+
+TDD RED was directly captured before source fixes in `task-7a-fix1-red.log` (SHA256
+`34720b370fb911231388aa3ab59d9e09f57edac6ad7a789113dec1bd19fb0f4b`): 7 tests ran,
+with missing derivation APIs/fields, three accepted float/bool domain mutations, accepted
+checker/runner substitutions, and accepted aggregate corruption. GREEN is directly
+captured in `task-7a-fix1-green.log` (SHA256
+`f3a47d4995c63f9316c7a098ad99dbbd6715425728aaf877c12c9a4440c5eaf7`): 7/7 passed in
+0.576 s. Registered focused CTest passed 1/1 in 0.60 s; direct `--output-log` is
+`task-7a-fix1-ctest.log` (SHA256
+`4fe0db5a0fd33ca6189d331812b37111d11f4a7ec824d8d7e526640636d30b99`).
+
+```sh
+PYTHONPATH="$PWD/python:$PWD/tests/python" python3 -m unittest test_faster_section_6_6_exact -v
+ctest --test-dir build/strict-v2-spin -R '^faster-section-6-6-exact-contract$' \
+  --output-on-failure --output-log \
+  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-7a-fix1-ctest.log
+```
+
+Old run1/run2 directories and bytes were preserved. Under the current checker, both now
+return `STALE_RESULT` with `checker content binding changed` and
+`checker is not the canonical current dependency`; direct output is
+`task-7a-fix1-oldruns-stale.log` (SHA256
+`f2521822df3d66499c9975b074d7ba0d3d74d2f2c57dfe1f1b25a1b021722970`).
+
+After final source commit, new exclusive `build/task-7a-faster-section-6-6-run-3` and
+`run-4` were created. Both bind Git HEAD `ffc9cad...` with no changed paths, are `CURRENT`
+with no mismatches, and have identical scientific-data SHA256
+`4a8e15c902415d85e381c9290f56398cd4f8fbd89d0753360d708e380d3a4754`.
+Their result files are byte-identical at
+`4f6e763cb1b681babe4dfddfb2dcae1743a7493897a70234a6ba9e1ce2ab72fb`; human reports
+are byte-identical at
+`4a1cd2efc0febb98974b5d70a2a6e9961f3dea2527f6587b77c9a503856f5d98`.
+Runtime evidence differs as intended. Both bind checker SHA256
+`8716deb7861f51a84279ec5467b00944217715e4c59c1cd3e28e22284a4b1bea`, runner SHA256
+`30c73a10b10d39be4aaeb268ad1581fd82e89eac4c1de47094758c23b450bdfd`, and aggregate
+input SHA256 `833f189075b477cb49381567989f36c3a03c1b3979f4fd7d5793699fb58d11aa`.
+A real repeat targeting existing run3 rejected with exit 2 and did not overwrite it.
+Direct run and audit logs are `task-7a-fix1-runs.log` and
+`task-7a-fix1-run-audit.log`.
+
+The immutable specification and PDF remain unchanged at SHA256
+`053f896c2b10ece89b136bfba24cd480bf44cd0da99c0661e6e9bd34495c15fa` and
+`e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc`.
+Self-review re-read the full fix diff and verified every review finding against its RED
+mutation. Scope remains only the two published examples; no proof framework/profile,
+aggregate verification status, release gate, or physical/native claim was added.

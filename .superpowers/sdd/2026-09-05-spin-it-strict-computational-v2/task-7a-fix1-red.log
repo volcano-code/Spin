@@ -1,0 +1,99 @@
+test_affine_interval_and_zero_integral_conditions_are_derived (test_faster_section_6_6_exact.FasterSection66ExactTests.test_affine_interval_and_zero_integral_conditions_are_derived) ... ERROR
+test_corrupted_witness_coefficients_and_parameter_ranges_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_corrupted_witness_coefficients_and_parameter_ranges_fail) ... ok
+test_exact_computations_prove_both_published_outcomes (test_faster_section_6_6_exact.FasterSection66ExactTests.test_exact_computations_prove_both_published_outcomes) ... ERROR
+test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) ... 
+  test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) (mutation={'schema': 'published-analytic-experiment-spec-v1', 'paper': 'Spin-It Faster, ACM TOG 43(4), article 78, 2024', 'source_url': 'https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf', 'source_sha256': 'e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc', 'paper_locator': 'Section 6.6, printed pages 78:12-78:13', 'asset_class': 'PUBLISHED_EXACT_SPECIFICATION', 'parameter_evidence': 'PUBLISHED', 'implementation_status': 'NOT_VERIFIED', 'formal_run_status': 'NOT_RUN', 'units': 'dimensionless', 'variable': 'measurable chi: Omega -> [0,1]', 'volume_definition': 'v(chi) = integral_Omega chi(x) dx', 'objective': '(v(chi) - 1/2)^2', 'constraints': [], 'cases': [{'case_id': 'faster.section6_6.nonunique', 'domain': {'dimension': 1, 'lower': 0, 'upper': 1.0, 'endpoints': 'open'}, 'expected_outcome': 'NONUNIQUE_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'Uncountably many optima, including binary and nonbinary distributions. Ordinary nondegenerate Newton convergence is not the acceptance criterion.'}, {'case_id': 'faster.section6_6.full_boundary', 'domain': {'dimension': 1, 'lower': 0, 'upper': '1/2', 'endpoints': 'open'}, 'expected_outcome': 'FULL_DOMAIN_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'The optimum is chi=1 almost everywhere. It is a boundary solution, not an infeasible problem and not a nondegenerate quadric interface.'}], 'independent_check_to_implement': 'Verify objective nonnegativity, exact witness integrals, zero derivative at v=1/2, and uniqueness/nonuniqueness properties without calling the ordinary sphere Newton solver.', 'caveat': 'This extracted specification does not grant a requirement pass or reproduce any three-dimensional CAD case.'}) ... FAIL
+  test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) (mutation={'schema': 'published-analytic-experiment-spec-v1', 'paper': 'Spin-It Faster, ACM TOG 43(4), article 78, 2024', 'source_url': 'https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf', 'source_sha256': 'e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc', 'paper_locator': 'Section 6.6, printed pages 78:12-78:13', 'asset_class': 'PUBLISHED_EXACT_SPECIFICATION', 'parameter_evidence': 'PUBLISHED', 'implementation_status': 'NOT_VERIFIED', 'formal_run_status': 'NOT_RUN', 'units': 'dimensionless', 'variable': 'measurable chi: Omega -> [0,1]', 'volume_definition': 'v(chi) = integral_Omega chi(x) dx', 'objective': '(v(chi) - 1/2)^2', 'constraints': [], 'cases': [{'case_id': 'faster.section6_6.nonunique', 'domain': {'dimension': 1, 'lower': 0.0, 'upper': 1, 'endpoints': 'open'}, 'expected_outcome': 'NONUNIQUE_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'Uncountably many optima, including binary and nonbinary distributions. Ordinary nondegenerate Newton convergence is not the acceptance criterion.'}, {'case_id': 'faster.section6_6.full_boundary', 'domain': {'dimension': 1, 'lower': 0, 'upper': '1/2', 'endpoints': 'open'}, 'expected_outcome': 'FULL_DOMAIN_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'The optimum is chi=1 almost everywhere. It is a boundary solution, not an infeasible problem and not a nondegenerate quadric interface.'}], 'independent_check_to_implement': 'Verify objective nonnegativity, exact witness integrals, zero derivative at v=1/2, and uniqueness/nonuniqueness properties without calling the ordinary sphere Newton solver.', 'caveat': 'This extracted specification does not grant a requirement pass or reproduce any three-dimensional CAD case.'}) ... FAIL
+  test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) (mutation={'schema': 'published-analytic-experiment-spec-v1', 'paper': 'Spin-It Faster, ACM TOG 43(4), article 78, 2024', 'source_url': 'https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf', 'source_sha256': 'e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc', 'paper_locator': 'Section 6.6, printed pages 78:12-78:13', 'asset_class': 'PUBLISHED_EXACT_SPECIFICATION', 'parameter_evidence': 'PUBLISHED', 'implementation_status': 'NOT_VERIFIED', 'formal_run_status': 'NOT_RUN', 'units': 'dimensionless', 'variable': 'measurable chi: Omega -> [0,1]', 'volume_definition': 'v(chi) = integral_Omega chi(x) dx', 'objective': '(v(chi) - 1/2)^2', 'constraints': [], 'cases': [{'case_id': 'faster.section6_6.nonunique', 'domain': {'dimension': True, 'lower': 0, 'upper': 1, 'endpoints': 'open'}, 'expected_outcome': 'NONUNIQUE_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'Uncountably many optima, including binary and nonbinary distributions. Ordinary nondegenerate Newton convergence is not the acceptance criterion.'}, {'case_id': 'faster.section6_6.full_boundary', 'domain': {'dimension': 1, 'lower': 0, 'upper': '1/2', 'endpoints': 'open'}, 'expected_outcome': 'FULL_DOMAIN_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'The optimum is chi=1 almost everywhere. It is a boundary solution, not an infeasible problem and not a nondegenerate quadric interface.'}], 'independent_check_to_implement': 'Verify objective nonnegativity, exact witness integrals, zero derivative at v=1/2, and uniqueness/nonuniqueness properties without calling the ordinary sphere Newton solver.', 'caveat': 'This extracted specification does not grant a requirement pass or reproduce any three-dimensional CAD case.'}) ... FAIL
+test_nonfinite_and_duplicate_key_json_fail_closed (test_faster_section_6_6_exact.FasterSection66ExactTests.test_nonfinite_and_duplicate_key_json_fail_closed) ... ok
+test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) ... 
+  test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) (substituted='checker') ... FAIL
+  test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) (substituted='runner') ... FAIL
+test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) ... FAIL
+test_cli_twice_is_deterministic_exclusive_and_pure_python (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_twice_is_deterministic_exclusive_and_pure_python) ... ok
+
+======================================================================
+ERROR: test_affine_interval_and_zero_integral_conditions_are_derived (test_faster_section_6_6_exact.FasterSection66ExactTests.test_affine_interval_and_zero_integral_conditions_are_derived)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 93, in test_affine_interval_and_zero_integral_conditions_are_derived
+    interval = self.api.derive_shifted_binary_interval_identity("2/5")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'make_it_stand.verification.faster_section_6_6' has no attribute 'derive_shifted_binary_interval_identity'
+
+======================================================================
+ERROR: test_exact_computations_prove_both_published_outcomes (test_faster_section_6_6_exact.FasterSection66ExactTests.test_exact_computations_prove_both_published_outcomes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 55, in test_exact_computations_prove_both_published_outcomes
+    self.assertEqual(nonunique["shifted_binary_overlap_polynomial"], ["1/2", "-1"])
+                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'shifted_binary_overlap_polynomial'
+
+======================================================================
+FAIL: test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) (mutation={'schema': 'published-analytic-experiment-spec-v1', 'paper': 'Spin-It Faster, ACM TOG 43(4), article 78, 2024', 'source_url': 'https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf', 'source_sha256': 'e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc', 'paper_locator': 'Section 6.6, printed pages 78:12-78:13', 'asset_class': 'PUBLISHED_EXACT_SPECIFICATION', 'parameter_evidence': 'PUBLISHED', 'implementation_status': 'NOT_VERIFIED', 'formal_run_status': 'NOT_RUN', 'units': 'dimensionless', 'variable': 'measurable chi: Omega -> [0,1]', 'volume_definition': 'v(chi) = integral_Omega chi(x) dx', 'objective': '(v(chi) - 1/2)^2', 'constraints': [], 'cases': [{'case_id': 'faster.section6_6.nonunique', 'domain': {'dimension': 1, 'lower': 0, 'upper': 1.0, 'endpoints': 'open'}, 'expected_outcome': 'NONUNIQUE_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'Uncountably many optima, including binary and nonbinary distributions. Ordinary nondegenerate Newton convergence is not the acceptance criterion.'}, {'case_id': 'faster.section6_6.full_boundary', 'domain': {'dimension': 1, 'lower': 0, 'upper': '1/2', 'endpoints': 'open'}, 'expected_outcome': 'FULL_DOMAIN_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'The optimum is chi=1 almost everywhere. It is a boundary solution, not an infeasible problem and not a nondegenerate quadric interface.'}], 'independent_check_to_implement': 'Verify objective nonnegativity, exact witness integrals, zero derivative at v=1/2, and uniqueness/nonuniqueness properties without calling the ordinary sphere Newton solver.', 'caveat': 'This extracted specification does not grant a requirement pass or reproduce any three-dimensional CAD case.'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 140, in test_mutated_published_definitions_missing_and_duplicate_cases_fail
+    with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                                          ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) (mutation={'schema': 'published-analytic-experiment-spec-v1', 'paper': 'Spin-It Faster, ACM TOG 43(4), article 78, 2024', 'source_url': 'https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf', 'source_sha256': 'e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc', 'paper_locator': 'Section 6.6, printed pages 78:12-78:13', 'asset_class': 'PUBLISHED_EXACT_SPECIFICATION', 'parameter_evidence': 'PUBLISHED', 'implementation_status': 'NOT_VERIFIED', 'formal_run_status': 'NOT_RUN', 'units': 'dimensionless', 'variable': 'measurable chi: Omega -> [0,1]', 'volume_definition': 'v(chi) = integral_Omega chi(x) dx', 'objective': '(v(chi) - 1/2)^2', 'constraints': [], 'cases': [{'case_id': 'faster.section6_6.nonunique', 'domain': {'dimension': 1, 'lower': 0.0, 'upper': 1, 'endpoints': 'open'}, 'expected_outcome': 'NONUNIQUE_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'Uncountably many optima, including binary and nonbinary distributions. Ordinary nondegenerate Newton convergence is not the acceptance criterion.'}, {'case_id': 'faster.section6_6.full_boundary', 'domain': {'dimension': 1, 'lower': 0, 'upper': '1/2', 'endpoints': 'open'}, 'expected_outcome': 'FULL_DOMAIN_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'The optimum is chi=1 almost everywhere. It is a boundary solution, not an infeasible problem and not a nondegenerate quadric interface.'}], 'independent_check_to_implement': 'Verify objective nonnegativity, exact witness integrals, zero derivative at v=1/2, and uniqueness/nonuniqueness properties without calling the ordinary sphere Newton solver.', 'caveat': 'This extracted specification does not grant a requirement pass or reproduce any three-dimensional CAD case.'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 140, in test_mutated_published_definitions_missing_and_duplicate_cases_fail
+    with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                                          ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) (mutation={'schema': 'published-analytic-experiment-spec-v1', 'paper': 'Spin-It Faster, ACM TOG 43(4), article 78, 2024', 'source_url': 'https://research-explorer.ista.ac.at/download/17203/17204/sif-final.pdf', 'source_sha256': 'e7fc6395362ef7e63a703851176afd81d8e953bae4e8080279d7e244b3c51fcc', 'paper_locator': 'Section 6.6, printed pages 78:12-78:13', 'asset_class': 'PUBLISHED_EXACT_SPECIFICATION', 'parameter_evidence': 'PUBLISHED', 'implementation_status': 'NOT_VERIFIED', 'formal_run_status': 'NOT_RUN', 'units': 'dimensionless', 'variable': 'measurable chi: Omega -> [0,1]', 'volume_definition': 'v(chi) = integral_Omega chi(x) dx', 'objective': '(v(chi) - 1/2)^2', 'constraints': [], 'cases': [{'case_id': 'faster.section6_6.nonunique', 'domain': {'dimension': True, 'lower': 0, 'upper': 1, 'endpoints': 'open'}, 'expected_outcome': 'NONUNIQUE_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'Uncountably many optima, including binary and nonbinary distributions. Ordinary nondegenerate Newton convergence is not the acceptance criterion.'}, {'case_id': 'faster.section6_6.full_boundary', 'domain': {'dimension': 1, 'lower': 0, 'upper': '1/2', 'endpoints': 'open'}, 'expected_outcome': 'FULL_DOMAIN_ZERO_SENSITIVITY', 'expected_volume': '1/2', 'expected_objective': 0, 'expected_p': 0, 'interpretation': 'The optimum is chi=1 almost everywhere. It is a boundary solution, not an infeasible problem and not a nondegenerate quadric interface.'}], 'independent_check_to_implement': 'Verify objective nonnegativity, exact witness integrals, zero derivative at v=1/2, and uniqueness/nonuniqueness properties without calling the ordinary sphere Newton solver.', 'caveat': 'This extracted specification does not grant a requirement pass or reproduce any three-dimensional CAD case.'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 140, in test_mutated_published_definitions_missing_and_duplicate_cases_fail
+    with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                                          ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) (substituted='checker')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 228, in test_cli_rejects_bad_source_hash_and_freshness_rechecks_files
+    self.assertEqual(assessment["status"], "STALE_RESULT")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'CURRENT' != 'STALE_RESULT'
+- CURRENT
++ STALE_RESULT
+
+
+======================================================================
+FAIL: test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) (substituted='runner')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 228, in test_cli_rejects_bad_source_hash_and_freshness_rechecks_files
+    self.assertEqual(assessment["status"], "STALE_RESULT")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'CURRENT' != 'STALE_RESULT'
+- CURRENT
++ STALE_RESULT
+
+
+======================================================================
+FAIL: test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 235, in test_cli_rejects_bad_source_hash_and_freshness_rechecks_files
+    self.assertEqual(assessment["status"], "STALE_RESULT")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'CURRENT' != 'STALE_RESULT'
+- CURRENT
++ STALE_RESULT
+
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.576s
+
+FAILED (failures=6, errors=2)

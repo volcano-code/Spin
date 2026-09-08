@@ -1,0 +1,19 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+    Start 54: faster-section-6-6-exact-contract
+1/1 Test #54: faster-section-6-6-exact-contract ...   Passed    0.60 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+exact-rational    =   0.60 sec*proc (1 test)
+paper             =   0.60 sec*proc (1 test)
+python            =   0.60 sec*proc (1 test)
+spin-it           =   0.60 sec*proc (1 test)
+spin-it-faster    =   0.60 sec*proc (1 test)
+
+Total Test time (real) =   0.60 sec

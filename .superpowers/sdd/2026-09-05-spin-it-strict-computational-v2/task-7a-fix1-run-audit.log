@@ -1,0 +1,20 @@
+4f6e763cb1b681babe4dfddfb2dcae1743a7493897a70234a6ba9e1ce2ab72fb  build/task-7a-faster-section-6-6-run-3/result.json
+4f6e763cb1b681babe4dfddfb2dcae1743a7493897a70234a6ba9e1ce2ab72fb  build/task-7a-faster-section-6-6-run-4/result.json
+4a1cd2efc0febb98974b5d70a2a6e9961f3dea2527f6587b77c9a503856f5d98  build/task-7a-faster-section-6-6-run-3/report.md
+4a1cd2efc0febb98974b5d70a2a6e9961f3dea2527f6587b77c9a503856f5d98  build/task-7a-faster-section-6-6-run-4/report.md
+ce42fd0f9d9596536da3b6cdeb0ef1a5b9be9768e1185edcc4544bfe1ebe1c5a  build/task-7a-faster-section-6-6-run-3/evidence.json
+2e4d55ccec98b97654669945b01beeaf122232425d63a7eca01ca8a67f3c0c48  build/task-7a-faster-section-6-6-run-4/evidence.json
+freshness 1 {'status': 'STALE_RESULT', 'mismatches': ['checker content binding changed', 'checker is not the canonical current dependency']}
+freshness 2 {'status': 'STALE_RESULT', 'mismatches': ['checker content binding changed', 'checker is not the canonical current dependency']}
+freshness 3 {'status': 'CURRENT', 'mismatches': []}
+source_content_sha256 3 833f189075b477cb49381567989f36c3a03c1b3979f4fd7d5793699fb58d11aa
+checker 3 8716deb7861f51a84279ec5467b00944217715e4c59c1cd3e28e22284a4b1bea
+runner 3 30c73a10b10d39be4aaeb268ad1581fd82e89eac4c1de47094758c23b450bdfd
+scientific 3 4a8e15c902415d85e381c9290f56398cd4f8fbd89d0753360d708e380d3a4754
+freshness 4 {'status': 'CURRENT', 'mismatches': []}
+source_content_sha256 4 833f189075b477cb49381567989f36c3a03c1b3979f4fd7d5793699fb58d11aa
+checker 4 8716deb7861f51a84279ec5467b00944217715e4c59c1cd3e28e22284a4b1bea
+runner 4 30c73a10b10d39be4aaeb268ad1581fd82e89eac4c1de47094758c23b450bdfd
+scientific 4 4a8e15c902415d85e381c9290f56398cd4f8fbd89d0753360d708e380d3a4754
+error: output directory already exists: build/task-7a-faster-section-6-6-run-3
+overwrite_exit_status=2
