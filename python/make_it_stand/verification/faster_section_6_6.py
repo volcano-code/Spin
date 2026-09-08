@@ -71,6 +71,7 @@ _WITNESSES = {
         "parameter_upper": "1/2",
         "interval_length": "1/2",
     },
+    "box_bounds": {"lower": "0", "upper": "1"},
     "nonbinary_constant_witness": "1/2",
     "full_domain_witness": {"constant": "1"},
 }
@@ -98,6 +99,21 @@ def _reject_nonfinite(value: Any) -> None:
             _reject_nonfinite(item)
     elif type(value) is float:
         _require(math.isfinite(value), "nonfinite JSON number")
+
+
+def _same_exact(first: Any, second: Any) -> bool:
+    """JSON equality that does not equate bool/int or int/float values."""
+    if type(first) is not type(second):
+        return False
+    if type(first) is dict:
+        return set(first) == set(second) and all(
+            _same_exact(first[key], second[key]) for key in first
+        )
+    if type(first) is list:
+        return len(first) == len(second) and all(
+            _same_exact(left, right) for left, right in zip(first, second)
+        )
+    return first == second
 
 
 def load_spec(path: str | Path) -> dict[str, Any]:
@@ -172,12 +188,98 @@ def _poly_multiply(first: list[Fraction], second: list[Fraction]) -> list[Fracti
     return result
 
 
+def _scale_polynomial(coefficients: list[Fraction], scale: Fraction) -> list[Fraction]:
+    return [scale * coefficient for coefficient in coefficients]
+
+
+def _subtract_polynomials(first: list[Fraction], second: list[Fraction]) -> list[Fraction]:
+    width = max(len(first), len(second))
+    return [
+        (first[power] if power < len(first) else Fraction(0))
+        - (second[power] if power < len(second) else Fraction(0))
+        for power in range(width)
+    ]
+
+
+def _shifted_binary_interval_identity(interval_length: Fraction) -> dict[str, list[Fraction]]:
+    # With delta=t-s, each interval has measure L and ordered overlap is L-delta.
+    interval_measure = [interval_length, Fraction(0)]
+    overlap = [interval_length, Fraction(-1)]
+    symmetric_difference = _subtract_polynomials(
+        _scale_polynomial(interval_measure, Fraction(2)),
+        _scale_polynomial(overlap, Fraction(2)),
+    )
+    return {
+        "interval_measure_polynomial": interval_measure,
+        "overlap_polynomial": overlap,
+        "symmetric_difference_polynomial": symmetric_difference,
+    }
+
+
+def derive_shifted_binary_interval_identity(interval_length: Any) -> dict[str, list[str]]:
+    """Expose the exact affine interval arithmetic used by the fixed proof."""
+    derived = _shifted_binary_interval_identity(
+        _fraction(interval_length, "binary interval length")
+    )
+    return {
+        name: [_rational(value) for value in coefficients]
+        for name, coefficients in derived.items()
+    }
+
+
+def _full_domain_uniqueness_conditions(
+    box_lower: Fraction,
+    box_upper: Fraction,
+    domain_measure: Fraction,
+    target: Fraction,
+) -> dict[str, Any]:
+    deficit_range = [Fraction(1) - box_upper, Fraction(1) - box_lower]
+    box_ordered = box_lower <= box_upper
+    deficit_nonnegative = box_ordered and deficit_range[0] >= 0
+    deficit_integral = domain_measure - target
+    deficit_integral_zero = deficit_integral == 0
+    return {
+        "deficit_range_from_box": deficit_range,
+        "deficit_integral_at_any_optimum": deficit_integral,
+        "box_bound_is_ordered": box_ordered,
+        "box_makes_deficit_nonnegative": deficit_nonnegative,
+        "deficit_integral_at_any_optimum_is_zero": deficit_integral_zero,
+        "nonnegative_zero_integral_lemma_applies": (
+            deficit_nonnegative and deficit_integral_zero
+        ),
+    }
+
+
+def derive_full_domain_uniqueness_conditions(
+    box_lower: Any,
+    box_upper: Any,
+    domain_measure: Any,
+    target: Any,
+) -> dict[str, Any]:
+    """Expose the exact conjunction used by the full-domain a.e. proof."""
+    derived = _full_domain_uniqueness_conditions(
+        _fraction(box_lower, "box lower"),
+        _fraction(box_upper, "box upper"),
+        _fraction(domain_measure, "domain measure"),
+        _fraction(target, "target"),
+    )
+    return {
+        **derived,
+        "deficit_range_from_box": [
+            _rational(value) for value in derived["deficit_range_from_box"]
+        ],
+        "deficit_integral_at_any_optimum": _rational(
+            derived["deficit_integral_at_any_optimum"]
+        ),
+    }
+
+
 def _validate_spec(spec: dict[str, Any]) -> dict[str, dict[str, Any]]:
     _reject_nonfinite(spec)
     _require(type(spec) is dict and set(spec) == _TOP_LEVEL_FIELDS,
              "unsupported specification fields")
     for key, expected in _FIXED_DEFINITIONS.items():
-        _require(spec.get(key) == expected, "mutated published definition: " + key)
+        _require(_same_exact(spec.get(key), expected), "mutated published definition: " + key)
     _require(type(spec["cases"]) is list and len(spec["cases"]) == 2,
              "exactly two published cases are required")
     cases: dict[str, dict[str, Any]] = {}
@@ -188,7 +290,7 @@ def _validate_spec(spec: dict[str, Any]) -> dict[str, dict[str, Any]]:
         _require(type(case_id) is str and case_id in _DOMAINS,
                  "unsupported published case identity")
         _require(case_id not in cases, "duplicate published case identity")
-        _require(case.get("domain") == _DOMAINS[case_id],
+        _require(_same_exact(case.get("domain"), _DOMAINS[case_id]),
                  "mutated published domain: " + case_id)
         cases[case_id] = case
     _require(set(cases) == set(_DOMAINS), "missing published case")
@@ -197,7 +299,8 @@ def _validate_spec(spec: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 def _validate_witnesses(witnesses: dict[str, Any]) -> None:
     _reject_nonfinite(witnesses)
-    _require(witnesses == _WITNESSES, "mutated or unsupported exact witness definitions")
+    _require(_same_exact(witnesses, _WITNESSES),
+             "mutated or unsupported exact witness definitions")
 
 
 def _objective_certificate(volume: Fraction, target: Fraction) -> dict[str, Any]:
@@ -247,8 +350,13 @@ def _nonunique_certificate(witnesses: dict[str, Any]) -> dict[str, Any]:
     interval_length = _fraction(binary["interval_length"], "binary interval length")
     ordered_delta_lower = Fraction(0)
     ordered_delta_upper = parameter_upper - parameter_lower
-    overlap_at_maximum_delta = interval_length - ordered_delta_upper
-    symmetric_difference_polynomial = [Fraction(0), Fraction(2)]
+    interval_identity = _shifted_binary_interval_identity(interval_length)
+    overlap_polynomial = interval_identity["overlap_polynomial"]
+    symmetric_difference_polynomial = interval_identity["symmetric_difference_polynomial"]
+    overlap_at_maximum_delta = sum(
+        coefficient * ordered_delta_upper ** power
+        for power, coefficient in enumerate(overlap_polynomial)
+    )
     nonbinary = _fraction(witnesses["nonbinary_constant_witness"], "nonbinary constant")
 
     conditions = {
@@ -293,6 +401,9 @@ def _nonunique_certificate(witnesses: dict[str, Any]) -> dict[str, Any]:
         "binary_half_interval_integrals": [_rational(value) for value in fixed_integrals],
         "constant_nonbinary_integral": _rational(nonbinary),
         "shifted_binary_overlap_length": "1/2-(t-s)",
+        "shifted_binary_overlap_polynomial": [
+            _rational(value) for value in overlap_polynomial
+        ],
         "shifted_binary_symmetric_difference": "2(t-s)",
         "shifted_binary_symmetric_difference_polynomial": [
             _rational(value) for value in symmetric_difference_polynomial
@@ -314,13 +425,25 @@ def _full_domain_certificate(witnesses: dict[str, Any]) -> dict[str, Any]:
     domain_measure = domain_upper - domain_lower
     witness_integral = witness * domain_measure
     target = Fraction(1, 2)
-    deficit_integral_at_optimum = domain_measure - target
+    box = witnesses["box_bounds"]
+    uniqueness = _full_domain_uniqueness_conditions(
+        _fraction(box["lower"], "box lower"),
+        _fraction(box["upper"], "box upper"),
+        domain_measure,
+        target,
+    )
+    deficit_integral_at_optimum = uniqueness["deficit_integral_at_any_optimum"]
     conditions = {
         "witness_is_in_box": 0 <= witness <= 1,
         "witness_integral_is_target": witness_integral == target,
-        "box_makes_deficit_nonnegative": True,
-        "deficit_integral_at_any_optimum_is_zero": deficit_integral_at_optimum == 0,
-        "nonnegative_zero_integral_lemma_applies": deficit_integral_at_optimum == 0,
+        "box_bound_is_ordered": uniqueness["box_bound_is_ordered"],
+        "box_makes_deficit_nonnegative": uniqueness["box_makes_deficit_nonnegative"],
+        "deficit_integral_at_any_optimum_is_zero": uniqueness[
+            "deficit_integral_at_any_optimum_is_zero"
+        ],
+        "nonnegative_zero_integral_lemma_applies": uniqueness[
+            "nonnegative_zero_integral_lemma_applies"
+        ],
     }
     _require(all(conditions.values()), "exact full-domain witness certificate failed")
     result = {
@@ -332,6 +455,9 @@ def _full_domain_certificate(witnesses: dict[str, Any]) -> dict[str, Any]:
         "witness": "chi=1",
         "witness_integral": _rational(witness_integral),
         "deficit": "1-chi",
+        "deficit_range_from_box": [
+            _rational(value) for value in uniqueness["deficit_range_from_box"]
+        ],
         "deficit_integral_at_any_optimum": _rational(deficit_integral_at_optimum),
         "nonnegative_zero_integral_lemma_applies": conditions["nonnegative_zero_integral_lemma_applies"],
         "uniqueness": "UNIQUE_ALMOST_EVERYWHERE",
@@ -395,6 +521,18 @@ def check_evidence_freshness(path: str | Path) -> dict[str, Any]:
                     mismatches.append(label + " content binding changed")
             except (KeyError, TypeError, ValueError, OSError) as error:
                 mismatches.append(label + " cannot be re-read: " + str(error))
+        canonical_dependencies = {
+            "checker": file_record(Path(__file__)),
+            "runner": file_record(
+                Path(__file__).resolve().parents[3]
+                / "experiments/spin_it_reproduction/strict/run_faster_section_6_6.py"
+            ),
+        }
+        for label, canonical in canonical_dependencies.items():
+            if inputs[label] != canonical:
+                mismatches.append(label + " is not the canonical current dependency")
+        if evidence.get("source_content_sha256") != scientific_sha256(inputs):
+            mismatches.append("source_content_sha256 aggregate input digest mismatch")
         if inputs["spec"].get("sha256") != EXPECTED_SPEC_SHA256:
             mismatches.append("spec immutable SHA256 mismatch")
         if inputs["paper_pdf"].get("sha256") != EXPECTED_PDF_SHA256:

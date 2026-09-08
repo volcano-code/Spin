@@ -52,6 +52,7 @@ class FasterSection66ExactTests(unittest.TestCase):
         self.assertEqual(nonunique["parameter_derivative_l2_squared"], "1/3")
         self.assertEqual(nonunique["binary_half_interval_integrals"], ["1/2", "1/2"])
         self.assertEqual(nonunique["constant_nonbinary_integral"], "1/2")
+        self.assertEqual(nonunique["shifted_binary_overlap_polynomial"], ["1/2", "-1"])
         self.assertEqual(nonunique["shifted_binary_symmetric_difference_polynomial"], ["0", "2"])
         self.assertTrue(nonunique["uncountable_affine_family_modulo_ae"])
         self.assertTrue(nonunique["uncountable_binary_family_modulo_ae"])
@@ -66,6 +67,7 @@ class FasterSection66ExactTests(unittest.TestCase):
         self.assertEqual(full["p"], "0")
         self.assertEqual(full["uniqueness"], "UNIQUE_ALMOST_EVERYWHERE")
         self.assertTrue(full["nonnegative_zero_integral_lemma_applies"])
+        self.assertEqual(full["deficit_range_from_box"], ["0", "1"])
         self.assertFalse(result["claims_all_p_zero_problems_classified"])
         self.assertEqual(result["native_extensions_required"], [])
 
@@ -87,6 +89,20 @@ class FasterSection66ExactTests(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 self.verify(witnesses=mutation)
 
+    def test_affine_interval_and_zero_integral_conditions_are_derived(self):
+        interval = self.api.derive_shifted_binary_interval_identity("2/5")
+        self.assertEqual(interval["interval_measure_polynomial"], ["2/5", "0"])
+        self.assertEqual(interval["overlap_polynomial"], ["2/5", "-1"])
+        self.assertEqual(interval["symmetric_difference_polynomial"], ["0", "2"])
+
+        invalid_box = self.api.derive_full_domain_uniqueness_conditions(
+            "0", "2", "1/2", "1/2"
+        )
+        self.assertEqual(invalid_box["deficit_range_from_box"], ["-1", "1"])
+        self.assertFalse(invalid_box["box_makes_deficit_nonnegative"])
+        self.assertTrue(invalid_box["deficit_integral_at_any_optimum_is_zero"])
+        self.assertFalse(invalid_box["nonnegative_zero_integral_lemma_applies"])
+
     def test_mutated_published_definitions_missing_and_duplicate_cases_fail(self):
         mutations = []
         changed = copy.deepcopy(self.spec)
@@ -97,6 +113,15 @@ class FasterSection66ExactTests(unittest.TestCase):
         mutations.append(changed)
         changed = copy.deepcopy(self.spec)
         changed["cases"][0]["domain"]["upper"] = 2
+        mutations.append(changed)
+        changed = copy.deepcopy(self.spec)
+        changed["cases"][0]["domain"]["upper"] = 1.0
+        mutations.append(changed)
+        changed = copy.deepcopy(self.spec)
+        changed["cases"][0]["domain"]["lower"] = 0.0
+        mutations.append(changed)
+        changed = copy.deepcopy(self.spec)
+        changed["cases"][0]["domain"]["dimension"] = True
         mutations.append(changed)
         changed = copy.deepcopy(self.spec)
         changed["cases"][0]["case_id"] = "renamed"
@@ -192,6 +217,23 @@ class FasterSection66RunnerTests(unittest.TestCase):
                     self.assertEqual(assessment["status"], "STALE_RESULT")
                     self.assertTrue(any(label in item for item in assessment["mismatches"]))
             evidence_path.write_text(json.dumps(original), encoding="utf-8")
+
+            for label, unrelated in (("checker", SPEC), ("runner", PDF)):
+                changed = copy.deepcopy(original)
+                changed["inputs"][label] = api.file_record(unrelated)
+                changed["source_content_sha256"] = api.scientific_sha256(changed["inputs"])
+                evidence_path.write_text(json.dumps(changed), encoding="utf-8")
+                with self.subTest(substituted=label):
+                    assessment = api.check_evidence_freshness(evidence_path)
+                    self.assertEqual(assessment["status"], "STALE_RESULT")
+                    self.assertTrue(any(label in item for item in assessment["mismatches"]))
+
+            changed = copy.deepcopy(original)
+            changed["source_content_sha256"] = "0" * 64
+            evidence_path.write_text(json.dumps(changed), encoding="utf-8")
+            assessment = api.check_evidence_freshness(evidence_path)
+            self.assertEqual(assessment["status"], "STALE_RESULT")
+            self.assertTrue(any("source_content_sha256" in item for item in assessment["mismatches"]))
 
 
 if __name__ == "__main__":
