@@ -17,6 +17,12 @@ DualMaterialSpinResult solveDualMaterialSpin(
     const DualMaterialSpinRequest& request
 )
 {
+    if (request.hollowing.formulation == Spin2014Formulation::PaperGivens)
+    {
+        throw std::invalid_argument(
+            "paper Givens profile is not validated for the dual-material product/export wrapper"
+        );
+    }
     if (
         !std::isfinite(request.boundaryDensity) ||
         request.boundaryDensity <= 0.0 ||

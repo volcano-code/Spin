@@ -3,6 +3,7 @@
 #include "physics/RawMassMoments10.h"
 #include "spin2014/AdaptiveVoxelDomain.h"
 #include "spin2014/SpinIt2014MomentProblem.h"
+#include "spin2014/Spin2014GivensProblem.h"
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
@@ -42,11 +43,15 @@ public:
     );
 
     AdaptiveFillEvaluation evaluate(const Eigen::VectorXd& beta) const;
+    AdaptiveFillEvaluation evaluatePaper(const Eigen::VectorXd& beta, double phi) const;
+    Eigen::Index betaCount() const noexcept { return momentColumns_.cols(); }
+    bool paperHasAngle() const noexcept { return problem_.objective() != Spin2014Objective::StaticLowering; }
     double laplacianEnergy(const Eigen::VectorXd& beta) const;
     const Eigen::MatrixXd& momentColumns() const noexcept;
     const Eigen::SparseMatrix<double>& laplacian() const noexcept;
 
 private:
+    physics::RawMassMoments10 assembleMoments(const Eigen::VectorXd& beta) const;
     const AdaptiveVoxelDomain* domain_ = nullptr;
     SpinIt2014MomentProblem problem_ =
         SpinIt2014MomentProblem::staticBalance();

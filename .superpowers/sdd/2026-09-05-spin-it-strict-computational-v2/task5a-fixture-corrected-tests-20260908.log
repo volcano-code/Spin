@@ -1,0 +1,71 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 14
+[HANDLER_OUTPUT] 
+    Start 14: spin-it-2014-givens
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+14: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-givens-regression
+
+14: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+14: Test timeout computed to be: 1500
+14: objective=0 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.74853e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=0 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=7.27914e-11 second_order_hessian_absolute_diagnostic=2.0481e-07
+14: objective=0 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=5.81508e-11 second_order_hessian_absolute_diagnostic=2.27572e-08
+14: objective=1 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.67091e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=1 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=5.18499e-11 second_order_hessian_absolute_diagnostic=2.04811e-07
+14: objective=1 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.21274e-10 second_order_hessian_absolute_diagnostic=2.27564e-08
+14: objective=2 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.67091e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=2 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=5.18499e-11 second_order_hessian_absolute_diagnostic=2.04811e-07
+14: objective=2 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.21274e-10 second_order_hessian_absolute_diagnostic=2.27564e-08
+14: objective=3 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.67091e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=3 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=5.18499e-11 second_order_hessian_absolute_diagnostic=2.04811e-07
+14: objective=3 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.21274e-10 second_order_hessian_absolute_diagnostic=2.27564e-08
+14: objective=4 h=0.001 fourth_order_max_relative_or_zero_absolute_error=1.90287e-12 second_order_hessian_absolute_diagnostic=3.75e-07
+14: objective=4 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=7.39754e-13 second_order_hessian_absolute_diagnostic=3.37501e-08
+14: objective=4 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=3.46715e-12 second_order_hessian_absolute_diagnostic=3.75192e-09
+14: joint status=CONVERGED residual=1.42131e-11 final_phi=1.5708 beta=0.200193 0.200193 0.200193 0.200193 0.200193 0.200193 0.200193 0.200193
+14: iteration=0 phi=1.7 accepted_step=1 residual=15.4271
+14: iteration=1 phi=1.56785 accepted_step=1 residual=0.356677
+14: iteration=2 phi=1.5708 accepted_step=1 residual=4.13237e-06
+14: iteration=3 phi=1.5708 accepted_step=1 residual=2.71804e-10
+14: iteration=4 phi=1.5708 accepted_step=0 residual=1.42131e-11
+14: [PASS] spin-it-2014-givens analytic and integration contract
+[HANDLER_OUTPUT] 
+1/1 Test #14: spin-it-2014-givens ..............
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	spin-it-2014-givens
+[HANDLER_OUTPUT] 
+
+100% tests passed, 0 tests failed out of 1
+
+
+Label Time Summary:
+regression      =   0.00 sec*proc (1 test)
+spin-it         =   0.00 sec*proc (1 test)
+spin-it-2014    =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.01 sec

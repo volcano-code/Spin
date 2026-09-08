@@ -1,0 +1,69 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 11
+[HANDLER_OUTPUT] 
+    Start 11: spin-it-2014-slqp
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+11: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-slqp-regression
+
+11: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+11: Test timeout computed to be: 1500
+11: [PASS] scenario=spin-it-2014-slqp iterations=90 residual=5.55112e-17 hash=ba7371831d27b970aeab54b8c1c14f8b411023e16bd06c7fc0c8a9d27f9d9aae
+[HANDLER_OUTPUT] 
+1/2 Test #11: spin-it-2014-slqp ................
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 12
+
+[HANDLER_OUTPUT] 
+    Start 12: spin-it-2014-end-to-end
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+12: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-end-to-end
+
+12: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+12: Test timeout computed to be: 1500
+12: [PASS] scenario=spin-it-2014-end-to-end passes=1 residual=0 hash=d1721e8f1564bedf596f9eb88469a1b28bf9040930de3dbfbff9a6ba56275ad2
+[HANDLER_OUTPUT] 
+2/2 Test #12: spin-it-2014-end-to-end ..........
+   Passed    0.01 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	spin-it-2014-slqp
+	spin-it-2014-end-to-end
+[HANDLER_OUTPUT] 
+
+100% tests passed, 0 tests failed out of 2
+
+
+Label Time Summary:
+geometry        =   0.01 sec*proc (1 test)
+regression      =   0.02 sec*proc (2 tests)
+solver          =   0.02 sec*proc (2 tests)
+spin-it         =   0.02 sec*proc (2 tests)
+spin-it-2014    =   0.02 sec*proc (2 tests)
+
+Total Test time (real) =   0.02 sec

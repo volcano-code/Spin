@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cstring>
 #include <deque>
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -131,11 +132,12 @@ double merit(
 
 double maximumBoundStep(
     const Eigen::VectorXd& beta,
-    const Eigen::VectorXd& direction
+    const Eigen::VectorXd& direction,
+    Eigen::Index betaCount
 )
 {
     double result = 1.0;
-    for (Eigen::Index index = 0; index < beta.size(); ++index)
+    for (Eigen::Index index = 0; index < betaCount; ++index)
     {
         if (direction(index) > 0.0)
         {
@@ -154,12 +156,13 @@ Eigen::VectorXd projectedTangentGradient(
     const spin2014::AdaptiveFillEvaluation& evaluation,
     const Eigen::VectorXd& beta,
     double activeTolerance,
-    std::vector<unsigned char>* active
+    std::vector<unsigned char>* active,
+    Eigen::Index betaCount
 )
 {
     const Eigen::MatrixXd& a = evaluation.constraintJacobian;
     active->assign(static_cast<std::size_t>(beta.size()), 0U);
-    for (Eigen::Index index = 0; index < beta.size(); ++index)
+    for (Eigen::Index index = 0; index < betaCount; ++index)
     {
         if (
             beta(index) <= activeTolerance ||
@@ -192,8 +195,8 @@ Eigen::VectorXd projectedTangentGradient(
         bool release = false;
         for (Eigen::Index index = 0; index < beta.size(); ++index)
         {
-            const bool lower = beta(index) <= activeTolerance;
-            const bool upper = beta(index) >= 1.0 - activeTolerance;
+            const bool lower = index < betaCount && beta(index) <= activeTolerance;
+            const bool upper = index < betaCount && beta(index) >= 1.0 - activeTolerance;
             if (!lower && !upper) continue;
             const double direction = -projected(index);
             const bool fixed = (*active)[static_cast<std::size_t>(index)] != 0U;
@@ -236,9 +239,9 @@ void appendDouble(std::string& bytes, double value)
 }
 
 
-std::string hashTrace(const std::vector<spin2014::SlqpIteration>& trace)
+std::string hashTrace(const std::vector<spin2014::SlqpIteration>& trace, bool paper)
 {
-    std::string bytes("spin-it-2014-slqp-trace-v3");
+    std::string bytes(paper ? "spin-it-2014-paper-givens-slqp-trace-v1" : "spin-it-2014-slqp-trace-v3");
     for (const spin2014::SlqpIteration& entry : trace)
     {
         bytes.append(reinterpret_cast<const char*>(&entry.iteration), sizeof(int));
@@ -259,6 +262,7 @@ std::string hashTrace(const std::vector<spin2014::SlqpIteration>& trace)
             reinterpret_cast<const char*>(&entry.lbfgsHistorySize), sizeof(int)
         );
         bytes.push_back(entry.usedFirstOrderFallback ? '\1' : '\0');
+        if(paper) appendDouble(bytes,entry.phi);
     }
     return manufacturing::computeContentSha256(bytes);
 }
@@ -310,17 +314,20 @@ const char* slqpStatusToken(SlqpStatus status) noexcept
 }
 
 
-SlqpLbfgsResult solveSlqpLbfgs(
-    const AdaptiveFillFunctional& functional,
+static SlqpLbfgsResult solveInternal(
+    const std::function<AdaptiveFillEvaluation(const Eigen::VectorXd&)>& evaluate,
     const Eigen::VectorXd& initialBeta,
-    const SlqpLbfgsSettings& settings
+    const SlqpLbfgsSettings& settings,
+    Eigen::Index betaCount,
+    bool paper
 )
 {
     validateSettings(settings);
     if (
         initialBeta.size() == 0 || !initialBeta.allFinite() ||
-        (initialBeta.array() < 0.0).any() ||
-        (initialBeta.array() > 1.0).any()
+        betaCount < 0 || betaCount > initialBeta.size() ||
+        (initialBeta.head(betaCount).array() < 0.0).any() ||
+        (initialBeta.head(betaCount).array() > 1.0).any()
     )
     {
         throw std::invalid_argument("initial fill field must lie in [0,1]");
@@ -328,7 +335,7 @@ SlqpLbfgsResult solveSlqpLbfgs(
 
     SlqpLbfgsResult result;
     result.beta = initialBeta;
-    result.evaluation = functional.evaluate(result.beta);
+    result.evaluation = evaluate(result.beta);
     LbfgsHistory history;
     history.capacity = settings.lbfgsMemory;
 
@@ -343,7 +350,8 @@ SlqpLbfgsResult solveSlqpLbfgs(
             current,
             result.beta,
             settings.activeSetTolerance,
-            &active
+            &active,
+            betaCount
         );
         const double equalityNorm = current.constraints.size() > 0
             ? current.constraints.lpNorm<Eigen::Infinity>()
@@ -351,6 +359,7 @@ SlqpLbfgsResult solveSlqpLbfgs(
         const double projectedNorm = projected.lpNorm<Eigen::Infinity>();
 
         SlqpIteration trace;
+        trace.phi = result.beta.size() > betaCount ? result.beta(betaCount) : 0.;
         trace.iteration = iteration;
         trace.objective = current.objective;
         trace.equalityInfinityNorm = equalityNorm;
@@ -371,7 +380,7 @@ SlqpLbfgsResult solveSlqpLbfgs(
             result.trace.push_back(trace);
             result.status = SlqpStatus::Converged;
             result.diagnostic = "SLQP equality and projected-gradient tolerances met";
-            result.traceHash = hashTrace(result.trace);
+            result.traceHash = hashTrace(result.trace, paper);
             return result;
         }
 
@@ -422,11 +431,11 @@ SlqpLbfgsResult solveSlqpLbfgs(
             result.trace.push_back(trace);
             result.status = SlqpStatus::LineSearchExhausted;
             result.diagnostic = "SLQP subproblem produced no usable direction";
-            result.traceHash = hashTrace(result.trace);
+            result.traceHash = hashTrace(result.trace, paper);
             return result;
         }
 
-        double step = maximumBoundStep(result.beta, direction);
+        double step = maximumBoundStep(result.beta, direction, betaCount);
         const double oldMerit = merit(current, settings.meritPenalty);
         const double predicted = std::max(
             1e-14,
@@ -441,9 +450,9 @@ SlqpLbfgsResult solveSlqpLbfgs(
              ++lineSearch)
         {
             ++trace.lineSearchEvaluations;
-            candidateBeta = (result.beta + step * direction)
-                .cwiseMax(0.0).cwiseMin(1.0);
-            candidate = functional.evaluate(candidateBeta);
+            candidateBeta = result.beta + step * direction;
+            candidateBeta.head(betaCount) = candidateBeta.head(betaCount).cwiseMax(0.0).cwiseMin(1.0);
+            candidate = evaluate(candidateBeta);
             if (
                 merit(candidate, settings.meritPenalty) <=
                 oldMerit - settings.armijo * step * predicted
@@ -483,7 +492,7 @@ SlqpLbfgsResult solveSlqpLbfgs(
                     direction(index) = 0.0;
                 }
             }
-            step = maximumBoundStep(result.beta, direction);
+            step = maximumBoundStep(result.beta, direction, betaCount);
             const double fallbackPredicted = std::max(
                 1e-14,
                 -current.gradient.dot(direction) +
@@ -494,9 +503,9 @@ SlqpLbfgsResult solveSlqpLbfgs(
                  ++lineSearch)
             {
                 ++trace.lineSearchEvaluations;
-                candidateBeta = (result.beta + step * direction)
-                    .cwiseMax(0.0).cwiseMin(1.0);
-                candidate = functional.evaluate(candidateBeta);
+                candidateBeta = result.beta + step * direction;
+                candidateBeta.head(betaCount) = candidateBeta.head(betaCount).cwiseMax(0.0).cwiseMin(1.0);
+                candidate = evaluate(candidateBeta);
                 if (
                     merit(candidate, settings.meritPenalty) <=
                     oldMerit - settings.armijo * step * fallbackPredicted
@@ -517,7 +526,7 @@ SlqpLbfgsResult solveSlqpLbfgs(
         {
             result.status = SlqpStatus::LineSearchExhausted;
             result.diagnostic = "SLQP merit-function line search was exhausted";
-            result.traceHash = hashTrace(result.trace);
+            result.traceHash = hashTrace(result.trace, paper);
             return result;
         }
 
@@ -532,7 +541,35 @@ SlqpLbfgsResult solveSlqpLbfgs(
 
     result.status = SlqpStatus::MaximumIterations;
     result.diagnostic = "SLQP reached its iteration limit";
-    result.traceHash = hashTrace(result.trace);
+    result.traceHash = hashTrace(result.trace, paper);
+    return result;
+}
+
+SlqpLbfgsResult solveSlqpLbfgs(const AdaptiveFillFunctional& functional,
+    const Eigen::VectorXd& initialBeta,const SlqpLbfgsSettings& settings)
+{
+    return solveInternal([&functional](const Eigen::VectorXd& beta){return functional.evaluate(beta);},initialBeta,settings,initialBeta.size(),false);
+}
+
+SlqpLbfgsResult solveSlqpLbfgsPaper(const AdaptiveFillFunctional& functional,
+    const Eigen::VectorXd& initialBeta,double initialPhi,const SlqpLbfgsSettings& settings)
+{
+    const Eigen::Index n=functional.betaCount();const bool angle=functional.paperHasAngle();
+    if(initialBeta.size()!=n||!std::isfinite(initialPhi)||(!angle&&initialPhi!=0.))
+        throw std::invalid_argument("invalid joint Givens dimensions or initial phi (static requires zero)");
+    Eigen::VectorXd state(n+(angle?1:0));state.head(n)=initialBeta;if(angle)state(n)=initialPhi;
+    auto result=solveInternal([&](const Eigen::VectorXd& x) {
+        if(!x.allFinite())throw std::invalid_argument("nonfinite joint Givens state");
+        return functional.evaluatePaper(x.head(n),angle?x(n):0.);
+    },state,settings,n,true);
+    result.formulation=Spin2014Formulation::PaperGivens;
+    result.initialPhi=initialPhi;result.finalPhi=angle?result.beta(n):0.;
+    result.beta=result.beta.head(n).eval();
+    // Bind final accepted state as well: a max-iteration trace ends before its
+    // last accepted step. Legacy serialization is deliberately unchanged.
+    std::string bytes=result.traceHash;appendDouble(bytes,result.finalPhi);
+    for(Eigen::Index i=0;i<n;++i)appendDouble(bytes,result.beta(i));
+    result.traceHash=manufacturing::computeContentSha256(bytes);
     return result;
 }
 

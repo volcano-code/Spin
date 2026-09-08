@@ -58,9 +58,9 @@ spin2014::SpinIt2014MomentProblem momentProblem(
 }
 
 
-std::string hashTrace(const std::vector<spin2014::AdaptiveSpinPass>& trace)
+std::string hashTrace(const std::vector<spin2014::AdaptiveSpinPass>& trace, bool paper)
 {
-    std::string bytes("spin-it-2014-adaptive-trace-v2");
+    std::string bytes(paper ? "spin-it-2014-paper-givens-adaptive-trace-v1" : "spin-it-2014-adaptive-trace-v2");
     for (const spin2014::AdaptiveSpinPass& pass : trace)
     {
         appendInt(bytes, pass.pass);
@@ -75,6 +75,7 @@ std::string hashTrace(const std::vector<spin2014::AdaptiveSpinPass>& trace)
         appendInt(bytes, pass.activeSetTransitions);
         bytes += pass.partitionHash;
         bytes += pass.slqpTraceHash;
+        if(paper) {appendDouble(bytes,pass.initialPhi);appendDouble(bytes,pass.finalPhi);}
     }
     return manufacturing::computeContentSha256(bytes);
 }
@@ -108,6 +109,12 @@ const char* adaptiveSpinStatusToken(AdaptiveSpinStatus status) noexcept
 
 void validateAdaptiveVoxelSpinRequest(const AdaptiveVoxelSpinRequest& request)
 {
+    if ((request.formulation != Spin2014Formulation::LegacyAngleEliminated &&
+         request.formulation != Spin2014Formulation::PaperGivens) ||
+        !std::isfinite(request.initialPhi) ||
+        ((request.formulation == Spin2014Formulation::LegacyAngleEliminated ||
+          request.mode == spin::SpinMode::StaticBalance) && request.initialPhi != 0.))
+        throw std::invalid_argument("invalid Givens formulation/phi; legacy and static require phi=0");
     if (!request.domain)
     {
         throw std::invalid_argument("Spin-It 2014 domain must not be null");
@@ -163,6 +170,11 @@ std::string computeAdaptiveVoxelSpinRequestHash(
 {
     validateAdaptiveVoxelSpinRequest(request);
     std::string bytes("spin-it-2014-adaptive-request-v2");
+    if(request.formulation == Spin2014Formulation::PaperGivens) {
+        bytes = "spin-it-2014-paper-givens-adaptive-request-v1";
+        bytes += spin2014FormulationToken(request.formulation);
+        appendDouble(bytes,request.initialPhi);
+    }
     bytes += request.domain->artifactId();
     appendInt(bytes, static_cast<int>(request.mode));
     appendInt(bytes, request.objective.has_value() ? 1 : 0);
@@ -201,6 +213,9 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
 {
     validateAdaptiveVoxelSpinRequest(request);
     AdaptiveVoxelSpinResult result;
+    const bool paper = request.formulation == Spin2014Formulation::PaperGivens;
+    result.formulation=request.formulation;result.initialPhi=request.initialPhi;
+    result.finalPhi=request.initialPhi;
     result.inputHash = computeAdaptiveVoxelSpinRequestHash(request);
     std::uint64_t initialCellBound = 1U;
     for (int level = 0; level < request.initialLevel; ++level)
@@ -255,14 +270,19 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
             request.boundaryDensity,
             request.interiorDensity
         );
-        const SlqpLbfgsResult relaxed = solveSlqpLbfgs(
+        const double passInitialPhi=result.finalPhi;
+        const SlqpLbfgsResult relaxed = paper ? solveSlqpLbfgsPaper(
+            functional,beta,passInitialPhi,request.slqp
+        ) : solveSlqpLbfgs(
             functional,
             beta,
             request.slqp
         );
         beta = relaxed.beta;
+        result.finalPhi=relaxed.finalPhi;
 
         AdaptiveSpinPass pass;
+        pass.initialPhi=passInitialPhi;pass.finalPhi=result.finalPhi;
         pass.pass = passIndex;
         pass.leafCountBefore = static_cast<int>(domain.leaves().size());
         pass.partitionHash = domain.partitionHash();
@@ -305,7 +325,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
             result.status = AdaptiveSpinStatus::RelaxationDidNotConverge;
             result.diagnostic = std::string("adaptive pass failed: ") +
                 relaxed.diagnostic;
-            result.adaptiveTraceHash = hashTrace(result.adaptiveTrace);
+            result.adaptiveTraceHash = hashTrace(result.adaptiveTrace, paper);
             result.outputHash = manufacturing::computeContentSha256(
                 result.inputHash + result.adaptiveTraceHash + result.diagnostic
             );
@@ -336,7 +356,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
             result.status = AdaptiveSpinStatus::ResourceLimitReached;
             result.diagnostic =
                 "adaptive split leaf bound exceeds maximumLeafCount";
-            result.adaptiveTraceHash = hashTrace(result.adaptiveTrace);
+            result.adaptiveTraceHash = hashTrace(result.adaptiveTrace, paper);
             result.outputHash = manufacturing::computeContentSha256(
                 result.inputHash + result.adaptiveTraceHash + result.diagnostic
             );
@@ -357,7 +377,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         }
     }
     result.relaxedFill = beta;
-    result.adaptiveTraceHash = hashTrace(result.adaptiveTrace);
+    result.adaptiveTraceHash = hashTrace(result.adaptiveTrace, paper);
     if (!adaptiveConverged)
     {
         result.status = AdaptiveSpinStatus::AdaptivePassLimit;
@@ -389,7 +409,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         result.binaryFill[static_cast<std::size_t>(index)] = binary(index);
     }
     const AdaptiveFillEvaluation finalEvaluation =
-        finalFunctional.evaluate(binary);
+        paper ? finalFunctional.evaluatePaper(binary,result.finalPhi) : finalFunctional.evaluate(binary);
     result.finalMoments = finalEvaluation.finalMoments;
     result.binaryConstraints = finalEvaluation.constraints;
     result.binaryConstraintInfinityNorm = result.binaryConstraints.size() > 0
@@ -448,6 +468,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
     result.geometryHash = finalDomain->artifactId();
     std::string outputBytes = result.inputHash + result.adaptiveTraceHash +
         result.geometryHash + result.diagnostic;
+    if(paper) {outputBytes += spin2014FormulationToken(request.formulation);appendDouble(outputBytes,result.finalPhi);}
     for (double value : result.binaryFill)
     {
         appendDouble(outputBytes, value);

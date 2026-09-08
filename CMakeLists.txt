@@ -213,6 +213,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         src/spin2014/AdaptiveVoxelDomain.cpp
         src/spin2014/AdaptiveFillFunctional.cpp
         src/spin2014/SpinIt2014MomentProblem.cpp
+        src/spin2014/Spin2014GivensProblem.cpp
         src/spin2014/SlqpLbfgsSolver.cpp
         src/spin2014/AdaptiveVoxelSpinSolver.cpp
         src/spin2014/DualMaterialSpinSolver.cpp
@@ -562,6 +563,12 @@ if(BUILD_TESTING)
             spin-it-2014-modes
             PROPERTIES LABELS "spin-it;spin-it-2014;solver;regression"
         )
+
+        add_executable(spin-it-2014-givens-regression tests/spin_it_2014_givens_regression.cpp)
+        target_link_libraries(spin-it-2014-givens-regression PRIVATE make_it_stand::core)
+        target_compile_features(spin-it-2014-givens-regression PRIVATE cxx_std_17)
+        add_test(NAME spin-it-2014-givens COMMAND "$<TARGET_FILE:spin-it-2014-givens-regression>")
+        set_tests_properties(spin-it-2014-givens PROPERTIES LABELS "spin-it;spin-it-2014;regression")
 
         add_executable(
             spin-it-2014-objectives-regression

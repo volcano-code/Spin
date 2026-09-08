@@ -81,6 +81,7 @@ int main()
         (result.beta.array() > 1.0).any() ||
         result.trace.empty() ||
         result.traceHash.size() != 64U ||
+        result.traceHash != "ba7371831d27b970aeab54b8c1c14f8b411023e16bd06c7fc0c8a9d27f9d9aae" ||
         result.traceHash != repeated.traceHash ||
         !result.beta.isApprox(repeated.beta, 0.0)
     )

@@ -53,6 +53,9 @@ struct AdaptiveVoxelSpinRequest
     double interiorDensity = 1.0;
     double binaryConstraintTolerance = 1e-6;
     SlqpLbfgsSettings slqp;
+    Spin2014Formulation formulation = Spin2014Formulation::LegacyAngleEliminated;
+    // Legacy and static requests require zero; paper spinning angle is unbounded.
+    double initialPhi = 0.0;
 };
 
 
@@ -71,6 +74,8 @@ struct AdaptiveSpinPass
     std::string partitionHash;
     std::string slqpTraceHash;
     std::vector<SlqpIteration> slqpTrace;
+    double initialPhi = 0.0;
+    double finalPhi = 0.0;
 };
 
 
@@ -95,6 +100,9 @@ struct AdaptiveVoxelSpinResult
     voxel::MaterialBoundaryMesh designBoundary;
     voxel::MaterialBoundaryMesh materialBoundary;
     std::vector<AdaptiveSpinPass> adaptiveTrace;
+    Spin2014Formulation formulation = Spin2014Formulation::LegacyAngleEliminated;
+    double initialPhi = 0.0;
+    double finalPhi = 0.0;
 };
 
 

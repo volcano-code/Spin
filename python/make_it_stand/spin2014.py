@@ -74,8 +74,17 @@ class SpinIt2014Request:
     slqp_projected_gradient_tolerance: float = 1e-7
     objective: str | None = None
     inertia_weight: float = 1.0
+    formulation: str = "LEGACY_ANGLE_ELIMINATED"
+    initial_phi: float = 0.0
 
     def __post_init__(self) -> None:
+        if self.formulation not in {"LEGACY_ANGLE_ELIMINATED", "PAPER_GIVENS"}:
+            raise ValueError("unsupported Spin-It 2014 formulation")
+        if not math.isfinite(self.initial_phi) or (
+            (self.formulation == "LEGACY_ANGLE_ELIMINATED" or self.mode == "STATIC_BALANCE")
+            and self.initial_phi != 0.0
+        ):
+            raise ValueError("phi must be finite; legacy and static require initial_phi=0")
         if len(self.dimensions) != 3 or any(
             isinstance(value, bool) or not isinstance(value, int) or value <= 0
             for value in self.dimensions
@@ -163,6 +172,18 @@ class SpinIt2014Result:
         return bool(self._native.geometry_sealed)
 
     @property
+    def formulation(self) -> str:
+        return self._diagnostics.get("formulation", "LEGACY_ANGLE_ELIMINATED")
+
+    @property
+    def initial_phi(self) -> float:
+        return float(self._diagnostics.get("initial_phi", 0.0))
+
+    @property
+    def final_phi(self) -> float:
+        return float(self._diagnostics.get("final_phi", 0.0))
+
+    @property
     def diagnostics(self) -> dict[str, Any]:
         return json.loads(json.dumps(self._diagnostics))
 
@@ -231,6 +252,8 @@ def solve_spin_it_2014(request: SpinIt2014Request) -> SpinIt2014Result:
             else None
         ),
         request.inertia_weight,
+        request.formulation,
+        request.initial_phi,
     )
     return SpinIt2014Result(artifact)
 
@@ -244,6 +267,8 @@ def solve_spin_it_2014_cage(
     """Run the paper's joint cage/fill stage from a hollowing artifact."""
     if not isinstance(hollowing, SpinIt2014Result):
         raise TypeError("hollowing must be a SpinIt2014Result")
+    if request.formulation == "PAPER_GIVENS" or hollowing.formulation == "PAPER_GIVENS":
+        raise ValueError("paper Givens formulation is unsupported by cage deformation")
     if (
         isinstance(maximum_handle_count, bool)
         or not isinstance(maximum_handle_count, int)

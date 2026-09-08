@@ -1202,7 +1202,9 @@ PYBIND11_MODULE(_make_it_stand, module)
             int slqpMaximumIterations,
             double slqpProjectedGradientTolerance,
             const std::optional<spin2014::Spin2014Objective>& objective,
-            double inertiaWeight
+            double inertiaWeight,
+            const std::string& formulation,
+            double initialPhi
         )
         {
             voxel::GridSpec grid;
@@ -1210,6 +1212,9 @@ PYBIND11_MODULE(_make_it_stand, module)
             grid.minimum = minimum;
             grid.maximum = maximum;
             spin2014::AdaptiveVoxelSpinRequest request;
+            if(formulation == "PAPER_GIVENS") request.formulation=spin2014::Spin2014Formulation::PaperGivens;
+            else if(formulation != "LEGACY_ANGLE_ELIMINATED") throw std::invalid_argument("unknown Spin-It 2014 formulation");
+            request.initialPhi=initialPhi;
             request.domain = voxel::VoxelDomain::create(
                 grid, materialMask, {}, carveableMask
             );
@@ -1256,7 +1261,9 @@ PYBIND11_MODULE(_make_it_stand, module)
         py::arg("slqp_maximum_iterations") = 120,
         py::arg("slqp_projected_gradient_tolerance") = 1e-7,
         py::arg("objective") = py::none(),
-        py::arg("inertia_weight") = 1.0
+        py::arg("inertia_weight") = 1.0,
+        py::arg("formulation") = "LEGACY_ANGLE_ELIMINATED",
+        py::arg("initial_phi") = 0.0
     );
 
     module.def(
@@ -1274,6 +1281,8 @@ PYBIND11_MODULE(_make_it_stand, module)
             double inertiaWeight
         )
         {
+            if(artifact.result().formulation == spin2014::Spin2014Formulation::PaperGivens)
+                throw std::invalid_argument("paper Givens artifacts are unsupported by cage deformation");
             voxel::GridSpec grid;
             grid.dimensions = dimensions;
             grid.minimum = minimum;

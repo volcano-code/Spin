@@ -1,0 +1,11 @@
+[ 75%] Built target highs
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/spin-it-2014-givens-regression.dir/tests/spin_it_2014_givens_regression.cpp.o
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_givens_regression.cpp:1:10: fatal error: spin2014/Spin2014GivensProblem.h: No such file or directory
+    1 | #include "spin2014/Spin2014GivensProblem.h"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+gmake[3]: *** [CMakeFiles/spin-it-2014-givens-regression.dir/build.make:76: CMakeFiles/spin-it-2014-givens-regression.dir/tests/spin_it_2014_givens_regression.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1285: CMakeFiles/spin-it-2014-givens-regression.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1292: CMakeFiles/spin-it-2014-givens-regression.dir/rule] Error 2
+gmake: *** [Makefile:693: spin-it-2014-givens-regression] Error 2

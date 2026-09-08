@@ -123,8 +123,10 @@ std::string diagnostics(
               ))
            << "\",\n  \"objective_resolution\": \""
            << (request.objective.has_value() ? "EXPLICIT" : "MODE_DEFAULT_LEGACY")
-           << "\",\n  \"objective_semantics\": "
-              "\"ANGLE_ELIMINATED_TRANSVERSE_INERTIA\",\n"
+           << "\",\n  \"objective_semantics\": \""
+           << (request.formulation == spin2014::Spin2014Formulation::PaperGivens ?
+               "PAPER_GIVENS_RAW_MOMENTS" : "ANGLE_ELIMINATED_TRANSVERSE_INERTIA")
+           << "\",\n"
            << "  \"original_phi_trajectory\": false,\n"
            << "  \"inertia_weight\": " << std::setprecision(17)
            << request.inertiaWeight
@@ -159,6 +161,13 @@ std::string diagnostics(
     else output << "null";
     output << ",\n  \"final_raw_moments\": ";
     vectorJson(output, result.finalMoments.values());
+    if(request.formulation == spin2014::Spin2014Formulation::PaperGivens) {
+        output << ",\n  \"formulation\": \"PAPER_GIVENS\",\n  \"initial_phi\": " << result.initialPhi
+               << ",\n  \"final_phi\": " << result.finalPhi
+               << ",\n  \"joint_angle_optimization\": " << (request.mode == spin::SpinMode::StaticBalance ? "false" : "true")
+               << ",\n  \"binary_constraints\": ";
+        vectorJson(output,result.binaryConstraints);
+    }
     output << ",\n  \"adaptive_passes\": [";
     for (std::size_t index = 0; index < result.adaptiveTrace.size(); ++index)
     {
@@ -180,8 +189,17 @@ std::string diagnostics(
                << ",\"active_set_transitions\":"
                << pass.activeSetTransitions
                << ",\"partition_hash\":\"" << pass.partitionHash
-               << "\",\"slqp_trace_hash\":\"" << pass.slqpTraceHash
-               << "\"}";
+               << "\",\"slqp_trace_hash\":\"" << pass.slqpTraceHash << "\"";
+        if(request.formulation == spin2014::Spin2014Formulation::PaperGivens) {
+            output << ",\"initial_phi\":" << pass.initialPhi << ",\"final_phi\":" << pass.finalPhi << ",\"slqp_trace\":[";
+            for(std::size_t j=0;j<pass.slqpTrace.size();++j) {
+                if(j)output<<',';const auto& t=pass.slqpTrace[j];
+                output << "{\"iteration\":"<<t.iteration<<",\"phi\":"<<t.phi
+                       <<",\"objective\":"<<t.objective<<",\"equality_infinity_norm\":"<<t.equalityInfinityNorm
+                       <<",\"accepted_step\":"<<t.acceptedStep<<"}";
+            }output<<']';
+        }
+        output << "}";
     }
     output << "]\n}\n";
     return output.str();

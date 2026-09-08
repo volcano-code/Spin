@@ -1,0 +1,114 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 11
+[HANDLER_OUTPUT] 
+    Start 11: spin-it-2014-slqp
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+11: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-slqp-regression
+
+11: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+11: Test timeout computed to be: 1500
+11: [PASS] scenario=spin-it-2014-slqp iterations=90 residual=5.55112e-17 hash=ba7371831d27b970aeab54b8c1c14f8b411023e16bd06c7fc0c8a9d27f9d9aae
+[HANDLER_OUTPUT] 
+1/3 Test #11: spin-it-2014-slqp ................
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 12
+
+[HANDLER_OUTPUT] 
+    Start 12: spin-it-2014-end-to-end
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+12: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-end-to-end
+
+12: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+12: Test timeout computed to be: 1500
+12: [PASS] scenario=spin-it-2014-end-to-end passes=1 residual=0 hash=d1721e8f1564bedf596f9eb88469a1b28bf9040930de3dbfbff9a6ba56275ad2
+[HANDLER_OUTPUT] 
+2/3 Test #12: spin-it-2014-end-to-end ..........
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 14
+
+[HANDLER_OUTPUT] 
+    Start 14: spin-it-2014-givens
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+14: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-givens-regression
+
+14: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+14: Test timeout computed to be: 1500
+14: objective=0 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.74853e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=0 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=7.27914e-11 second_order_hessian_absolute_diagnostic=2.0481e-07
+14: objective=0 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=5.81508e-11 second_order_hessian_absolute_diagnostic=2.27572e-08
+14: objective=1 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.67091e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=1 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=5.18499e-11 second_order_hessian_absolute_diagnostic=2.04811e-07
+14: objective=1 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.21274e-10 second_order_hessian_absolute_diagnostic=2.27564e-08
+14: objective=2 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.67091e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=2 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=5.18499e-11 second_order_hessian_absolute_diagnostic=2.04811e-07
+14: objective=2 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.21274e-10 second_order_hessian_absolute_diagnostic=2.27564e-08
+14: objective=3 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.67091e-11 second_order_hessian_absolute_diagnostic=2.27567e-06
+14: objective=3 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=5.18499e-11 second_order_hessian_absolute_diagnostic=2.04811e-07
+14: objective=3 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.21274e-10 second_order_hessian_absolute_diagnostic=2.27564e-08
+14: objective=4 h=0.001 fourth_order_max_relative_or_zero_absolute_error=1.90287e-12 second_order_hessian_absolute_diagnostic=3.75e-07
+14: objective=4 h=0.0003 fourth_order_max_relative_or_zero_absolute_error=7.39754e-13 second_order_hessian_absolute_diagnostic=3.37501e-08
+14: objective=4 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=3.46715e-12 second_order_hessian_absolute_diagnostic=3.75192e-09
+14: joint status=CONVERGED residual=1.69808e-14 final_phi=1.5708 beta=0.200025 0.200025 0.200025 0.200025 0.200025 0.200025 0.200025 0.200025
+14: iteration=0 phi=1.7 accepted_step=1 residual=15.5113
+14: iteration=1 phi=1.56784 accepted_step=1 residual=0.358706
+14: iteration=2 phi=1.5708 accepted_step=1 residual=4.17654e-06
+14: iteration=3 phi=1.5708 accepted_step=1 residual=7.92329e-14
+14: iteration=4 phi=1.5708 accepted_step=0 residual=1.69808e-14
+14: [FAIL] maximum-resolution grid must be divisible by source dimensions
+[HANDLER_OUTPUT] 
+3/3 Test #14: spin-it-2014-givens ..............
+***Failed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	spin-it-2014-slqp
+	spin-it-2014-end-to-end
+[HANDLER_OUTPUT] 
+
+67% tests passed, 1 tests failed out of 3
+
+
+Label Time Summary:
+geometry        =   0.00 sec*proc (1 test)
+regression      =   0.01 sec*proc (3 tests)
+solver          =   0.00 sec*proc (2 tests)
+spin-it         =   0.01 sec*proc (3 tests)
+spin-it-2014    =   0.01 sec*proc (3 tests)
+
+Total Test time (real) =   0.01 sec
+
+The following tests FAILED:
+	 14 - spin-it-2014-givens (Failed)
+[ERROR_MESSAGE] 
+Errors while running CTest
+
+Output from these tests are in: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

@@ -48,6 +48,7 @@ struct SlqpIteration
     int activeVariables = 0;
     int lbfgsHistorySize = 0;
     bool usedFirstOrderFallback = false;
+    double phi = 0.0;
 };
 
 
@@ -59,6 +60,9 @@ struct SlqpLbfgsResult
     AdaptiveFillEvaluation evaluation;
     std::vector<SlqpIteration> trace;
     std::string traceHash;
+    Spin2014Formulation formulation = Spin2014Formulation::LegacyAngleEliminated;
+    double initialPhi = 0.0;
+    double finalPhi = 0.0;
 };
 
 
@@ -67,6 +71,14 @@ const char* slqpStatusToken(SlqpStatus status) noexcept;
 SlqpLbfgsResult solveSlqpLbfgs(
     const AdaptiveFillFunctional& functional,
     const Eigen::VectorXd& initialBeta,
+    const SlqpLbfgsSettings& settings = SlqpLbfgsSettings()
+);
+
+// Joint [beta,phi], box bounds apply only to beta. Static requires initialPhi=0.
+SlqpLbfgsResult solveSlqpLbfgsPaper(
+    const AdaptiveFillFunctional& functional,
+    const Eigen::VectorXd& initialBeta,
+    double initialPhi,
     const SlqpLbfgsSettings& settings = SlqpLbfgsSettings()
 );
 

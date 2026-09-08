@@ -1,0 +1,51 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 14
+[HANDLER_OUTPUT] 
+    Start 14: spin-it-2014-givens
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+14: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-givens-regression
+
+14: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+14: Test timeout computed to be: 1500
+14: [FAIL] 11-coordinate finite difference tolerance
+[HANDLER_OUTPUT] 
+1/1 Test #14: spin-it-2014-givens ..............
+***Failed    0.00 sec
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+regression      =   0.00 sec*proc (1 test)
+spin-it         =   0.00 sec*proc (1 test)
+spin-it-2014    =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.01 sec
+
+The following tests FAILED:
+	 14 - spin-it-2014-givens (Failed)
+[ERROR_MESSAGE] 
+Errors while running CTest
+
+Output from these tests are in: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

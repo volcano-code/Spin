@@ -1,0 +1,142 @@
+[  1%] Built target r8-fake-slicer
+[ 53%] Built target highs
+[ 70%] Built target make_it_stand_core
+[ 70%] Building CXX object CMakeFiles/_make_it_stand.dir/bindings/pybind_module.cpp.o
+[ 70%] Linking CXX executable exact-material-region-regression
+[ 70%] Linking CXX executable exact-partition-clearance-regression
+[ 70%] Built target exact-material-region-regression
+[ 71%] Built target exact-partition-clearance-regression
+[ 72%] Linking CXX executable spin-it-2014-adaptive-domain-regression
+[ 72%] Linking CXX executable exact-boundary-audit-regression
+[ 73%] Built target exact-boundary-audit-regression
+[ 73%] Building CXX object CMakeFiles/spin-it-2014-fill-functional-regression.dir/tests/spin_it_2014_fill_functional_regression.cpp.o
+[ 73%] Built target spin-it-2014-adaptive-domain-regression
+[ 73%] Building CXX object CMakeFiles/spin-it-2014-slqp-regression.dir/tests/spin_it_2014_slqp_regression.cpp.o
+[ 74%] Linking CXX executable spin-it-2014-fill-functional-regression
+[ 75%] Linking CXX executable spin-it-2014-slqp-regression
+[ 75%] Built target spin-it-2014-fill-functional-regression
+[ 75%] Building CXX object CMakeFiles/spin-it-2014-end-to-end.dir/tests/spin_it_2014_end_to_end.cpp.o
+[ 75%] Built target spin-it-2014-slqp-regression
+[ 76%] Building CXX object CMakeFiles/spin-it-2014-modes-regression.dir/tests/spin_it_2014_modes_regression.cpp.o
+[ 76%] Linking CXX executable spin-it-2014-end-to-end
+[ 76%] Linking CXX executable spin-it-2014-modes-regression
+[ 76%] Built target spin-it-2014-end-to-end
+[ 76%] Building CXX object CMakeFiles/spin-it-2014-givens-regression.dir/tests/spin_it_2014_givens_regression.cpp.o
+[ 76%] Built target spin-it-2014-modes-regression
+[ 76%] Building CXX object CMakeFiles/spin-it-2014-objectives-regression.dir/tests/spin_it_2014_objectives_regression.cpp.o
+[ 76%] Linking CXX executable spin-it-2014-objectives-regression
+[ 76%] Built target spin-it-2014-objectives-regression
+[ 77%] Building CXX object CMakeFiles/spin-it-2014-resolution-ladder.dir/tests/spin_it_2014_resolution_ladder.cpp.o
+[ 77%] Linking CXX executable spin-it-2014-resolution-ladder
+[ 77%] Linking CXX executable spin-it-2014-givens-regression
+[ 77%] Built target spin-it-2014-givens-regression
+[ 77%] Building CXX object CMakeFiles/spin-it-2014-dual-material-regression.dir/tests/spin_it_2014_dual_material_regression.cpp.o
+[ 77%] Built target spin-it-2014-resolution-ladder
+[ 77%] Building CXX object CMakeFiles/spin-it-2014-api-regression.dir/tests/spin_it_2014_api_regression.cpp.o
+[ 78%] Linking CXX executable spin-it-2014-dual-material-regression
+[ 78%] Linking CXX executable spin-it-2014-api-regression
+[ 78%] Built target spin-it-2014-dual-material-regression
+[ 78%] Linking CXX executable spin-it-2014-surface-differential-regression
+[ 78%] Built target spin-it-2014-surface-differential-regression
+[ 78%] Linking CXX executable spin-it-2014-cage-functional-regression
+[ 78%] Built target spin-it-2014-cage-functional-regression
+[ 78%] Linking CXX executable spin-it-2014-cage-solver-regression
+[ 78%] Built target spin-it-2014-api-regression
+[ 78%] Linking CXX executable spin-it-2014-automatic-cage-regression
+[ 79%] Built target spin-it-2014-automatic-cage-regression
+[ 79%] Linking CXX executable spin-design-request-regression
+[ 80%] Built target spin-it-2014-cage-solver-regression
+[ 80%] Linking CXX executable spin-moment-problem-regression
+[ 80%] Built target spin-design-request-regression
+[ 81%] Linking CXX executable quadric-coefficients-regression
+[ 81%] Built target quadric-coefficients-regression
+[ 82%] Linking CXX executable spin-boolean-regression
+[ 83%] Built target spin-moment-problem-regression
+[ 84%] Linking CXX executable quadric-triangulator-regression
+[ 84%] Built target quadric-triangulator-regression
+[ 85%] Linking CXX executable quadric-inverse-gauss-map-regression
+[ 85%] Built target spin-boolean-regression
+[ 85%] Built target quadric-inverse-gauss-map-regression
+[ 85%] Linking CXX executable quadric-moment-evaluator-regression
+[ 85%] Linking CXX executable quadric-discrete-moment-regression
+[ 85%] Built target quadric-moment-evaluator-regression
+[ 85%] Built target quadric-discrete-moment-regression
+[ 86%] Linking CXX executable spin-it-faster-end-to-end
+[ 86%] Linking CXX executable quadric-hollowing-solver-regression
+[ 86%] Built target spin-it-faster-end-to-end
+[ 86%] Linking CXX executable spin-it-faster-interface-types
+[ 86%] Built target spin-it-faster-interface-types
+[ 86%] Linking CXX executable carving-reachability-regression
+[ 87%] Built target quadric-hollowing-solver-regression
+[ 88%] Linking CXX executable balance-model-reachability-regression
+[ 88%] Built target carving-reachability-regression
+[ 88%] Linking CXX executable result-view-regression
+[ 88%] Built target result-view-regression
+[ 88%] Linking CXX executable released-beta-archive-regression
+[ 88%] Built target balance-model-reachability-regression
+[ 89%] Linking CXX executable voxel-domain-regression
+[ 90%] Built target released-beta-archive-regression
+[ 90%] Linking CXX executable balance-model-regression
+[ 90%] Built target voxel-domain-regression
+[ 90%] Linking CXX executable mass-properties-regression
+[ 90%] Built target balance-model-regression
+[ 90%] Built target mass-properties-regression
+[ 90%] Linking CXX executable raw-mass-moments-regression
+[ 90%] Linking CXX executable stability-regression
+[ 90%] Built target raw-mass-moments-regression
+[ 90%] Linking CXX executable objective-integration-regression
+[ 90%] Built target stability-regression
+[ 90%] Linking CXX executable plane-carving-policy-regression
+[ 90%] Linking CXX shared module python/_make_it_stand.cpython-313-x86_64-linux-gnu.so
+[ 91%] Built target plane-carving-policy-regression
+[ 91%] Linking CXX executable deformation-regression
+[ 92%] Built target objective-integration-regression
+[ 93%] Linking CXX executable deformation-optimization-regression
+[ 93%] Built target deformation-optimization-regression
+[ 93%] Built target _make_it_stand
+[ 94%] Linking CXX executable deformed-carving-solver-regression
+[ 94%] Linking CXX executable deformed-voxel-mass-field-regression
+[ 94%] Built target deformation-regression
+[ 94%] Linking CXX executable balance-target-schedule-regression
+[ 94%] Built target deformed-carving-solver-regression
+[ 94%] Linking CXX executable alternating-block-semantics-regression
+[ 95%] Built target balance-target-schedule-regression
+[ 96%] Linking CXX executable alternating-balance-optimizer-regression
+[ 96%] Built target deformed-voxel-mass-field-regression
+[ 96%] Linking CXX executable r10-ablation-regression
+[ 96%] Built target alternating-block-semantics-regression
+[ 96%] Linking CXX executable voxel-constraints-regression
+[ 96%] Built target r10-ablation-regression
+[ 97%] Linking CXX executable manufacturing-geometry-regression
+[ 98%] Built target voxel-constraints-regression
+[ 98%] Linking CXX executable slicer-validation-regression
+[ 98%] Built target alternating-balance-optimizer-regression
+[ 98%] Built target manufacturing-geometry-regression
+[ 98%] Linking CXX executable partition-manifest-regression
+[ 98%] Linking CXX executable carving-regression
+[ 99%] Built target slicer-validation-regression
+[ 99%] Built target partition-manifest-regression
+[100%] Built target carving-regression
+	Command being timed: "cmake --build build/strict-v2-spin -j3"
+	User time (seconds): 54.35
+	System time (seconds): 10.58
+	Percent of CPU this job got: 191%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:33.96
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1746984
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 3
+	Minor (reclaiming a frame) page faults: 10235132
+	Voluntary context switches: 2767
+	Involuntary context switches: 2005
+	Swaps: 0
+	File system inputs: 518568
+	File system outputs: 9822520
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

@@ -11,6 +11,39 @@ from make_it_stand import (
 
 
 class SpinIt2014PythonTests(unittest.TestCase):
+    def test_paper_givens_native_joint_angle_and_rejections(self) -> None:
+        self.assertIn("formulation", SpinIt2014Request.__dataclass_fields__,
+                      "explicit native Givens path is unavailable")
+        common = dict(dimensions=(2, 2, 2), minimum=(-1., -2., 0.),
+                      maximum=(1., 2., 2.), material_mask=(1,)*8,
+                      carveable_mask=(1,)*8, initial_level=1, maximum_level=1,
+                      initial_fill=0.2, objective="TOP_INERTIA_ONLY",
+                      formulation="PAPER_GIVENS", initial_phi=1.7,
+                      slqp_maximum_iterations=120)
+        first = solve_spin_it_2014(SpinIt2014Request(**common))
+        second = solve_spin_it_2014(SpinIt2014Request(**common))
+        d = first.diagnostics
+        self.assertEqual(d["formulation"], "PAPER_GIVENS")
+        self.assertEqual(d["initial_phi"], 1.7)
+        self.assertTrue(abs(d["final_phi"]-1.7)>1e-6)
+        trace = d["adaptive_passes"][0]["slqp_trace"]
+        self.assertTrue(any(t["accepted_step"] > 0 for t in trace))
+        self.assertEqual(trace[0]["phi"], 1.7)
+        self.assertEqual(d["output_hash"], second.diagnostics["output_hash"])
+        self.assertEqual(first.formulation, "PAPER_GIVENS")
+        self.assertEqual(first.final_phi, d["final_phi"])
+        with self.assertRaises(ValueError):
+            solve_spin_it_2014_cage(first, SpinIt2014Request(**common))
+        native = spin2014_module._native_module()
+        with self.assertRaisesRegex(ValueError, "Givens"):
+            native.solve_spin_it_2014_cage(first._native, common["dimensions"],
+                common["minimum"], common["maximum"], [1]*8, [1]*8)
+        for update in ({"initial_phi": float("nan")}, {"formulation":"unknown"},
+                       {"formulation":"LEGACY_ANGLE_ELIMINATED"},
+                       {"mode":"STATIC_BALANCE","objective":"STATIC_LOWERING"}):
+            with self.assertRaises(ValueError):
+                SpinIt2014Request(**(common | update))
+
     def test_objective_selector_must_match_mode(self) -> None:
         self.assertEqual(
             getattr(spin2014_module, "SPIN_2014_OBJECTIVES", None),

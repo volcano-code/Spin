@@ -83,6 +83,7 @@ int main()
         result.adaptiveTrace.empty() ||
         result.inputHash.size() != 64U ||
         result.outputHash.size() != 64U ||
+        result.outputHash != "d1721e8f1564bedf596f9eb88469a1b28bf9040930de3dbfbff9a6ba56275ad2" ||
         result.outputHash != repeated.outputHash ||
         result.binaryVoidMask != repeated.binaryVoidMask
     )

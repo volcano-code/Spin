@@ -64,7 +64,7 @@ AdaptiveFillFunctional::AdaptiveFillFunctional(
 }
 
 
-AdaptiveFillEvaluation AdaptiveFillFunctional::evaluate(
+physics::RawMassMoments10 AdaptiveFillFunctional::assembleMoments(
     const Eigen::VectorXd& beta
 ) const
 {
@@ -93,7 +93,13 @@ AdaptiveFillEvaluation AdaptiveFillFunctional::evaluate(
                 return result;
             }()
         );
-    const spin::SpinMomentEvaluation paper = problem_.evaluate(raw);
+    return finalMoments;
+}
+
+AdaptiveFillEvaluation AdaptiveFillFunctional::evaluate(const Eigen::VectorXd& beta) const
+{
+    const auto finalMoments = assembleMoments(beta);
+    const spin::SpinMomentEvaluation paper = problem_.evaluate(finalMoments.values());
 
     AdaptiveFillEvaluation result;
     result.paperObjective = paper.objective;
@@ -106,6 +112,30 @@ AdaptiveFillEvaluation AdaptiveFillFunctional::evaluate(
     result.constraintJacobian =
         -paper.constraintJacobian * momentColumns_;
     result.finalMoments = finalMoments;
+    return result;
+}
+
+AdaptiveFillEvaluation AdaptiveFillFunctional::evaluatePaper(const Eigen::VectorXd& beta, double phi) const
+{
+    if (!std::isfinite(phi) || (!paperHasAngle() && phi != 0.))
+        throw std::invalid_argument("static paper functional requires phi=0; angle must be finite");
+    const auto finalMoments = assembleMoments(beta);
+    Spin2014GivensProblem::Vector11 state;
+    state.head<10>() = finalMoments.values(); state(10) = phi;
+    const auto paper = Spin2014GivensProblem(problem_.objective(),problem_.inertiaWeight(),problem_.centerWeight()).evaluate(state);
+    AdaptiveFillEvaluation result;
+    result.finalMoments=finalMoments;result.paperObjective=paper.objective;
+    result.regularizationEnergy=laplacianEnergy(beta);
+    result.objective=paper.objective+result.regularizationEnergy;
+    const Eigen::Index n=betaCount();
+    result.gradient.resize(n+(paperHasAngle()?1:0));
+    result.gradient.head(n)=-momentColumns_.transpose()*paper.objectiveGradient.head<10>()+laplacianWeight_*laplacian_*beta;
+    result.constraints=paper.constraints;
+    result.constraintJacobian.resize(paper.constraints.size(),result.gradient.size());
+    result.constraintJacobian.leftCols(n)=-paper.constraintJacobian.leftCols(10)*momentColumns_;
+    if(paperHasAngle()) {result.gradient(n)=paper.objectiveGradient(10);result.constraintJacobian.col(n)=paper.constraintJacobian.col(10);}
+    if(!std::isfinite(result.objective)||!result.gradient.allFinite()||!result.constraintJacobian.allFinite())
+        throw std::invalid_argument("nonfinite paper fill evaluation");
     return result;
 }
 

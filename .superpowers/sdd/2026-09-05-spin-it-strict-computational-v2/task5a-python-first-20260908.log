@@ -1,0 +1,66 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 23
+[HANDLER_OUTPUT] 
+    Start 23: spin-it-2014-python
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+23: Test command: /home/lin/anaconda3/bin/python3 "-m" "unittest" "test_spin_it_2014.SpinIt2014PythonTests" "-v"
+
+23: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+23: Environment variables: 
+23:  PYTHONPATH=/data/xvxinyao/make-it-balance-paper-sim/python:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/python:/data/xvxinyao/make-it-balance-paper-sim/tests/python
+23:  LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/libstdc++.so.6
+23: Test timeout computed to be: 60
+23: test_binary_constraint_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_binary_constraint_tolerance_must_be_positive) ... ok
+23: test_cage_api_rejects_non_artifact_before_native_execution (test_spin_it_2014.SpinIt2014PythonTests.test_cage_api_rejects_non_artifact_before_native_execution) ... ok
+23: test_objective_selector_must_match_mode (test_spin_it_2014.SpinIt2014PythonTests.test_objective_selector_must_match_mode) ... ok
+23: test_objective_weights_must_be_finite_and_nonnegative (test_spin_it_2014.SpinIt2014PythonTests.test_objective_weights_must_be_finite_and_nonnegative) ... ok
+23: test_paper_givens_native_joint_angle_and_rejections (test_spin_it_2014.SpinIt2014PythonTests.test_paper_givens_native_joint_angle_and_rejections) ... ok
+23: test_sealed_deterministic_static_artifact_and_viewer_bundle (test_spin_it_2014.SpinIt2014PythonTests.test_sealed_deterministic_static_artifact_and_viewer_bundle) ... ok
+23: test_slqp_gradient_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_gradient_tolerance_must_be_positive) ... ok
+23: test_slqp_iteration_limit_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_iteration_limit_must_be_positive) ... ok
+23: 
+23: ----------------------------------------------------------------------
+23: Ran 8 tests in 0.025s
+23: 
+23: OK
+[HANDLER_OUTPUT] 
+1/1 Test #23: spin-it-2014-python ..............
+   Passed    0.11 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	spin-it-2014-python
+[HANDLER_OUTPUT] 
+
+100% tests passed, 0 tests failed out of 1
+
+
+Label Time Summary:
+python          =   0.11 sec*proc (1 test)
+regression      =   0.11 sec*proc (1 test)
+spin-it         =   0.11 sec*proc (1 test)
+spin-it-2014    =   0.11 sec*proc (1 test)
+
+Total Test time (real) =   0.11 sec
