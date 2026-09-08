@@ -1,0 +1,141 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 11
+[HANDLER_OUTPUT] 
+    Start 11: spin-it-2014-slqp
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+11: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-slqp-regression
+
+11: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+11: Test timeout computed to be: 1500
+11: [PASS] scenario=spin-it-2014-slqp iterations=90 residual=5.55112e-17 hash=ba7371831d27b970aeab54b8c1c14f8b411023e16bd06c7fc0c8a9d27f9d9aae
+[HANDLER_OUTPUT] 
+1/4 Test #11: spin-it-2014-slqp ................
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 12
+
+[HANDLER_OUTPUT] 
+    Start 12: spin-it-2014-end-to-end
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+12: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-end-to-end
+
+12: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+12: Test timeout computed to be: 1500
+12: [PASS] scenario=spin-it-2014-end-to-end passes=1 residual=0 hash=d1721e8f1564bedf596f9eb88469a1b28bf9040930de3dbfbff9a6ba56275ad2
+[HANDLER_OUTPUT] 
+2/4 Test #12: spin-it-2014-end-to-end ..........
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 14
+
+[HANDLER_OUTPUT] 
+    Start 14: spin-it-2014-givens
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+14: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-givens-regression
+
+14: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+14: Test timeout computed to be: 1500
+14: objective=0 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.7485261622895915e-11 second_order_hessian_absolute_diagnostic=2.2756674435964186e-06
+14: objective=0 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=7.279135990563305e-11 second_order_hessian_absolute_diagnostic=2.0481030038599357e-07
+14: objective=0 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=5.8150800515056653e-11 second_order_hessian_absolute_diagnostic=2.2757224105163232e-08
+14: objective=1 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+14: objective=1 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+14: objective=1 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+14: objective=2 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+14: objective=2 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+14: objective=2 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+14: objective=3 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+14: objective=3 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+14: objective=3 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+14: objective=4 h=0.001 fourth_order_max_relative_or_zero_absolute_error=1.9028729209619793e-12 second_order_hessian_absolute_diagnostic=3.7499994842704609e-07
+14: objective=4 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=7.3975393711912655e-13 second_order_hessian_absolute_diagnostic=3.3750142347521717e-08
+14: objective=4 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=3.4671524910360554e-12 second_order_hessian_absolute_diagnostic=3.7519161111276844e-09
+14: joint status=CONVERGED residual=1.4213146065523828e-11 final_phi=1.5707963267947704 beta=0.20019255792412366 0.20019255789310009 0.20019255789310006 0.20019255792412366 0.20019255792412333 0.20019255789309925 0.20019255789309917  0.2001925579241233
+14: iteration=0 phi=1.7 accepted_step=1 residual=15.427096185954186
+14: iteration=1 phi=1.5678463028200025 accepted_step=1 residual=0.35667695203462219
+14: iteration=2 phi=1.5707999408452491 accepted_step=1 residual=4.1323696036701051e-06
+14: iteration=3 phi=1.5707969963841375 accepted_step=1 residual=2.7180425533175016e-10
+14: iteration=4 phi=1.5707963267947704 accepted_step=0 residual=1.4213146065523828e-11
+14: adaptive angle carry passes=2
+14: [PASS] spin-it-2014-givens analytic and integration contract
+[HANDLER_OUTPUT] 
+3/4 Test #14: spin-it-2014-givens ..............
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 23
+
+[HANDLER_OUTPUT] 
+    Start 23: spin-it-2014-python
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+23: Test command: /home/lin/anaconda3/bin/python3 "-m" "unittest" "test_spin_it_2014.SpinIt2014PythonTests" "-v"
+
+23: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+23: Environment variables: 
+23:  PYTHONPATH=/data/xvxinyao/make-it-balance-paper-sim/python:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/python:/data/xvxinyao/make-it-balance-paper-sim/tests/python
+23:  LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/libstdc++.so.6
+23: Test timeout computed to be: 60
+23: test_binary_constraint_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_binary_constraint_tolerance_must_be_positive) ... ok
+23: test_cage_api_rejects_non_artifact_before_native_execution (test_spin_it_2014.SpinIt2014PythonTests.test_cage_api_rejects_non_artifact_before_native_execution) ... ok
+23: test_objective_selector_must_match_mode (test_spin_it_2014.SpinIt2014PythonTests.test_objective_selector_must_match_mode) ... ok
+23: test_objective_weights_must_be_finite_and_nonnegative (test_spin_it_2014.SpinIt2014PythonTests.test_objective_weights_must_be_finite_and_nonnegative) ... ok
+23: test_paper_givens_native_joint_angle_and_rejections (test_spin_it_2014.SpinIt2014PythonTests.test_paper_givens_native_joint_angle_and_rejections) ... ok
+23: test_sealed_deterministic_static_artifact_and_viewer_bundle (test_spin_it_2014.SpinIt2014PythonTests.test_sealed_deterministic_static_artifact_and_viewer_bundle) ... ok
+23: test_slqp_gradient_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_gradient_tolerance_must_be_positive) ... ok
+23: test_slqp_iteration_limit_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_iteration_limit_must_be_positive) ... ok
+23: 
+23: ----------------------------------------------------------------------
+23: Ran 8 tests in 0.026s
+23: 
+23: OK
+[HANDLER_OUTPUT] 
+4/4 Test #23: spin-it-2014-python ..............
+   Passed    0.11 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	spin-it-2014-slqp
+	spin-it-2014-end-to-end
+	spin-it-2014-givens
+	spin-it-2014-python
+[HANDLER_OUTPUT] 
+
+100% tests passed, 0 tests failed out of 4
+
+
+Label Time Summary:
+geometry        =   0.00 sec*proc (1 test)
+python          =   0.11 sec*proc (1 test)
+regression      =   0.12 sec*proc (4 tests)
+solver          =   0.00 sec*proc (2 tests)
+spin-it         =   0.12 sec*proc (4 tests)
+spin-it-2014    =   0.12 sec*proc (4 tests)
+
+Total Test time (real) =   0.12 sec
