@@ -77,6 +77,7 @@ from .stability_oracle import (
 from .spin import (
     SPIN_ARTIFACT_SCHEMA,
     SpinItFasterRequest,
+    SpinEvaluatorConfig,
     SpinItFasterResult,
     SpinIteration,
     SpinQuadricEvaluation,
@@ -132,6 +133,7 @@ __all__ = [
     "SpinIt2014Request",
     "SpinIt2014Result",
     "SpinItFasterRequest",
+    "SpinEvaluatorConfig",
     "SpinItFasterResult",
     "SpinIteration",
     "SpinQuadricEvaluation",

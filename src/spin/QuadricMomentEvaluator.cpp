@@ -400,6 +400,46 @@ const char* quadricMomentDerivativeMethodToken(QuadricMomentDerivativeMethod met
     return "unknown";
 }
 
+void validateQuadricMomentEvaluatorSettings(const QuadricMomentEvaluatorSettings& settings)
+{
+    if (settings.derivativeMethod != QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape &&
+        settings.derivativeMethod != QuadricMomentDerivativeMethod::DiscreteEllipsoid)
+        throw std::invalid_argument("unknown quadric derivative method");
+    if (!std::isfinite(settings.minimumInterfaceGradient) || settings.minimumInterfaceGradient <= 0.0)
+        throw std::invalid_argument("minimum interface gradient must be finite and positive");
+    const auto& t = settings.triangulation;
+    if (t.icosphereSubdivisions < 0 || t.icosphereSubdivisions > 7 ||
+        t.paraboloidGridResolution < 1 || t.cylinderAngularResolution < 8 ||
+        t.maximumRadiusDoublings < 0 || !std::isfinite(t.truncationRadius) || t.truncationRadius < 0.0)
+        throw std::invalid_argument("invalid quadric triangulation settings");
+}
+
+
+std::string computeQuadricEvaluatorRequestHash(
+    const SpinDesignRequest& request,
+    const QuadricMomentEvaluatorSettings& settings)
+{
+    validateQuadricMomentEvaluatorSettings(settings);
+    const auto& t = settings.triangulation;
+    const std::string base = computeSpinDesignRequestHash(request);
+    if (settings.derivativeMethod == QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape &&
+        settings.minimumInterfaceGradient == 1e-12 && t.icosphereSubdivisions == 3 &&
+        t.paraboloidGridResolution == 24 && t.cylinderAngularResolution == 96 &&
+        t.truncationRadius == 0.0 && t.maximumRadiusDoublings == 8 &&
+        !t.retainFixedNormalProvenance)
+        return base;
+    std::ostringstream identity;
+    identity.imbue(std::locale::classic());
+    identity << "QuadricEvaluatorRequest-v1;" << base << ';'
+        << static_cast<int>(settings.derivativeMethod) << ';'
+        << t.icosphereSubdivisions << ';' << t.paraboloidGridResolution << ';'
+        << t.cylinderAngularResolution << ';' << t.maximumRadiusDoublings << ';'
+        << t.retainFixedNormalProvenance << ';' << std::hexfloat
+        << t.truncationRadius << ';' << settings.minimumInterfaceGradient << ';';
+    return manufacturing::computeContentSha256(identity.str());
+}
+
+
 QuadricMomentEvaluation evaluateQuadricMaterialMoments(
     const SpinDesignRequest& request,
     const QuadricCoefficients10& quadricTarget,
@@ -408,23 +448,12 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
 {
     const auto evaluationStart = std::chrono::steady_clock::now();
     validateSpinDesignRequest(request);
-    if (
-        !std::isfinite(settings.minimumInterfaceGradient) ||
-        settings.minimumInterfaceGradient <= 0.0
-    )
-    {
-        throw std::invalid_argument(
-            "minimum interface gradient must be finite and positive"
-        );
-    }
+    validateQuadricMomentEvaluatorSettings(settings);
 
     const TriangleMesh designTarget =
         toTarget(request.designDomain, request.targetFrame);
     QuadricMomentEvaluation result;
     result.derivativeMethod = settings.derivativeMethod;
-    if (settings.derivativeMethod != QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape &&
-        settings.derivativeMethod != QuadricMomentDerivativeMethod::DiscreteEllipsoid)
-        throw std::invalid_argument("unknown quadric derivative method");
     QuadricTriangulationSettings triangulationSettings = settings.triangulation;
     if (settings.derivativeMethod == QuadricMomentDerivativeMethod::DiscreteEllipsoid)
         triangulationSettings.retainFixedNormalProvenance = true;
@@ -624,7 +653,7 @@ QuadricMomentEvaluation evaluateQuadricMaterialMoments(
     scientific << "QuadricMomentDifferentialScientific-v2;"
         << quadricMomentDerivativeMethodToken(result.derivativeMethod) << ';'
         << result.derivativeDefined << ';' << result.derivativeDiagnostic << ';'
-        << computeSpinDesignRequestHash(request) << ';'
+        << computeQuadricEvaluatorRequestHash(request, settings) << ';'
         << result.quadricTriangulation.hash << ';' << result.geometryHash << ';'
         << result.provenanceTopologyHash << ';' << std::hexfloat
         << settings.minimumInterfaceGradient << ';';

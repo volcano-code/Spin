@@ -31,6 +31,14 @@ struct QuadricMomentEvaluatorSettings
         QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape;
 };
 
+/** Effective request identity including nondefault evaluator controls.
+ * Default settings preserve the historical request hash byte for byte. */
+std::string computeQuadricEvaluatorRequestHash(
+    const SpinDesignRequest& request,
+    const QuadricMomentEvaluatorSettings& settings);
+
+void validateQuadricMomentEvaluatorSettings(const QuadricMomentEvaluatorSettings& settings);
+
 
 struct QuadricMomentEvaluation
 {

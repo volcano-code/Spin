@@ -1,0 +1,15 @@
+test_solver_exposes_immutable_actual_export_and_derivative_metadata (test_faster_material_bridge.FasterSettingsTests.test_solver_exposes_immutable_actual_export_and_derivative_metadata) ... FAIL
+
+======================================================================
+FAIL: test_solver_exposes_immutable_actual_export_and_derivative_metadata (test_faster_material_bridge.FasterSettingsTests.test_solver_exposes_immutable_actual_export_and_derivative_metadata)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 36, in test_solver_exposes_immutable_actual_export_and_derivative_metadata
+    self.assertTrue(hasattr(spin.SpinItFasterResult, 'derivative_metadata'))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

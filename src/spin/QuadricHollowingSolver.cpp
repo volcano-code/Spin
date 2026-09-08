@@ -978,6 +978,7 @@ QuadricHollowingResult solveQuadricHollowing(
 )
 {
     validateSpinDesignRequest(request);
+    validateQuadricMomentEvaluatorSettings(evaluatorSettings);
     const std::vector<QuadricCoefficients10> guesses =
         initialGuesses.empty()
         ? deterministicInitialQuadrics(request.mode, request.settings)
@@ -1022,7 +1023,7 @@ QuadricHollowingResult solveQuadricHollowing(
     result.derivativeScientificHash = lastDerivativeScientificHash;
     result.status = solved.status;
     result.diagnostic = solved.diagnostic;
-    result.inputHash = computeSpinDesignRequestHash(request);
+    result.inputHash = computeQuadricEvaluatorRequestHash(request, evaluatorSettings);
     result.outerSurface = request.outerSurface;
     result.normalizedEquationResidual = solved.normalizedEquationResidual;
     result.physicalRelativeResidual = solved.physicalRelativeResidual;

@@ -101,6 +101,39 @@ class SpinSolverConfig:
 
 
 @dataclass(frozen=True)
+class SpinEvaluatorConfig:
+    """Explicit native geometry controls; omitting this keeps legacy defaults."""
+    derivative_method: str = "LEGACY_CONTINUOUS_IMPLICIT_SHAPE"
+    icosphere_subdivisions: int = 3
+    paraboloid_grid_resolution: int = 24
+    cylinder_angular_resolution: int = 96
+    truncation_radius: float = 0.0
+    maximum_radius_doublings: int = 8
+    retain_fixed_normal_provenance: bool = False
+    minimum_interface_gradient: float = 1e-12
+
+    def __post_init__(self):
+        if self.derivative_method not in {"LEGACY_CONTINUOUS_IMPLICIT_SHAPE", "DISCRETE_ELLIPSOID"}:
+            raise ValueError("unsupported derivative_method")
+        for name, minimum in (("icosphere_subdivisions", 0), ("paraboloid_grid_resolution", 1),
+                              ("cylinder_angular_resolution", 8), ("maximum_radius_doublings", 0)):
+            value = getattr(self, name)
+            if type(value) is not int or value < minimum:
+                raise ValueError(name + " must be an integer in the native supported range")
+        if self.icosphere_subdivisions > 7:
+            raise ValueError("icosphere_subdivisions exceeds native maximum 7")
+        if type(self.retain_fixed_normal_provenance) is not bool:
+            raise ValueError("retain_fixed_normal_provenance must be bool")
+        for name in ("truncation_radius", "minimum_interface_gradient"):
+            value = getattr(self, name)
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(name + " must be finite")
+            if value < 0 or (name == "minimum_interface_gradient" and value == 0):
+                raise ValueError(name + " is outside native supported range")
+            object.__setattr__(self, name, float(value))
+
+
+@dataclass(frozen=True)
 class SpinItFasterRequest:
     outer_vertices: tuple[tuple[float, float, float], ...]
     outer_faces: tuple[tuple[int, int, int], ...]
@@ -228,6 +261,18 @@ class SpinQuadricEvaluation:
     topology_hash: str
     interface_type: str
     interface_subtype: str
+    base_request_hash: str = ""
+    request_hash: str = ""
+    derivative_method: str = ""
+    derivative_defined: bool = False
+    derivative_diagnostic: str = ""
+    derivative_scientific_hash: str = ""
+    provenance_topology_hash: str = ""
+    vertex_provenance: tuple[str, ...] = ()
+    material_vertices: tuple[tuple[float, ...], ...] = ()
+    material_faces: tuple[tuple[int, ...], ...] = ()
+    outer_vertices: tuple[tuple[float, ...], ...] = ()
+    outer_faces: tuple[tuple[int, ...], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -384,6 +429,21 @@ class SpinItFasterResult:
         return json.loads(json.dumps(self._diagnostics))
 
     @property
+    def derivative_metadata(self) -> dict[str, str]:
+        return {"method": str(self._native.derivative_method),
+                "diagnostic": str(self._native.derivative_diagnostic),
+                "scientific_hash": str(self._native.derivative_scientific_hash)}
+
+    @property
+    def final_raw_moments(self) -> tuple[float, ...] | None:
+        """Actual converged export in native target coordinates, or no final claim."""
+        return tuple(self._diagnostics['final_raw_moments']) if self.succeeded else None
+
+    @property
+    def solution_coefficients(self) -> tuple[float, ...] | None:
+        return tuple(self._diagnostics['quadric_coefficients']) if self.succeeded else None
+
+    @property
     def trace(self) -> tuple[SpinIteration, ...]:
         return self._trace
 
@@ -517,15 +577,37 @@ def _native_request(request: SpinItFasterRequest) -> tuple[Any, Any]:
     return native, result
 
 
+def _native_evaluator_settings(native, config):
+    if not isinstance(config, SpinEvaluatorConfig):
+        raise ValueError("expected immutable SpinEvaluatorConfig")
+    if not hasattr(native, "SpinEvaluatorSettings"):
+        raise RuntimeError("native Faster evaluator settings support is unavailable")
+    settings = native.SpinEvaluatorSettings()
+    triangulation = native.SpinTriangulationSettings()
+    for name in SpinEvaluatorConfig.__dataclass_fields__:
+        value = getattr(config, name)
+        if name == "derivative_method":
+            settings.derivative_method = getattr(native.SpinDerivativeMethod, value)
+        elif name == "minimum_interface_gradient":
+            settings.minimum_interface_gradient = value
+        else:
+            setattr(triangulation, name, value)
+    settings.triangulation = triangulation
+    return settings
+
+
 def evaluate_spin_it_faster_quadric(
     request: SpinItFasterRequest,
     coefficients: Sequence[float],
+    *, evaluator_settings: SpinEvaluatorConfig | None = None,
 ) -> SpinQuadricEvaluation:
     native, native_request = _native_request(request)
     values = _finite_tuple(coefficients, 10, "quadric coefficients")
+    extra = () if evaluator_settings is None else (_native_evaluator_settings(native, evaluator_settings),)
     evaluated = native.evaluate_spin_it_faster_quadric(
         native_request,
         np.asarray(values, dtype=np.float64),
+        *extra,
     )
     return SpinQuadricEvaluation(
         variable_raw_moments=tuple(float(value) for value in evaluated["variable_raw_moments"]),
@@ -534,6 +616,13 @@ def evaluate_spin_it_faster_quadric(
         topology_hash=str(evaluated["topology_hash"]),
         interface_type=str(evaluated["interface_type"]),
         interface_subtype=str(evaluated["interface_subtype"]),
+        **({} if evaluator_settings is None else {
+            **{name: evaluated[name] for name in ("base_request_hash", "request_hash", "derivative_method",
+                "derivative_defined", "derivative_diagnostic", "derivative_scientific_hash", "provenance_topology_hash")},
+            "vertex_provenance": tuple(evaluated["vertex_provenance"]),
+            **{name: tuple(tuple(row) for row in evaluated[name].tolist()) for name in
+               ("material_vertices", "material_faces", "outer_vertices", "outer_faces")},
+        }),
     )
 
 
@@ -557,15 +646,18 @@ def solve_spin_it_faster(
     request: SpinItFasterRequest,
     *,
     initial_quadrics: Sequence[Sequence[float]] = (),
+    evaluator_settings: SpinEvaluatorConfig | None = None,
 ) -> SpinItFasterResult:
     native, native_request = _native_request(request)
     initial = np.asarray(
         tuple(_finite_tuple(row, 10, "initial quadric") for row in initial_quadrics),
         dtype=np.float64,
     ).reshape((-1, 10))
+    extra = () if evaluator_settings is None else (_native_evaluator_settings(native, evaluator_settings),)
     artifact = native.solve_spin_it_faster(
         native_request,
         getattr(native.SpinItFasterEvidence, request.evidence),
         initial,
+        *extra,
     )
     return SpinItFasterResult(artifact)

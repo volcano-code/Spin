@@ -661,6 +661,22 @@ PYBIND11_MODULE(_make_it_stand, module)
         .export_values();
 
 #if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+    py::enum_<spin::QuadricMomentDerivativeMethod>(module, "SpinDerivativeMethod")
+        .value("LEGACY_CONTINUOUS_IMPLICIT_SHAPE", spin::QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape)
+        .value("DISCRETE_ELLIPSOID", spin::QuadricMomentDerivativeMethod::DiscreteEllipsoid);
+    py::class_<spin::QuadricTriangulationSettings>(module, "SpinTriangulationSettings")
+        .def(py::init<>())
+        .def_readwrite("icosphere_subdivisions", &spin::QuadricTriangulationSettings::icosphereSubdivisions)
+        .def_readwrite("paraboloid_grid_resolution", &spin::QuadricTriangulationSettings::paraboloidGridResolution)
+        .def_readwrite("cylinder_angular_resolution", &spin::QuadricTriangulationSettings::cylinderAngularResolution)
+        .def_readwrite("truncation_radius", &spin::QuadricTriangulationSettings::truncationRadius)
+        .def_readwrite("maximum_radius_doublings", &spin::QuadricTriangulationSettings::maximumRadiusDoublings)
+        .def_readwrite("retain_fixed_normal_provenance", &spin::QuadricTriangulationSettings::retainFixedNormalProvenance);
+    py::class_<spin::QuadricMomentEvaluatorSettings>(module, "SpinEvaluatorSettings")
+        .def(py::init<>())
+        .def_readwrite("triangulation", &spin::QuadricMomentEvaluatorSettings::triangulation)
+        .def_readwrite("minimum_interface_gradient", &spin::QuadricMomentEvaluatorSettings::minimumInterfaceGradient)
+        .def_readwrite("derivative_method", &spin::QuadricMomentEvaluatorSettings::derivativeMethod);
     module.def(
         "integrate_raw_mass_moments",
         [](
@@ -803,6 +819,9 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_property_readonly("evidence", &api::SpinItFasterArtifact::evidenceToken)
         .def_property_readonly("succeeded", &api::SpinItFasterArtifact::succeeded)
         .def_property_readonly("geometry_sealed", &api::SpinItFasterArtifact::geometrySealed)
+        .def_property_readonly("derivative_method", [](const api::SpinItFasterArtifact& v) { return v.result().derivativeMethod; })
+        .def_property_readonly("derivative_diagnostic", [](const api::SpinItFasterArtifact& v) { return v.result().derivativeDiagnostic; })
+        .def_property_readonly("derivative_scientific_hash", [](const api::SpinItFasterArtifact& v) { return v.result().derivativeScientificHash; })
         .def_property_readonly(
             "residual_evaluation_seconds",
             &api::SpinItFasterArtifact::residualEvaluationSeconds
@@ -943,26 +962,29 @@ PYBIND11_MODULE(_make_it_stand, module)
         [](
             const spin::SpinDesignRequest& request,
             api::SpinItFasterEvidence evidence,
-            const Eigen::MatrixXd& initialQuadrics
+            const Eigen::MatrixXd& initialQuadrics,
+            const spin::QuadricMomentEvaluatorSettings& evaluatorSettings
         )
         {
             const std::vector<spin::QuadricCoefficients10> initial =
                 quadricsFromRows(initialQuadrics);
             py::gil_scoped_release release;
             const api::SpinItFasterArtifact artifact =
-                api::solveSpinItFaster(request, evidence, {}, initial);
+                api::solveSpinItFaster(request, evidence, evaluatorSettings, initial);
             return std::make_unique<api::SpinItFasterArtifact>(artifact);
         },
         py::arg("request"),
         py::arg("evidence"),
-        py::arg("initial_quadrics") = Eigen::MatrixXd(0, 10)
+        py::arg("initial_quadrics") = Eigen::MatrixXd(0, 10),
+        py::arg("evaluator_settings") = spin::QuadricMomentEvaluatorSettings()
     );
 
     module.def(
         "evaluate_spin_it_faster_quadric",
         [](
             const spin::SpinDesignRequest& request,
-            const Eigen::VectorXd& coefficients
+            const Eigen::VectorXd& coefficients,
+            const std::optional<spin::QuadricMomentEvaluatorSettings>& explicitSettings
         )
         {
             if (coefficients.size() != 10 || !coefficients.allFinite())
@@ -974,7 +996,8 @@ PYBIND11_MODULE(_make_it_stand, module)
             const spin::QuadricMomentEvaluation evaluation =
                 spin::evaluateQuadricMaterialMoments(
                     request,
-                    spin::QuadricCoefficients10::fromUnnormalized(coefficients)
+                    spin::QuadricCoefficients10::fromUnnormalized(coefficients),
+                    explicitSettings.value_or(spin::QuadricMomentEvaluatorSettings())
                 );
             py::dict result;
             result["variable_raw_moments"] =
@@ -983,6 +1006,21 @@ PYBIND11_MODULE(_make_it_stand, module)
                 Eigen::VectorXd(evaluation.totalMomentsTarget.values());
             result["geometry_hash"] = evaluation.geometryHash;
             result["topology_hash"] = evaluation.topologyHash;
+            if (explicitSettings.has_value())
+            {
+                result["base_request_hash"] = spin::computeSpinDesignRequestHash(request);
+                result["request_hash"] = spin::computeQuadricEvaluatorRequestHash(request, *explicitSettings);
+                result["derivative_method"] = spin::quadricMomentDerivativeMethodToken(evaluation.derivativeMethod);
+                result["derivative_defined"] = evaluation.derivativeDefined;
+                result["derivative_diagnostic"] = evaluation.derivativeDiagnostic;
+                result["derivative_scientific_hash"] = evaluation.derivativeScientificHash;
+                result["provenance_topology_hash"] = evaluation.provenanceTopologyHash;
+                result["vertex_provenance"] = evaluation.vertexProvenance;
+                result["material_vertices"] = evaluation.materialBoundary.vertices;
+                result["material_faces"] = evaluation.materialBoundary.faces;
+                result["outer_vertices"] = request.outerSurface.vertices;
+                result["outer_faces"] = request.outerSurface.faces;
+            }
             result["interface_type"] = std::string(
                 spin::quadricSurfaceTypeToken(
                     evaluation.quadricTriangulation.type
@@ -1000,7 +1038,8 @@ PYBIND11_MODULE(_make_it_stand, module)
             return result;
         },
         py::arg("request"),
-        py::arg("quadric_coefficients")
+        py::arg("quadric_coefficients"),
+        py::arg("evaluator_settings") = py::none()
     );
 #endif
 

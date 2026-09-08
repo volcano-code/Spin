@@ -1,0 +1,15 @@
+test_public_settings_and_legacy_native_dictionary_compatibility (test_faster_material_bridge.FasterSettingsTests.test_public_settings_and_legacy_native_dictionary_compatibility) ... FAIL
+
+======================================================================
+FAIL: test_public_settings_and_legacy_native_dictionary_compatibility (test_faster_material_bridge.FasterSettingsTests.test_public_settings_and_legacy_native_dictionary_compatibility)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 37, in test_public_settings_and_legacy_native_dictionary_compatibility
+    self.assertTrue(hasattr(make_it_stand, 'SpinEvaluatorConfig'))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (failures=1)

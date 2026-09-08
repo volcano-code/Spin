@@ -1501,6 +1501,13 @@ if(BUILD_TESTING)
 
     if(MAKE_IT_STAND_BUILD_PYTHON)
         if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
+            if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+                add_test(NAME spin-faster-material-bridge-python
+                    COMMAND "${Python3_EXECUTABLE}" -m unittest test_faster_material_bridge -v)
+                set_tests_properties(spin-faster-material-bridge-python PROPERTIES
+                    LABELS "spin-it;spin-it-faster;verification;exact-geometry;python;native"
+                    TIMEOUT 300 ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}")
+            endif()
             add_test(
                 NAME spin-faster-python-api
                 COMMAND "${Python3_EXECUTABLE}" -m unittest

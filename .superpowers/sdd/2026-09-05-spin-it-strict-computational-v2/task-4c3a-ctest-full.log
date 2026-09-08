@@ -1,0 +1,441 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+        Start   1: exact-partition-clearance-native
+  1/187 Test   #1: exact-partition-clearance-native ............   Passed    0.15 sec
+        Start   2: exact-material-region-native
+  2/187 Test   #2: exact-material-region-native ................   Passed    0.14 sec
+        Start   3: exact-boundary-audit-native
+  3/187 Test   #3: exact-boundary-audit-native .................   Passed    0.07 sec
+        Start   4: exact-geometry-dependency-contract
+  4/187 Test   #4: exact-geometry-dependency-contract ..........   Passed    0.64 sec
+        Start   5: sealed-spin-artifact-python
+  5/187 Test   #5: sealed-spin-artifact-python .................   Passed   65.12 sec
+        Start   6: exact-partition-clearance-python
+  6/187 Test   #6: exact-partition-clearance-python ............   Passed    3.25 sec
+        Start   7: exact-material-region-python
+  7/187 Test   #7: exact-material-region-python ................   Passed    1.26 sec
+        Start   8: exact-boundary-audit-python
+  8/187 Test   #8: exact-boundary-audit-python .................   Passed    0.12 sec
+        Start   9: spin-it-2014-adaptive-domain
+  9/187 Test   #9: spin-it-2014-adaptive-domain ................   Passed    0.02 sec
+        Start  10: spin-it-2014-fill-functional
+ 10/187 Test  #10: spin-it-2014-fill-functional ................   Passed    0.15 sec
+        Start  11: spin-it-2014-slqp
+ 11/187 Test  #11: spin-it-2014-slqp ...........................   Passed    0.07 sec
+        Start  12: spin-it-2014-end-to-end
+ 12/187 Test  #12: spin-it-2014-end-to-end .....................   Passed    0.10 sec
+        Start  13: spin-it-2014-modes
+ 13/187 Test  #13: spin-it-2014-modes ..........................   Passed    0.10 sec
+        Start  14: spin-it-2014-objectives
+ 14/187 Test  #14: spin-it-2014-objectives .....................   Passed    0.08 sec
+        Start  15: spin-it-2014-resolution-ladder
+ 15/187 Test  #15: spin-it-2014-resolution-ladder ..............   Passed    0.11 sec
+        Start  16: spin-it-2014-dual-material
+ 16/187 Test  #16: spin-it-2014-dual-material ..................   Passed    0.04 sec
+        Start  17: spin-it-2014-api
+ 17/187 Test  #17: spin-it-2014-api ............................   Passed    0.09 sec
+        Start  18: spin-it-2014-surface-differential
+ 18/187 Test  #18: spin-it-2014-surface-differential ...........   Passed    0.03 sec
+        Start  19: spin-it-2014-cage-functional
+ 19/187 Test  #19: spin-it-2014-cage-functional ................   Passed    0.07 sec
+        Start  20: spin-it-2014-cage-solver
+ 20/187 Test  #20: spin-it-2014-cage-solver ....................   Passed    0.04 sec
+        Start  21: spin-it-2014-automatic-cage
+ 21/187 Test  #21: spin-it-2014-automatic-cage .................   Passed    0.06 sec
+        Start  22: spin-it-2014-python
+ 22/187 Test  #22: spin-it-2014-python .........................   Passed    0.09 sec
+        Start  23: spin-it-2014-paper-miniature
+ 23/187 Test  #23: spin-it-2014-paper-miniature ................   Passed    0.12 sec
+        Start  24: spin-faster-request
+ 24/187 Test  #24: spin-faster-request .........................   Passed    0.02 sec
+        Start  25: spin-faster-moment-problems
+ 25/187 Test  #25: spin-faster-moment-problems .................   Passed    0.00 sec
+        Start  26: spin-faster-quadric-coefficients
+ 26/187 Test  #26: spin-faster-quadric-coefficients ............   Passed    0.00 sec
+        Start  27: spin-faster-boolean
+ 27/187 Test  #27: spin-faster-boolean .........................   Passed    0.01 sec
+        Start  28: spin-faster-quadric-triangulator
+ 28/187 Test  #28: spin-faster-quadric-triangulator ............   Passed    0.02 sec
+        Start  29: spin-faster-inverse-gauss-map
+ 29/187 Test  #29: spin-faster-inverse-gauss-map ...............   Passed    0.00 sec
+        Start  30: spin-faster-discrete-moments
+ 30/187 Test  #30: spin-faster-discrete-moments ................   Passed    8.73 sec
+        Start  31: spin-faster-quadric-moments
+ 31/187 Test  #31: spin-faster-quadric-moments .................   Passed    0.41 sec
+        Start  32: spin-faster-newton
+ 32/187 Test  #32: spin-faster-newton ..........................   Passed    0.00 sec
+        Start  33: spin-faster-newton-dual-pairing
+ 33/187 Test  #33: spin-faster-newton-dual-pairing .............   Passed    0.00 sec
+        Start  34: spin-faster-newton-raw-stopping
+ 34/187 Test  #34: spin-faster-newton-raw-stopping .............   Passed    0.00 sec
+        Start  35: spin-faster-newton-dual-coordinates
+ 35/187 Test  #35: spin-faster-newton-dual-coordinates .........   Passed    0.00 sec
+        Start  36: spin-faster-end-to-end
+ 36/187 Test  #36: spin-faster-end-to-end ......................   Passed    1.37 sec
+        Start  37: spin-faster-interface-types
+ 37/187 Test  #37: spin-faster-interface-types .................   Passed    0.00 sec
+        Start  38: reachability-dependency-contract
+ 38/187 Test  #38: reachability-dependency-contract ............   Passed    0.30 sec
+        Start  39: spin-faster-dependency-contract
+ 39/187 Test  #39: spin-faster-dependency-contract .............   Passed    0.30 sec
+        Start  40: spin-2014-dependency-contract
+ 40/187 Test  #40: spin-2014-dependency-contract ...............   Passed   38.28 sec
+        Start  41: reachability-input
+ 41/187 Test  #41: reachability-input ..........................   Passed    0.00 sec
+        Start  42: reachability-already-safe
+ 42/187 Test  #42: reachability-already-safe ...................   Passed    0.00 sec
+        Start  43: reachability-feasible
+ 43/187 Test  #43: reachability-feasible .......................   Passed    0.00 sec
+        Start  44: reachability-infeasible
+ 44/187 Test  #44: reachability-infeasible .....................   Passed    0.00 sec
+        Start  45: reachability-certificate
+ 45/187 Test  #45: reachability-certificate ....................   Passed    0.00 sec
+        Start  46: reachability-exhaustive
+ 46/187 Test  #46: reachability-exhaustive .....................   Passed    0.00 sec
+        Start  47: reachability-sparse-certificate
+ 47/187 Test  #47: reachability-sparse-certificate .............   Passed    0.01 sec
+        Start  48: balance-model-reachability
+ 48/187 Test  #48: balance-model-reachability ..................   Passed    0.00 sec
+        Start  49: result-view-preserves-sealed-posture
+ 49/187 Test  #49: result-view-preserves-sealed-posture ........   Passed    0.00 sec
+        Start  50: released-beta-archive-contract
+ 50/187 Test  #50: released-beta-archive-contract ..............   Passed    0.00 sec
+        Start  51: ctest-registration-contract
+ 51/187 Test  #51: ctest-registration-contract .................   Passed    0.52 sec
+        Start  52: paper-python-contracts
+ 52/187 Test  #52: paper-python-contracts ......................   Passed    0.55 sec
+        Start  53: spin-it-strict-audit-contract
+ 53/187 Test  #53: spin-it-strict-audit-contract ...............   Passed    0.07 sec
+        Start  54: independent-mass-moments-contract
+ 54/187 Test  #54: independent-mass-moments-contract ...........   Passed    0.17 sec
+        Start  55: independent-exact-feasibility-contract
+ 55/187 Test  #55: independent-exact-feasibility-contract ......   Passed    0.09 sec
+        Start  56: run-evidence-v2-contract
+ 56/187 Test  #56: run-evidence-v2-contract ....................   Passed    3.86 sec
+        Start  57: compiler-observer-contract
+ 57/187 Test  #57: compiler-observer-contract ..................   Passed    3.51 sec
+        Start  58: compiler-observer-cmake-fixture
+ 58/187 Test  #58: compiler-observer-cmake-fixture .............   Passed    1.41 sec
+        Start  59: independent-surface-derivatives-contract
+ 59/187 Test  #59: independent-surface-derivatives-contract ....   Passed    2.47 sec
+        Start  60: paper-native-pipeline-contract
+ 60/187 Test  #60: paper-native-pipeline-contract ..............   Passed    0.13 sec
+        Start  61: released-beta-native-archive-contracts
+ 61/187 Test  #61: released-beta-native-archive-contracts ......   Passed   33.08 sec
+        Start  62: voxel-domain-domain
+ 62/187 Test  #62: voxel-domain-domain .........................   Passed    0.00 sec
+        Start  63: voxel-domain-boundary
+ 63/187 Test  #63: voxel-domain-boundary .......................   Passed    0.00 sec
+        Start  64: voxel-domain-invalid
+ 64/187 Test  #64: voxel-domain-invalid ........................   Passed    0.00 sec
+        Start  65: voxel-domain-model
+ 65/187 Test  #65: voxel-domain-model ..........................   Passed    0.01 sec
+        Start  66: r9-balance-model-facade
+ 66/187 Test  #66: r9-balance-model-facade .....................   Passed    0.06 sec
+        Start  67: spin-faster-material-bridge-python
+ 67/187 Test  #67: spin-faster-material-bridge-python ..........   Passed   57.03 sec
+        Start  68: spin-faster-python-api
+ 68/187 Test  #68: spin-faster-python-api ......................   Passed    0.16 sec
+        Start  69: spin-faster-table1-miniature
+ 69/187 Test  #69: spin-faster-table1-miniature ................   Passed    0.87 sec
+        Start  70: spin-faster-paper-figures-miniature
+ 70/187 Test  #70: spin-faster-paper-figures-miniature .........   Passed   16.07 sec
+        Start  71: independent-exact-feasibility-native
+ 71/187 Test  #71: independent-exact-feasibility-native ........   Passed    3.84 sec
+        Start  72: reachability-python-bindings
+ 72/187 Test  #72: reachability-python-bindings ................   Passed    0.09 sec
+        Start  73: r9-python-bindings
+ 73/187 Test  #73: r9-python-bindings ..........................   Passed    0.17 sec
+        Start  74: r9-python-tools
+ 74/187 Test  #74: r9-python-tools .............................   Passed    0.21 sec
+        Start  75: r10-python-evidence
+ 75/187 Test  #75: r10-python-evidence .........................   Passed    0.30 sec
+        Start  76: mass-surface-analytic
+ 76/187 Test  #76: mass-surface-analytic .......................   Passed    0.00 sec
+        Start  77: mass-voxel-analytic
+ 77/187 Test  #77: mass-voxel-analytic .........................   Passed    0.00 sec
+        Start  78: mass-deletion-exhaustive
+ 78/187 Test  #78: mass-deletion-exhaustive ....................   Passed    0.00 sec
+        Start  79: balance-energy-analytic
+ 79/187 Test  #79: balance-energy-analytic .....................   Passed    0.00 sec
+        Start  80: raw-moments-ordering
+ 80/187 Test  #80: raw-moments-ordering ........................   Passed    0.00 sec
+        Start  81: raw-moments-conversion
+ 81/187 Test  #81: raw-moments-conversion ......................   Passed    0.00 sec
+        Start  82: raw-moments-transform
+ 82/187 Test  #82: raw-moments-transform .......................   Passed    0.00 sec
+        Start  83: support-polygon-analytic
+ 83/187 Test  #83: support-polygon-analytic ....................   Passed    0.00 sec
+        Start  84: safe-region-analytic
+ 84/187 Test  #84: safe-region-analytic ........................   Passed    0.00 sec
+        Start  85: standing-target-analytic
+ 85/187 Test  #85: standing-target-analytic ....................   Passed    0.00 sec
+        Start  86: suspension-target-analytic
+ 86/187 Test  #86: suspension-target-analytic ..................   Passed    0.00 sec
+        Start  87: multi-target-energy-analytic
+ 87/187 Test  #87: multi-target-energy-analytic ................   Passed    0.00 sec
+        Start  88: multi-target-solver-boundary
+ 88/187 Test  #88: multi-target-solver-boundary ................   Passed    0.32 sec
+        Start  89: cutting-plane-analytic
+ 89/187 Test  #89: cutting-plane-analytic ......................   Passed    0.00 sec
+        Start  90: multi-plane-score-analytic
+ 90/187 Test  #90: multi-plane-score-analytic ..................   Passed    0.00 sec
+        Start  91: carving-order-deterministic
+ 91/187 Test  #91: carving-order-deterministic .................   Passed    0.00 sec
+        Start  92: global-prefix-transient
+ 92/187 Test  #92: global-prefix-transient .....................   Passed    0.00 sec
+        Start  93: global-prefix-middle
+ 93/187 Test  #93: global-prefix-middle ........................   Passed    0.00 sec
+        Start  94: global-prefix-zero
+ 94/187 Test  #94: global-prefix-zero ..........................   Passed    0.00 sec
+        Start  95: global-prefix-shortest-tie
+ 95/187 Test  #95: global-prefix-shortest-tie ..................   Passed    0.00 sec
+        Start  96: global-prefix-scale-invariant
+ 96/187 Test  #96: global-prefix-scale-invariant ...............   Passed    0.00 sec
+        Start  97: global-prefix-over-1000
+ 97/187 Test  #97: global-prefix-over-1000 .....................   Passed    0.00 sec
+        Start  98: bbw-path-analytic
+ 98/187 Test  #98: bbw-path-analytic ...........................   Passed    0.00 sec
+        Start  99: bbw-active-bound-analytic
+ 99/187 Test  #99: bbw-active-bound-analytic ...................   Passed    0.00 sec
+        Start 100: bbw-contract-analytic
+100/187 Test #100: bbw-contract-analytic .......................   Passed    0.00 sec
+        Start 101: handle-parameter-contract
+101/187 Test #101: handle-parameter-contract ...................   Passed    0.00 sec
+        Start 102: lbs-equation-9-10
+102/187 Test #102: lbs-equation-9-10 ...........................   Passed    0.00 sec
+        Start 103: grid-weight-trilinear
+103/187 Test #103: grid-weight-trilinear .......................   Passed    0.00 sec
+        Start 104: deformation-geometry-sync
+104/187 Test #104: deformation-geometry-sync ...................   Passed    0.01 sec
+        Start 105: deformation-invalid-inputs
+105/187 Test #105: deformation-invalid-inputs ..................   Passed    0.00 sec
+        Start 106: laplacian-editing-analytic
+106/187 Test #106: laplacian-editing-analytic ..................   Passed    0.00 sec
+        Start 107: surface-mass-gradient-analytic
+107/187 Test #107: surface-mass-gradient-analytic ..............   Passed    0.00 sec
+        Start 108: surface-mass-triangle-chain-analytic
+108/187 Test #108: surface-mass-triangle-chain-analytic ........   Passed    0.00 sec
+        Start 109: deformation-objective-gradient-analytic
+109/187 Test #109: deformation-objective-gradient-analytic .....   Passed    0.01 sec
+        Start 110: paper-line-search-state-machine
+110/187 Test #110: paper-line-search-state-machine .............   Passed    0.00 sec
+        Start 111: deformation-optimizer-end-to-end
+111/187 Test #111: deformation-optimizer-end-to-end ............   Passed    0.00 sec
+        Start 112: deformed-voxel-mass-identity-similarity
+112/187 Test #112: deformed-voxel-mass-identity-similarity .....   Passed    0.00 sec
+        Start 113: deformed-voxel-mass-cavity-sum
+113/187 Test #113: deformed-voxel-mass-cavity-sum ..............   Passed    0.00 sec
+        Start 114: deformed-voxel-mass-invalid
+114/187 Test #114: deformed-voxel-mass-invalid .................   Passed    0.00 sec
+        Start 115: deformed-carving-identity
+115/187 Test #115: deformed-carving-identity ...................   Passed    0.00 sec
+        Start 116: deformed-carving-mass-field
+116/187 Test #116: deformed-carving-mass-field .................   Passed    0.00 sec
+        Start 117: deformed-carving-transaction
+117/187 Test #117: deformed-carving-transaction ................   Passed    0.00 sec
+        Start 118: deformed-carving-objective-update
+118/187 Test #118: deformed-carving-objective-update ...........   Passed    0.00 sec
+        Start 119: alternating-target-refresh
+119/187 Test #119: alternating-target-refresh ..................   Passed    0.00 sec
+        Start 120: alternating-stability-terminal
+120/187 Test #120: alternating-stability-terminal ..............   Passed    0.00 sec
+        Start 121: alternating-multi-target-terminal
+121/187 Test #121: alternating-multi-target-terminal ...........   Passed    0.00 sec
+        Start 122: released-beta-frozen-target
+122/187 Test #122: released-beta-frozen-target .................   Passed    0.00 sec
+        Start 123: alternating-refill-reset
+123/187 Test #123: alternating-refill-reset ....................   Passed    0.00 sec
+        Start 124: alternating-fixed-alpha-transaction
+124/187 Test #124: alternating-fixed-alpha-transaction .........   Passed    0.00 sec
+        Start 125: alternating-paper-beta-profile
+125/187 Test #125: alternating-paper-beta-profile ..............   Passed    0.00 sec
+        Start 126: alternating-controller-refill-block
+126/187 Test #126: alternating-controller-refill-block .........   Passed    0.26 sec
+        Start 127: alternating-controller-transaction
+127/187 Test #127: alternating-controller-transaction ..........   Passed    0.41 sec
+        Start 128: alternating-controller-end-to-end
+128/187 Test #128: alternating-controller-end-to-end ...........   Passed    0.49 sec
+        Start 129: released-beta-outer-loop
+129/187 Test #129: released-beta-outer-loop ....................   Passed    0.07 sec
+        Start 130: alternating-invalid-outer-boundary-gate
+130/187 Test #130: alternating-invalid-outer-boundary-gate .....   Passed    0.00 sec
+        Start 131: r10-ablation-switches
+131/187 Test #131: r10-ablation-switches .......................   Passed    2.96 sec
+        Start 132: minimum-wall-thickness-analytic
+132/187 Test #132: minimum-wall-thickness-analytic .............   Passed    0.09 sec
+        Start 133: voxel-topology-report
+133/187 Test #133: voxel-topology-report .......................   Passed    0.03 sec
+        Start 134: released-beta-unit-cube-voxel-grid
+134/187 Test #134: released-beta-unit-cube-voxel-grid ..........   Passed    0.00 sec
+        Start 135: released-beta-archive-voxel-cache
+135/187 Test #135: released-beta-archive-voxel-cache ...........   Passed    0.00 sec
+        Start 136: r8-boundary-cube
+136/187 Test #136: r8-boundary-cube ............................   Passed    0.00 sec
+        Start 137: r8-boundary-missing-face
+137/187 Test #137: r8-boundary-missing-face ....................   Passed    0.00 sec
+        Start 138: r8-boundary-reversed
+138/187 Test #138: r8-boundary-reversed ........................   Passed    0.00 sec
+        Start 139: r8-boundary-duplicate
+139/187 Test #139: r8-boundary-duplicate .......................   Passed    0.00 sec
+        Start 140: r8-boundary-degenerate
+140/187 Test #140: r8-boundary-degenerate ......................   Passed    0.00 sec
+        Start 141: r8-boundary-double-outer
+141/187 Test #141: r8-boundary-double-outer ....................   Passed    0.00 sec
+        Start 142: r8-boundary-self-intersection
+142/187 Test #142: r8-boundary-self-intersection ...............   Passed    0.00 sec
+        Start 143: r8-boundary-rounded-sphere-adjacency
+143/187 Test #143: r8-boundary-rounded-sphere-adjacency ........   Passed    0.00 sec
+        Start 144: r8-boundary-coplanar-shared-vertex
+144/187 Test #144: r8-boundary-coplanar-shared-vertex ..........   Passed    0.00 sec
+        Start 145: r8-prepare-empty
+145/187 Test #145: r8-prepare-empty ............................   Passed    0.00 sec
+        Start 146: r8-prepare-cavity
+146/187 Test #146: r8-prepare-cavity ...........................   Passed    0.00 sec
+        Start 147: r8-prepare-stale-inner
+147/187 Test #147: r8-prepare-stale-inner ......................   Passed    0.00 sec
+        Start 148: r8-prepare-cell-collapse
+148/187 Test #148: r8-prepare-cell-collapse ....................   Passed    0.00 sec
+        Start 149: r8-prepare-cell-swap
+149/187 Test #149: r8-prepare-cell-swap ........................   Passed    0.00 sec
+        Start 150: r8-prepare-material-components
+150/187 Test #150: r8-prepare-material-components ..............   Passed    0.01 sec
+        Start 151: r8-prepare-containment
+151/187 Test #151: r8-prepare-containment ......................   Passed    0.00 sec
+        Start 152: r8-prepare-wall-threshold
+152/187 Test #152: r8-prepare-wall-threshold ...................   Passed    0.01 sec
+        Start 153: r8-source-bound
+153/187 Test #153: r8-source-bound .............................   Passed    0.00 sec
+        Start 154: r8-source-bound-cavity
+154/187 Test #154: r8-source-bound-cavity ......................   Passed    0.01 sec
+        Start 155: r8-source-bound-deformation-terminal
+155/187 Test #155: r8-source-bound-deformation-terminal ........   Passed    0.01 sec
+        Start 156: r10-source-bound-no-carving-terminal
+156/187 Test #156: r10-source-bound-no-carving-terminal ........   Passed    0.01 sec
+        Start 157: r8-source-bound-carving-after-deformation
+157/187 Test #157: r8-source-bound-carving-after-deformation ...   Passed    0.00 sec
+        Start 158: r8-export-roundtrip
+158/187 Test #158: r8-export-roundtrip .........................   Passed    0.03 sec
+        Start 159: r8-export-transaction
+159/187 Test #159: r8-export-transaction .......................   Passed    0.01 sec
+        Start 160: r8-export-seal
+160/187 Test #160: r8-export-seal ..............................   Passed    0.00 sec
+        Start 161: r8-source-rejection
+161/187 Test #161: r8-source-rejection .........................   Passed    0.03 sec
+        Start 162: r8-raw-substitution
+162/187 Test #162: r8-raw-substitution .........................   Passed    0.00 sec
+        Start 163: r8-bound-substitution
+163/187 Test #163: r8-bound-substitution .......................   Passed    0.00 sec
+        Start 164: r8-scale-translation
+164/187 Test #164: r8-scale-translation ........................   Passed    0.00 sec
+        Start 165: r8-slicer-not-configured
+165/187 Test #165: r8-slicer-not-configured ....................   Passed    0.00 sec
+        Start 166: r8-slicer-executable-hash-mismatch
+166/187 Test #166: r8-slicer-executable-hash-mismatch ..........   Passed    0.00 sec
+        Start 167: r8-slicer-profile-hash-mismatch
+167/187 Test #167: r8-slicer-profile-hash-mismatch .............   Passed    0.00 sec
+        Start 168: r8-slicer-version-mismatch
+168/187 Test #168: r8-slicer-version-mismatch ..................   Passed    0.01 sec
+        Start 169: r8-slicer-version-truncation
+169/187 Test #169: r8-slicer-version-truncation ................   Passed    0.01 sec
+        Start 170: r8-slicer-success
+170/187 Test #170: r8-slicer-success ...........................   Passed    0.03 sec
+        Start 171: r8-slicer-stable-invocation
+171/187 Test #171: r8-slicer-stable-invocation .................   Passed    0.05 sec
+        Start 172: r8-slicer-repair-rejected
+172/187 Test #172: r8-slicer-repair-rejected ...................   Passed    0.02 sec
+        Start 173: r8-slicer-invalid-toolpath
+173/187 Test #173: r8-slicer-invalid-toolpath ..................   Passed    0.23 sec
+        Start 174: r8-slicer-nonzero
+174/187 Test #174: r8-slicer-nonzero ...........................   Passed    0.02 sec
+        Start 175: r8-slicer-signal
+175/187 Test #175: r8-slicer-signal ............................   Passed    0.02 sec
+        Start 176: r8-slicer-timeout
+176/187 Test #176: r8-slicer-timeout ...........................   Passed    1.85 sec
+        Start 177: r8-slicer-shell-safe
+177/187 Test #177: r8-slicer-shell-safe ........................   Passed    0.03 sec
+        Start 178: r8-slicer-report-json
+178/187 Test #178: r8-slicer-report-json .......................   Passed    0.03 sec
+        Start 179: r8-slicer-paths
+179/187 Test #179: r8-slicer-paths .............................   Passed    0.03 sec
+        Start 180: r8-slicer-sigchld-ownership
+180/187 Test #180: r8-slicer-sigchld-ownership .................   Passed    0.01 sec
+        Start 181: r8-slicer-closed-stdio-launch-failure
+181/187 Test #181: r8-slicer-closed-stdio-launch-failure .......   Passed    0.02 sec
+        Start 182: r8-slicer-capture-limit
+182/187 Test #182: r8-slicer-capture-limit .....................   Passed    0.02 sec
+        Start 183: r8-partition-manifest
+183/187 Test #183: r8-partition-manifest .......................   Passed    0.00 sec
+        Start 184: carving-initial-state
+184/187 Test #184: carving-initial-state .......................   Passed    0.11 sec
+        Start 185: carving-one-step
+185/187 Test #185: carving-one-step ............................   Passed    0.12 sec
+        Start 186: carving-full-mass-consistency
+186/187 Test #186: carving-full-mass-consistency ...............   Passed    0.26 sec
+        Start 187: carving-no-candidates
+187/187 Test #187: carving-no-candidates .......................   Passed    0.10 sec
+
+100% tests passed, 0 tests failed out of 187
+
+Label Time Summary:
+ablation                    =   2.98 sec*proc (2 tests)
+alternating                 =   4.21 sec*proc (17 tests)
+api                         =   0.15 sec*proc (3 tests)
+archive                     =   0.00 sec*proc (1 test)
+bbw                         =   0.06 sec*proc (1 test)
+bindings                    =   0.24 sec*proc (2 tests)
+build-system                =  39.39 sec*proc (4 tests)
+carving                     =   1.05 sec*proc (25 tests)
+cmake                       =   0.64 sec*proc (1 test)
+compatibility               =   0.69 sec*proc (2 tests)
+compiler-observation        =   4.92 sec*proc (2 tests)
+deformation                 =   0.25 sec*proc (21 tests)
+dual-material               =   0.04 sec*proc (1 test)
+evidence                    =   0.30 sec*proc (1 test)
+exact-geometry              = 127.77 sec*proc (9 tests)
+geometry                    =  10.80 sec*proc (37 tests)
+independent-verification    =   6.40 sec*proc (3 tests)
+integration                 =   4.51 sec*proc (7 tests)
+manufacturing               =   2.67 sec*proc (52 tests)
+moments                     =   0.00 sec*proc (3 tests)
+multi-target                =   0.00 sec*proc (4 tests)
+native                      = 166.65 sec*proc (12 tests)
+objective                   =   0.08 sec*proc (1 test)
+occupancy                   =   0.01 sec*proc (4 tests)
+official-assets             =  33.08 sec*proc (1 test)
+optimization                =   0.02 sec*proc (6 tests)
+paper                       =  62.40 sec*proc (14 tests)
+paper-compat                =   0.00 sec*proc (2 tests)
+partition-interface         =   0.00 sec*proc (1 test)
+physics                     =   4.24 sec*proc (36 tests)
+python                      = 194.02 sec*proc (25 tests)
+r1                          =   0.59 sec*proc (4 tests)
+r10                         =   3.28 sec*proc (3 tests)
+r2                          =   0.60 sec*proc (8 tests)
+r3                          =   0.33 sec*proc (6 tests)
+r4                          =   0.82 sec*proc (16 tests)
+r5                          =   0.02 sec*proc (8 tests)
+r6                          =   0.02 sec*proc (6 tests)
+r7                          =   1.25 sec*proc (19 tests)
+r8                          =   2.55 sec*proc (48 tests)
+r9                          =   0.44 sec*proc (3 tests)
+reachability                =   4.35 sec*proc (12 tests)
+registration                =   0.52 sec*proc (1 test)
+regression                  =  28.92 sec*proc (43 tests)
+released-beta               =  33.63 sec*proc (3 tests)
+resolution                  =   0.11 sec*proc (1 test)
+result                      =   0.00 sec*proc (1 test)
+scaling                     =   0.01 sec*proc (4 tests)
+slicer-unit                 =   2.40 sec*proc (18 tests)
+solver                      =   1.80 sec*proc (10 tests)
+spin-it                     = 137.71 sec*proc (54 tests)
+spin-it-2014                =  41.91 sec*proc (17 tests)
+spin-it-faster              =  84.99 sec*proc (19 tests)
+stability                   =   0.01 sec*proc (9 tests)
+strict                      =   0.07 sec*proc (1 test)
+transaction                 =   0.01 sec*proc (7 tests)
+verification                = 136.72 sec*proc (13 tests)
+viewer                      =   0.00 sec*proc (1 test)
+voxel-domain                =   0.01 sec*proc (4 tests)
+
+Total Test time (real) = 253.93 sec

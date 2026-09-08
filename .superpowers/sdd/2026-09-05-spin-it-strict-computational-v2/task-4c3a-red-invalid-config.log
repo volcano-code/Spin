@@ -1,0 +1,15 @@
+test_native_invalid_evaluator_controls_reject_before_solver (test_faster_material_bridge.FasterSettingsTests.test_native_invalid_evaluator_controls_reject_before_solver) ... FAIL
+
+======================================================================
+FAIL: test_native_invalid_evaluator_controls_reject_before_solver (test_faster_material_bridge.FasterSettingsTests.test_native_invalid_evaluator_controls_reject_before_solver)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 44, in test_native_invalid_evaluator_controls_reject_before_solver
+    with self.assertRaises(ValueError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 1 test in 0.004s
+
+FAILED (failures=1)

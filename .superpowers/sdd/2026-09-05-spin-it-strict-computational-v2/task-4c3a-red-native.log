@@ -1,0 +1,67 @@
+test_actual_unsuccessful_solve_keeps_events_and_has_no_seal (test_faster_material_bridge.FasterMaterialBridgeTests.test_actual_unsuccessful_solve_keeps_events_and_has_no_seal) ... FAIL
+test_complete_material_includes_actual_fixed_shell_and_roundtrips (test_faster_material_bridge.FasterMaterialBridgeTests.test_complete_material_includes_actual_fixed_shell_and_roundtrips) ... FAIL
+test_density_once_and_translated_scaled_rotated_target (test_faster_material_bridge.FasterMaterialBridgeTests.test_density_once_and_translated_scaled_rotated_target) ... FAIL
+test_unsupported_derivative_and_scope_cannot_be_sealed (test_faster_material_bridge.FasterMaterialBridgeTests.test_unsupported_derivative_and_scope_cannot_be_sealed) ... FAIL
+test_opt_in_exposes_actual_discrete_geometry_and_settings_identity (test_faster_material_bridge.FasterSettingsTests.test_opt_in_exposes_actual_discrete_geometry_and_settings_identity) ... ERROR
+
+======================================================================
+ERROR: test_opt_in_exposes_actual_discrete_geometry_and_settings_identity (test_faster_material_bridge.FasterSettingsTests.test_opt_in_exposes_actual_discrete_geometry_and_settings_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 39, in test_opt_in_exposes_actual_discrete_geometry_and_settings_identity
+    e = spin.evaluate_spin_it_faster_quadric(request, COEFFICIENTS, evaluator_settings=config)
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/spin.py", line 591, in evaluate_spin_it_faster_quadric
+    extra = () if evaluator_settings is None else (_native_evaluator_settings(native, evaluator_settings),)
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/spin.py", line 569, in _native_evaluator_settings
+    raise RuntimeError("native Faster evaluator settings support is unavailable")
+RuntimeError: native Faster evaluator settings support is unavailable
+
+======================================================================
+FAIL: test_actual_unsuccessful_solve_keeps_events_and_has_no_seal (test_faster_material_bridge.FasterMaterialBridgeTests.test_actual_unsuccessful_solve_keeps_events_and_has_no_seal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 65, in setUp
+    self.assertIsNotNone(importlib.util.find_spec('make_it_stand.verification.faster_material'),
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         'locked Faster material bridge missing')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : locked Faster material bridge missing
+
+======================================================================
+FAIL: test_complete_material_includes_actual_fixed_shell_and_roundtrips (test_faster_material_bridge.FasterMaterialBridgeTests.test_complete_material_includes_actual_fixed_shell_and_roundtrips)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 65, in setUp
+    self.assertIsNotNone(importlib.util.find_spec('make_it_stand.verification.faster_material'),
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         'locked Faster material bridge missing')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : locked Faster material bridge missing
+
+======================================================================
+FAIL: test_density_once_and_translated_scaled_rotated_target (test_faster_material_bridge.FasterMaterialBridgeTests.test_density_once_and_translated_scaled_rotated_target)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 65, in setUp
+    self.assertIsNotNone(importlib.util.find_spec('make_it_stand.verification.faster_material'),
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         'locked Faster material bridge missing')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : locked Faster material bridge missing
+
+======================================================================
+FAIL: test_unsupported_derivative_and_scope_cannot_be_sealed (test_faster_material_bridge.FasterMaterialBridgeTests.test_unsupported_derivative_and_scope_cannot_be_sealed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_material_bridge.py", line 65, in setUp
+    self.assertIsNotNone(importlib.util.find_spec('make_it_stand.verification.faster_material'),
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                         'locked Faster material bridge missing')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unexpectedly None : locked Faster material bridge missing
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.160s
+
+FAILED (failures=4, errors=1)
