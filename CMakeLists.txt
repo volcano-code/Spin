@@ -1285,6 +1285,21 @@ if(BUILD_TESTING)
         )
 
         add_test(
+            NAME faster-section-6-6-exact-contract
+            COMMAND "${Python3_EXECUTABLE}" -m unittest
+                test_faster_section_6_6_exact
+                -v
+        )
+        set_tests_properties(
+            faster-section-6-6-exact-contract
+            PROPERTIES
+                LABELS "paper;python;spin-it;spin-it-faster;exact-rational"
+                TIMEOUT 30
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
+        )
+
+        add_test(
             NAME independent-mass-moments-contract
             COMMAND "${Python3_EXECUTABLE}" -m unittest
                 test_independent_mass_moments
