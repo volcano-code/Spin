@@ -1,0 +1,27 @@
+FINAL COMMAND
+cmake --build build/strict-v2-spin -j4 && ctest --test-dir build/strict-v2-spin --output-on-failure -j4
+
+BUILD RESULT
+All targets built, exit status 0. Build concurrency was -j4. The incremental output
+ended with:
+[100%] Built target carving-regression
+[100%] Built target partition-manifest-regression
+
+CTEST RESULT
+The configured primary contained 188 registered tests. Relevant and final raw lines:
+  3/188 Test  #54: faster-section-6-6-exact-contract ...........   Passed    0.62 sec
+187/188 Test  #48: balance-model-reachability ..................   Passed    0.15 sec
+188/188 Test   #5: sealed-spin-artifact-python .................   Passed   65.89 sec
+
+100% tests passed, 0 tests failed out of 188
+
+Label Time Summary:
+exact-rational              =   0.62 sec*proc (1 test)
+paper                       =  66.18 sec*proc (15 tests)
+spin-it-faster              =  90.07 sec*proc (20 tests)
+
+Total Test time (real) =  65.90 sec
+
+CTest's complete per-test raw log is retained at:
+/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/Testing/Temporary/LastTest.log
+SHA256: b9a4599ad670c92fa8aba343c4e9202e2ed9ec244fb688d6367390315b1e3231

@@ -1,0 +1,41 @@
+COMMAND
+PYTHONPATH="$PWD/python:$PWD/tests/python" python3 -m unittest test_faster_section_6_6_exact -v
+
+RAW RESULT BEFORE PRODUCTION IMPLEMENTATION
+test_corrupted_witness_coefficients_and_parameter_ranges_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_corrupted_witness_coefficients_and_parameter_ranges_fail) ... FAIL
+test_exact_computations_prove_both_published_outcomes (test_faster_section_6_6_exact.FasterSection66ExactTests.test_exact_computations_prove_both_published_outcomes) ... FAIL
+test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) ... FAIL
+test_nonfinite_and_duplicate_key_json_fail_closed (test_faster_section_6_6_exact.FasterSection66ExactTests.test_nonfinite_and_duplicate_key_json_fail_closed) ... FAIL
+test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) ... FAIL
+test_cli_twice_is_deterministic_exclusive_and_pure_python (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_twice_is_deterministic_exclusive_and_pure_python) ... FAIL
+
+Representative checker failure (the same setUp failure reached the four checker cases and freshness case):
+======================================================================
+FAIL: test_exact_computations_prove_both_published_outcomes (test_faster_section_6_6_exact.FasterSection66ExactTests.test_exact_computations_prove_both_published_outcomes)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 25, in setUp
+    self.assertIsNotNone(
+AssertionError: unexpectedly None : exact Faster Section 6.6 checker is missing
+
+Runner failure:
+======================================================================
+FAIL: test_cli_twice_is_deterministic_exclusive_and_pure_python (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_twice_is_deterministic_exclusive_and_pure_python)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_faster_section_6_6_exact.py", line 149, in test_cli_twice_is_deterministic_exclusive_and_pure_python
+    self.assertEqual(run1.returncode, 0, run1.stderr)
+AssertionError: 2 != 0 : /home/lin/anaconda3/bin/python3: can't open file '/data/xvxinyao/make-it-balance-paper-sim/experiments/spin_it_reproduction/strict/run_faster_section_6_6.py': [Errno 2] No such file or directory
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.071s
+
+FAILED (failures=6)
+
+The failure was expected: neither the exact checker module nor its runner existed.
+
+INTERMEDIATE COMMAND ERROR RETAINED
+The first launch used relative PYTHONPATH=python while cwd was tests/python. It therefore
+reported five ModuleNotFoundError errors for make_it_stand plus the same missing-runner
+failure; Ran 6 tests in 0.027s, FAILED (failures=1, errors=5). The command was corrected
+to the repository-root command above before accepting RED.

@@ -1,0 +1,24 @@
+COMMAND
+PYTHONPATH="$PWD/python:$PWD/tests/python" python3 -m unittest test_faster_section_6_6_exact -v
+
+RAW RESULT AFTER IMPLEMENTATION
+test_corrupted_witness_coefficients_and_parameter_ranges_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_corrupted_witness_coefficients_and_parameter_ranges_fail) ... ok
+test_exact_computations_prove_both_published_outcomes (test_faster_section_6_6_exact.FasterSection66ExactTests.test_exact_computations_prove_both_published_outcomes) ... ok
+test_mutated_published_definitions_missing_and_duplicate_cases_fail (test_faster_section_6_6_exact.FasterSection66ExactTests.test_mutated_published_definitions_missing_and_duplicate_cases_fail) ... ok
+test_nonfinite_and_duplicate_key_json_fail_closed (test_faster_section_6_6_exact.FasterSection66ExactTests.test_nonfinite_and_duplicate_key_json_fail_closed) ... ok
+test_cli_rejects_bad_source_hash_and_freshness_rechecks_files (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_rejects_bad_source_hash_and_freshness_rechecks_files) ... ok
+test_cli_twice_is_deterministic_exclusive_and_pure_python (test_faster_section_6_6_exact.FasterSection66RunnerTests.test_cli_twice_is_deterministic_exclusive_and_pure_python) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.564s
+
+OK
+
+FOCUSED CTEST
+COMMAND
+ctest --test-dir build/strict-v2-spin -R '^faster-section-6-6-exact-contract$' --output-on-failure
+
+1/1 Test #54: faster-section-6-6-exact-contract ...   Passed    0.58 sec
+
+100% tests passed, 0 tests failed out of 1
+Total Test time (real) =   0.58 sec
