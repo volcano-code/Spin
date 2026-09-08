@@ -1818,6 +1818,17 @@ std::string spinDiagnosticsJson(
 )
 {
     std::ostringstream output;
+    const bool strict=result.equationProfile==spin::SpinEquationProfile::DualMonomialRawV1;
+    const auto appendProfile=[&output](spin::SpinEquationProfile profile) {
+        output << ",\"equation_profile\":";
+        appendJsonString(output,spin::spinEquationProfileToken(profile));
+        output << ",\"solver_coordinate_identity\":";
+        appendJsonString(output,spin::spinSolverCoordinateIdentity(profile));
+    };
+    const auto appendRaw=[&output](const std::optional<double>& value) {
+        output << ",\"raw_equation_residual\":";
+        if(value) appendNumber(output,*value); else output << "null";
+    };
     output.imbue(std::locale::classic());
     output << "{\n"
            << "  \"schema\": \"spin-it-faster-artifact-v1\",\n"
@@ -1839,7 +1850,8 @@ std::string spinDiagnosticsJson(
            << "  \"geometry_hash\": \"" << result.geometryHash << "\",\n"
            << "  \"trace_hash\": \"" << result.traceHash << "\",\n"
            << "  \"trace_hash_semantics\": "
-              "\"legacy_accepted_states_v1\",\n"
+           << (strict ? "\"dual_monomial_accepted_states_v2\",\n" :
+                        "\"legacy_accepted_states_v1\",\n")
            << "  \"event_stream_version\": "
            << result.eventStreamVersion << ",\n"
            << "  \"event_hash\": \"" << result.eventHash << "\",\n"
@@ -1858,6 +1870,7 @@ std::string spinDiagnosticsJson(
            << "  \"output_hash\": \"" << result.outputHash << "\",\n"
            << "  \"normalized_equation_residual\": ";
     appendNumber(output, result.normalizedEquationResidual);
+    if(strict) {appendProfile(result.equationProfile);appendRaw(result.rawEquationResidual);}
     output << ",\n  \"physical_relative_residual\": ";
     appendNumber(output, result.physicalRelativeResidual);
     if (request.mode == spin::SpinMode::BuoyantStability)
@@ -1936,6 +1949,18 @@ std::string spinDiagnosticsJson(
                << entry.functionEvaluations
                << ",\"normalized_equation_residual\":";
         appendNumber(output, entry.normalizedEquationResidual);
+        if(strict) {
+            appendProfile(entry.equationProfile);appendRaw(entry.rawEquationResidual);
+            output << ",\"quadric_coefficients\":";
+            if(entry.quadricCoefficients) {
+                output << '[';
+                for(std::size_t j=0;j<entry.quadricCoefficients->size();++j) {
+                    if(j) output << ',';
+                    appendNumber(output,(*entry.quadricCoefficients)[j]);
+                }
+                output << ']';
+            } else output << "null";
+        }
         output << ",\"physical_relative_residual\":";
         appendNumber(output, entry.physicalRelativeResidual);
         output << ",\"objective\":";
@@ -1957,6 +1982,7 @@ std::string spinDiagnosticsJson(
         const spin::SpinSolverEvent& event = result.events[index];
         output << "{\"type\":";
         appendJsonString(output, event.type);
+        if(strict) {appendProfile(event.equationProfile);appendRaw(event.rawEquationResidual);}
         output << ",\"restart\":" << event.restart
                << ",\"iteration\":" << event.iteration
                << ",\"evaluation_index\":" << event.evaluationIndex

@@ -1,5 +1,6 @@
 #include "spin/QuadricMomentEvaluator.h"
 #include "spin/QuadricHollowingSolver.h"
+#include "spin/DualMonomialCoordinates.h"
 #include <Eigen/Geometry>
 #include <algorithm>
 #include <cmath>
@@ -222,6 +223,29 @@ void check(const std::string& name, const spin::SpinDesignRequest& r,
               << " raw_error_ratio_fine_over_middle=" << relativeErrors[2]/relativeErrors[1] << '\n';
     require(richardsonRelative<=1e-6 && richardsonAbsolute<=1e-8 && extrapolationAgreement<=1e-6,
             "supplemental strict1e-6 Richardson entrywise gate");
+    // Independent chain in literal-monomial coordinates on the same fixed
+    // Task6d contained/clipped asymmetric fixtures, without altering its gates.
+    if(name.find("contained-")==0 || name.find("clipped-")==0) {
+        const auto dual=spin::DualMonomialCoordinates10::fromGeometry(q);
+        const Matrix analytic=base.momentJacobian*dual.geometryJacobian();
+        require((analytic*dual.values()).norm()<2e-10,"dual full-map radial null");
+        for(double h : {3e-4,1e-4,3e-5}) {
+            Matrix fd;
+            for(int j=0;j<10;++j) {
+                Vector p=dual.values(),m=p; p(j)+=h; m(j)-=h;
+                const auto plus=spin::evaluateQuadricMaterialMoments(r,
+                    spin::DualMonomialCoordinates10::fromUnnormalized(p).geometry(),settings);
+                const auto minus=spin::evaluateQuadricMaterialMoments(r,
+                    spin::DualMonomialCoordinates10::fromUnnormalized(m).geometry(),settings);
+                require(plus.derivativeDefined && minus.derivativeDefined &&
+                    keys==correspondence(plus) && keys==correspondence(minus),"dual-chain topology changed");
+                fd.col(j)=(plus.totalMomentsTarget.values()-minus.totalMomentsTarget.values())/(2*h);
+            }
+            const double error=(fd-analytic).norm()/fd.norm();
+            std::cout << name << " dual h=" << h << " full_map_relative=" << error << '\n';
+            if(h==3e-5) require(error<=1e-6,"dual-chain fine full-map 1e-6 gate");
+        }
+    }
     const auto complement=spin::evaluateQuadricMaterialMoments(r,q.inverted(),settings);
     // r's domain is a rigidly transformed cube: recover it independently.
     spin::TriangleMesh target=r.designDomain;
@@ -276,6 +300,24 @@ int main() {
                 "solver lost undefined differential reason");
         require(solved.derivativeMethod==spin::quadricMomentDerivativeMethodToken(settings.derivativeMethod),
                 "solver lost selected method");
+        const auto legacyHash=spin::computeSpinDesignRequestHash(r);
+        r.settings.equationProfile=spin::SpinEquationProfile::DualMonomialRawV1;
+        require(legacyHash!=spin::computeSpinDesignRequestHash(r),"request profile hash alias");
+        const auto strictFailure=spin::solveQuadricHollowing(r,settings,{plane});
+        require(strictFailure.equationProfile==r.settings.equationProfile &&
+                strictFailure.eventStreamVersion==2 && !strictFailure.rawEquationResidual &&
+                strictFailure.status!=spin::SpinSolverStatus::Converged,"strict geometry rejection identity");
+        r.settings.maximumFunctionEvaluationsPerRestart=1;
+        const auto smoke=spin::solveQuadricHollowing(r,settings,{generic});
+        const auto smokeRepeat=spin::solveQuadricHollowing(r,settings,{generic});
+        require(smoke.equationProfile==r.settings.equationProfile &&
+            smoke.events[1].rawEquationResidual && smoke.eventHash==smokeRepeat.eventHash &&
+            smoke.outputHash==smokeRepeat.outputHash,"actual request geometry strict smoke identity");
+        r.settings.equationProfile=static_cast<spin::SpinEquationProfile>(99);
+        bool invalidProfile=false;
+        try{spin::validateSpinDesignRequest(r);}catch(const std::invalid_argument&){invalidProfile=true;}
+        require(invalidProfile,"invalid request profile accepted");
+        r.settings.equationProfile=spin::SpinEquationProfile::LegacyNativeNormalizedV1;
         p.setZero(); p(0)=1; p.segment<3>(4).setConstant(-1);
         const auto tangent=spin::evaluateQuadricMaterialMoments(r,
             spin::QuadricCoefficients10::fromUnnormalized(p),settings);

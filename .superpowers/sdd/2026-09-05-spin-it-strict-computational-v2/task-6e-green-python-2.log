@@ -1,0 +1,48 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 67
+    Start 67: spin-faster-python-api
+
+67: Test command: /home/lin/anaconda3/bin/python3 "-m" "unittest" "discover" "-s" "/data/xvxinyao/make-it-balance-paper-sim/tests/python" "-p" "test_spin_it_faster.py" "-v"
+67: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+67: Environment variables: 
+67:  PYTHONPATH=/data/xvxinyao/make-it-balance-paper-sim/python:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/python:/data/xvxinyao/make-it-balance-paper-sim/tests/python
+67:  LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/libstdc++.so.6
+67: Test timeout computed to be: 180
+67: test_dual_profile_native_roundtrip_and_failed_serialization (test_spin_it_faster.SpinNativeArtifactTests.test_dual_profile_native_roundtrip_and_failed_serialization) ... ok
+67: test_failed_evaluation_events_are_strict_json_safe (test_spin_it_faster.SpinNativeArtifactTests.test_failed_evaluation_events_are_strict_json_safe) ... ok
+67: test_planar_fixture_returns_immutable_sealed_artifact (test_spin_it_faster.SpinNativeArtifactTests.test_planar_fixture_returns_immutable_sealed_artifact) ... ok
+67: test_raw_moment_integration_matches_cube (test_spin_it_faster.SpinNativeArtifactTests.test_raw_moment_integration_matches_cube) ... ok
+67: test_buoyant_request_normalizes_public_paper_inputs (test_spin_it_faster.SpinSchemaTests.test_buoyant_request_normalizes_public_paper_inputs) ... ok
+67: test_request_is_frozen_and_rejects_unknown_mode (test_spin_it_faster.SpinSchemaTests.test_request_is_frozen_and_rejects_unknown_mode) ... ok
+67: test_static_pareto_weight_is_mode_checked (test_spin_it_faster.SpinSchemaTests.test_static_pareto_weight_is_mode_checked) ... ok
+67: 
+67: ----------------------------------------------------------------------
+67: Ran 7 tests in 0.073s
+67: 
+67: OK
+1/1 Test #67: spin-faster-python-api ...........   Passed    0.38 sec
+
+The following tests passed:
+	spin-faster-python-api
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+bindings          =   0.38 sec*proc (1 test)
+python            =   0.38 sec*proc (1 test)
+regression        =   0.38 sec*proc (1 test)
+spin-it           =   0.38 sec*proc (1 test)
+spin-it-faster    =   0.38 sec*proc (1 test)
+
+Total Test time (real) =   0.38 sec

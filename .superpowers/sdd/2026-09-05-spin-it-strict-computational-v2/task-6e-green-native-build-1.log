@@ -1,0 +1,44 @@
+[ 74%] Built target highs
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/api/BalanceModel.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/SpinDesignRequest.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/SpinMomentProblem.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricMomentEvaluator.cpp.o
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/Cartesian_base.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Simple_cartesian.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Exact_predicates_exact_constructions_kernel.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/assign.h:12,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.cpp:11,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.h:226,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin/QuadricMomentEvaluator.cpp:9:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricDiscreteMomentDifferential.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricHollowingSolver.cpp.o
+[ 77%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/DualMonomialCoordinates.cpp.o
+[ 77%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricTriangulator.cpp.o
+[ 78%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/AdaptiveFillFunctional.cpp.o
+[ 78%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SpinIt2014MomentProblem.cpp.o
+[ 78%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SlqpLbfgsSolver.cpp.o
+[ 78%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/AdaptiveVoxelSpinSolver.cpp.o
+[ 80%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/DualMaterialSpinSolver.cpp.o
+[ 80%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/api/SpinIt2014.cpp.o
+[ 81%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/CageSpinDeformation.cpp.o
+[ 81%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/CageSpinDeformationSolver.cpp.o
+[ 82%] Linking CXX static library libmake_it_stand_core.a
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/quadric-hollowing-solver-regression.dir/tests/dual_monomial_newton_regression.cpp.o
+[100%] Building CXX object CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o
+[100%] Linking CXX executable quadric-hollowing-solver-regression
+[100%] Built target quadric-hollowing-solver-regression
+[ 73%] Built target highs
+[ 98%] Built target make_it_stand_core
+[ 98%] Building CXX object CMakeFiles/quadric-discrete-moment-regression.dir/tests/quadric_discrete_moment_regression.cpp.o
+[100%] Linking CXX executable quadric-discrete-moment-regression
+[100%] Built target quadric-discrete-moment-regression

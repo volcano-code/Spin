@@ -719,8 +719,13 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_readwrite("origin", &spin::SpinTargetFrame::origin)
         .def_readwrite("axes", &spin::SpinTargetFrame::axes);
 
+    py::enum_<spin::SpinEquationProfile>(module, "SpinEquationProfile")
+        .value("LEGACY_NATIVE_NORMALIZED_V1", spin::SpinEquationProfile::LegacyNativeNormalizedV1)
+        .value("DUAL_MONOMIAL_RAW_V1", spin::SpinEquationProfile::DualMonomialRawV1);
+
     py::class_<spin::SpinSolverSettings>(module, "SpinSolverSettings")
         .def(py::init<>())
+        .def_readwrite("equation_profile", &spin::SpinSolverSettings::equationProfile)
         .def_readwrite("maximum_iterations", &spin::SpinSolverSettings::maximumIterations)
         .def_readwrite("maximum_restarts", &spin::SpinSolverSettings::maximumRestarts)
         .def_readwrite(
@@ -826,6 +831,16 @@ PYBIND11_MODULE(_make_it_stand, module)
             "event_hash",
             &api::SpinItFasterArtifact::eventHash
         )
+        .def_property_readonly("equation_profile", [](const api::SpinItFasterArtifact& value) {
+            return spin::spinEquationProfileToken(value.result().equationProfile);
+        })
+        .def_property_readonly("solver_coordinate_identity", [](const api::SpinItFasterArtifact& value) {
+            return spin::spinSolverCoordinateIdentity(value.result().equationProfile);
+        })
+        .def_property_readonly("raw_equation_residual", [](const api::SpinItFasterArtifact& value) -> py::object {
+            const auto residual=value.result().rawEquationResidual;
+            return residual ? py::cast(*residual) : py::none();
+        })
         .def_property_readonly(
             "evaluation_timings",
             [](const api::SpinItFasterArtifact& value)

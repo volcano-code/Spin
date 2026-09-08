@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import FrozenInstanceError, replace
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -103,6 +104,60 @@ class SpinSchemaTests(unittest.TestCase):
 
 
 class SpinNativeArtifactTests(unittest.TestCase):
+    def test_dual_profile_native_roundtrip_and_failed_serialization(self) -> None:
+        from make_it_stand.spin import _native_request
+        v, f = cube(-5.0, 5.0)
+        d, g = cube(-1.0, 1.0)
+        config = SpinSolverConfig(equation_profile="DUAL_MONOMIAL_RAW_V1",
+                                  maximum_iterations=1, maximum_restarts=1,
+                                  maximum_function_evaluations_per_restart=1)
+        request = SpinItFasterRequest(v, f, d, g, minimum_wall_thickness=4.0, settings=config)
+        native, converted = _native_request(request)
+        self.assertEqual(converted.settings.equation_profile, native.SpinEquationProfile.DUAL_MONOMIAL_RAW_V1)
+        with self.assertRaises(ValueError):
+            replace(config, equation_profile="UNKNOWN")
+        with self.assertRaises(ValueError):
+            replace(config, maximum_function_evaluations_per_restart=61)
+        initial = ((1, 0, 0, 0, 0, 0, 0, 0, 0, 0),)
+        strict = solve_spin_it_faster(request, initial_quadrics=initial)
+        repeated = solve_spin_it_faster(request, initial_quadrics=initial)
+        legacy = solve_spin_it_faster(replace(request, settings=replace(config,
+            equation_profile="LEGACY_NATIVE_NORMALIZED_V1")), initial_quadrics=initial)
+        self.assertEqual(strict.equation_profile, "DUAL_MONOMIAL_RAW_V1")
+        self.assertEqual(strict.solver_coordinate_identity, "literal_monomial_unit_sphere_v1")
+        self.assertIsNone(strict.raw_equation_residual)
+        self.assertEqual(strict.diagnostics["event_stream_version"], 2)
+        self.assertEqual(strict.diagnostics, repeated.diagnostics)
+        for event in strict.events:
+            self.assertEqual(event.equation_profile, strict.equation_profile)
+            self.assertEqual(event.solver_coordinate_identity, strict.solver_coordinate_identity)
+            self.assertIsNone(event.raw_equation_residual)
+        self.assertNotEqual(strict.diagnostics["input_hash"], legacy.diagnostics["input_hash"])
+        self.assertNotEqual(strict.event_hash, legacy.event_hash)
+        self.assertNotIn("equation_profile", legacy.diagnostics)
+        self.assertEqual(legacy.equation_profile, "LEGACY_NATIVE_NORMALIZED_V1")
+        self.assertEqual(legacy.events[1].equation_profile, legacy.equation_profile)
+        # Captured from the actual f433a14 binary before Task6e rebuilds.
+        self.assertEqual(hashlib.sha256((legacy._native.diagnostics_json + "\n").encode()).hexdigest(),
+                         "c744e1daf10d8349b42801e787a9b54193464facfb62725dcc14b098fcf04dd8")
+        json.dumps(strict.diagnostics, allow_nan=False)
+
+        # A returned geometry evaluation has finite raw metrics and a native p
+        # in each trace row, from which s=Dp/||Dp|| is recoverable.
+        evaluated = solve_spin_it_faster(request, initial_quadrics=((.371,.8,.123,0,0,0,0,0,0,0),))
+        self.assertTrue(evaluated.trace)
+        self.assertIsNotNone(evaluated.raw_equation_residual)
+        self.assertEqual(evaluated._native.raw_equation_residual, evaluated.raw_equation_residual)
+        self.assertEqual(evaluated._native.equation_profile, evaluated.equation_profile)
+        self.assertEqual(evaluated._native.solver_coordinate_identity, evaluated.solver_coordinate_identity)
+        trace = evaluated.trace[0]
+        self.assertIsInstance(trace.quadric_coefficients, tuple)
+        self.assertEqual(trace.equation_profile, evaluated.equation_profile)
+        self.assertEqual(trace.solver_coordinate_identity, evaluated.solver_coordinate_identity)
+        self.assertIsNotNone(trace.raw_equation_residual)
+        with self.assertRaises(TypeError):
+            trace.quadric_coefficients[0] = 42  # type: ignore[index]
+
     def test_raw_moment_integration_matches_cube(self) -> None:
         vertices, faces = cube(-1.0, 1.0)
         moments = integrate_raw_mass_moments(vertices, faces)

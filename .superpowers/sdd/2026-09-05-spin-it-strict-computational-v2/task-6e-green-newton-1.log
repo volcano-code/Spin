@@ -1,0 +1,62 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 32
+    Start 32: spin-faster-newton
+
+32: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression
+32: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+32: Test timeout computed to be: 1500
+32: [PASS] scenario=quadric-hollowing-solver iterations=4 residual=3.65566e-26 trace=4325d8f9b111a6925b47df38cd87e0f9023360b96efec3164a1fe20329e81d18
+1/4 Test #32: spin-faster-newton ....................   Passed    0.00 sec
+test 33
+    Start 33: spin-faster-newton-dual-pairing
+
+33: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression "--dual-pairing"
+33: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+33: Test timeout computed to be: 1500
+2/4 Test #33: spin-faster-newton-dual-pairing .......   Passed    0.00 sec
+test 34
+    Start 34: spin-faster-newton-raw-stopping
+
+34: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression "--raw-stopping"
+34: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+34: Test timeout computed to be: 1500
+3/4 Test #34: spin-faster-newton-raw-stopping .......   Passed    0.00 sec
+test 35
+    Start 35: spin-faster-newton-dual-coordinates
+
+35: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression "--dual-coordinates"
+35: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+35: Test timeout computed to be: 1500
+35: adapter h=0.0003 error=1.11081e-07
+35: adapter h=0.0001 error=1.23421e-08
+35: adapter h=3e-05 error=1.11047e-09
+35: strict nonlinear evaluations=4 raw=3.33356e-16 event=f797f4544ba273fb1aed5b55bb6dd1ea88292e657dc44fe2308cf8e5b083f16b
+35: [PASS] dual monomial coordinate Newton
+4/4 Test #35: spin-faster-newton-dual-coordinates ...   Passed    0.00 sec
+
+The following tests passed:
+	spin-faster-newton
+	spin-faster-newton-dual-pairing
+	spin-faster-newton-raw-stopping
+	spin-faster-newton-dual-coordinates
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+regression        =   0.01 sec*proc (4 tests)
+solver            =   0.01 sec*proc (4 tests)
+spin-it           =   0.01 sec*proc (4 tests)
+spin-it-faster    =   0.01 sec*proc (4 tests)
+
+Total Test time (real) =   0.01 sec

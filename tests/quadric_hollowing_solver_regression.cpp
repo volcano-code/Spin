@@ -135,8 +135,64 @@ bool allPresentMetricsAreFinite(const spin::SpinSolverEvent& event)
 } // namespace
 
 
-int main()
+int runDualMonomialRegression();
+
+int main(int argc, char** argv)
 {
+    if (argc == 2 && std::string(argv[1]) == "--dual-coordinates") return runDualMonomialRegression();
+    if (argc == 2 && std::string(argv[1]) == "--raw-stopping")
+    {
+        Vector10 p=Vector10::Zero(); p(0)=1; p(3)=-1; p(4)=1e-14;
+        const auto q=spin::QuadricCoefficients10::fromUnnormalized(p);
+        Vector10 r=Vector10::Zero(); r(0)=1e-5; r(3)=1e-5;
+        spin::SpinSolverSettings strict;
+        strict.equationProfile=spin::SpinEquationProfile::DualMonomialRawV1;
+        strict.maximumRestarts=1; strict.maximumFunctionEvaluationsPerRestart=1;
+        const auto map=[&](const spin::QuadricCoefficients10& point) {
+            spin::SpinMomentMapEvaluation value;
+            value.rawMoments=r+1e-6*(point.values()-q.values());
+            value.momentJacobian=1e-6*Eigen::Matrix<double,10,10>::Identity();
+            value.derivativeDefined=true; return value;
+        };
+        const auto solved=spin::solveSpinMomentSystem(spin::SpinMomentProblem::staticBalance(
+            spin::StaticObjective::LowerCenterOfMass),strict,map,{q});
+        if(solved.status==spin::SpinSolverStatus::Converged)
+            return fail("raw > 1e-12 accepted because engineering normalized residual < 1e-12");
+        if(!solved.rawEquationResidual || *solved.rawEquationResidual<=1e-12 ||
+           solved.normalizedEquationResidual>=1e-12)
+            return fail("fixture must separate raw and normalized stopping");
+        strict.equationProfile=spin::SpinEquationProfile::LegacyNativeNormalizedV1;
+        if(spin::solveSpinMomentSystem(spin::SpinMomentProblem::staticBalance(
+            spin::StaticObjective::LowerCenterOfMass),strict,map,{q}).status!=spin::SpinSolverStatus::Converged)
+            return fail("legacy normalized stopping changed");
+        return EXIT_SUCCESS;
+    }
+    if (argc == 2 && std::string(argv[1]) == "--dual-pairing")
+    {
+        // Independent yo-yo raw state: algebraic map fixture, not geometry.
+        Vector10 r;
+        r << 1,0,0,0,2,3,4,0,0,.5;
+        Vector10 negativeGradient = Vector10::Zero();
+        negativeGradient(4)=111.0/125; negativeGradient(5)=101.0/125;
+        negativeGradient(6)=-26.0/25; negativeGradient(9)=-2.0/25;
+        Vector10 native = negativeGradient; native.tail<3>() *= .5;
+        const auto q = spin::QuadricCoefficients10::fromUnnormalized(native);
+        spin::SpinSolverSettings strict;
+        strict.equationProfile=spin::SpinEquationProfile::DualMonomialRawV1;
+        strict.maximumRestarts=1; strict.maximumFunctionEvaluationsPerRestart=1;
+        const auto map = [&](const spin::QuadricCoefficients10& p) {
+            spin::SpinMomentMapEvaluation value;
+            value.rawMoments=r+.01*(p.values()-q.values());
+            value.momentJacobian=.01*Eigen::Matrix<double,10,10>::Identity();
+            value.derivativeDefined=true;
+            return value;
+        };
+        const auto solved=spin::solveSpinMomentSystem(spin::SpinMomentProblem::yoYo(),strict,map,{q});
+        if(solved.status!=spin::SpinSolverStatus::Converged)
+            return fail("dual raw-monomial stationary yo-yo state rejected by solver pairing; residual="+
+                        std::to_string(solved.normalizedEquationResidual));
+        return EXIT_SUCCESS;
+    }
     spin::SpinSolverSettings settings;
     settings.maximumIterations = 60;
     settings.maximumRestarts = 1;
@@ -205,6 +261,9 @@ int main()
         identityMoments,
         {initialPoint()}
     );
+    // Captured from the actual BASE f433a14 executable, before this change.
+    if (solved.traceHash != "4325d8f9b111a6925b47df38cd87e0f9023360b96efec3164a1fe20329e81d18")
+        return fail("BASE legacy trace hash compatibility");
     if (
         repeated.traceHash != solved.traceHash ||
         repeated.quadric->hash() != solved.quadric->hash()

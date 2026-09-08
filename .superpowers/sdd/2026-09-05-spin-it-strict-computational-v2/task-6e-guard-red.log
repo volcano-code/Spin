@@ -1,0 +1,6 @@
+adapter h=0.0003 error=1.11081e-07
+adapter h=0.0001 error=1.23421e-08
+adapter h=3e-05 error=1.11047e-09
+strict nonlinear evaluations=4 raw=3.33356e-16 event=f797f4544ba273fb1aed5b55bb6dd1ea88292e657dc44fe2308cf8e5b083f16b
+raw line-search before=1.11485 trial=1.35535 normalized before=0.259136 trial=0.150504
+[FAIL] coordinate projection must not conceal overflowing native Jacobian norm

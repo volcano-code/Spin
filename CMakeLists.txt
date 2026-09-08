@@ -195,6 +195,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER)
         src/spin/QuadricMomentEvaluator.cpp
         src/spin/QuadricDiscreteMomentDifferential.cpp
         src/spin/QuadricHollowingSolver.cpp
+        src/spin/DualMonomialCoordinates.cpp
         src/spin/QuadricTriangulator.cpp
     )
     list(APPEND MAKE_IT_STAND_CORE_HEADERS
@@ -963,6 +964,7 @@ if(BUILD_TESTING)
         add_executable(
             quadric-hollowing-solver-regression
             tests/quadric_hollowing_solver_regression.cpp
+            tests/dual_monomial_newton_regression.cpp
         )
         target_compile_features(
             quadric-hollowing-solver-regression
@@ -980,6 +982,12 @@ if(BUILD_TESTING)
             NAME spin-faster-newton
             COMMAND "$<TARGET_FILE:quadric-hollowing-solver-regression>"
         )
+        foreach(contract dual-pairing raw-stopping dual-coordinates)
+            add_test(NAME spin-faster-newton-${contract}
+                COMMAND "$<TARGET_FILE:quadric-hollowing-solver-regression>" --${contract})
+            set_tests_properties(spin-faster-newton-${contract} PROPERTIES
+                LABELS "spin-it;spin-it-faster;solver;regression")
+        endforeach()
         set_tests_properties(
             spin-faster-newton
             PROPERTIES LABELS "spin-it;spin-it-faster;solver;regression"

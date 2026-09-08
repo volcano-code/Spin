@@ -61,6 +61,19 @@ struct SpinTargetFrame
 };
 
 
+/** Explicit equation/coordinate convention. Legacy remains the default.
+ * DualMonomialRawV1 is an independent consistent reconstruction, not a claim
+ * to recover the author's implementation or the legacy Newton trajectory.
+ */
+enum class SpinEquationProfile
+{
+    LegacyNativeNormalizedV1,
+    DualMonomialRawV1
+};
+
+const char* spinEquationProfileToken(SpinEquationProfile profile) noexcept;
+const char* spinSolverCoordinateIdentity(SpinEquationProfile profile) noexcept;
+
 struct SpinSolverSettings
 {
     int maximumIterations = 60;
@@ -71,6 +84,7 @@ struct SpinSolverSettings
     double lineSearchReduction = 0.5;
     double maximumGeodesicStep = 0.5;
     unsigned int deterministicSeed = 0;
+    SpinEquationProfile equationProfile = SpinEquationProfile::LegacyNativeNormalizedV1;
 };
 
 
@@ -140,6 +154,10 @@ struct SpinIterationTrace
     std::string quadricHash;
     std::string materialGeometryHash;
     std::string materialTopologyHash;
+    SpinEquationProfile equationProfile = SpinEquationProfile::LegacyNativeNormalizedV1;
+    std::optional<double> rawEquationResidual;
+    /** Native p; strict s is exactly recoverable from p and equationProfile. */
+    std::optional<std::array<double, 10>> quadricCoefficients;
 };
 
 
@@ -163,6 +181,8 @@ struct SpinSolverEvent
     std::optional<double> multiplierMu;
     std::optional<std::string> materialGeometryHash;
     std::optional<std::string> materialTopologyHash;
+    SpinEquationProfile equationProfile = SpinEquationProfile::LegacyNativeNormalizedV1;
+    std::optional<double> rawEquationResidual;
 };
 
 
@@ -192,7 +212,7 @@ struct QuadricHollowingResult
     std::string derivativeScientificHash;
     std::string inputHash;
     std::string geometryHash;
-    /** Legacy v1 hash over accepted initial/iterate states only. */
+    /** Accepted states: legacy v1, or profile-bound dual-coordinate v2. */
     std::string traceHash;
     std::string outputHash;
     Eigen::Matrix<double, 10, 1> quadricCoefficients =
@@ -222,6 +242,8 @@ struct QuadricHollowingResult
     std::vector<SpinSolverEvent> events;
     std::vector<SpinEvaluationTiming> evaluationTimings;
     std::vector<SpinIterationTrace> trace;
+    SpinEquationProfile equationProfile = SpinEquationProfile::LegacyNativeNormalizedV1;
+    std::optional<double> rawEquationResidual;
 };
 
 

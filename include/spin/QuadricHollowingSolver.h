@@ -60,12 +60,17 @@ struct SpinNewtonResult
     std::vector<SpinEvaluationTiming> evaluationTimings;
     std::string eventHash;
     std::vector<SpinIterationTrace> trace;
-    /** Legacy v1 hash over accepted initial/iterate states only. */
+    /** Accepted states: legacy v1, or profile-bound dual-coordinate v2. */
     std::string traceHash;
+    SpinEquationProfile equationProfile = SpinEquationProfile::LegacyNativeNormalizedV1;
+    std::optional<double> rawEquationResidual;
 };
 
 
-/** Paper Eq. 14 spherical Newton solve against an arbitrary moment map. */
+/** Eq. 14 spherical Newton with an explicit equation/coordinate profile.
+ * The evaluator always consumes native geometry coefficients p and returns
+ * independent raw moments and their native-p Jacobian, in either profile.
+ */
 SpinNewtonResult solveSpinMomentSystem(
     const SpinMomentProblem& problem,
     const SpinSolverSettings& settings,

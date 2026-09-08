@@ -76,8 +76,13 @@ class SpinSolverConfig:
     equation_tolerance: float = 1e-12
     physical_relative_tolerance: float = 1e-6
     deterministic_seed: int = 0
+    equation_profile: str = "LEGACY_NATIVE_NORMALIZED_V1"
 
     def __post_init__(self) -> None:
+        if self.equation_profile not in {"LEGACY_NATIVE_NORMALIZED_V1", "DUAL_MONOMIAL_RAW_V1"}:
+            raise ValueError("unsupported equation_profile")
+        if self.equation_profile == "DUAL_MONOMIAL_RAW_V1" and self.maximum_function_evaluations_per_restart > 60:
+            raise ValueError("strict equation profile permits at most 60 evaluations per restart")
         for name in (
             "maximum_iterations",
             "maximum_restarts",
@@ -238,6 +243,15 @@ class SpinIteration:
     quadric_hash: str
     material_geometry_hash: str
     material_topology_hash: str
+    equation_profile: str = "LEGACY_NATIVE_NORMALIZED_V1"
+    solver_coordinate_identity: str = "native_matrix_entry_unit_sphere_v1"
+    raw_equation_residual: float | None = None
+    quadric_coefficients: tuple[float, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if self.quadric_coefficients is not None:
+            object.__setattr__(self, "quadric_coefficients", _finite_tuple(
+                self.quadric_coefficients, 10, "trace quadric coefficients"))
 
 
 @dataclass(frozen=True)
@@ -259,6 +273,9 @@ class SpinSolverEvent:
     multiplier_mu: float | None
     material_geometry_hash: str | None
     material_topology_hash: str | None
+    equation_profile: str = "LEGACY_NATIVE_NORMALIZED_V1"
+    solver_coordinate_identity: str = "native_matrix_entry_unit_sphere_v1"
+    raw_equation_residual: float | None = None
 
 
 def _immutable_spin_solver_event(entry: dict[str, Any]) -> SpinSolverEvent:
@@ -345,6 +362,18 @@ class SpinItFasterResult:
     @property
     def event_hash(self) -> str:
         return str(self._native.event_hash)
+
+    @property
+    def equation_profile(self) -> str:
+        return self._diagnostics.get("equation_profile", "LEGACY_NATIVE_NORMALIZED_V1")
+
+    @property
+    def solver_coordinate_identity(self) -> str:
+        return self._diagnostics.get("solver_coordinate_identity", "native_matrix_entry_unit_sphere_v1")
+
+    @property
+    def raw_equation_residual(self) -> float | None:
+        return self._diagnostics.get("raw_equation_residual")
 
     @property
     def evaluation_timings(self) -> tuple[dict[str, Any], ...]:
@@ -453,7 +482,10 @@ def _native_request(request: SpinItFasterRequest) -> tuple[Any, Any]:
     frame.axes = np.asarray(request.target_axes, dtype=np.float64)
     settings = native.SpinSolverSettings()
     for name in SpinSolverConfig.__dataclass_fields__:
-        setattr(settings, name, getattr(request.settings, name))
+        value = getattr(request.settings, name)
+        if name == "equation_profile":
+            value = getattr(native.SpinEquationProfile, value)
+        setattr(settings, name, value)
     result.outer_surface = outer
     result.design_domain = design
     result.fixed_shell_moments = native.RawMassMoments10.from_values(

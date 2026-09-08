@@ -1,0 +1,4 @@
+1155da93833b6cd28eb73be0292bd0b5ecb428f4334fb3a8b28756f59d4002df  build/task-6b-faster-only/quadric-hollowing-solver-regression
+7f8dc970f85908aa422f511096e2eefc7651af04bbcd88fd117992b96970cef6  build/task-6b-faster-only/quadric-discrete-moment-regression
+e10debb806d08c4fb691edce78c89c76ae71f2f4074770f9033ec7839d1ae506  build/task-6b-faster-only/libmake_it_stand_core.a
+bf9ce45dc0aee97188c0bd023182f18bf0b1d7fc927ee08ad54d38be72718127  build/task-6b-faster-only/CMakeCache.txt

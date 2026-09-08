@@ -1,0 +1,57 @@
+[  2%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/api/BalanceModel.cpp.o
+[  4%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/SpinMomentProblem.cpp.o
+[  6%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/SpinDesignRequest.cpp.o
+[  9%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricMomentEvaluator.cpp.o
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/Cartesian_base.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Simple_cartesian.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Exact_predicates_exact_constructions_kernel.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/assign.h:12,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.cpp:11,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/include/igl/copyleft/cgal/mesh_boolean.h:226,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin/QuadricMomentEvaluator.cpp:9:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+[ 11%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricDiscreteMomentDifferential.cpp.o
+[ 13%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricHollowingSolver.cpp.o
+[ 13%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/DualMonomialCoordinates.cpp.o
+[ 16%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin/QuadricTriangulator.cpp.o
+[ 18%] Linking CXX static library libmake_it_stand_core.a
+[ 93%] Built target make_it_stand_core
+[ 95%] Building CXX object CMakeFiles/quadric-hollowing-solver-regression.dir/tests/quadric_hollowing_solver_regression.cpp.o
+[ 97%] Building CXX object CMakeFiles/quadric-hollowing-solver-regression.dir/tests/dual_monomial_newton_regression.cpp.o
+[100%] Linking CXX executable quadric-hollowing-solver-regression
+[100%] Built target quadric-hollowing-solver-regression
+[ 97%] Built target make_it_stand_core
+[ 97%] Building CXX object CMakeFiles/quadric-discrete-moment-regression.dir/tests/quadric_discrete_moment_regression.cpp.o
+[100%] Linking CXX executable quadric-discrete-moment-regression
+[100%] Built target quadric-discrete-moment-regression
+	Command being timed: "cmake --build build/task-6b-faster-only --target quadric-hollowing-solver-regression quadric-discrete-moment-regression -j4"
+	User time (seconds): 89.79
+	System time (seconds): 5.11
+	Percent of CPU this job got: 153%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:01.84
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3343544
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 3848584
+	Voluntary context switches: 419
+	Involuntary context switches: 1174
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 6029008
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

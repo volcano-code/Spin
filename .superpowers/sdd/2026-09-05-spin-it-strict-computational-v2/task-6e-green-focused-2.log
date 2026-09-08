@@ -1,0 +1,136 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 30
+    Start 30: spin-faster-discrete-moments
+
+30: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-discrete-moment-regression
+30: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+30: Test timeout computed to be: 1500
+30: historical-sphere intersections=0 coplanar_diagonal_intersections=0 constraint_residual=1.0331840194559672e-15 constraint_singular_ratio=0.63417537801865642 geometry=0f00208452856b310c3735782290374aeac11b185b640fe0a157d102ef387101 provenance=edfc3054dcab71d92a0230b56e7c8b348b9bce4cdba3d83d917eb5886130b31a scientific=bc2313298fd18f4f5813456040342917142c1856c3874af2aed76ea6ccb5fd50
+30: historical-sphere h=0.00029999999999999997 relative_norm=2.0414328021494352e-07 entry_relative=5.5125021166096028e-07 near_zero_absolute=3.7006971716534333e-13
+30: historical-sphere h=0.0001 relative_norm=2.2685084364861124e-08 entry_relative=6.1249214344230276e-08 near_zero_absolute=1.1102577868573119e-12
+30: historical-sphere h=3.0000000000000001e-05 relative_norm=2.0419271028008771e-09 entry_relative=5.5130208748451277e-09 near_zero_absolute=3.6998368055605564e-12
+30: historical-sphere supplemental_richardson_entry_relative=6.2933926151204869e-11 near_zero_absolute=4.010943257515957e-12 two_extrapolations_entry_agreement=6.218008762983511e-11 raw_error_ratio_middle_over_coarse=0.11112334601940305 raw_error_ratio_fine_over_middle=0.090011880492002636
+30: sphere analytic-volume triangulation_relative_error=0.0086061573702495009
+30: contained-positive intersections=0 coplanar_diagonal_intersections=0 constraint_residual=5.3724826780244259e-16 constraint_singular_ratio=0.68036691539694172 geometry=cd992aa131d78023a3f59c9b06163453e95f2014d63b73aecc78fb847f8ffcb9 provenance=759ca8fddeb31f3690c268ed81a466dcc513860fdac9c72699db6f104efd4cdc scientific=08e7ea62a04d37ed0b580e73dc8a76afcaae24f21437e40fc87206df289141a3
+30: contained-positive h=0.00029999999999999997 relative_norm=9.5662311310986945e-07 entry_relative=2.0304317338751598e-06 near_zero_absolute=0
+30: contained-positive h=0.0001 relative_norm=1.0628935379966245e-07 entry_relative=2.2560535067247654e-07 near_zero_absolute=0
+30: contained-positive h=3.0000000000000001e-05 relative_norm=9.5412543313942613e-09 entry_relative=2.040820629028855e-08 near_zero_absolute=0
+30: contained-positive supplemental_richardson_entry_relative=1.4857376341911909e-09 near_zero_absolute=0 two_extrapolations_entry_agreement=1.6343993897530926e-09 raw_error_ratio_middle_over_coarse=0.11110891253100527 raw_error_ratio_fine_over_middle=0.089766792160369327
+30: contained-positive dual h=0.00029999999999999997 full_map_relative=8.3095869251106902e-07
+30: contained-positive dual h=0.0001 full_map_relative=9.2322326877216439e-08
+30: contained-positive dual h=3.0000000000000001e-05 full_map_relative=8.3008388881395942e-09
+30: clipped-positive intersections=60 coplanar_diagonal_intersections=8 constraint_residual=1.2071229572633428e-15 constraint_singular_ratio=0.040658789036594041 geometry=33fb27459843a67b006c0101914aeaa38da45ae461a1a1ce81d9c2a650085aae provenance=699ea8c02c881f1606e69d3358eac30368fcc3aa3797b568b0e7d2daf5aabfe1 scientific=f75163ddc25f90208a30757a108a78f8568ba279bf44be4f7f77e44ca72d7191
+30: clipped-positive h=0.00029999999999999997 relative_norm=6.0850095062030915e-07 entry_relative=0.00014389583703861323 near_zero_absolute=0
+30: clipped-positive h=0.0001 relative_norm=6.7611680544982892e-08 entry_relative=1.5991213943113645e-05 near_zero_absolute=0
+30: clipped-positive h=3.0000000000000001e-05 relative_norm=6.0879212151168996e-09 entry_relative=1.4392637411640616e-06 near_zero_absolute=0
+30: clipped-positive supplemental_richardson_entry_relative=2.5970977415560908e-09 near_zero_absolute=0 two_extrapolations_entry_agreement=3.9081409239568119e-09 raw_error_ratio_middle_over_coarse=0.11111187332749305 raw_error_ratio_fine_over_middle=0.090042447784839927
+30: clipped-positive dual h=0.00029999999999999997 full_map_relative=5.9694870434701555e-07
+30: clipped-positive dual h=0.0001 full_map_relative=6.6327364036178464e-08
+30: clipped-positive dual h=3.0000000000000001e-05 full_map_relative=5.9737953687999843e-09
+30: contained-negative intersections=0 coplanar_diagonal_intersections=0 constraint_residual=6.1660527500875087e-16 constraint_singular_ratio=0.68036691539694216 geometry=0c0503d1540efb988fa6619116617503daac1854ba22b21c3127bf927ed3b970 provenance=e8afc5c8231095ca718e48e242a7d6f9310ec4f47c44f541c4705f816719b99b scientific=c0877fb37ac7f452f09edf0fc65d4f14529a158a37a55651c650710c541fc410
+30: contained-negative h=0.00029999999999999997 relative_norm=9.5662428616136071e-07 entry_relative=2.0304386597657439e-06 near_zero_absolute=0
+30: contained-negative h=0.0001 relative_norm=1.0629157998727681e-07 entry_relative=2.2560718345301841e-07 near_zero_absolute=0
+30: contained-negative h=3.0000000000000001e-05 relative_norm=9.566801468057228e-09 entry_relative=2.0313473964036129e-08 near_zero_absolute=0
+30: contained-negative supplemental_richardson_entry_relative=5.724118703217334e-11 near_zero_absolute=0 two_extrapolations_entry_agreement=6.9415572263143906e-11 raw_error_ratio_middle_over_coarse=0.11111110341322428 raw_error_ratio_fine_over_middle=0.090005261651039364
+30: contained-negative dual h=0.00029999999999999997 full_map_relative=8.3095635148612112e-07
+30: contained-negative dual h=0.0001 full_map_relative=9.2328187802388641e-08
+30: contained-negative dual h=3.0000000000000001e-05 full_map_relative=8.3081621562845298e-09
+30: clipped-negative intersections=60 coplanar_diagonal_intersections=8 constraint_residual=1.2071229572633428e-15 constraint_singular_ratio=0.040658789036594041 geometry=b5ec5d12b3cb24c69b3bb04c15732e5a5f122bc5cfa1328dc73bdb7bb23d8087 provenance=66c6e2f644aad99f7ec31b3d530b8b1c20a8e7edc78a6be09844cc1d46f40b2e scientific=795bc0258cd5c83dff4fc4ce8137fd5a0bbd8b5e806a2a72f296fc6e3a71f86b
+30: clipped-negative h=0.00029999999999999997 relative_norm=6.085013791302652e-07 entry_relative=0.00014389582087789423 near_zero_absolute=0
+30: clipped-negative h=0.0001 relative_norm=6.7610700880704114e-08 entry_relative=1.5990634970634609e-05 near_zero_absolute=0
+30: clipped-negative h=3.0000000000000001e-05 relative_norm=6.0893569585839762e-09 entry_relative=1.4387008325733803e-06 near_zero_absolute=0
+30: clipped-negative supplemental_richardson_entry_relative=3.4204279656825174e-09 near_zero_absolute=0 two_extrapolations_entry_agreement=2.5376336442401809e-09 raw_error_ratio_middle_over_coarse=0.11111018511961387 raw_error_ratio_fine_over_middle=0.090064987927404555
+30: clipped-negative dual h=0.00029999999999999997 full_map_relative=5.969487595681464e-07
+30: clipped-negative dual h=0.0001 full_map_relative=6.6327920129905709e-08
+30: clipped-negative dual h=3.0000000000000001e-05 full_map_relative=5.9726611896966303e-09
+30: [PASS] discrete ellipsoid moment differential
+1/6 Test #30: spin-faster-discrete-moments ..........   Passed    8.67 sec
+test 32
+    Start 32: spin-faster-newton
+
+32: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression
+32: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+32: Test timeout computed to be: 1500
+32: [PASS] scenario=quadric-hollowing-solver iterations=4 residual=3.65566e-26 trace=4325d8f9b111a6925b47df38cd87e0f9023360b96efec3164a1fe20329e81d18
+2/6 Test #32: spin-faster-newton ....................   Passed    0.00 sec
+test 33
+    Start 33: spin-faster-newton-dual-pairing
+
+33: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression "--dual-pairing"
+33: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+33: Test timeout computed to be: 1500
+3/6 Test #33: spin-faster-newton-dual-pairing .......   Passed    0.00 sec
+test 34
+    Start 34: spin-faster-newton-raw-stopping
+
+34: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression "--raw-stopping"
+34: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+34: Test timeout computed to be: 1500
+4/6 Test #34: spin-faster-newton-raw-stopping .......   Passed    0.00 sec
+test 35
+    Start 35: spin-faster-newton-dual-coordinates
+
+35: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/quadric-hollowing-solver-regression "--dual-coordinates"
+35: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+35: Test timeout computed to be: 1500
+35: adapter h=0.0003 error=1.11081e-07
+35: adapter h=0.0001 error=1.23421e-08
+35: adapter h=3e-05 error=1.11047e-09
+35: strict nonlinear evaluations=4 raw=3.33356e-16 event=f797f4544ba273fb1aed5b55bb6dd1ea88292e657dc44fe2308cf8e5b083f16b
+35: raw line-search before=1.11485 trial=1.35535 normalized before=0.259136 trial=0.150504
+35: [PASS] dual monomial coordinate Newton
+5/6 Test #35: spin-faster-newton-dual-coordinates ...   Passed    0.00 sec
+test 67
+    Start 67: spin-faster-python-api
+
+67: Test command: /home/lin/anaconda3/bin/python3 "-m" "unittest" "discover" "-s" "/data/xvxinyao/make-it-balance-paper-sim/tests/python" "-p" "test_spin_it_faster.py" "-v"
+67: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+67: Environment variables: 
+67:  PYTHONPATH=/data/xvxinyao/make-it-balance-paper-sim/python:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/python:/data/xvxinyao/make-it-balance-paper-sim/tests/python
+67:  LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/libstdc++.so.6
+67: Test timeout computed to be: 180
+67: test_dual_profile_native_roundtrip_and_failed_serialization (test_spin_it_faster.SpinNativeArtifactTests.test_dual_profile_native_roundtrip_and_failed_serialization) ... ok
+67: test_failed_evaluation_events_are_strict_json_safe (test_spin_it_faster.SpinNativeArtifactTests.test_failed_evaluation_events_are_strict_json_safe) ... ok
+67: test_planar_fixture_returns_immutable_sealed_artifact (test_spin_it_faster.SpinNativeArtifactTests.test_planar_fixture_returns_immutable_sealed_artifact) ... ok
+67: test_raw_moment_integration_matches_cube (test_spin_it_faster.SpinNativeArtifactTests.test_raw_moment_integration_matches_cube) ... ok
+67: test_buoyant_request_normalizes_public_paper_inputs (test_spin_it_faster.SpinSchemaTests.test_buoyant_request_normalizes_public_paper_inputs) ... ok
+67: test_request_is_frozen_and_rejects_unknown_mode (test_spin_it_faster.SpinSchemaTests.test_request_is_frozen_and_rejects_unknown_mode) ... ok
+67: test_static_pareto_weight_is_mode_checked (test_spin_it_faster.SpinSchemaTests.test_static_pareto_weight_is_mode_checked) ... ok
+67: 
+67: ----------------------------------------------------------------------
+67: Ran 7 tests in 0.069s
+67: 
+67: OK
+6/6 Test #67: spin-faster-python-api ................   Passed    0.19 sec
+
+The following tests passed:
+	spin-faster-discrete-moments
+	spin-faster-newton
+	spin-faster-newton-dual-pairing
+	spin-faster-newton-raw-stopping
+	spin-faster-newton-dual-coordinates
+	spin-faster-python-api
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+bindings          =   0.19 sec*proc (1 test)
+geometry          =   8.67 sec*proc (1 test)
+python            =   0.19 sec*proc (1 test)
+regression        =   8.87 sec*proc (6 tests)
+solver            =   0.01 sec*proc (4 tests)
+spin-it           =   8.87 sec*proc (6 tests)
+spin-it-faster    =   8.87 sec*proc (6 tests)
+
+Total Test time (real) =   8.87 sec

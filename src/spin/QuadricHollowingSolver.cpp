@@ -1,4 +1,5 @@
 #include "spin/QuadricHollowingSolver.h"
+#include "spin/DualMonomialCoordinates.h"
 
 #include "manufacturing/SlicerValidation.h"
 
@@ -27,6 +28,8 @@ constexpr int momentDimension = 10;
 
 struct NewtonState
 {
+    spin::QuadricCoefficients10::Vector solverCoordinates;
+    double rawResidual = std::numeric_limits<double>::infinity();
     spin::SpinMomentMapEvaluation map;
     spin::SpinMomentEvaluation problem;
     Eigen::VectorXd lambda;
@@ -47,6 +50,11 @@ public:
 
 void validateSettings(const spin::SpinSolverSettings& settings)
 {
+    if ((settings.equationProfile != spin::SpinEquationProfile::LegacyNativeNormalizedV1 &&
+         settings.equationProfile != spin::SpinEquationProfile::DualMonomialRawV1) ||
+        (settings.equationProfile == spin::SpinEquationProfile::DualMonomialRawV1 &&
+         settings.maximumFunctionEvaluationsPerRestart > 60))
+        throw std::invalid_argument("invalid equation profile or strict evaluation budget");
     if (
         settings.maximumIterations <= 0 || settings.maximumRestarts <= 0 ||
         settings.maximumFunctionEvaluationsPerRestart <= 0 ||
@@ -66,11 +74,13 @@ void validateSettings(const spin::SpinSolverSettings& settings)
 NewtonState evaluateState(
     const spin::SpinMomentProblem& problem,
     const spin::QuadricCoefficients10& quadric,
-    spin::SpinMomentMapEvaluation map
+    spin::SpinMomentMapEvaluation map,
+    spin::SpinEquationProfile profile
 )
 {
     NewtonState state;
     state.map = std::move(map);
+    state.solverCoordinates = quadric.values();
     if (
         !state.map.rawMoments.allFinite() ||
         !state.map.momentJacobian.allFinite()
@@ -90,6 +100,21 @@ NewtonState evaluateState(
         throw InvalidNumericalState(
             "moment evaluator data overflowed its numerical scale"
         );
+    }
+    if (profile == spin::SpinEquationProfile::DualMonomialRawV1)
+    {
+        // Validate the native map before projecting: a radial projection must
+        // not conceal invalid evaluator data. Check the transformed map too.
+        const auto coordinates =
+            spin::DualMonomialCoordinates10::fromGeometry(quadric);
+        state.solverCoordinates = coordinates.values();
+        state.map.momentJacobian =
+            (state.map.momentJacobian * coordinates.geometryJacobian()).eval();
+        if (!state.map.momentJacobian.allFinite() ||
+            !std::isfinite(state.map.momentJacobian.norm()))
+        {
+            throw InvalidNumericalState("dual moment Jacobian overflowed");
+        }
     }
     if (!state.map.derivativeDefined)
     {
@@ -134,7 +159,7 @@ NewtonState evaluateState(
         projection.leftCols(constraintCount) =
             -state.problem.constraintJacobian.transpose();
     }
-    projection.col(constraintCount) = quadric.values();
+    projection.col(constraintCount) = state.solverCoordinates;
     const Eigen::VectorXd coefficients =
         projection.completeOrthogonalDecomposition().solve(
             -state.problem.objectiveGradient
@@ -148,7 +173,7 @@ NewtonState evaluateState(
     state.lambda = coefficients.head(constraintCount);
     state.mu = coefficients(constraintCount);
     state.optimalityResidual =
-        state.problem.objectiveGradient + state.mu * quadric.values();
+        state.problem.objectiveGradient + state.mu * state.solverCoordinates;
     if (constraintCount > 0)
     {
         state.optimalityResidual -=
@@ -189,7 +214,8 @@ NewtonState evaluateState(
             "Eq. 14 residual normalization overflowed"
         );
     }
-    state.normalizedResidual = std::sqrt(combinedSquared) / equationScale;
+    state.rawResidual = std::sqrt(combinedSquared);
+    state.normalizedResidual = state.rawResidual / equationScale;
     state.physicalResidual = std::sqrt(constraintSquared) / physicalScale;
     if (
         !std::isfinite(state.normalizedResidual) ||
@@ -215,6 +241,7 @@ spin::SpinIterationTrace traceEntry(
     entry.iteration = iteration;
     entry.functionEvaluations = evaluations;
     entry.normalizedEquationResidual = state.normalizedResidual;
+    entry.rawEquationResidual = state.rawResidual;
     entry.physicalRelativeResidual = state.physicalResidual;
     entry.objective = state.problem.objective;
     entry.multiplierMu = state.mu;
@@ -226,13 +253,21 @@ spin::SpinIterationTrace traceEntry(
 }
 
 
-std::string traceHash(const std::vector<spin::SpinIterationTrace>& trace)
+std::string traceHash(const std::vector<spin::SpinIterationTrace>& trace,
+                      spin::SpinEquationProfile profile)
 {
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << "SpinNewtonTrace-v1;" << std::hexfloat;
+    const bool strict=profile==spin::SpinEquationProfile::DualMonomialRawV1;
+    stream << (strict ? "SpinNewtonTrace-v2;" : "SpinNewtonTrace-v1;") << std::hexfloat;
+    if(strict) stream << spin::spinEquationProfileToken(profile) << ';'
+                      << spin::spinSolverCoordinateIdentity(profile) << ';';
     for (const spin::SpinIterationTrace& entry : trace)
     {
+        if(strict) {
+            stream << *entry.rawEquationResidual << ';';
+            for(double value:*entry.quadricCoefficients) stream << value << ';';
+        }
         stream << entry.restart << ';' << entry.iteration << ';'
                << entry.functionEvaluations << ';'
                << entry.normalizedEquationResidual << ';'
@@ -288,11 +323,15 @@ spin::SpinSolverEvent restartEvent(
 }
 
 
-std::string solverEventHash(const std::vector<spin::SpinSolverEvent>& events)
+std::string solverEventHash(const std::vector<spin::SpinSolverEvent>& events,
+                            spin::SpinEquationProfile profile)
 {
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << "SpinSolverEvents-v1;" << std::hexfloat;
+    const bool strict=profile==spin::SpinEquationProfile::DualMonomialRawV1;
+    stream << (strict ? "SpinSolverEvents-v2;" : "SpinSolverEvents-v1;") << std::hexfloat;
+    if(strict) stream << spin::spinEquationProfileToken(profile) << ';'
+                      << spin::spinSolverCoordinateIdentity(profile) << ';';
     const auto optionalDouble = [&stream](const std::optional<double>& value) {
         if (value) stream << "some:" << *value;
         else stream << "none";
@@ -307,6 +346,7 @@ std::string solverEventHash(const std::vector<spin::SpinSolverEvent>& events)
     };
     for (const spin::SpinSolverEvent& event : events)
     {
+        if(strict) optionalDouble(event.rawEquationResidual);
         stream << event.type.size() << ':' << event.type << ';'
                << event.restart << ';' << event.iteration << ';'
                << event.evaluationIndex << ';'
@@ -339,12 +379,18 @@ std::string solverEventHash(const std::vector<spin::SpinSolverEvent>& events)
 }
 
 
+double stoppingResidual(const NewtonState& state, const spin::SpinSolverSettings& settings)
+{
+    return settings.equationProfile==spin::SpinEquationProfile::DualMonomialRawV1
+        ? state.rawResidual : state.normalizedResidual;
+}
+
 bool converged(
     const NewtonState& state,
     const spin::SpinSolverSettings& settings
 )
 {
-    return state.normalizedResidual <= settings.equationTolerance &&
+    return stoppingResidual(state, settings) <= settings.equationTolerance &&
         state.physicalResidual <= settings.physicalRelativeTolerance &&
         state.mu > 0.0;
 }
@@ -407,7 +453,15 @@ std::string hollowingOutputHash(
 {
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << "QuadricHollowingResult-v2;" << result.inputHash << ';'
+    const bool strict=result.equationProfile==spin::SpinEquationProfile::DualMonomialRawV1;
+    if(strict) {
+        stream << "QuadricHollowingResult-v3;" << spin::spinEquationProfileToken(result.equationProfile)
+               << ';' << spin::spinSolverCoordinateIdentity(result.equationProfile) << ';' << std::hexfloat;
+        if(result.rawEquationResidual) stream << *result.rawEquationResidual;
+        else stream << "none";
+        stream << ';';
+    } else stream << "QuadricHollowingResult-v2;";
+    stream << result.inputHash << ';'
            << result.geometryHash << ';' << result.traceHash << ';'
            << result.eventHash << ';'
            << spin::spinSolverStatusToken(result.status) << ';'
@@ -457,10 +511,15 @@ SpinNewtonResult solveSpinMomentSystem(
     }
 
     SpinNewtonResult result;
+    result.equationProfile=settings.equationProfile;
+    const bool strict=settings.equationProfile==SpinEquationProfile::DualMonomialRawV1;
+    result.eventStreamVersion=strict ? 2 : 1;
     bool sawGeometryFailure = false;
     const auto finish = [&result]() {
-        result.traceHash = ::traceHash(result.trace);
-        result.eventHash = ::solverEventHash(result.events);
+        for(auto& event:result.events) event.equationProfile=result.equationProfile;
+        for(auto& entry:result.trace) entry.equationProfile=result.equationProfile;
+        result.traceHash = ::traceHash(result.trace, result.equationProfile);
+        result.eventHash = ::solverEventHash(result.events, result.equationProfile);
     };
     const int restartLimit = std::min(
         settings.maximumRestarts,
@@ -553,9 +612,10 @@ SpinNewtonResult solveSpinMomentSystem(
                     event.materialTopologyHash = map.topologyHash;
                 }
                 NewtonState state = evaluateState(
-                    problem, quadric, std::move(map)
+                    problem, quadric, std::move(map), settings.equationProfile
                 );
                 event.outcome = "evaluated";
+                event.rawEquationResidual = finiteMetric(state.rawResidual);
                 event.reason = "evaluation_succeeded";
                 event.normalizedEquationResidual = finiteMetric(
                     state.normalizedResidual
@@ -618,6 +678,7 @@ SpinNewtonResult solveSpinMomentSystem(
             traceEntry(restart, 0, evaluationsThisRestart, 0.0, state)
         );
         result.trace.back().quadricHash = current.hash();
+        if(strict) result.trace.back().quadricCoefficients=coefficientArray(current);
         if (state.map.momentJacobian.norm() <= 1e-15)
         {
             result.status = SpinSolverStatus::OptimizationDidNotConverge;
@@ -630,6 +691,7 @@ SpinNewtonResult solveSpinMomentSystem(
             result.status = SpinSolverStatus::Converged;
             result.quadric = current;
             result.normalizedEquationResidual = state.normalizedResidual;
+            result.rawEquationResidual = state.rawResidual;
             result.physicalRelativeResidual = state.physicalResidual;
             result.multiplierMu = state.mu;
             result.multipliers = state.lambda;
@@ -694,13 +756,13 @@ SpinNewtonResult solveSpinMomentSystem(
                 momentDimension + constraintCount,
                 momentDimension,
                 1
-            ) = current.values();
+            ) = state.solverCoordinates;
             system.block(
                 momentDimension + constraintCount,
                 0,
                 1,
                 momentDimension
-            ) = 2.0 * current.values().transpose();
+            ) = 2.0 * state.solverCoordinates.transpose();
             rightHandSide.head(momentDimension) =
                 -state.optimalityResidual;
             if (constraintCount > 0)
@@ -726,7 +788,9 @@ SpinNewtonResult solveSpinMomentSystem(
             }
             Eigen::Matrix<double, momentDimension, 1> direction =
                 factorization.solve(rightHandSide).head(momentDimension);
-            direction = current.projectToTangent(direction);
+            direction = strict
+                ? DualMonomialCoordinates10::fromGeometry(current).projectToTangent(direction)
+                : current.projectToTangent(direction);
             const double directionNorm = direction.norm();
             if (!direction.allFinite() || !std::isfinite(directionNorm))
             {
@@ -756,15 +820,17 @@ SpinNewtonResult solveSpinMomentSystem(
                 step > std::numeric_limits<double>::epsilon()
             )
             {
-                candidate = current.geodesicUpdate(direction, step);
+                candidate = strict
+                    ? DualMonomialCoordinates10::fromGeometry(current).geodesicUpdate(direction, step).geometry()
+                    : current.geodesicUpdate(direction, step);
                 EvaluationResult trial = evaluateAttempt(
                     candidate, iteration, step
                 );
                 if (trial.state)
                 {
                     candidateState = std::move(*trial.state);
-                    if (candidateState.normalizedResidual <
-                        state.normalizedResidual)
+                    if (stoppingResidual(candidateState, settings) <
+                        stoppingResidual(state, settings))
                     {
                         result.events.back().outcome = "accepted";
                         result.events.back().reason = "residual_decreased";
@@ -812,11 +878,13 @@ SpinNewtonResult solveSpinMomentSystem(
                 state
             ));
             result.trace.back().quadricHash = current.hash();
+            if(strict) result.trace.back().quadricCoefficients=coefficientArray(current);
             if (converged(state, settings))
             {
                 result.status = SpinSolverStatus::Converged;
                 result.quadric = current;
                 result.normalizedEquationResidual = state.normalizedResidual;
+                result.rawEquationResidual = state.rawResidual;
                 result.physicalRelativeResidual = state.physicalResidual;
                 result.multiplierMu = state.mu;
                 result.multipliers = state.lambda;
@@ -845,6 +913,7 @@ SpinNewtonResult solveSpinMomentSystem(
         const SpinIterationTrace& final = result.trace.back();
         result.normalizedEquationResidual =
             final.normalizedEquationResidual;
+        result.rawEquationResidual = final.rawEquationResidual;
         result.physicalRelativeResidual = final.physicalRelativeResidual;
         result.multiplierMu = final.multiplierMu;
     }
@@ -946,6 +1015,8 @@ QuadricHollowingResult solveQuadricHollowing(
     );
 
     QuadricHollowingResult result;
+    result.equationProfile=solved.equationProfile;
+    result.rawEquationResidual=solved.rawEquationResidual;
     result.derivativeMethod = quadricMomentDerivativeMethodToken(evaluatorSettings.derivativeMethod);
     result.derivativeDiagnostic = lastDerivativeDiagnostic;
     result.derivativeScientificHash = lastDerivativeScientificHash;

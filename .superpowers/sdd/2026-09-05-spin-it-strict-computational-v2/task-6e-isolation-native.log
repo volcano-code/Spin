@@ -1,0 +1,134 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 7
+    Start  7: spin-faster-discrete-moments
+
+7: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/quadric-discrete-moment-regression
+7: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+7: Test timeout computed to be: 1500
+7: historical-sphere intersections=0 coplanar_diagonal_intersections=0 constraint_residual=1.0331840194559672e-15 constraint_singular_ratio=0.63417537801865642 geometry=0f00208452856b310c3735782290374aeac11b185b640fe0a157d102ef387101 provenance=edfc3054dcab71d92a0230b56e7c8b348b9bce4cdba3d83d917eb5886130b31a scientific=bc2313298fd18f4f5813456040342917142c1856c3874af2aed76ea6ccb5fd50
+7: historical-sphere h=0.00029999999999999997 relative_norm=2.0414328021494352e-07 entry_relative=5.5125021166096028e-07 near_zero_absolute=3.7006971716534333e-13
+7: historical-sphere h=0.0001 relative_norm=2.2685084364861124e-08 entry_relative=6.1249214344230276e-08 near_zero_absolute=1.1102577868573119e-12
+7: historical-sphere h=3.0000000000000001e-05 relative_norm=2.0419271028008771e-09 entry_relative=5.5130208748451277e-09 near_zero_absolute=3.6998368055605564e-12
+7: historical-sphere supplemental_richardson_entry_relative=6.2933926151204869e-11 near_zero_absolute=4.010943257515957e-12 two_extrapolations_entry_agreement=6.218008762983511e-11 raw_error_ratio_middle_over_coarse=0.11112334601940305 raw_error_ratio_fine_over_middle=0.090011880492002636
+7: sphere analytic-volume triangulation_relative_error=0.0086061573702495009
+7: contained-positive intersections=0 coplanar_diagonal_intersections=0 constraint_residual=5.3724826780244259e-16 constraint_singular_ratio=0.68036691539694172 geometry=cd992aa131d78023a3f59c9b06163453e95f2014d63b73aecc78fb847f8ffcb9 provenance=759ca8fddeb31f3690c268ed81a466dcc513860fdac9c72699db6f104efd4cdc scientific=08e7ea62a04d37ed0b580e73dc8a76afcaae24f21437e40fc87206df289141a3
+7: contained-positive h=0.00029999999999999997 relative_norm=9.5662311310986945e-07 entry_relative=2.0304317338751598e-06 near_zero_absolute=0
+7: contained-positive h=0.0001 relative_norm=1.0628935379966245e-07 entry_relative=2.2560535067247654e-07 near_zero_absolute=0
+7: contained-positive h=3.0000000000000001e-05 relative_norm=9.5412543313942613e-09 entry_relative=2.040820629028855e-08 near_zero_absolute=0
+7: contained-positive supplemental_richardson_entry_relative=1.4857376341911909e-09 near_zero_absolute=0 two_extrapolations_entry_agreement=1.6343993897530926e-09 raw_error_ratio_middle_over_coarse=0.11110891253100527 raw_error_ratio_fine_over_middle=0.089766792160369327
+7: contained-positive dual h=0.00029999999999999997 full_map_relative=8.3095869251106902e-07
+7: contained-positive dual h=0.0001 full_map_relative=9.2322326877216439e-08
+7: contained-positive dual h=3.0000000000000001e-05 full_map_relative=8.3008388881395942e-09
+7: clipped-positive intersections=60 coplanar_diagonal_intersections=8 constraint_residual=1.2071229572633428e-15 constraint_singular_ratio=0.040658789036594041 geometry=33fb27459843a67b006c0101914aeaa38da45ae461a1a1ce81d9c2a650085aae provenance=699ea8c02c881f1606e69d3358eac30368fcc3aa3797b568b0e7d2daf5aabfe1 scientific=f75163ddc25f90208a30757a108a78f8568ba279bf44be4f7f77e44ca72d7191
+7: clipped-positive h=0.00029999999999999997 relative_norm=6.0850095062030915e-07 entry_relative=0.00014389583703861323 near_zero_absolute=0
+7: clipped-positive h=0.0001 relative_norm=6.7611680544982892e-08 entry_relative=1.5991213943113645e-05 near_zero_absolute=0
+7: clipped-positive h=3.0000000000000001e-05 relative_norm=6.0879212151168996e-09 entry_relative=1.4392637411640616e-06 near_zero_absolute=0
+7: clipped-positive supplemental_richardson_entry_relative=2.5970977415560908e-09 near_zero_absolute=0 two_extrapolations_entry_agreement=3.9081409239568119e-09 raw_error_ratio_middle_over_coarse=0.11111187332749305 raw_error_ratio_fine_over_middle=0.090042447784839927
+7: clipped-positive dual h=0.00029999999999999997 full_map_relative=5.9694870434701555e-07
+7: clipped-positive dual h=0.0001 full_map_relative=6.6327364036178464e-08
+7: clipped-positive dual h=3.0000000000000001e-05 full_map_relative=5.9737953687999843e-09
+7: contained-negative intersections=0 coplanar_diagonal_intersections=0 constraint_residual=6.1660527500875087e-16 constraint_singular_ratio=0.68036691539694216 geometry=0c0503d1540efb988fa6619116617503daac1854ba22b21c3127bf927ed3b970 provenance=e8afc5c8231095ca718e48e242a7d6f9310ec4f47c44f541c4705f816719b99b scientific=c0877fb37ac7f452f09edf0fc65d4f14529a158a37a55651c650710c541fc410
+7: contained-negative h=0.00029999999999999997 relative_norm=9.5662428616136071e-07 entry_relative=2.0304386597657439e-06 near_zero_absolute=0
+7: contained-negative h=0.0001 relative_norm=1.0629157998727681e-07 entry_relative=2.2560718345301841e-07 near_zero_absolute=0
+7: contained-negative h=3.0000000000000001e-05 relative_norm=9.566801468057228e-09 entry_relative=2.0313473964036129e-08 near_zero_absolute=0
+7: contained-negative supplemental_richardson_entry_relative=5.724118703217334e-11 near_zero_absolute=0 two_extrapolations_entry_agreement=6.9415572263143906e-11 raw_error_ratio_middle_over_coarse=0.11111110341322428 raw_error_ratio_fine_over_middle=0.090005261651039364
+7: contained-negative dual h=0.00029999999999999997 full_map_relative=8.3095635148612112e-07
+7: contained-negative dual h=0.0001 full_map_relative=9.2328187802388641e-08
+7: contained-negative dual h=3.0000000000000001e-05 full_map_relative=8.3081621562845298e-09
+7: clipped-negative intersections=60 coplanar_diagonal_intersections=8 constraint_residual=1.2071229572633428e-15 constraint_singular_ratio=0.040658789036594041 geometry=b5ec5d12b3cb24c69b3bb04c15732e5a5f122bc5cfa1328dc73bdb7bb23d8087 provenance=66c6e2f644aad99f7ec31b3d530b8b1c20a8e7edc78a6be09844cc1d46f40b2e scientific=795bc0258cd5c83dff4fc4ce8137fd5a0bbd8b5e806a2a72f296fc6e3a71f86b
+7: clipped-negative h=0.00029999999999999997 relative_norm=6.085013791302652e-07 entry_relative=0.00014389582087789423 near_zero_absolute=0
+7: clipped-negative h=0.0001 relative_norm=6.7610700880704114e-08 entry_relative=1.5990634970634609e-05 near_zero_absolute=0
+7: clipped-negative h=3.0000000000000001e-05 relative_norm=6.0893569585839762e-09 entry_relative=1.4387008325733803e-06 near_zero_absolute=0
+7: clipped-negative supplemental_richardson_entry_relative=3.4204279656825174e-09 near_zero_absolute=0 two_extrapolations_entry_agreement=2.5376336442401809e-09 raw_error_ratio_middle_over_coarse=0.11111018511961387 raw_error_ratio_fine_over_middle=0.090064987927404555
+7: clipped-negative dual h=0.00029999999999999997 full_map_relative=5.969487595681464e-07
+7: clipped-negative dual h=0.0001 full_map_relative=6.6327920129905709e-08
+7: clipped-negative dual h=3.0000000000000001e-05 full_map_relative=5.9726611896966303e-09
+7: [PASS] discrete ellipsoid moment differential
+1/5 Test  #7: spin-faster-discrete-moments ..........   Passed    8.64 sec
+test 9
+    Start  9: spin-faster-newton
+
+9: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/quadric-hollowing-solver-regression
+9: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+9: Test timeout computed to be: 1500
+9: [PASS] scenario=quadric-hollowing-solver iterations=4 residual=3.65566e-26 trace=4325d8f9b111a6925b47df38cd87e0f9023360b96efec3164a1fe20329e81d18
+2/5 Test  #9: spin-faster-newton ....................   Passed    0.00 sec
+test 10
+    Start 10: spin-faster-newton-dual-pairing
+
+10: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/quadric-hollowing-solver-regression "--dual-pairing"
+10: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+10: Test timeout computed to be: 1500
+3/5 Test #10: spin-faster-newton-dual-pairing .......   Passed    0.00 sec
+test 11
+    Start 11: spin-faster-newton-raw-stopping
+
+11: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/quadric-hollowing-solver-regression "--raw-stopping"
+11: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+11: Test timeout computed to be: 1500
+4/5 Test #11: spin-faster-newton-raw-stopping .......   Passed    0.00 sec
+test 12
+    Start 12: spin-faster-newton-dual-coordinates
+
+12: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only/quadric-hollowing-solver-regression "--dual-coordinates"
+12: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
+12: Test timeout computed to be: 1500
+12: adapter h=0.0003 error=1.11081e-07
+12: adapter h=0.0001 error=1.23421e-08
+12: adapter h=3e-05 error=1.11047e-09
+12: strict nonlinear evaluations=4 raw=3.33356e-16 event=f797f4544ba273fb1aed5b55bb6dd1ea88292e657dc44fe2308cf8e5b083f16b
+12: raw line-search before=1.11485 trial=1.35535 normalized before=0.259136 trial=0.150504
+12: [PASS] dual monomial coordinate Newton
+5/5 Test #12: spin-faster-newton-dual-coordinates ...   Passed    0.00 sec
+
+The following tests passed:
+	spin-faster-discrete-moments
+	spin-faster-newton
+	spin-faster-newton-dual-pairing
+	spin-faster-newton-raw-stopping
+	spin-faster-newton-dual-coordinates
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+geometry          =   8.64 sec*proc (1 test)
+regression        =   8.65 sec*proc (5 tests)
+solver            =   0.01 sec*proc (4 tests)
+spin-it           =   8.65 sec*proc (5 tests)
+spin-it-faster    =   8.65 sec*proc (5 tests)
+
+Total Test time (real) =   8.65 sec
+	Command being timed: "ctest --test-dir build/task-6b-faster-only -R ^spin-faster-(newton.*|discrete-moments)$ --output-on-failure -V"
+	User time (seconds): 9.71
+	System time (seconds): 1.63
+	Percent of CPU this job got: 131%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.65
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 17908
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 70697
+	Voluntary context switches: 341304
+	Involuntary context switches: 4442
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 64
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

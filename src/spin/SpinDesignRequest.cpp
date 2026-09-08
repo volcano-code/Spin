@@ -94,6 +94,24 @@ void requireFinite(double value, const char* name)
 namespace spin
 {
 
+const char* spinEquationProfileToken(SpinEquationProfile profile) noexcept
+{
+    switch(profile) {
+    case SpinEquationProfile::LegacyNativeNormalizedV1: return "LEGACY_NATIVE_NORMALIZED_V1";
+    case SpinEquationProfile::DualMonomialRawV1: return "DUAL_MONOMIAL_RAW_V1";
+    }
+    return "INVALID";
+}
+
+const char* spinSolverCoordinateIdentity(SpinEquationProfile profile) noexcept
+{
+    switch(profile) {
+    case SpinEquationProfile::LegacyNativeNormalizedV1: return "native_matrix_entry_unit_sphere_v1";
+    case SpinEquationProfile::DualMonomialRawV1: return "literal_monomial_unit_sphere_v1";
+    }
+    return "INVALID";
+}
+
 
 const char* spinModeToken(SpinMode mode) noexcept
 {
@@ -333,6 +351,11 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
     }
 
     const SpinSolverSettings& settings = request.settings;
+    if ((settings.equationProfile != SpinEquationProfile::LegacyNativeNormalizedV1 &&
+         settings.equationProfile != SpinEquationProfile::DualMonomialRawV1) ||
+        (settings.equationProfile == SpinEquationProfile::DualMonomialRawV1 &&
+         settings.maximumFunctionEvaluationsPerRestart > 60))
+        throw std::invalid_argument("invalid equation profile or strict evaluation budget");
     requireFinite(settings.equationTolerance, "equation tolerance");
     requireFinite(
         settings.physicalRelativeTolerance,
@@ -388,7 +411,10 @@ std::string computeSpinDesignRequestHash(const SpinDesignRequest& request)
     validateSpinDesignRequest(request);
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
-    stream << "SpinDesignRequest-v3;";
+    if(request.settings.equationProfile == SpinEquationProfile::DualMonomialRawV1)
+        stream << "SpinDesignRequest-v4;" << spinEquationProfileToken(request.settings.equationProfile)
+               << ';' << spinSolverCoordinateIdentity(request.settings.equationProfile) << ';';
+    else stream << "SpinDesignRequest-v3;";
     stream << spinModeToken(request.mode) << ';';
     stream << staticObjectiveToken(request.staticObjective) << ';';
     appendScalar(stream, request.staticParetoWeight);

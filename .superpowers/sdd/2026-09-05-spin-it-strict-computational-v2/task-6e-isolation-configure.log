@@ -1,0 +1,27 @@
+CMake Deprecation Warning at libigl/cmake/libigl.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  cmake/FindLIBIGL.cmake:34 (include)
+  CMakeLists.txt:91 (find_package)
+
+
+-- Creating target: igl::core (igl)
+BOOST_ROOT: 
+-- Using header-only CGAL
+-- Targetting Unix Makefiles
+-- Using /usr/bin/c++ compiler.
+-- __cplusplus is 201703
+--   --> Do not link with Boost.Thread
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48")  
+-- Boost include dirs: /home/lin/anaconda3/include
+-- Boost libraries:    
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48") found components: thread system 
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Creating target: igl::cgal (igl_cgal)
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /data/xvxinyao/make-it-balance-paper-sim/build/task-6b-faster-only
