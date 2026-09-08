@@ -236,6 +236,15 @@ manufacturability, CAD and hydrostatics remain outside this material result.
 `MESH_MATERIAL_VALIDATED` and connectivity are not physical feasibility claims.
 Independent controller review remains pending.
 
+Implementation commit: `4425e20` — `feat(spin): bridge locked Faster runs to
+complete material seals`. Postcommit `sha256sum -c task-4c3a-final-sha256.log`
+verified all 13 recorded source/DSO/binary/cache hashes; worktree was clean.
+Source-only `git diff HEAD^ HEAD --check -- <the nine source paths>` passed.
+The all-file staged whitespace check reported four pre-existing CMake/Boost
+trailing-space lines in the raw `task-4c3a-build-03.log`; those original log bytes
+were deliberately retained as evidence rather than edited. No source whitespace
+error or test failure was involved.
+
 ## Source files
 
 - `python/make_it_stand/verification/faster_material.py`
