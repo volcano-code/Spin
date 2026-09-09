@@ -1,4 +1,7 @@
 #include "spin2014/AdaptiveFillFunctional.h"
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+#include "spin2014/SourceAdaptiveDomain.h"
+#endif
 
 #include <cmath>
 #include <stdexcept>
@@ -7,6 +10,18 @@
 
 namespace spin2014
 {
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+AdaptiveFillFunctional::AdaptiveFillFunctional(const SourceAdaptiveDomain& domain,
+    SpinIt2014MomentProblem problem,double laplacianWeight,double density)
+    :problem_(std::move(problem)),laplacianWeight_(laplacianWeight),
+    baseMoments_(domain.source().outerSurfaceMoments().scaledDensity(density)),
+    momentColumns_(10,domain.leaves().size()),laplacian_(domain.uniformLaplacian()) {
+    if(!std::isfinite(laplacianWeight)||laplacianWeight<0||!std::isfinite(density)||density<=0)
+        throw std::invalid_argument("invalid source fill weight/density");
+    for(std::size_t i=0;i<domain.leaves().size();++i)momentColumns_.col(i)=density*domain.leaves()[i].moments.values();
+    if(!baseMoments_.isFinite()||!momentColumns_.allFinite())throw std::overflow_error("nonfinite source fill moments");
+}
+#endif
 
 
 AdaptiveFillFunctional::AdaptiveFillFunctional(

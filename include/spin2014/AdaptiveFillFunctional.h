@@ -11,6 +11,9 @@
 
 namespace spin2014
 {
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+class SourceAdaptiveDomain;
+#endif
 
 
 struct AdaptiveFillEvaluation
@@ -29,6 +32,10 @@ struct AdaptiveFillEvaluation
 class AdaptiveFillFunctional
 {
 public:
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+    AdaptiveFillFunctional(const SourceAdaptiveDomain& domain,
+        SpinIt2014MomentProblem problem,double laplacianWeight,double density=1.0);
+#endif
     AdaptiveFillFunctional(
         const AdaptiveVoxelDomain& domain,
         SpinIt2014MomentProblem problem,
