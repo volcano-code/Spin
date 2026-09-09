@@ -1,0 +1,26 @@
+# Task5e controller verification checklist
+
+Completed bounded increment after fixround1 at edc99c4; BASEdba17bd57d2e17f4e846e6438b34c999c68a17ab. Sole implementer ownership released. Final controller checks and independent re-review in task-5e-controller-verification.md and task-5e-review-fix1.md. Items below preserve the original checklist and intermediate chronology, not outstanding duplicate work.
+
+Final-state intermediate check: controller read `build/task-5e-focused-final-03.log` (actual FasterOFF/exactON 4/4,57.80s) and rehashed dirty-main tracked diff, unchanged `93e32af47ab1957a1efcb6716437656be129053f4269d2169378fcd95b05a35e`. Implementer reports main all-target exit0; full197 registered tests now running. These are not final acceptance until scoped commit, independent review and controller freshness verification.
+
+Intermediate evidence: controller read `build/task-5e-red-missing-01.log`, expected missing exact source cuboid union/material-boundary operation RED. This is an interface-availability failure before production, not a claim every numerical behavior had a running pre-implementation counterpart. Worker reports full intended regression written first; final behavior/exact-set checks remain pending.
+
+Actual intermediate freshness checks on both `build/task-5d-refresh-faster-section-6-6-run-{1,2}/evidence.json`: STALE_RESULT, cmake_configuration content binding changed. Preserve old files; Task5e refresh belongs after code/review freeze only.
+
+Controller read actual intermediate union/material success logs (test-only, FasterOFF), and `build/task-5e-red-cap-01.log`: exact8vertex/12triangle cube budget incorrectly rejected. Worker diagnosing preflight output-count overestimate; added real equality-cap RED before fixing. Final tests must retain exact-cap/one-below behavior. Wrapper density contract clarified: only request.density feeds final material; boundary settings contain geometry caps/wall, not another silently overriding density.
+
+Actual successful solve log parsed with JSON: iterations0..37 and a second-pass final0 are present without gaps; statusBINARY_MOMENT_VALIDATED, final relaxed beta[1,1,0.99999999999999989,0.99999999999999989], binary fullremoval. Input83359bc0abc68ff056f49e18ec52ad6bb34d1121e0743f28d074cbab22d7f7a9, trace72002479f41c4a8a4ef71731e1ff8bc41c42537cd2990e8dbd3417130838d246, output39b18d241e42e8978295e6bb97c7e2e0c743c59893cee9ca609dbc355b6d9283. Tool display truncation was not missing stored evidence. Previous quarter-fill failure retains originalrequest/trace/outputidentities. Full final source/mesh audit hashes still pending.
+
+Resource-scope concern to carry to review: new union/extraction/roundtrip object counters and input/output caps are observable; pre-existing signed-region auditor temporaries may be uninstrumented. Require honest explicit scope and actual external process guards, not global-memory guarantees or guessed work preflight rejecting legitimate exact-cap geometry. No permission granted to silently omit a brief requirement; reviewer must evaluate boundary and controller must resolve any realgap.
+
+- Read full implementer report and actual RED/GREEN/final logs, not only a summary. Confirm tests fail before production and all required registered cases actually run.
+- Exact set equality must verify exported union vs original union, not just moments. Nonmanifold edge/point contact must not become a perturbed/manufactured success. Check hollow26cube signed nesting and retained-island consequence against independent math.
+- Original outer arrays byte-identical, cavity union exact canonical output with unchanged coordinate values. Lossy rational conversion rejected; no unexpected repair/reorientation of user source.
+- Actual optimizer wrapper must execute shared solver and get a private trusted terminal domain/beta, not accept a public mutable status report. Fixed actual full-carve and former quarter-fill failure retain opposite outcomes without input/tolerance changes.
+- Compare final all10moments, center/fullinertia, translationcross terms and clearance against task-5e-controller-math.md independent exact values. Exact5/8threshold passes, nextafter fails; not a full internal-web thickness/manufacturing certificate.
+- Input/cap/density/wall/binary changes bind identity, actual stats retained, resource/failure no accepted partial product. Immutable snapshots remain independent of mutable inputs. Same-environment scientific hashes repeat.
+- Verify exactON/FasterOFF and prior exactOFF2014 linked contracts, fullsuite logs and actual loadedextension/executable/cache/source hashes. Main tracked diffSHA/historical experiments unchanged.
+- Fresh task reviewer over fullBASE..HEAD diff package after solewriter handoff. FixImportant/Critical only through original implementer and scoped re-review; keep minors/failedruns in ledger.
+- Refresh unchanged FasterSection6.6 evidence into new Task5e paths only after code/reviewfreeze if actual freshness invalidates prior runs. Never mutate oldruns or count refresh as newly implemented Faster features.
+- Final claim limited to native exact material-boundary/moment contract; no Python sealedadmission/fulllevel9optimizer/originalcase/CAD/physics/fullpaper grant.
