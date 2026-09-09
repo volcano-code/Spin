@@ -6,8 +6,10 @@ bool LbfgsHistory::update(const Eigen::VectorXd& step,const Eigen::VectorXd& gra
     if(capacity<=0 || step.size()!=gradientChange.size() || !step.allFinite() || !gradientChange.allFinite())return false;
     const double curvature=step.dot(gradientChange);
     if(!std::isfinite(curvature)||curvature<=1e-12*step.norm()*gradientChange.norm())return false;
+    const double reciprocal=1./curvature;
+    if(!std::isfinite(reciprocal))return false;
     if(static_cast<int>(s.size())==capacity){s.pop_front();y.pop_front();inverseCurvature.pop_front();}
-    s.push_back(step);y.push_back(gradientChange);inverseCurvature.push_back(1./curvature);return true;
+    s.push_back(step);y.push_back(gradientChange);inverseCurvature.push_back(reciprocal);return true;
 }
 Eigen::VectorXd LbfgsHistory::applyInverse(const Eigen::VectorXd& vector) const {
     if(s.empty())return vector;

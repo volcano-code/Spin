@@ -202,3 +202,79 @@ Generic trace hashes do not attest arbitrary callbacks. Numerical caps and
 ill-scaled or inconsistent problems can return UNKNOWN or stalled. Existing
 Faster result bundles become stale under their CMake input binding; they are
 preserved, and the controller owns any unchanged-spec refresh after review.
+
+## Fix round 1: reject reciprocal-curvature overflow before mutation
+
+Fix base: `c624c845578ddb6c738caf1c9a4fca988ae0f843`. The independent review's
+important finding was verified against `SlqpHistory.cpp` and reproduced in
+the real history implementation. With fixed one-dimensional s=y=1e-160,
+curvature is positive and finite, approximately 1e-320, while its reciprocal
+overflows. The prior code accepted the pair and could evict valid history
+before storing infinity. This fix computes and checks the reciprocal before
+any deque eviction or insertion, then stores the already-validated value.
+No threshold, objective, formulation, API or normal finite-curvature behavior
+is changed. The deferred minor findings remain outside this fix's scope.
+
+The regression prepopulates capacity-one history with s=2, y=4, reciprocal
+.125. It then attempts the fixed tiny pair and checks rejection, all three
+deque sizes and original values, plus the unchanged finite inverse action
+H*2=1. An explicit fixture precondition requires finite positive curvature
+and a nonfinite reciprocal, so flush-to-zero/underflow cannot make the test
+pass through the older zero-curvature guard. The precondition was added
+following the controller's clarification, after the initial RED observation.
+
+`task-5b-fix1-red.log` and its console show the actual failure before the fix:
+`subnormal_curvature=9.9998886718268301e-321 accepted=1 retained_inverse=inf
+retained_metric=-nan`. The test fails with “nonfinite reciprocal curvature
+accepted”; its RED build is `task-5b-fix1-red-build.log`.
+After the fix, `task-5b-fix1-green.log` passes the four focused tests. The final
+test including the explicit precondition was rebuilt in
+`task-5b-fix1-final-test-build.log`; `task-5b-fix1-final-focused.log` and its
+console again pass 4/4 (including nine Python unittest methods). Actual GREEN:
+`subnormal_curvature=9.9998886718268301e-321 accepted=0 retained_inverse=0.125
+retained_metric=1`.
+
+The all-target `task-5b-fix1-build.log` records -j3, exit zero, 26.24 seconds,
+peak RSS 1,757,380 KiB. The last edit after this build only adds the test's
+arithmetic precondition; that executable was rebuilt before the final focused
+and full runs. Normal legacy SLQP still has hash
+`ba7371831d27b970aeab54b8c1c14f8b411023e16bd06c7fc0c8a9d27f9d9aae`.
+The retained BASE comparison driver was relinked against the fixed core;
+`task-5b-fix1-default-givens.log` confirms equal BASE/current default Givens
+hashes `13fcb7597f2bc6a0275921674dd5f109f63abeb0013487e5216bfba14aa99eb5` and
+exactly equal final beta/phi. Original fixed fixtures and tolerances remain
+unchanged.
+
+Final fix1 full suite passed 190/190 tests on unchanged fixed binaries, with
+190 actual Passed records, zero failures, exit zero, 314.01 seconds elapsed,
+and peak RSS 4,253,644 KiB. Unique logs: `task-5b-fix1-full.log` and
+`task-5b-fix1-full-console.log`. The registered 2014-ON/reachability-OFF
+dependency contract built and executed the actual audited solver, including
+this boundary regression, successfully as part of the full run.
+Previous full runs and raw failure logs were retained under their old names.
+The refreshed 26-entry source/binary/cache manifest is
+`task-5b-fix1-sha256.log`; all 26 entries were rechecked after completion and
+match, as recorded in `task-5b-fix1-sha256-check.log`.
+
+`task-5b-fix1-loaded-dso.log` records an actual import using the configured
+CTest Python/environment, the module's resolved path, SHA256, and its live
+`/proc/<python-pid>/maps` entries. Interpreter:
+`/home/lin/anaconda3/bin/python3`. Actual DSO:
+`build/strict-v2-spin/python/_make_it_stand.cpython-313-x86_64-linux-gnu.so`,
+SHA256 `54d47b3f8ee834d4ceaac145d7491a692f07ae9038687a38103166a0d980519c`.
+The import used the source/build/test PYTHONPATH and configured GCC 13
+libstdc++ LD_PRELOAD from CTestTestfile.cmake, not a guessed installed extension.
+
+Commands retain the original isolated build configuration and resource limits:
+`cmake --build build/strict-v2-spin --target spin-it-2014-audited -j3`;
+`/usr/bin/time -v cmake --build build/strict-v2-spin -j3`;
+`ctest --test-dir build/strict-v2-spin -R '^spin-it-2014-(audited|slqp|givens|python)$'
+-V --output-log <unique-fix1-log>`;
+`/usr/bin/time -v ctest --test-dir build/strict-v2-spin -j1 --output-on-failure
+--output-log <unique-fix1-full-log>`; `sha256sum -c <fix1-manifest>`.
+The loaded-DSO record imports `_native_module()`, prints `__file__` resolved
+through realpath, and invokes `sha256sum` and `rg` on the live process maps.
+All code edits are limited to the reciprocal guard and its actual-history
+regression. No dirty-main, historical-evidence, dependency, asset or unrelated
+trace cleanup was performed. First-order-only and incomplete whole-method
+limitations above remain; the controller owns the scoped re-review.

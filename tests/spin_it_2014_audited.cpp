@@ -72,6 +72,26 @@ static EqualityBoxProblem linearProblem(int variant) {
     };return p;
 }
 static void analyticProblems() {
+    // A subnormal positive curvature can have an infinite reciprocal. A
+    // rejected update must preserve the already-full metric, including its
+    // oldest entry, rather than evicting it before validation completes.
+    LbfgsHistory fullHistory;fullHistory.capacity=1;
+    require(fullHistory.update(Eigen::VectorXd::Constant(1,2.),Eigen::VectorXd::Constant(1,4.)),
+        "valid full-history setup failed");
+    const Eigen::VectorXd tiny=Eigen::VectorXd::Constant(1,1e-160);
+    const double tinyCurvature=tiny.dot(tiny);
+    require(std::isfinite(tinyCurvature) && tinyCurvature>0. && !std::isfinite(1./tinyCurvature),
+        "fixed subnormal fixture must exercise reciprocal overflow, not zero-curvature rejection");
+    const bool tinyAccepted=fullHistory.update(tiny,tiny);
+    const auto retainedMetric=fullHistory.applyInverse(Eigen::VectorXd::Constant(1,2.));
+    std::cout<<"subnormal_curvature="<<tinyCurvature<<" accepted="<<tinyAccepted
+        <<" retained_inverse="<<fullHistory.inverseCurvature.front()
+        <<" retained_metric="<<retainedMetric(0)<<'\n';
+    require(!tinyAccepted,"nonfinite reciprocal curvature accepted");
+    require(fullHistory.s.size()==1 && fullHistory.y.size()==1 && fullHistory.inverseCurvature.size()==1 &&
+        fullHistory.s.front()(0)==2. && fullHistory.y.front()(0)==4. && fullHistory.inverseCurvature.front()==.125 &&
+        retainedMetric.allFinite() && retainedMetric(0)==1.,
+        "rejected reciprocal overflow mutated full history or its inverse metric");
     LbfgsHistory history;history.capacity=3;
     require(history.update(Eigen::Vector2d(1,0),Eigen::Vector2d(2,0)),"positive curvature rejected");
     require(!history.update(Eigen::Vector2d(1,0),Eigen::Vector2d(-2,0)),"negative curvature accepted");
