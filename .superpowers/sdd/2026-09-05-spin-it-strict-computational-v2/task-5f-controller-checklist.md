@@ -1,0 +1,22 @@
+# Task5f controller acceptance checklist
+
+Final disposition2026-09-10: all bounded Task5f checks below satisfied, with explicit scope/resource/authentication limitations retained. Implementatione1db0ee; independent reviewApproved;198/198fullsuite; controller10/10; final two actual solver runs and reloaded seals CURRENT and scientific/geometry/trace identical. See task-5f-controller-verification.md for exact logs/hashes and the preserved controller initialization failure. No fullpaper/release gate opened.
+
+BASE d664ab6812b8bbb476b7fb77272671df62464262. Implementer `/root/spin2014_source_sealed_bridge` owns source/build; controller only independent math, observations and review. Baseline2/2,68.04s saved `build/task-5f-baseline-01.log`; maintrackedSHA93e32af47ab1957a1efcb6716437656be129053f4269d2169378fcd95b05a35e. No pending Task5e fix.
+
+Controller read actual missing-entrypoint RED `build/task-5f-red-missing-01.log`: one assertion failure before production. Expanded `build/task-5f-red-contract-01.log` contains that assertion plus missing-module setUpClass error; this is availability scaffolding, not proof every numerical behavior ran RED. Real integration tests still pending.
+
+Controller read actual intermediate `build/task-5f-focused-04.log`:10/10,33.197s. Behaviors include native fixturehash/fulltrace, allaffinecrossmoments, directnativeinputvalidation, savedsealreintegrate/tamper, oldquarterfailure/fiveemptyUNKNOWN, density/copy, resource/wallfailure, settings/targetreject, actualrunner success/failure/freshness. Separate runneravailabilityRED `build/task-5f-red-runner-01.log` confirms missingrunner assertion beforeimplementation. These precede finalselfreview/build/fullsuite; notfinalacceptance. Failedrunner directory build/task-5f-runner-test-5_eu2g7h retained perworker; verify finalreport preservation.
+
+- Native binding calls existing source/private-terminal material wrapper once; no arbitrary result/status injection, source reads original mesh not occupancy. New input lossless parsing includes mixedsequence bool/integer behavior and cap/settings types.
+- Literal synthetic fixture matches native bit-index box vertex/face order, not different equivalent Python box triangulation; old native scientific golden hashes retained. Geometric equivalent mesh may legitimately have different sourcehash, but cannot be reported as same input.
+- Problem density/wall/axis determine actual request. Unsupported frame/multi-design/density rejects; no source normalization/deformation or aftersolve mesh repair.
+- All10world->fixednormalization moments checked against exact task-5f-controller-math.md. Density2 world doubles/normalized same, mixedtranslation derivatives or transform check covers xy,xz,yz. Claim not computed by independent checker itself.
+- Native complete original/material/cavity copied; outer unchanged and design-retained signedappend checked for design noncontact/exactpartition. Preserve actualnativegeometry provenance and cap results; existing seal independenttetra/materialpartition remains mandatory.
+- Full per-pass trace, split/merge, source/config/partition/solve hashes, failures and unavailable diagnostics survive serialization. No NaN/inf/zero-fakedunavailable; UNKNOWNnotinfeasible.
+- In-memory result and underlying arrays/metadata remain immutable/copy-on-read. Save/reload seal independentlyintegrates; persistedgeometry is not proof of solver execution. Runner stores actualinput/settings/run/trace/fileobservations before/after; evidenceCURRENT is freshnessonly.
+- Real fixed solve succeeds, quarter-fill failsbinary, fiveemptyobjectivesUNKNOWN, wall/resource failures noartifact. Preserved numericalstatus distinct fromsealstatus.
+- RealFasterOFFPython/native path, exactOFF oldcontract, finalmainalltarget+fullregisteredCTest-V. NoUnexpectedskip/NotRun. Controller rechecks actual logs and hashes, loadedmodulepath, dirtymain and scope.
+- Fresh independentreview fullBASE..HEAD package, fixloops originalimplementer only. PreservepriorMinorfindings; no broadfinalmerge or wholepapergrant.
+- Afterreview/sourcefreeze run2actual syntheticdemonstrations into NEWdirectories, re-read/reintegrate savedseals, check run/artifact/trace/scientificpayload determinism separate from path-dependent provenance. Check actualfreshness; preserveoldstaleruns.
+- Finish bounded Task5f only; no GUI/originalcase/fullM2/M3/physics/manufacturing/completepaperclaim. Next sealed-viewer admission or remainingalgorithm task muststartfromrealoutputs, notnewmockmesh.

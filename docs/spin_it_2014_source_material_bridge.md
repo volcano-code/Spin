@@ -92,3 +92,29 @@ Evidence is `OBSERVED_FILES_ON_DISK_ONLY`, with build/source attestation
 facts cover the native source-material operation chain; they exclude the extra
 independent Python seal audits, CGAL allocator internals, and triangle-distance
 storage. They do not measure total process memory.
+
+## Retained Task5f execution evidence
+
+Implementation `e1db0ee` passed independent task-scoped review. Full configured
+CTest suite:198/198,445.61s; independent controller bridge rerun:10/10.
+The source bridge also executed10/10 tests with Faster disabled.
+
+Actual post-review runs are retained under
+`build/task-5f-demo-run-1` and `build/task-5f-demo-run-2` (not original paper assets).
+Both were independently reloaded and reintegrated: unchanged original outer
+bytes,1actual cavity from72cuboids,39ordered optimization records, exact squared
+outer-wall clearance25/64. Maximum normalized moment claim error:
+`1.3877787807814457e-17`. Inputs, complete native trace, material and cavity geometry
+are identical across the two runs. Both evidence checks were CURRENT at acceptance.
+
+Scientific digest: `780431ce4e1970da972488483a575b2b566a61fa072fdc6d09b65b5399c6e6a7`.
+Reintegrated artifact digest: `778f8dfb1dd0dc601152e2ffb78d5756efe8c42b1e61c1b3c9c8c03af9f0a97c`.
+Full-suite log: `build/task-5f-full-ctest-verbose-01.log`.
+Controller independent checks: `build/task-5f-controller-demos-02.log`.
+The earlier controller check log is retained: it rejected freshness before the
+controller explicitly loaded the required native module; no solver change was needed.
+
+These are sealed synthetic numerical/material results, not physical simulations
+or newly implemented OpenGL views. Geometry success does not certify the requested
+support/rotation target. Original elephant/heart experiments and full paper
+reproduction remain unverified; the overall project remains `PARTIAL_BLOCKED`.
