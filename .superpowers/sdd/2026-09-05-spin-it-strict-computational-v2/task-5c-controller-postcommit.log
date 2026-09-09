@@ -1,0 +1,183 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 9
+[HANDLER_OUTPUT] 
+    Start  9: spin-it-2014-source-surface-octree
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+9: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-source-surface-octree-regression
+
+9: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+9: Test timeout computed to be: 3600
+9: source surface hierarchy, signed material, queries, hashes, validation passed; faster=1 exact=1
+[HANDLER_OUTPUT] 
+1/7 Test  #9: spin-it-2014-source-surface-octree ..........
+   Passed    1.41 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 10
+
+[HANDLER_OUTPUT] 
+    Start 10: spin-it-2014-source-surface-octree-level9
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+10: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-source-surface-octree-regression "--level9"
+
+10: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+10: Test timeout computed to be: 3600
+10: depth9 nodes=2097993 internal=262249 boundary=786448 full=506360 empty=542936 max_level=9 stored_cell_bytes=302110992 peak_rss_KiB=351892 seconds=19.491588023999999 volume=0.12209314107894897 uncertainty=0.0058594942092895508 partition=652de7d6b99c64445640902e891a98f85f76c4a8b5a93b6ef34471954a5bc137
+10: depth9 moments= 0.12209314107894897 0.061046570539474487 0.061046570539474487 0.061046570539474487 0.033027303763977521 0.033027303763977514 0.033027303763977514 0.030523285269737244 0.030523285269737244 0.030523285269737244
+10: level_counts=1,8,64,512,1664,6272,24704,98432,393344,1572992,
+[HANDLER_OUTPUT] 
+2/7 Test #10: spin-it-2014-source-surface-octree-level9 ...
+   Passed   19.51 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 11
+
+[HANDLER_OUTPUT] 
+    Start 11: spin-it-2014-surface-value
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+11: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-surface-value-regression
+
+11: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+11: Test timeout computed to be: 1500
+11: surface value analytic, signed, covariance, invalid-input checks passed
+[HANDLER_OUTPUT] 
+3/7 Test #11: spin-it-2014-surface-value ..................
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 12
+
+[HANDLER_OUTPUT] 
+    Start 12: spin-it-2014-surface-value-allocation
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+12: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-surface-value-regression "--allocation"
+
+12: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+12: Test timeout computed to be: 1500
+12: value-only succeeds with 32 MiB headroom; dense differential allocation fails as expected, N=1000000
+[HANDLER_OUTPUT] 
+4/7 Test #12: spin-it-2014-surface-value-allocation .......
+   Passed    0.01 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 15
+
+[HANDLER_OUTPUT] 
+    Start 15: spin-it-2014-audited
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+15: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-audited
+
+15: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+15: Test timeout computed to be: 1500
+15: status=CONVERGED x=0.75 residual=0
+15: subnormal_curvature=9.9998886718268301e-321 accepted=0 retained_inverse=0.125 retained_metric=1
+15: duplicate=CONVERGED inconsistent_L1=0.5 singular=RESTORATION_STALLED finite_failed_trials=24 invalid_trials=24 cap=WITNESS_LP_UNKNOWN: Iteration limit reached
+15: givens=CONVERGED kkt=6.3137399822221774e-11 phi=1.5707963268031664
+15: [PASS] audited actual KKT/restoration/analytic/Givens tests
+[HANDLER_OUTPUT] 
+5/7 Test #15: spin-it-2014-audited ........................
+   Passed    0.01 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 19
+
+[HANDLER_OUTPUT] 
+    Start 19: spin-it-2014-givens
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+19: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-givens-regression
+
+19: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+19: Test timeout computed to be: 1500
+19: objective=0 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.7485261622895915e-11 second_order_hessian_absolute_diagnostic=2.2756674435964186e-06
+19: objective=0 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=7.279135990563305e-11 second_order_hessian_absolute_diagnostic=2.0481030038599357e-07
+19: objective=0 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=5.8150800515056653e-11 second_order_hessian_absolute_diagnostic=2.2757224105163232e-08
+19: objective=1 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+19: objective=1 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+19: objective=1 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+19: objective=2 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+19: objective=2 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+19: objective=2 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+19: objective=3 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+19: objective=3 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+19: objective=3 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+19: objective=4 h=0.001 fourth_order_max_relative_or_zero_absolute_error=1.9028729209619793e-12 second_order_hessian_absolute_diagnostic=3.7499994842704609e-07
+19: objective=4 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=7.3975393711912655e-13 second_order_hessian_absolute_diagnostic=3.3750142347521717e-08
+19: objective=4 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=3.4671524910360554e-12 second_order_hessian_absolute_diagnostic=3.7519161111276844e-09
+19: joint status=CONVERGED residual=1.4213146065523828e-11 final_phi=1.5707963267947704 beta=0.20019255792412366 0.20019255789310009 0.20019255789310006 0.20019255792412366 0.20019255792412333 0.20019255789309925 0.20019255789309917  0.2001925579241233
+19: iteration=0 phi=1.7 accepted_step=1 residual=15.427096185954186
+19: iteration=1 phi=1.5678463028200025 accepted_step=1 residual=0.35667695203462219
+19: iteration=2 phi=1.5707999408452491 accepted_step=1 residual=4.1323696036701051e-06
+19: iteration=3 phi=1.5707969963841375 accepted_step=1 residual=2.7180425533175016e-10
+19: iteration=4 phi=1.5707963267947704 accepted_step=0 residual=1.4213146065523828e-11
+19: adaptive angle carry passes=2
+19: [PASS] spin-it-2014-givens analytic and integration contract
+[HANDLER_OUTPUT] 
+6/7 Test #19: spin-it-2014-givens .........................
+   Passed    0.01 sec
+[HANDLER_VERBOSE_OUTPUT] 
+test 24
+
+[HANDLER_OUTPUT] 
+    Start 24: spin-it-2014-surface-differential
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+24: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-surface-differential-regression
+
+24: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+24: Test timeout computed to be: 1500
+24: [PASS] scenario=spin-it-2014-surface-differential error=4.45924e-12
+[HANDLER_OUTPUT] 
+7/7 Test #24: spin-it-2014-surface-differential ...........
+   Passed    0.00 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	spin-it-2014-source-surface-octree
+	spin-it-2014-source-surface-octree-level9
+	spin-it-2014-surface-value
+	spin-it-2014-surface-value-allocation
+	spin-it-2014-audited
+	spin-it-2014-givens
+	spin-it-2014-surface-differential
+[HANDLER_OUTPUT] 
+
+100% tests passed, 0 tests failed out of 7
+
+
+Label Time Summary:
+deformation       =   0.00 sec*proc (1 test)
+exact-geometry    =  20.93 sec*proc (2 tests)
+native            =  20.93 sec*proc (2 tests)
+regression        =   0.01 sec*proc (2 tests)
+spin-it           =   0.01 sec*proc (2 tests)
+spin-it-2014      =  20.93 sec*proc (4 tests)
+
+Total Test time (real) =  20.96 sec
