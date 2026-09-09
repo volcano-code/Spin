@@ -1,5 +1,6 @@
 #pragma once
 #include "verification/ExactBoundaryAudit.h"
+#include "verification/ExactNefBudget.h"
 #include <array>
 #include <memory>
 #include <optional>
@@ -73,6 +74,11 @@ private:
     friend ExactMaterialPartitionFacts checkExactMaterialPartition(const ExactMaterialRegion&, const std::vector<ExactMaterialRegion>&);
     friend ExactBoundaryClearanceFacts checkExactBoundaryClearance(const ExactMaterialRegion&, const ExactMaterialRegion&, double);
     friend ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>&,const ExactCuboidUnionSettings&);
+    friend ExactCuboidUnion makeExactCuboidUnionWithBudget(const std::vector<ExactCuboid>&,const ExactCuboidUnionSettings&,const ExactNefBudgetPtr&);
+    friend ExactMaterialRegion makeExactMaterialRegionWithBudget(const Eigen::MatrixXd&,const Eigen::MatrixXi&,const ExactNefBudgetPtr&);
+    friend ExactMaterialRegion emptyExactMaterialRegionWithBudget(const ExactNefBudgetPtr&);
+    friend ExactMaterialRelationFacts relateExactMaterialRegionsWithBudget(const ExactMaterialRegion&,const ExactMaterialRegion&,const ExactNefBudgetPtr&);
+    friend ExactMaterialPartitionFacts checkExactMaterialPartitionWithBudget(const ExactMaterialRegion&,const std::vector<ExactMaterialRegion>&,const ExactNefBudgetPtr&);
 };
 
 // Malformed input throws invalid_argument; invalid boundaries/nesting retain
@@ -94,5 +100,12 @@ ExactMaterialPartitionFacts checkExactMaterialPartition(
 // Invalid operands/thresholds throw; operation failure publishes no clear facts.
 ExactBoundaryClearanceFacts checkExactBoundaryClearance(
     const ExactMaterialRegion& a, const ExactMaterialRegion& b, double minimumClearance);
+
+// Explicit opt-in variants. Absent-context legacy calls keep their identities
+// and geometric semantics. Resource failures never publish successful facts.
+ExactMaterialRegion makeExactMaterialRegionWithBudget(const Eigen::MatrixXd&,const Eigen::MatrixXi&,const ExactNefBudgetPtr&);
+ExactMaterialRegion emptyExactMaterialRegionWithBudget(const ExactNefBudgetPtr&);
+ExactMaterialRelationFacts relateExactMaterialRegionsWithBudget(const ExactMaterialRegion&,const ExactMaterialRegion&,const ExactNefBudgetPtr&);
+ExactMaterialPartitionFacts checkExactMaterialPartitionWithBudget(const ExactMaterialRegion&,const std::vector<ExactMaterialRegion>&,const ExactNefBudgetPtr&);
 
 } // namespace verification

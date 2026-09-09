@@ -16,12 +16,143 @@
 #include <stdexcept>
 #include <map>
 #include <functional>
+#include <set>
 
 namespace verification {
+ExactNefBudget::ExactNefBudget(std::size_t maximumComplexity) {
+    if(maximumComplexity==0 || maximumComplexity>static_cast<std::size_t>(std::numeric_limits<int>::max()))
+        throw std::invalid_argument("exact Nef budget must be positive and fit native signed indices");
+    facts_.maximumComplexity=maximumComplexity;
+}
+void ExactNefBudget::preflight(std::size_t additional,const std::string& operation) {
+    ++facts_.preflightChecks;
+    const auto requested=facts_.currentComplexity+additional;
+    if(requested>facts_.maximumComplexity) {
+        facts_.lastOperation=operation;facts_.lastRequestedComplexity=requested;facts_.exceeded=true;
+        throw std::length_error("RESOURCE_LIMIT: exact Nef preflight "+operation);
+    }
+}
+void ExactNefBudget::acquire(std::size_t count,const std::string& operation) {
+    // Throwing string/map work precedes lease admission. A rejected result is
+    // observed in the peak, but never left charged after constructor unwinding.
+    ++facts_.observationsByOperation[operation];
+    facts_.lastOperation=operation;
+    const auto requested=facts_.currentComplexity+count;
+    facts_.peakComplexity=std::max(facts_.peakComplexity,requested);
+    if(requested>facts_.maximumComplexity) {
+        facts_.lastRequestedComplexity=requested;facts_.exceeded=true;
+        throw std::length_error("RESOURCE_LIMIT: exact Nef observed "+operation);
+    }
+    facts_.currentComplexity=requested;
+}
+void ExactNefBudget::release(std::size_t count) noexcept {facts_.currentComplexity-=count;}
+
+class ExactNefBudgetLease {
+    ExactNefBudgetPtr budget_;
+    std::size_t count_=0;
+public:
+    ExactNefBudgetLease()=default;
+    ExactNefBudgetLease(const ExactNefBudgetPtr& budget,std::size_t count,const std::string& operation):budget_(budget) {
+        if(budget_) budget_->acquire(count,operation);
+        count_=budget_?count:0;
+    }
+    ExactNefBudgetLease(const ExactNefBudgetLease&)=delete;
+    ExactNefBudgetLease& operator=(const ExactNefBudgetLease&)=delete;
+    ExactNefBudgetLease(ExactNefBudgetLease&& other) noexcept
+        :budget_(std::move(other.budget_)),count_(other.count_) {other.count_=0;}
+    ExactNefBudgetLease& operator=(ExactNefBudgetLease&& other) noexcept {
+        if(this!=&other) {
+            if(budget_) budget_->release(count_);
+            budget_=std::move(other.budget_);count_=other.count_;other.count_=0;
+        }
+        return *this;
+    }
+    ~ExactNefBudgetLease() {if(budget_) budget_->release(count_);}
+    static void preflight(const ExactNefBudgetPtr& budget,std::size_t additional,const std::string& operation) {
+        if(budget) budget->preflight(additional,operation);
+    }
+};
+
 namespace {
 using Kernel = CGAL::Simple_cartesian<CGAL::Gmpq>;
 using Polyhedron = CGAL::Polyhedron_3<Kernel>;
-using Nef = CGAL::Nef_polyhedron_3<Kernel>;
+using NativeNef = CGAL::Nef_polyhedron_3<Kernel>;
+
+std::size_t nativeComplexity(const NativeNef& n) {
+    return n.number_of_vertices()+n.number_of_halfedges()+n.number_of_halffacets()+n.number_of_volumes();
+}
+
+// Local ownership adapter: every explicit native result acquires a lease
+// immediately after its exact operation, before any successful facts. Moving
+// the owner moves the native object and its charge together without copying it.
+class Nef {
+    std::unique_ptr<NativeNef> value_;
+    ExactNefBudgetPtr budget_;
+    ExactNefBudgetLease lease_;
+    template<class Build> static std::unique_ptr<NativeNef> construct(
+        const ExactNefBudgetPtr& budget,const char* operation,Build build) {
+        // Every Nef has at least its exterior volume. More complex growth is
+        // measured after the operation, never rejected using a guessed mesh bound.
+        ExactNefBudgetLease::preflight(budget,1,operation);
+        return std::unique_ptr<NativeNef>(new NativeNef(build()));
+    }
+    template<class Build> Nef(const ExactNefBudgetPtr& budget,const char* operation,Build build)
+        :value_(construct(budget,operation,build)),budget_(budget),lease_(budget,nativeComplexity(*value_),operation) {}
+public:
+    explicit Nef(const ExactNefBudgetPtr& budget={})
+        :Nef(budget,"empty construction",[]{return NativeNef();}) {}
+    Nef(Polyhedron& surface,const ExactNefBudgetPtr& budget={})
+        :Nef(budget,"component construction",[&]{return NativeNef(surface);}) {}
+    Nef(const Nef& other):Nef(other.budget_,"solid copy",[&]{return NativeNef(other.native());}) {}
+    Nef(Nef&&)=default;
+    Nef& operator=(Nef&&)=default;
+    Nef& operator=(const Nef& other) {Nef copy(other);*this=std::move(copy);return *this;}
+    const NativeNef& native() const {return *value_;}
+    const ExactNefBudgetPtr& budget() const {return budget_;}
+    bool is_valid() const {return value_->is_valid();}
+    bool is_empty() const {return value_->is_empty();}
+    bool is_simple() const {return value_->is_simple();}
+    auto volumes_begin() const {return value_->volumes_begin();}
+    auto volumes_end() const {return value_->volumes_end();}
+    auto halffacets_begin() const {return value_->halffacets_begin();}
+    auto halffacets_end() const {return value_->halffacets_end();}
+    auto number_of_vertices() const {return value_->number_of_vertices();}
+    auto number_of_halfedges() const {return value_->number_of_halfedges();}
+    auto number_of_halffacets() const {return value_->number_of_halffacets();}
+    auto number_of_volumes() const {return value_->number_of_volumes();}
+    using SHalfedge_around_facet_const_circulator=NativeNef::SHalfedge_around_facet_const_circulator;
+    Nef join(const Nef& b) const {return join(b,budget_);}
+    Nef join(const Nef& b,const ExactNefBudgetPtr& budget) const {
+        return Nef(budget,"union",[&]{return value_->join(b.native());});
+    }
+    Nef intersection(const Nef& b) const {return intersection(b,budget_);}
+    Nef intersection(const Nef& b,const ExactNefBudgetPtr& budget) const {
+        return Nef(budget,"intersection",[&]{return value_->intersection(b.native());});
+    }
+    Nef difference(const Nef& b) const {return difference(b,budget_);}
+    Nef difference(const Nef& b,const ExactNefBudgetPtr& budget) const {
+        return Nef(budget,"difference",[&]{return value_->difference(b.native());});
+    }
+    Nef symmetric_difference(const Nef& b) const {return symmetric_difference(b,budget_);}
+    Nef symmetric_difference(const Nef& b,const ExactNefBudgetPtr& budget) const {
+        return Nef(budget,"symmetric difference",[&]{return value_->symmetric_difference(b.native());});
+    }
+    Nef regularization() const {
+        return Nef(budget_,"regularization",[&]{return value_->regularization();});
+    }
+};
+
+class InputBudgetScope {
+    ExactNefBudgetPtr budget_;
+    std::set<const NativeNef*> seen_;
+    std::vector<ExactNefBudgetLease> leases_;
+public:
+    explicit InputBudgetScope(const ExactNefBudgetPtr& budget):budget_(budget) {}
+    void add(const Nef& solid) {
+        if(budget_ && solid.budget()!=budget_ && seen_.insert(&solid.native()).second)
+            leases_.emplace_back(budget_,nativeComplexity(solid.native()),"existing operand");
+    }
+};
 
 // Domain-separated NUL-delimited strings; digests are lowercase fixed-width hex.
 std::string digest(std::initializer_list<std::string> fields) {
@@ -101,21 +232,34 @@ std::string boundaryError(const ExactBoundaryFacts& b) {
 }
 } // namespace
 
+std::string hashExactNefBudgetFacts(const ExactNefBudgetFacts& f) {
+    std::string operations;
+    for(const auto& entry:f.observationsByOperation)
+        operations+=std::to_string(entry.first.size())+":"+entry.first+":"+std::to_string(entry.second)+";";
+    return digest({"exact-nef-budget-snapshot-v1",f.definition,std::to_string(f.maximumComplexity),
+        std::to_string(f.currentComplexity),std::to_string(f.peakComplexity),std::to_string(f.preflightChecks),
+        std::to_string(f.lastRequestedComplexity),f.exceeded?"exceeded":"within",f.lastOperation,operations});
+}
+
 struct ExactMaterialRegion::Data {
     // Original arrays retained exactly, independent of caller lifetime/mutation.
     Eigen::MatrixXd vertices;
     Eigen::MatrixXi faces;
     Nef solid;
+    explicit Data(const ExactNefBudgetPtr& budget={}):solid(budget) {}
 };
 
 ExactMaterialRegion makeExactMaterialRegion(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces) {
+    return makeExactMaterialRegionWithBudget(vertices,faces,{});
+}
+ExactMaterialRegion makeExactMaterialRegionWithBudget(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,const ExactNefBudgetPtr& budget) {
     ExactMaterialRegion result;
     result.boundary_=auditExactTriangleBoundary(vertices,faces,ExactBoundaryOrientation::AnyNonzero).facts();
     auto& r=result.facts_;
     r.inputDigest=result.boundary_.inputDigest;
     r.regionDigest=digest({r.algorithm,r.backend,r.semantics,"indexed-boundary",r.inputDigest});
     r.originalSigns=result.boundary_.componentVolumeSigns;
-    auto data=std::make_shared<ExactMaterialRegion::Data>();
+    auto data=std::make_shared<ExactMaterialRegion::Data>(budget);
     data->vertices=vertices; data->faces=faces;
     result.data_=data;
     if (!result.boundary_.boundaryValid) {
@@ -136,7 +280,7 @@ ExactMaterialRegion makeExactMaterialRegion(const Eigen::MatrixXd& vertices,cons
                 throw std::runtime_error("component Polyhedron is not a valid closed surface");
             // Pinned constructor marks bounded volumes, not an oriented halfspace.
             // Positive orientation is provided on the checker-only surface copy.
-            Nef solid(surface);
+            Nef solid(surface,budget);
             finiteRegularSolid(solid,false,"component construction");
             solids.push_back(std::move(solid));
         }
@@ -201,12 +345,15 @@ ExactMaterialRegion makeExactMaterialRegion(const Eigen::MatrixXd& vertices,cons
 }
 
 ExactMaterialRegion emptyExactMaterialRegion() {
+    return emptyExactMaterialRegionWithBudget({});
+}
+ExactMaterialRegion emptyExactMaterialRegionWithBudget(const ExactNefBudgetPtr& budget) {
     ExactMaterialRegion result;
     auto& r=result.facts_;
     r.explicitEmpty=true;
     r.regionDigest=digest({r.algorithm,r.backend,r.semantics,"explicit-empty"});
     try {
-        auto data=std::make_shared<ExactMaterialRegion::Data>();
+        auto data=std::make_shared<ExactMaterialRegion::Data>(budget);
         finiteRegularSolid(data->solid,true,"explicit empty construction");
         if (!data->solid.is_empty()) throw std::runtime_error("explicit empty constructor returned nonempty set");
         result.data_=data;
@@ -218,6 +365,9 @@ ExactMaterialRegion emptyExactMaterialRegion() {
 }
 
 ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion& a,const ExactMaterialRegion& b) {
+    return relateExactMaterialRegionsWithBudget(a,b,{});
+}
+ExactMaterialRelationFacts relateExactMaterialRegionsWithBudget(const ExactMaterialRegion& a,const ExactMaterialRegion& b,const ExactNefBudgetPtr& budget) {
     for (const auto* operand : {&a,&b})
         if (!operand->facts_.valid || !operand->facts_.completed || !operand->data_)
             throw std::invalid_argument("invalid exact material operand: "+operand->facts_.error);
@@ -227,13 +377,14 @@ ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion&
     r.relationDigest=digest({r.algorithm,r.semantics,r.aDigest,r.bDigest,
                             r.aExplicitEmpty?"empty":"nonempty",r.bExplicitEmpty?"empty":"nonempty"});
     try {
-        Nef intersection=a.data_->solid.intersection(b.data_->solid);
+        InputBudgetScope inputs(budget);inputs.add(a.data_->solid);inputs.add(b.data_->solid);
+        Nef intersection=a.data_->solid.intersection(b.data_->solid,budget);
         checked(intersection,"relation intersection");
         Nef volume=intersection.regularization(); checked(volume,"relation intersection regularization");
         // Unregularized differences authenticate inclusive set containment,
         // retaining boundary-only differences. Do not reuse regularized emptiness.
-        Nef ab=a.data_->solid.difference(b.data_->solid); checked(ab,"relation difference A-B");
-        Nef ba=b.data_->solid.difference(a.data_->solid); checked(ba,"relation difference B-A");
+        Nef ab=a.data_->solid.difference(b.data_->solid,budget); checked(ab,"relation difference A-B");
+        Nef ba=b.data_->solid.difference(a.data_->solid,budget); checked(ba,"relation difference B-A");
         const bool contact=!intersection.is_empty(), overlap=!volume.is_empty();
         const bool aSubsetB=ab.is_empty(), bSubsetA=ba.is_empty();
         // Publish atomically only after every exact operation/predicate succeeds.
@@ -248,6 +399,10 @@ ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion&
 
 ExactMaterialPartitionFacts checkExactMaterialPartition(
     const ExactMaterialRegion& whole,const std::vector<ExactMaterialRegion>& parts) {
+    return checkExactMaterialPartitionWithBudget(whole,parts,{});
+}
+ExactMaterialPartitionFacts checkExactMaterialPartitionWithBudget(
+    const ExactMaterialRegion& whole,const std::vector<ExactMaterialRegion>& parts,const ExactNefBudgetPtr& budget) {
     if (parts.empty()) throw std::invalid_argument("partition requires a nonempty ordered list of parts");
     const auto validate=[](const ExactMaterialRegion& region) {
         if (!region.facts_.valid || !region.facts_.completed || !region.data_)
@@ -270,17 +425,19 @@ ExactMaterialPartitionFacts checkExactMaterialPartition(
     }
     r.partitionDigest=identity;
     try {
-        Nef united;
+        InputBudgetScope inputs(budget);inputs.add(whole.data_->solid);
+        for(const auto& part:parts) inputs.add(part.data_->solid);
+        Nef united(budget);
         std::vector<bool> subsets;
         std::vector<std::array<std::size_t,2>> overlaps;
         for (std::size_t i=0;i<parts.size();++i) {
             Nef next=united.join(parts[i].data_->solid); checked(next,"partition union");
             united=std::move(next);
-            Nef excess=parts[i].data_->solid.difference(whole.data_->solid);
+            Nef excess=parts[i].data_->solid.difference(whole.data_->solid,budget);
             checked(excess,"partition inclusive part subset");
             subsets.push_back(excess.is_empty());
             for (std::size_t j=0;j<i;++j) {
-                Nef intersection=parts[j].data_->solid.intersection(parts[i].data_->solid);
+                Nef intersection=parts[j].data_->solid.intersection(parts[i].data_->solid,budget);
                 checked(intersection,"partition pair intersection");
                 Nef volume=intersection.regularization(); checked(volume,"partition positive volume");
                 if (!volume.is_empty()) overlaps.push_back({j,i});
@@ -288,8 +445,8 @@ ExactMaterialPartitionFacts checkExactMaterialPartition(
         }
         // Do not regularize differences: boundary-only missing/excess content
         // is significant for inclusive equality.
-        Nef missing=whole.data_->solid.difference(united); checked(missing,"partition missing whole content");
-        Nef excess=united.difference(whole.data_->solid); checked(excess,"partition excess union content");
+        Nef missing=whole.data_->solid.difference(united,budget); checked(missing,"partition missing whole content");
+        Nef excess=united.difference(whole.data_->solid,budget); checked(excess,"partition excess union content");
         const bool hasMissing=!missing.is_empty(),hasExcess=!excess.is_empty();
         const bool equal=!hasMissing && !hasExcess,disjoint=overlaps.empty();
         std::sort(overlaps.begin(),overlaps.end());
@@ -360,38 +517,7 @@ ExactNefComplexity complexity(const Nef& n) {
     return {n.number_of_vertices(),n.number_of_halfedges(),n.number_of_halffacets(),n.number_of_volumes()};
 }
 
-// Checks explicit live structures and conservative known-growth preflights.
-// CGAL's internal temporary allocations are not an allocator/cgroup hard cap.
-class UnionBudget {
-    const ExactCuboidUnionSettings& settings_;
-    ExactCuboidUnionFacts& facts_;
-public:
-    UnionBudget(const ExactCuboidUnionSettings& s,ExactCuboidUnionFacts& f):settings_(s),facts_(f) {}
-    void preflight(std::size_t requested) const {
-        if(requested>settings_.maximumIntermediateComplexity)
-            throw std::length_error("RESOURCE_LIMIT: exact union intermediate complexity");
-    }
-    void observed(std::size_t actual) {
-        facts_.peakComplexity=std::max(facts_.peakComplexity,actual);
-        preflight(actual);
-    }
-    void validate(Nef& set,std::size_t otherLive) {
-        observed(otherLive+complexity(set).total());
-        checked(set,"cuboid union structure");
-        if(set.volumes_begin()==set.volumes_end() || set.volumes_begin()->mark())
-            throw std::runtime_error("cuboid union has marked unbounded exterior");
-        preflight(otherLive+3*complexity(set).total());
-        Nef regular=set.regularization();
-        observed(otherLive+complexity(set).total()+complexity(regular).total());
-        checked(regular,"cuboid union regularization");
-        Nef delta=set.symmetric_difference(regular);
-        observed(otherLive+complexity(set).total()+complexity(regular).total()+complexity(delta).total());
-        checked(delta,"cuboid union regularity equality");
-        if(!delta.is_empty()) throw std::runtime_error("cuboid union is not regular closed");
-    }
-};
-
-Nef boxSolid(const ExactCuboid& box) {
+Nef boxSolid(const ExactCuboid& box,const ExactNefBudgetPtr& budget) {
     Eigen::MatrixXd vertices(8,3);
     Eigen::MatrixXi faces(12,3);
     for(int i=0;i<8;++i) for(int axis=0;axis<3;++axis)
@@ -402,7 +528,7 @@ Nef boxSolid(const ExactCuboid& box) {
     Polyhedron surface;
     ComponentBuilder builder(vertices,faces,components,0,false);
     surface.delegate(builder);
-    return Nef(surface);
+    return Nef(surface,budget);
 }
 
 struct Nonrepresentable : std::runtime_error {using std::runtime_error::runtime_error;};
@@ -441,7 +567,7 @@ std::pair<Eigen::MatrixXd,Eigen::MatrixXi> exportUnion(
             triangleCount>settings.maximumOutputTriangles)
         throw std::length_error("RESOURCE_LIMIT: exact union conversion preflight");
     CGAL::Surface_mesh<Kernel::Point_3> mesh;
-    CGAL::convert_nef_polyhedron_to_polygon_mesh(solid,mesh,true);
+    CGAL::convert_nef_polyhedron_to_polygon_mesh(solid.native(),mesh,true);
     if(mesh.number_of_vertices()>settings.maximumOutputVertices ||
             mesh.number_of_faces()>settings.maximumOutputTriangles)
         throw std::length_error("RESOURCE_LIMIT: exact union triangulated output");
@@ -491,7 +617,14 @@ std::pair<Eigen::MatrixXd,Eigen::MatrixXi> exportUnion(
 
 ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>& boxes,
     const ExactCuboidUnionSettings& settings) {
+    return makeExactCuboidUnionWithBudget(boxes,settings,
+        std::make_shared<ExactNefBudget>(settings.maximumIntermediateComplexity));
+}
+ExactCuboidUnion makeExactCuboidUnionWithBudget(const std::vector<ExactCuboid>& boxes,
+    const ExactCuboidUnionSettings& settings,const ExactNefBudgetPtr& budget) {
     validateExactCuboidUnionSettings(settings);
+    if(!budget || budget->facts().maximumComplexity!=settings.maximumIntermediateComplexity)
+        throw std::invalid_argument("union context must match intermediate complexity setting");
     for(const auto& b:boxes)
         if(!b.lower.allFinite() || !b.upper.allFinite() || (b.upper.array()<=b.lower.array()).any())
             throw std::invalid_argument("cuboid union requires finite strictly positive binary64 boxes");
@@ -505,27 +638,23 @@ ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>& boxes,
     try {
         if(boxes.size()>settings.maximumInputCuboids)
             throw std::length_error("RESOURCE_LIMIT: exact union input cuboids");
-        UnionBudget budget(settings,facts);
         // Depth-first balanced reduction holds only logarithmically many
         // sub-results; source input order remains part of the input identity.
-        std::function<Nef(std::size_t,std::size_t,std::size_t)> reduce;
-        reduce=[&](std::size_t begin,std::size_t end,std::size_t otherLive)->Nef {
-            if(begin==end) {Nef empty;budget.validate(empty,otherLive);return empty;}
+        std::function<Nef(std::size_t,std::size_t)> reduce;
+        reduce=[&](std::size_t begin,std::size_t end)->Nef {
+            if(begin==end) {Nef empty(budget);finiteRegularSolid(empty,true,"empty union");return empty;}
             if(end-begin==1) {
-                budget.preflight(otherLive+64); // triangulated cube: 8V+36H+12F+2 volumes
-                Nef box=boxSolid(boxes[begin]);budget.validate(box,otherLive);return box;
+                Nef box=boxSolid(boxes[begin],budget);finiteRegularSolid(box,false,"box union");return box;
             }
             const auto mid=begin+(end-begin)/2;
-            Nef left=reduce(begin,mid,otherLive);
-            Nef right=reduce(mid,end,otherLive+complexity(left).total());
-            const auto operands=complexity(left).total()+complexity(right).total();
-            budget.preflight(otherLive+2*operands);
+            Nef left=reduce(begin,mid);
+            Nef right=reduce(mid,end);
             Nef united=left.join(right);
             ++facts.booleanOperations;
-            budget.validate(united,otherLive+operands);
+            finiteRegularSolid(united,false,"balanced union");
             return united;
         };
-        Nef united=reduce(0,boxes.size(),0);
+        Nef united=reduce(0,boxes.size());
         facts.finalComplexity=complexity(united);
         facts.simple=united.is_simple();
         if(!*facts.simple) {
@@ -533,14 +662,10 @@ ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>& boxes,
             facts.diagnostic="exact union is not simple; edge/point contacts are not repaired";
         } else {
             auto arrays=boxes.empty()?std::make_pair(Eigen::MatrixXd(0,3),Eigen::MatrixXi(0,3)):exportUnion(united,settings);
-            auto region=boxes.empty()?emptyExactMaterialRegion():makeExactMaterialRegion(arrays.first,arrays.second);
+            auto region=boxes.empty()?emptyExactMaterialRegionWithBudget(budget):makeExactMaterialRegionWithBudget(arrays.first,arrays.second,budget);
             if(!region.facts().valid || !region.facts().completed)
                 throw std::runtime_error("exported signed boundary invalid: "+region.facts().error);
-            const auto live=complexity(united).total()+complexity(region.data_->solid).total();
-            budget.observed(live);
-            budget.preflight(2*live);
             Nef difference=united.symmetric_difference(region.data_->solid);
-            budget.observed(live+complexity(difference).total());
             checked(difference,"exported union exact inclusive roundtrip");
             facts.roundtripEqual=difference.is_empty();
             if(!*facts.roundtripEqual) throw std::runtime_error("exported union differs from exact original set");
@@ -555,16 +680,19 @@ ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>& boxes,
     catch(const std::bad_alloc&) {facts.status="RESOURCE_LIMIT_UNKNOWN";facts.diagnostic="exact union allocation failure";}
     catch(const std::exception& e) {facts.status="GEOMETRY_UNKNOWN";facts.diagnostic=e.what();}
     catch(...) {facts.status="GEOMETRY_UNKNOWN";facts.diagnostic="unknown exact union failure";}
+    if(budget->facts().exceeded) facts.status="RESOURCE_LIMIT_UNKNOWN";
     if(facts.status!="EXACT_UNION_VALIDATED") {
         result.region_.reset();
         result.vertices_.resize(0,3);result.faces_.resize(0,3);
     }
+    facts.budget=budget->facts();facts.peakComplexity=facts.budget.peakComplexity;
     const auto& c=facts.finalComplexity;
     facts.outputDigest=digest({facts.inputDigest,facts.status,facts.diagnostic,facts.meshDigest,
         facts.simple?(*facts.simple?"simple":"nonsimple"):"unknown",
         facts.roundtripEqual?(*facts.roundtripEqual?"equal":"unequal"):"unknown",
         std::to_string(c.vertices),std::to_string(c.halfedges),std::to_string(c.halffacets),std::to_string(c.volumes),
-        std::to_string(facts.booleanOperations),std::to_string(facts.peakComplexity),facts.complexityDefinition});
+        std::to_string(facts.booleanOperations),std::to_string(facts.peakComplexity),facts.complexityDefinition,
+        hashExactNefBudgetFacts(facts.budget)});
     return result;
 }
 } // namespace verification

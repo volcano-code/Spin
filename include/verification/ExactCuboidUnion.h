@@ -17,10 +17,11 @@ struct ExactNefComplexity {
 struct ExactCuboidUnionFacts {
     std::string algorithm="exact-balanced-cuboid-union-binary64-roundtrip-v1";
     std::string backend=ExactMaterialRegionFacts{}.backend;
-    std::string complexityDefinition="vertices+halfedges+halffacets+volumes; live explicit union/roundtrip Nef operands/results including imported region; excludes existing auditor internal temporaries; not allocator cap";
+    std::string complexityDefinition=ExactNefBudgetFacts{}.definition;
     std::string status="INCOMPLETE_UNKNOWN",diagnostic,inputDigest,outputDigest,meshDigest;
     ExactCuboidUnionSettings settings;
     ExactNefComplexity finalComplexity;
+    ExactNefBudgetFacts budget;
     std::size_t inputCuboids=0,booleanOperations=0,peakComplexity=0;
     std::optional<bool> simple,roundtripEqual;
 };
@@ -41,10 +42,12 @@ private:
     Eigen::MatrixXi faces_{0,3};
     std::shared_ptr<const ExactMaterialRegion> region_;
     friend ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>&,const ExactCuboidUnionSettings&);
+    friend ExactCuboidUnion makeExactCuboidUnionWithBudget(const std::vector<ExactCuboid>&,const ExactCuboidUnionSettings&,const ExactNefBudgetPtr&);
 };
 void validateExactCuboidUnionSettings(const ExactCuboidUnionSettings&);
 std::string hashExactCuboidUnionSettings(const ExactCuboidUnionSettings&);
 // Malformed settings/coordinates throw invalid_argument. Operational failures
 // are explicit UNKNOWN/NONMANIFOLD/NONREPRESENTABLE diagnostics, not infeasible.
 ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>&,const ExactCuboidUnionSettings& = {});
+ExactCuboidUnion makeExactCuboidUnionWithBudget(const std::vector<ExactCuboid>&,const ExactCuboidUnionSettings&,const ExactNefBudgetPtr&);
 }

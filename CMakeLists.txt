@@ -254,7 +254,7 @@ endif()
 
 if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES src/verification/ExactBoundaryAudit.cpp src/verification/ExactMaterialRegion.cpp src/verification/ExactBoundaryDistance.cpp)
-    list(APPEND MAKE_IT_STAND_CORE_HEADERS include/verification/ExactBoundaryAudit.h include/verification/ExactMaterialRegion.h include/verification/ExactCuboidUnion.h)
+    list(APPEND MAKE_IT_STAND_CORE_HEADERS include/verification/ExactBoundaryAudit.h include/verification/ExactMaterialRegion.h include/verification/ExactCuboidUnion.h include/verification/ExactNefBudget.h)
     if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceSurfaceOctree.cpp)
         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceSurfaceOctree.h)

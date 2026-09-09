@@ -45,7 +45,7 @@ std::string productDigest(const SourceMaterialBoundaryFacts& f) {
     optionalBool(f.partition.completePartition);optionalBool(f.carvedSubsetDesign.aSubsetB);
     return digest({f.algorithm,f.inputDigest,f.status,f.diagnostic,f.unionFacts.outputDigest,
         f.outerMeshHash,f.materialMeshHash,f.partition.partitionDigest,f.carvedSubsetDesign.relationDigest,
-        f.clearance.clearanceDigest,evidence.str()});
+        f.clearance.clearanceDigest,evidence.str(),verification::hashExactNefBudgetFacts(f.resourceBudget)});
 }
 void requireRegion(const verification::ExactMaterialRegion& r,const char* label) {
     if(!r.facts().completed || !r.facts().valid)
@@ -107,35 +107,42 @@ SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDoma
     facts.binaryHash=digest({"source-material-binary-v1",facts.sourceHash,facts.partitionHash,binaryText});
     facts.inputDigest=digest({facts.algorithm,facts.sourceHash,facts.partitionHash,facts.binaryHash,
         scalar(density),hashSourceMaterialBoundarySettings(settings)});
+    const auto budget=std::make_shared<verification::ExactNefBudget>(settings.unionSettings.maximumIntermediateComplexity);
+    const auto finishFacts=[&] {
+        facts.resourceBudget=budget->facts();
+        if(facts.resourceBudget.exceeded) facts.status="RESOURCE_LIMIT_UNKNOWN";
+        facts.productDigest=productDigest(facts);
+    };
     try {
         domain.validateCoverage();
         const auto output=sourceBinaryCuboids(domain,binary,settings.unionSettings.maximumInputCuboids);
         std::vector<verification::ExactCuboid> boxes;
         boxes.reserve(output.cuboids.size());
         for(const auto& box:output.cuboids) boxes.push_back({box.lower,box.upper});
-        auto united=verification::makeExactCuboidUnion(boxes,settings.unionSettings);
+        auto united=verification::makeExactCuboidUnionWithBudget(boxes,settings.unionSettings,budget);
         facts.unionFacts=united.facts();
         if(!united.region()) {
             facts.status=united.facts().status;facts.diagnostic=united.facts().diagnostic;
-            facts.productDigest=productDigest(facts);return result;
+            finishFacts();return result;
         }
         SourceMaterialBoundary product;
         const auto& source=domain.source();
         product.outerVertices_=source.outerVertices();product.outerFaces_=source.outerFaces();
         product.cavityVertices_=united.vertices();product.cavityFaces_=united.faces();
-        const auto outer=verification::makeExactMaterialRegion(product.outerVertices_,product.outerFaces_);
-        const auto design=verification::makeExactMaterialRegion(source.designVertices(),source.designFaces());
-        requireRegion(outer,"original outer");requireRegion(design,"original design");
+        const auto outer=verification::makeExactMaterialRegionWithBudget(product.outerVertices_,product.outerFaces_,budget);
+        requireRegion(outer,"original outer");
+        const auto design=verification::makeExactMaterialRegionWithBudget(source.designVertices(),source.designFaces(),budget);
+        requireRegion(design,"original design");
         facts.outerRegion=outer.facts();facts.designRegion=design.facts();facts.carvedRegion=united.region()->facts();
         facts.outerMeshHash=outer.facts().inputDigest;
-        facts.carvedSubsetDesign=verification::relateExactMaterialRegions(*united.region(),design);
+        facts.carvedSubsetDesign=verification::relateExactMaterialRegionsWithBudget(*united.region(),design,budget);
         if(!facts.carvedSubsetDesign.completed || facts.carvedSubsetDesign.aSubsetB!=true)
             throw std::runtime_error("newly carved union is not an established subset of original design");
         facts.clearance=verification::checkExactBoundaryClearance(outer,*united.region(),settings.minimumOuterWall);
         if(!facts.clearance.completed || (!boxes.empty() &&
                 (facts.clearance.applicable!=true || facts.clearance.contact!=false || facts.clearance.atLeastMinimum!=true))) {
             facts.status="OUTER_CLEARANCE_REJECTED";facts.diagnostic="strict original-boundary separation/threshold not established";
-            facts.productDigest=productDigest(facts);return result;
+            finishFacts();return result;
         }
         const auto vertexCount=product.outerVertices_.rows()+product.cavityVertices_.rows();
         const auto faceCount=product.outerFaces_.rows()+product.cavityFaces_.rows();
@@ -149,24 +156,24 @@ SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDoma
         // become cavities, inward void shells become outward retained islands.
         product.materialFaces_.bottomRows(product.cavityFaces_.rows())=
             (product.cavityFaces_.rowwise().reverse().array()+product.outerVertices_.rows()).matrix();
-        const auto material=verification::makeExactMaterialRegion(product.materialVertices_,product.materialFaces_);
+        const auto material=verification::makeExactMaterialRegionWithBudget(product.materialVertices_,product.materialFaces_,budget);
         facts.materialRegion=material.facts();facts.materialBoundary=material.boundaryFacts();
         requireRegion(material,"final signed material");
         facts.materialMeshHash=material.facts().inputDigest;
-        facts.partition=verification::checkExactMaterialPartition(outer,{material,*united.region()});
+        facts.partition=verification::checkExactMaterialPartitionWithBudget(outer,{material,*united.region()},budget);
         if(!facts.partition.completed || facts.partition.completePartition!=true)
             throw std::runtime_error("exact inclusive final-material/new-carve partition not established");
         geometricMoments(domain,binary,product.materialVertices_,product.materialFaces_,density,facts);
         facts.status="MATERIAL_BOUNDARY_VALIDATED";
         facts.diagnostic="native exact material geometry and independent moments only; no solver/stability/manufacturing authority";
-        facts.productDigest=productDigest(facts);
+        finishFacts();
         product.facts_=facts;
         result.product_=std::shared_ptr<const SourceMaterialBoundary>(new SourceMaterialBoundary(std::move(product)));
     } catch(const std::length_error& e) {facts.status="RESOURCE_LIMIT_UNKNOWN";facts.diagnostic=e.what();}
     catch(const std::bad_alloc&) {facts.status="RESOURCE_LIMIT_UNKNOWN";facts.diagnostic="source material allocation failure";}
     catch(const std::exception& e) {facts.status="GEOMETRY_UNKNOWN";facts.diagnostic=e.what();}
     catch(...) {facts.status="GEOMETRY_UNKNOWN";facts.diagnostic="unknown source material operation failure";}
-    if(!result.product_) facts.productDigest=productDigest(facts);
+    if(!result.product_) finishFacts();
     return result;
 }
 

@@ -15,6 +15,8 @@ struct SourceMaterialBoundaryFacts {
     std::string sourceHash,partitionHash,binaryHash,outerMeshHash,materialMeshHash;
     double density=0,minimumOuterWall=0;
     verification::ExactCuboidUnionFacts unionFacts;
+    // Immutable copy at the final validation/failure point, not a live context.
+    verification::ExactNefBudgetFacts resourceBudget;
     verification::ExactMaterialRegionFacts outerRegion,designRegion,materialRegion,carvedRegion;
     verification::ExactBoundaryFacts materialBoundary;
     verification::ExactMaterialPartitionFacts partition;

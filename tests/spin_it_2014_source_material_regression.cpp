@@ -7,6 +7,10 @@
 #include <iomanip>
 #include <iostream>
 #include <type_traits>
+#if __has_include("verification/ExactNefBudget.h") // Recompile after the preserved missing-API RED.
+#include "verification/ExactNefBudget.h"
+#define SOURCE_MATERIAL_HAS_SCOPED_BUDGET 1
+#endif
 using namespace spin2014;
 using namespace verification;
 using namespace surface_test;
@@ -112,6 +116,7 @@ void materialTests() {
     std::cout<<std::setprecision(17)<<"material product="<<f.productDigest<<" mesh="<<f.materialMeshHash
         <<" union="<<f.unionFacts.outputDigest<<" cuboids="<<f.unionFacts.inputCuboids
         <<" operations="<<f.unionFacts.booleanOperations<<" peak_complexity="<<f.unionFacts.peakComplexity
+        <<" material_budget_peak="<<f.resourceBudget.peakComplexity<<" material_budget_live_snapshot="<<f.resourceBudget.currentComplexity
         <<" final_complexity="<<f.unionFacts.finalComplexity.total()<<" residual="<<f.normalizedMomentError
         <<" min_inertia="<<f.minimumCentralInertiaEigenvalue<<" moments="<<f.integratedMoments.values().transpose()<<'\n';
     checkOuter(p,box({-1,-1,0},{1,1,2}));
@@ -205,7 +210,102 @@ void wrapperTests() {
     static_assert(!std::is_default_constructible<SourceMaterialBoundary>::value,"no caller fabricated accepted product");
     static_assert(std::is_const<std::remove_reference_t<decltype(result.solve())>>::value,"immutable wrapper solve access");
 }
+void zeroCarveBudgetTest() {
+    // Catch an empty union bypassing all subsequent original/design/final Nefs.
+    auto r=goodRequest();SourceAdaptiveDomain domain(r.source,2,4);
+    SourceMaterialBoundarySettings limits;limits.unionSettings.maximumIntermediateComplexity=4;
+    auto result=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Zero(domain.leaves().size()),1,limits);
+    std::cout<<"zero-carve cap4 status="<<result.facts().status<<" product="<<bool(result.product())<<'\n';
+    require(!result.product() && result.facts().status=="RESOURCE_LIMIT_UNKNOWN","zero carve cannot bypass cap4 through ordinary-cube material audits");
+    require(result.facts().resourceBudget.exceeded && result.facts().resourceBudget.currentComplexity==0,
+        "failed zero-carve chain retains measured rejection and releases all Nefs");
+    auto baseline=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Zero(domain.leaves().size()),1);
+    const auto peak=baseline.facts().resourceBudget.peakComplexity;
+    limits.unionSettings.maximumIntermediateComplexity=peak;
+    auto equal=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Zero(domain.leaves().size()),1,limits);
+    require(bool(equal.product()),"zero-carve complete original/design/final/partition exact peak equality");
+    limits.unionSettings.maximumIntermediateComplexity=peak-1;
+    auto below=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Zero(domain.leaves().size()),1,limits);
+    require(!below.product() && below.facts().status=="RESOURCE_LIMIT_UNKNOWN","zero-carve full-chain one-below peak fails closed");
+    std::cout<<"zero-carve full-chain peak="<<peak<<'\n';
+}
+void auditorBudgetTests() {
+#ifdef SOURCE_MATERIAL_HAS_SCOPED_BUDGET
+    static_assert(!std::is_copy_constructible<ExactNefBudget>::value && !std::is_copy_assignable<ExactNefBudget>::value,
+        "live operation contexts cannot be copied or reset under existing leases");
+    const auto shape=join(cube(0,3),cube(1,2),true);
+    auto unlimited=std::make_shared<ExactNefBudget>(100000);
+    auto region=makeExactMaterialRegionWithBudget(shape.v,shape.f,unlimited);
+    require(region.facts().valid,"budgeted signed nesting build");
+    const auto builderPeak=unlimited->facts().peakComplexity;
+    require(builderPeak>138,"construction/nesting/assembly count simultaneous explicit solids");
+    auto at=std::make_shared<ExactNefBudget>(builderPeak);
+    auto same=makeExactMaterialRegionWithBudget(shape.v,shape.f,at);
+    require(same.facts().valid && same.facts().regionDigest==makeExactMaterialRegion(shape.v,shape.f).facts().regionDigest,"budget equality preserves exact legacy region identity");
+    auto below=std::make_shared<ExactNefBudget>(builderPeak-1);
+    auto denied=makeExactMaterialRegionWithBudget(shape.v,shape.f,below);
+    require(!denied.facts().valid && below->facts().exceeded,"signed auditor must reject one below actual peak");
+    auto meshA=cube(0,2),meshB=cube(1,3);
+    const auto a=makeExactMaterialRegion(meshA.v,meshA.f),b=makeExactMaterialRegion(meshB.v,meshB.f);
+    auto relationBudget=std::make_shared<ExactNefBudget>(100000);
+    const auto relation=relateExactMaterialRegionsWithBudget(a,b,relationBudget);
+    require(relation.completed && relation.positiveVolumeOverlap==true,"budgeted overlap relation");
+    const auto relationPeak=relationBudget->facts().peakComplexity;
+    require(relationPeak>92 && relationBudget->facts().currentComplexity==0,"relation counts both existing operands and live Boolean results, then releases leases");
+    at=std::make_shared<ExactNefBudget>(relationPeak);
+    require(relateExactMaterialRegionsWithBudget(a,b,at).completed,"relation exact peak equality");
+    below=std::make_shared<ExactNefBudget>(relationPeak-1);
+    auto failedRelation=relateExactMaterialRegionsWithBudget(a,b,below);
+    require(!failedRelation.completed && !failedRelation.equal && below->facts().exceeded,"relation cap cannot publish partial facts");
+    const auto left=box({0,0,0},{1,2,2}),right=box({1,0,0},{2,2,2});
+    const std::vector<ExactMaterialRegion> parts={makeExactMaterialRegion(left.v,left.f),makeExactMaterialRegion(right.v,right.f)};
+    auto partitionBudget=std::make_shared<ExactNefBudget>(100000);
+    auto partition=checkExactMaterialPartitionWithBudget(a,parts,partitionBudget);
+    require(partition.completePartition==true,"budgeted actual inclusive partition");
+    const auto partitionPeak=partitionBudget->facts().peakComplexity;
+    require(partitionPeak>138 && partitionBudget->facts().currentComplexity==0,"partition counts whole/parts/union/results then releases");
+    at=std::make_shared<ExactNefBudget>(partitionPeak);
+    require(checkExactMaterialPartitionWithBudget(a,parts,at).completePartition==true,"partition exact peak equality");
+    below=std::make_shared<ExactNefBudget>(partitionPeak-1);
+    auto failedPartition=checkExactMaterialPartitionWithBudget(a,parts,below);
+    require(!failedPartition.completed && !failedPartition.completePartition && below->facts().exceeded,"partition cap cannot publish partial facts");
+    // Persisted region solids remain charged until their last owner releases.
+    auto lifetime=std::make_shared<ExactNefBudget>(100000);
+    {auto owned=makeExactMaterialRegionWithBudget(meshA.v,meshA.f,lifetime);
+        require(owned.facts().valid && lifetime->facts().currentComplexity==46,"actual cube Nef retained by region");}
+    require(lifetime->facts().currentComplexity==0,"region destruction releases actual solid lease");
+    auto aliases=std::make_shared<ExactNefBudget>(140);
+    require(relateExactMaterialRegionsWithBudget(a,a,aliases).equal==true &&
+        aliases->facts().peakComplexity==140 && aliases->facts().observationsByOperation.at("existing operand")==1,
+        "same existing operand is admitted once, not twice");
+    auto ownedBudget=std::make_shared<ExactNefBudget>(100000);
+    auto owned=makeExactMaterialRegionWithBudget(meshA.v,meshA.f,ownedBudget);
+    const auto admissions=ownedBudget->facts().observationsByOperation.count("existing operand");
+    require(relateExactMaterialRegionsWithBudget(owned,owned,ownedBudget).equal==true &&
+        ownedBudget->facts().observationsByOperation.count("existing operand")==admissions,
+        "already charged context operands are not double-counted");
+    const auto ownedSnapshot=hashExactNefBudgetFacts(ownedBudget->facts());
+    require(relateExactMaterialRegions(owned,owned).equal==true &&
+        hashExactNefBudgetFacts(ownedBudget->facts())==ownedSnapshot,
+        "absent-budget legacy operation never mutates an operand context");
+    ExactCuboidUnionSettings settings;
+    auto shared=std::make_shared<ExactNefBudget>(settings.maximumIntermediateComplexity);
+    auto output=makeExactCuboidUnionWithBudget({cuboid({0,0,0},{1,1,1})},settings,shared);
+    require(bool(output.region()),"shared union success");
+    const auto frozen=hashExactNefBudgetFacts(output.facts().budget),identity=output.facts().outputDigest;
+    {auto later=makeExactMaterialRegionWithBudget(meshA.v,meshA.f,shared);
+        require(later.facts().valid,"later context operation");}
+    require(output.facts().outputDigest==identity && hashExactNefBudgetFacts(output.facts().budget)==frozen &&
+        hashExactNefBudgetFacts(shared->facts())!=frozen,"published budget snapshot and identity cannot mutate across later operations");
+    rejects([]{ExactNefBudget invalid(0);},"zero shared budget rejected");
+    std::cout<<"scoped budgets builder_peak="<<builderPeak<<" relation_peak="<<relationPeak<<" partition_peak="<<partitionPeak<<'\n';
+#else
+    require(false,"RED: scoped shared-auditor Nef budget operations are unavailable");
+#endif
+}
 int main(int argc,char** argv) {try {
+    if(argc==1 || std::string(argv[1])=="--budget-zero") zeroCarveBudgetTest();
+    if(argc==1 || std::string(argv[1])=="--auditor-budget") auditorBudgetTests();
     if(argc==1 || std::string(argv[1])=="--union") unionTests();
     if(argc==1 || std::string(argv[1])=="--cap") exactOutputCapTests();
     if(argc==1 || std::string(argv[1])=="--material") materialTests();
