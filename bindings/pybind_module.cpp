@@ -1,4 +1,7 @@
 #include "api/BalanceModel.h"
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+#include "SourceSpinMaterialBindings.h"
+#endif
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
 #include "verification/ExactBoundaryAudit.h"
 #include "verification/ExactMaterialRegion.h"
@@ -404,6 +407,9 @@ std::vector<spin::QuadricCoefficients10> quadricsFromRows(
 
 PYBIND11_MODULE(_make_it_stand, module)
 {
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+    registerSourceSpinMaterialBindings(module,exactVerticesFromPython,exactFacesFromPython);
+#endif
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
     py::class_<verification::ExactMaterialRegion>(module, "ExactMaterialRegion",
         "Immutable exact represented material set; no public constructor or physical/seal authority.")

@@ -353,6 +353,9 @@ if(MAKE_IT_STAND_BUILD_PYTHON)
         bindings/pybind_module.cpp
     )
     target_compile_features(_make_it_stand PRIVATE cxx_std_17)
+    if(MAKE_IT_STAND_BUILD_SPIN_IT_2014 AND MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+        target_sources(_make_it_stand PRIVATE bindings/SourceSpinMaterialBindings.cpp)
+    endif()
     set_target_properties(
         _make_it_stand
         PROPERTIES
@@ -459,6 +462,13 @@ if(BUILD_TESTING)
     endif()
     if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+            if(MAKE_IT_STAND_BUILD_PYTHON)
+                add_test(NAME source-spin-material-python
+                    COMMAND "${Python3_EXECUTABLE}" -m unittest test_source_spin_material_bridge -v)
+                set_tests_properties(source-spin-material-python PROPERTIES
+                    LABELS "spin-it-2014;exact-geometry;python;native" TIMEOUT 900
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}")
+            endif()
             add_executable(spin-it-2014-source-material-regression tests/spin_it_2014_source_material_regression.cpp)
             target_link_libraries(spin-it-2014-source-material-regression PRIVATE make_it_stand::core)
             add_test(NAME spin-it-2014-source-material COMMAND spin-it-2014-source-material-regression)
