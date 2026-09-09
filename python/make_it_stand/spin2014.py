@@ -76,8 +76,25 @@ class SpinIt2014Request:
     inertia_weight: float = 1.0
     formulation: str = "LEGACY_ANGLE_ELIMINATED"
     initial_phi: float = 0.0
+    slqp_algorithm: str = "LEGACY_V3"
+    slqp_restoration_trust_bound: float = 1.0
+    slqp_lp_iteration_limit: int = 10000
+    slqp_lp_time_limit: float = 10.0
+    slqp_lp_feasibility_tolerance: float = 1e-9
 
     def __post_init__(self) -> None:
+        if self.slqp_algorithm not in {"LEGACY_V3", "AUDITED_KKT_RESTORATION_V1"}:
+            raise ValueError("unsupported SLQP algorithm")
+        if self.slqp_algorithm == "AUDITED_KKT_RESTORATION_V1":
+            if self.formulation != "PAPER_GIVENS":
+                raise ValueError("audited SLQP requires PAPER_GIVENS")
+            if any(not math.isfinite(v) or v <= 0 for v in
+                   (self.slqp_restoration_trust_bound, self.slqp_lp_time_limit)):
+                raise ValueError("audit trust bound and LP time limit must be positive and finite")
+            if isinstance(self.slqp_lp_iteration_limit, bool) or not isinstance(self.slqp_lp_iteration_limit, int) or self.slqp_lp_iteration_limit <= 0:
+                raise ValueError("LP iteration limit must be a positive integer")
+            if not math.isfinite(self.slqp_lp_feasibility_tolerance) or not 1e-10 <= self.slqp_lp_feasibility_tolerance <= 1e-4:
+                raise ValueError("LP feasibility tolerance must be in [1e-10,1e-4]")
         if self.formulation not in {"LEGACY_ANGLE_ELIMINATED", "PAPER_GIVENS"}:
             raise ValueError("unsupported Spin-It 2014 formulation")
         if not math.isfinite(self.initial_phi) or (
@@ -254,6 +271,11 @@ def solve_spin_it_2014(request: SpinIt2014Request) -> SpinIt2014Result:
         request.inertia_weight,
         request.formulation,
         request.initial_phi,
+        request.slqp_algorithm,
+        request.slqp_restoration_trust_bound,
+        request.slqp_lp_iteration_limit,
+        request.slqp_lp_time_limit,
+        request.slqp_lp_feasibility_tolerance,
     )
     return SpinIt2014Result(artifact)
 

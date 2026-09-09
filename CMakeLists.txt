@@ -94,7 +94,7 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER OR MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHEC
     make_it_stand_verify_pinned_geometry_dependencies()
 endif()
 
-if(MAKE_IT_STAND_BUILD_REACHABILITY)
+if(MAKE_IT_STAND_BUILD_REACHABILITY OR MAKE_IT_STAND_BUILD_SPIN_IT_2014)
     include(HighsDependency)
 endif()
 
@@ -215,6 +215,11 @@ if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
         src/spin2014/SpinIt2014MomentProblem.cpp
         src/spin2014/Spin2014GivensProblem.cpp
         src/spin2014/SlqpLbfgsSolver.cpp
+        src/spin2014/SlqpKkt.cpp
+        src/spin2014/SlqpAuditLp.cpp
+        src/spin2014/SlqpAuditTrace.cpp
+        src/spin2014/SlqpAuditJson.cpp
+        src/spin2014/SlqpHistory.cpp
         src/spin2014/AdaptiveVoxelSpinSolver.cpp
         src/spin2014/DualMaterialSpinSolver.cpp
         src/api/SpinIt2014.cpp
@@ -284,7 +289,7 @@ target_link_libraries(make_it_stand_core PUBLIC igl::core)
 if(MAKE_IT_STAND_BUILD_SPIN_IT_FASTER OR MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
     target_link_libraries(make_it_stand_core PUBLIC igl::cgal)
 endif()
-if(MAKE_IT_STAND_BUILD_REACHABILITY)
+if(MAKE_IT_STAND_BUILD_REACHABILITY OR MAKE_IT_STAND_BUILD_SPIN_IT_2014)
     target_link_libraries(make_it_stand_core PRIVATE highs::highs)
 endif()
 
@@ -499,6 +504,9 @@ if(BUILD_TESTING)
             spin-it-2014-slqp-regression
             tests/spin_it_2014_slqp_regression.cpp
         )
+        add_executable(spin-it-2014-audited tests/spin_it_2014_audited.cpp)
+        target_link_libraries(spin-it-2014-audited PRIVATE make_it_stand::core)
+        add_test(NAME spin-it-2014-audited COMMAND spin-it-2014-audited)
         target_compile_features(
             spin-it-2014-slqp-regression
             PRIVATE cxx_std_17

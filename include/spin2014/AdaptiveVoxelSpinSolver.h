@@ -76,6 +76,7 @@ struct AdaptiveSpinPass
     std::vector<SlqpIteration> slqpTrace;
     double initialPhi = 0.0;
     double finalPhi = 0.0;
+    SlqpAlgorithm algorithm = SlqpAlgorithm::LegacyV3;
 };
 
 
@@ -103,6 +104,7 @@ struct AdaptiveVoxelSpinResult
     Spin2014Formulation formulation = Spin2014Formulation::LegacyAngleEliminated;
     double initialPhi = 0.0;
     double finalPhi = 0.0;
+    SlqpAlgorithm algorithm = SlqpAlgorithm::LegacyV3;
 };
 
 

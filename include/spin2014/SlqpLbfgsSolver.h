@@ -1,15 +1,26 @@
 #pragma once
 
 #include "spin2014/AdaptiveFillFunctional.h"
+#include "spin2014/SlqpKkt.h"
 
 #include <Eigen/Core>
 
 #include <string>
+#include <functional>
 #include <vector>
 
 
 namespace spin2014
 {
+
+// Differentiable equalities with a [0,1] bounded prefix; remaining variables
+// are unbounded. Callback identity is not a code or input attestation.
+struct EqualityBoxProblem
+{
+    Eigen::Index variableCount = 0;
+    Eigen::Index betaCount = 0;
+    std::function<AdaptiveFillEvaluation(const Eigen::VectorXd&)> evaluate;
+};
 
 
 enum class SlqpStatus
@@ -17,8 +28,13 @@ enum class SlqpStatus
     Converged,
     MaximumIterations,
     LineSearchExhausted,
-    InvalidProblem
+    InvalidProblem,
+    RestorationStalled,
+    NumericalUnknown
 };
+
+enum class SlqpAlgorithm { LegacyV3, AuditedKktRestorationV1 };
+const char* slqpAlgorithmToken(SlqpAlgorithm) noexcept;
 
 
 struct SlqpLbfgsSettings
@@ -32,6 +48,8 @@ struct SlqpLbfgsSettings
     double meritPenalty = 100.0;
     double lineSearchReduction = 0.5;
     double armijo = 1e-4;
+    SlqpAlgorithm algorithm = SlqpAlgorithm::LegacyV3;
+    SlqpAuditSettings audit;
 };
 
 
@@ -49,6 +67,21 @@ struct SlqpIteration
     int lbfgsHistorySize = 0;
     bool usedFirstOrderFallback = false;
     double phi = 0.0;
+    KktResidual kkt;
+    Eigen::VectorXd state, gradient, constraints;
+    Eigen::MatrixXd constraintJacobian;
+    // 0 free, 1 lower, 2 upper; unbounded coordinates always 0.
+    std::vector<unsigned char> activeMembership;
+    std::string membershipHash;
+    std::string historyResetReason;
+    int historyBefore = 0;
+    int historyAfter = 0;
+    bool curvaturePairAccepted = false;
+    bool curvaturePairRejected = false;
+    double linearizedConstraintResidual = 0.;
+    RestorationEvidence restoration;
+    std::vector<RestorationTrial> objectiveTrials;
+    bool finalState = false;
 };
 
 
@@ -63,10 +96,17 @@ struct SlqpLbfgsResult
     Spin2014Formulation formulation = Spin2014Formulation::LegacyAngleEliminated;
     double initialPhi = 0.0;
     double finalPhi = 0.0;
+    SlqpAlgorithm algorithm = SlqpAlgorithm::LegacyV3;
+    KktResidual finalKkt;
+    Eigen::VectorXd finalState;
+    Eigen::Index boundedVariableCount = 0;
 };
 
 
 const char* slqpStatusToken(SlqpStatus status) noexcept;
+
+SlqpLbfgsResult solveSlqpLbfgs(const EqualityBoxProblem& problem,
+    const Eigen::VectorXd& initial, const SlqpLbfgsSettings& settings = {});
 
 SlqpLbfgsResult solveSlqpLbfgs(
     const AdaptiveFillFunctional& functional,

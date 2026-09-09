@@ -1,0 +1,59 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 42
+    Start 42: spin-2014-dependency-contract
+
+42: Test command: /usr/bin/cmake "-P" "/data/xvxinyao/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency.cmake"
+42: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+42: Test timeout computed to be: 240
+42: -- 2014 ON / reachability OFF actual linked audit fixture: status=CONVERGED x=0.75 residual=0
+42: duplicate=CONVERGED inconsistent_L1=0.5 singular=RESTORATION_STALLED finite_failed_trials=24 invalid_trials=24 cap=WITNESS_LP_UNKNOWN: Iteration limit reached
+42: givens=CONVERGED kkt=6.3137399822221774e-11 phi=1.5707963268031664
+42: [PASS] audited actual KKT/restoration/analytic/Givens tests
+42: 
+1/1 Test #42: spin-2014-dependency-contract ....   Passed   91.26 sec
+
+The following tests passed:
+	spin-2014-dependency-contract
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+build-system    =  91.26 sec*proc (1 test)
+spin-it         =  91.26 sec*proc (1 test)
+spin-it-2014    =  91.26 sec*proc (1 test)
+
+Total Test time (real) =  91.26 sec
+	Command being timed: "ctest --test-dir build/strict-v2-spin -R ^spin-2014-dependency-contract$ -V --output-log /data/xvxinyao/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5b-isolation.log"
+	User time (seconds): 222.99
+	System time (seconds): 14.19
+	Percent of CPU this job got: 259%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:31.26
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 787632
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 188
+	Minor (reclaiming a frame) page faults: 11164813
+	Voluntary context switches: 386148
+	Involuntary context switches: 7638
+	Swaps: 0
+	File system inputs: 11736
+	File system outputs: 691960
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

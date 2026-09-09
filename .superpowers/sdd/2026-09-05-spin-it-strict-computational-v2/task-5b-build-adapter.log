@@ -1,0 +1,10 @@
+[ 73%] Built target highs
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/DualMaterialSpinSolver.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SlqpLbfgsSolver.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/AdaptiveVoxelSpinSolver.cpp.o
+[ 75%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/api/SpinIt2014.cpp.o
+[ 76%] Linking CXX static library libmake_it_stand_core.a
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/spin-it-2014-audited.dir/tests/spin_it_2014_audited.cpp.o
+[100%] Linking CXX executable spin-it-2014-audited
+[100%] Built target spin-it-2014-audited

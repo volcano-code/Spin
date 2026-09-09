@@ -1,0 +1,5 @@
+[ 71%] Built target highs
+[ 98%] Built target make_it_stand_core
+[ 98%] Building CXX object CMakeFiles/spin-it-2014-audited.dir/tests/spin_it_2014_audited.cpp.o
+[100%] Linking CXX executable spin-it-2014-audited
+[100%] Built target spin-it-2014-audited

@@ -43,7 +43,7 @@ execute_process(
         -B "${ENABLED_BINARY_DIR}"
         -G Ninja
         -DMAKE_IT_STAND_BUILD_VIEWER=OFF
-        -DBUILD_TESTING=OFF
+        -DBUILD_TESTING=ON
         -DMAKE_IT_STAND_BUILD_REACHABILITY=OFF
         -DMAKE_IT_STAND_BUILD_SPIN_IT_FASTER=OFF
         -DMAKE_IT_STAND_BUILD_SPIN_IT_2014=ON
@@ -65,7 +65,7 @@ if(enabled_graph MATCHES "igl_cgal|external/cgal|libgmp|libmpfr")
     message(FATAL_ERROR "Spin-It 2014-only build unexpectedly requires CGAL")
 endif()
 execute_process(
-    COMMAND "${CMAKE_COMMAND}" --build "${ENABLED_BINARY_DIR}" --target make_it_stand_core -j2
+    COMMAND "${CMAKE_COMMAND}" --build "${ENABLED_BINARY_DIR}" --target spin-it-2014-audited -j3
     RESULT_VARIABLE build_status
     OUTPUT_VARIABLE build_stdout
     ERROR_VARIABLE build_stderr
@@ -76,3 +76,9 @@ if(NOT build_status EQUAL 0)
         "stdout:\n${build_stdout}\nstderr:\n${build_stderr}"
     )
 endif()
+execute_process(COMMAND "${ENABLED_BINARY_DIR}/spin-it-2014-audited"
+    RESULT_VARIABLE audited_status OUTPUT_VARIABLE audited_stdout ERROR_VARIABLE audited_stderr)
+if(NOT audited_status EQUAL 0)
+    message(FATAL_ERROR "2014 ON / reachability OFF linked audited solver failed\n${audited_stdout}\n${audited_stderr}")
+endif()
+message(STATUS "2014 ON / reachability OFF actual linked audit fixture: ${audited_stdout}")

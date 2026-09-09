@@ -1,4 +1,5 @@
 #include "api/SpinIt2014.h"
+#include "spin2014/SlqpAuditTrace.h"
 
 #include "manufacturing/ManufacturingGeometry.h"
 
@@ -168,6 +169,10 @@ std::string diagnostics(
                << ",\n  \"binary_constraints\": ";
         vectorJson(output,result.binaryConstraints);
     }
+    if(request.slqp.algorithm==spin2014::SlqpAlgorithm::AuditedKktRestorationV1) {
+        output<<",\n  \"slqp_algorithm\":\"AUDITED_KKT_RESTORATION_V1\",\n  \"optimality_scope\":\"FIRST_ORDER_KKT_ONLY\",\n  \"slqp_audit_controls\":";
+        spin2014::writeSlqpAuditControlsJson(output,request.slqp);
+    }
     output << ",\n  \"adaptive_passes\": [";
     for (std::size_t index = 0; index < result.adaptiveTrace.size(); ++index)
     {
@@ -196,7 +201,9 @@ std::string diagnostics(
                 if(j)output<<',';const auto& t=pass.slqpTrace[j];
                 output << "{\"iteration\":"<<t.iteration<<",\"phi\":"<<t.phi
                        <<",\"objective\":"<<t.objective<<",\"equality_infinity_norm\":"<<t.equalityInfinityNorm
-                       <<",\"accepted_step\":"<<t.acceptedStep<<"}";
+                       <<",\"accepted_step\":"<<t.acceptedStep;
+                if(request.slqp.algorithm==spin2014::SlqpAlgorithm::AuditedKktRestorationV1)spin2014::writeSlqpAuditJson(output,t);
+                output<<"}";
             }output<<']';
         }
         output << "}";

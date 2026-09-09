@@ -1204,7 +1204,12 @@ PYBIND11_MODULE(_make_it_stand, module)
             const std::optional<spin2014::Spin2014Objective>& objective,
             double inertiaWeight,
             const std::string& formulation,
-            double initialPhi
+            double initialPhi,
+            const std::string& slqpAlgorithm,
+            double restorationTrustBound,
+            int lpIterationLimit,
+            double lpTimeLimit,
+            double lpFeasibilityTolerance
         )
         {
             voxel::GridSpec grid;
@@ -1215,6 +1220,12 @@ PYBIND11_MODULE(_make_it_stand, module)
             if(formulation == "PAPER_GIVENS") request.formulation=spin2014::Spin2014Formulation::PaperGivens;
             else if(formulation != "LEGACY_ANGLE_ELIMINATED") throw std::invalid_argument("unknown Spin-It 2014 formulation");
             request.initialPhi=initialPhi;
+            if(slqpAlgorithm=="AUDITED_KKT_RESTORATION_V1")request.slqp.algorithm=spin2014::SlqpAlgorithm::AuditedKktRestorationV1;
+            else if(slqpAlgorithm!="LEGACY_V3")throw std::invalid_argument("unknown SLQP algorithm");
+            request.slqp.audit.restorationTrustBound=restorationTrustBound;
+            request.slqp.audit.lpIterationLimit=lpIterationLimit;
+            request.slqp.audit.lpTimeLimit=lpTimeLimit;
+            request.slqp.audit.lpFeasibilityTolerance=lpFeasibilityTolerance;
             request.domain = voxel::VoxelDomain::create(
                 grid, materialMask, {}, carveableMask
             );
@@ -1263,7 +1274,12 @@ PYBIND11_MODULE(_make_it_stand, module)
         py::arg("objective") = py::none(),
         py::arg("inertia_weight") = 1.0,
         py::arg("formulation") = "LEGACY_ANGLE_ELIMINATED",
-        py::arg("initial_phi") = 0.0
+        py::arg("initial_phi") = 0.0,
+        py::arg("slqp_algorithm") = "LEGACY_V3",
+        py::arg("slqp_restoration_trust_bound") = 1.0,
+        py::arg("slqp_lp_iteration_limit") = 10000,
+        py::arg("slqp_lp_time_limit") = 10.0,
+        py::arg("slqp_lp_feasibility_tolerance") = 1e-9
     );
 
     module.def(

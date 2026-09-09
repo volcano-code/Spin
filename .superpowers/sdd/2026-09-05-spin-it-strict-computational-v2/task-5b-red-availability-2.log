@@ -1,0 +1,14 @@
+[ 73%] Built target highs
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/spin-it-2014-audited.dir/tests/spin_it_2014_audited.cpp.o
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_audited.cpp: In function ‘int main()’:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_audited.cpp:9:15: error: ‘EqualityBoxProblem’ is not a member of ‘spin2014’
+    9 |     spin2014::EqualityBoxProblem problem;
+      |               ^~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_audited.cpp:10:5: error: ‘problem’ was not declared in this scope
+   10 |     problem.variableCount = problem.betaCount = 1;
+      |     ^~~~~~~
+gmake[3]: *** [CMakeFiles/spin-it-2014-audited.dir/build.make:76: CMakeFiles/spin-it-2014-audited.dir/tests/spin_it_2014_audited.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1233: CMakeFiles/spin-it-2014-audited.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1240: CMakeFiles/spin-it-2014-audited.dir/rule] Error 2
+gmake: *** [Makefile:667: spin-it-2014-audited] Error 2

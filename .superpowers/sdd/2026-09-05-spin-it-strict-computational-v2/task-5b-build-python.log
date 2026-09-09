@@ -1,0 +1,5 @@
+[ 73%] Built target highs
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/_make_it_stand.dir/bindings/pybind_module.cpp.o
+[100%] Linking CXX shared module python/_make_it_stand.cpython-313-x86_64-linux-gnu.so
+[100%] Built target _make_it_stand

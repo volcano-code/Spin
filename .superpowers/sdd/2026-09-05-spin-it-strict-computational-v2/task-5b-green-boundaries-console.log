@@ -1,0 +1,21 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+    Start 11: spin-it-2014-audited
+1/4 Test #11: spin-it-2014-audited .............   Passed    0.01 sec
+    Start 12: spin-it-2014-slqp
+2/4 Test #12: spin-it-2014-slqp ................   Passed    0.00 sec
+    Start 15: spin-it-2014-givens
+3/4 Test #15: spin-it-2014-givens ..............   Passed    0.01 sec
+    Start 24: spin-it-2014-python
+4/4 Test #24: spin-it-2014-python ..............   Passed    0.11 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+python          =   0.11 sec*proc (1 test)
+regression      =   0.12 sec*proc (3 tests)
+solver          =   0.00 sec*proc (1 test)
+spin-it         =   0.12 sec*proc (3 tests)
+spin-it-2014    =   0.12 sec*proc (3 tests)
+
+Total Test time (real) =   0.13 sec

@@ -109,6 +109,14 @@ const char* adaptiveSpinStatusToken(AdaptiveSpinStatus status) noexcept
 
 void validateAdaptiveVoxelSpinRequest(const AdaptiveVoxelSpinRequest& request)
 {
+    if(request.slqp.algorithm!=SlqpAlgorithm::LegacyV3 &&
+       request.slqp.algorithm!=SlqpAlgorithm::AuditedKktRestorationV1)
+        throw std::invalid_argument("unknown SLQP algorithm");
+    if(request.slqp.algorithm==SlqpAlgorithm::AuditedKktRestorationV1) {
+        if(request.formulation!=Spin2014Formulation::PaperGivens)
+            throw std::invalid_argument("audited SLQP requires PAPER_GIVENS");
+        validateSlqpAuditSettings(request.slqp.audit);
+    }
     if ((request.formulation != Spin2014Formulation::LegacyAngleEliminated &&
          request.formulation != Spin2014Formulation::PaperGivens) ||
         !std::isfinite(request.initialPhi) ||
@@ -203,6 +211,13 @@ std::string computeAdaptiveVoxelSpinRequestHash(
     appendDouble(bytes, request.slqp.meritPenalty);
     appendDouble(bytes, request.slqp.lineSearchReduction);
     appendDouble(bytes, request.slqp.armijo);
+    if(request.slqp.algorithm==SlqpAlgorithm::AuditedKktRestorationV1) {
+        bytes+=slqpAlgorithmToken(request.slqp.algorithm);
+        appendDouble(bytes,request.slqp.audit.restorationTrustBound);
+        appendInt(bytes,request.slqp.audit.lpIterationLimit);
+        appendDouble(bytes,request.slqp.audit.lpTimeLimit);
+        appendDouble(bytes,request.slqp.audit.lpFeasibilityTolerance);
+    }
     return manufacturing::computeContentSha256(bytes);
 }
 
@@ -215,6 +230,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
     AdaptiveVoxelSpinResult result;
     const bool paper = request.formulation == Spin2014Formulation::PaperGivens;
     result.formulation=request.formulation;result.initialPhi=request.initialPhi;
+    result.algorithm=request.slqp.algorithm;
     result.finalPhi=request.initialPhi;
     result.inputHash = computeAdaptiveVoxelSpinRequestHash(request);
     std::uint64_t initialCellBound = 1U;
@@ -283,6 +299,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
 
         AdaptiveSpinPass pass;
         pass.initialPhi=passInitialPhi;pass.finalPhi=result.finalPhi;
+        pass.algorithm=request.slqp.algorithm;
         pass.pass = passIndex;
         pass.leafCountBefore = static_cast<int>(domain.leaves().size());
         pass.partitionHash = domain.partitionHash();
@@ -296,14 +313,17 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
             pass.finalProjectedGradientInfinityNorm =
                 relaxed.trace.back().projectedGradientInfinityNorm;
             int previousActive = relaxed.trace.front().activeVariables;
+            std::string previousMembership=relaxed.trace.front().membershipHash;
             for (const SlqpIteration& iteration : relaxed.trace)
             {
                 pass.totalLineSearchEvaluations +=
                     iteration.lineSearchEvaluations;
-                if (iteration.activeVariables != previousActive)
+                if (request.slqp.algorithm==SlqpAlgorithm::AuditedKktRestorationV1 ?
+                    iteration.membershipHash!=previousMembership : iteration.activeVariables != previousActive)
                 {
                     ++pass.activeSetTransitions;
                     previousActive = iteration.activeVariables;
+                    previousMembership=iteration.membershipHash;
                 }
             }
         }

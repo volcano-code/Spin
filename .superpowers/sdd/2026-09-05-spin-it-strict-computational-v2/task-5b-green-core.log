@@ -1,0 +1,20 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+    Start 11: spin-it-2014-audited
+1/2 Test #11: spin-it-2014-audited .............   Passed    0.00 sec
+    Start 12: spin-it-2014-slqp
+2/2 Test #12: spin-it-2014-slqp ................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+regression      =   0.00 sec*proc (1 test)
+solver          =   0.00 sec*proc (1 test)
+spin-it         =   0.00 sec*proc (1 test)
+spin-it-2014    =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.01 sec

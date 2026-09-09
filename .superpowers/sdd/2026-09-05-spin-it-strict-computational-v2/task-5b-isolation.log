@@ -1,0 +1,54 @@
+[OUTPUT] 
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+[HANDLER_OUTPUT] 
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+
+[HANDLER_VERBOSE_OUTPUT] 
+Constructing a list of tests
+
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 42
+[HANDLER_OUTPUT] 
+    Start 42: spin-2014-dependency-contract
+
+[HANDLER_VERBOSE_OUTPUT] 
+
+42: Test command: /usr/bin/cmake "-P" "/data/xvxinyao/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency.cmake"
+
+42: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+42: Test timeout computed to be: 240
+42: -- 2014 ON / reachability OFF actual linked audit fixture: status=CONVERGED x=0.75 residual=0
+42: duplicate=CONVERGED inconsistent_L1=0.5 singular=RESTORATION_STALLED finite_failed_trials=24 invalid_trials=24 cap=WITNESS_LP_UNKNOWN: Iteration limit reached
+42: givens=CONVERGED kkt=6.3137399822221774e-11 phi=1.5707963268031664
+42: [PASS] audited actual KKT/restoration/analytic/Givens tests
+42: 
+[HANDLER_OUTPUT] 
+1/1 Test #42: spin-2014-dependency-contract ....
+   Passed   91.26 sec
+[HANDLER_VERBOSE_OUTPUT] 
+
+The following tests passed:
+
+	spin-2014-dependency-contract
+[HANDLER_OUTPUT] 
+
+100% tests passed, 0 tests failed out of 1
+
+
+Label Time Summary:
+build-system    =  91.26 sec*proc (1 test)
+spin-it         =  91.26 sec*proc (1 test)
+spin-it-2014    =  91.26 sec*proc (1 test)
+
+Total Test time (real) =  91.26 sec

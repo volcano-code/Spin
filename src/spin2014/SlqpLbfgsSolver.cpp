@@ -1,4 +1,6 @@
 #include "spin2014/SlqpLbfgsSolver.h"
+#include "spin2014/SlqpAuditTrace.h"
+#include "spin2014/SlqpHistory.h"
 
 #include "manufacturing/SlicerValidation.h"
 
@@ -22,62 +24,7 @@ namespace
 {
 
 
-struct LbfgsHistory
-{
-    int capacity = 0;
-    std::deque<Eigen::VectorXd> s;
-    std::deque<Eigen::VectorXd> y;
-    std::deque<double> inverseCurvature;
-
-    void update(const Eigen::VectorXd& step, const Eigen::VectorXd& gradientChange)
-    {
-        const double curvature = step.dot(gradientChange);
-        if (
-            !std::isfinite(curvature) ||
-            curvature <= 1e-12 * step.norm() * gradientChange.norm()
-        )
-        {
-            return;
-        }
-        if (static_cast<int>(s.size()) == capacity)
-        {
-            s.pop_front();
-            y.pop_front();
-            inverseCurvature.pop_front();
-        }
-        s.push_back(step);
-        y.push_back(gradientChange);
-        inverseCurvature.push_back(1.0 / curvature);
-    }
-
-    Eigen::VectorXd applyInverse(const Eigen::VectorXd& vector) const
-    {
-        if (s.empty())
-        {
-            return vector;
-        }
-        Eigen::VectorXd result = vector;
-        std::vector<double> alpha(s.size(), 0.0);
-        for (std::size_t offset = 0; offset < s.size(); ++offset)
-        {
-            const std::size_t index = s.size() - 1U - offset;
-            alpha[index] = inverseCurvature[index] * s[index].dot(result);
-            result -= alpha[index] * y[index];
-        }
-        const double yy = y.back().squaredNorm();
-        const double scale = yy > 0.0
-            ? s.back().dot(y.back()) / yy
-            : 1.0;
-        result *= std::clamp(scale, 1e-6, 1e6);
-        for (std::size_t index = 0; index < s.size(); ++index)
-        {
-            const double beta =
-                inverseCurvature[index] * y[index].dot(result);
-            result += s[index] * (alpha[index] - beta);
-        }
-        return result;
-    }
-};
+using spin2014::LbfgsHistory;
 
 
 Eigen::VectorXd solveSymmetric(
@@ -270,6 +217,13 @@ std::string hashTrace(const std::vector<spin2014::SlqpIteration>& trace, bool pa
 
 void validateSettings(const spin2014::SlqpLbfgsSettings& settings)
 {
+    if(settings.algorithm != spin2014::SlqpAlgorithm::LegacyV3 &&
+       settings.algorithm != spin2014::SlqpAlgorithm::AuditedKktRestorationV1)
+        throw std::invalid_argument("unsupported SLQP algorithm");
+    if(settings.algorithm == spin2014::SlqpAlgorithm::AuditedKktRestorationV1) {
+        spin2014::validateSlqpAuditSettings(settings.audit);
+        if(settings.activeSetTolerance>=.5)throw std::invalid_argument("overlapping active faces");
+    }
     if (
         settings.maximumIterations <= 0 ||
         settings.maximumLineSearchSteps <= 0 ||
@@ -309,20 +263,33 @@ const char* slqpStatusToken(SlqpStatus status) noexcept
     case SlqpStatus::MaximumIterations: return "MAXIMUM_ITERATIONS";
     case SlqpStatus::LineSearchExhausted: return "LINE_SEARCH_EXHAUSTED";
     case SlqpStatus::InvalidProblem: return "INVALID_PROBLEM";
+    case SlqpStatus::RestorationStalled: return "RESTORATION_STALLED";
+    case SlqpStatus::NumericalUnknown: return "NUMERICAL_UNKNOWN";
     }
     return "INVALID_PROBLEM";
 }
 
+const char* slqpAlgorithmToken(SlqpAlgorithm algorithm) noexcept {
+    switch(algorithm) {
+    case SlqpAlgorithm::LegacyV3:return "LEGACY_V3";
+    case SlqpAlgorithm::AuditedKktRestorationV1:return "AUDITED_KKT_RESTORATION_V1";
+    }return "UNKNOWN";
+}
+
 
 static SlqpLbfgsResult solveInternal(
-    const std::function<AdaptiveFillEvaluation(const Eigen::VectorXd&)>& evaluate,
+    const EqualityBoxProblem& problem,
     const Eigen::VectorXd& initialBeta,
     const SlqpLbfgsSettings& settings,
-    Eigen::Index betaCount,
     bool paper
 )
 {
+    if(!problem.evaluate || problem.variableCount!=initialBeta.size())
+        throw std::invalid_argument("invalid equality-box problem dimensions/callback");
+    const auto& evaluate=problem.evaluate;
+    const Eigen::Index betaCount=problem.betaCount;
     validateSettings(settings);
+    const bool audited=settings.algorithm==SlqpAlgorithm::AuditedKktRestorationV1;
     if (
         initialBeta.size() == 0 || !initialBeta.allFinite() ||
         betaCount < 0 || betaCount > initialBeta.size() ||
@@ -334,15 +301,56 @@ static SlqpLbfgsResult solveInternal(
     }
 
     SlqpLbfgsResult result;
+    result.algorithm=settings.algorithm;
+    result.boundedVariableCount=betaCount;
     result.beta = initialBeta;
-    result.evaluation = evaluate(result.beta);
+    Eigen::Index equalityCount=-1;
+    const auto checkedEvaluate=[&](const Eigen::VectorXd& x) {
+        auto e=evaluate(x);
+        if(audited && (!validSlqpEvaluation(e,x.size()) ||
+            (equalityCount>=0 && e.constraints.size()!=equalityCount)))
+            throw std::invalid_argument("nonfinite or dimension-invalid callback evaluation");
+        equalityCount=e.constraints.size();
+        return e;
+    };
+    result.evaluation = checkedEvaluate(result.beta);
     LbfgsHistory history;
     history.capacity = settings.lbfgsMemory;
+    std::vector<unsigned char> previousMembership;
+    const auto finish=[&]() {
+        if(audited) {
+            result.finalState=result.beta;
+            result.finalKkt=computeKktWitness(result.evaluation,result.beta,betaCount,settings.activeSetTolerance,settings.audit);
+            if(result.trace.empty() || !result.trace.back().state.isApprox(result.beta,0.)) {
+                SlqpIteration t;t.iteration=static_cast<int>(result.trace.size());t.finalState=true;
+                t.objective=result.evaluation.objective;t.kkt=result.finalKkt;t.kktInfinityNorm=t.kkt.full;
+                t.equalityInfinityNorm=t.kkt.equalityPrimal;
+                t.meritValue=merit(result.evaluation,settings.meritPenalty);
+                std::vector<unsigned char> active;
+                auto p=projectedTangentGradient(result.evaluation,result.beta,settings.activeSetTolerance,&active,betaCount);
+                t.projectedGradientInfinityNorm=p.lpNorm<Eigen::Infinity>();
+                t.activeMembership=active;for(int i=0;i<betaCount;++i)if(active[i])t.activeMembership[i]=result.beta(i)<=settings.activeSetTolerance?1:2;
+                for(auto fixed:active)t.activeVariables+=fixed!=0;
+                t.membershipHash=slqpMembershipHash(t.activeMembership);
+                t.phi=result.beta.size()>betaCount?result.beta(betaCount):0.;
+                t.historyBefore=t.historyAfter=history.s.size();
+                if(!previousMembership.empty()&&previousMembership!=t.activeMembership) {
+                    t.historyResetReason="ACTIVE_MEMBERSHIP_CHANGED";history.resetForMembership(previousMembership,t.activeMembership);t.historyAfter=0;
+                }
+                t.lbfgsHistorySize=history.s.size();
+                captureSlqpState(t,result.evaluation,result.beta);result.trace.push_back(t);
+            } else result.trace.back().finalState=true;
+            result.traceHash=hashAuditedSlqp(result,settings);
+        } else result.traceHash=hashTrace(result.trace,paper);
+        return result;
+    };
 
     for (int iteration = 0; iteration < settings.maximumIterations; ++iteration)
     {
         const AdaptiveFillEvaluation current = result.evaluation;
-        const Eigen::VectorXd multipliers = leastSquaresMultipliers(current);
+        const KktResidual witness=audited?computeKktWitness(current,result.beta,betaCount,settings.activeSetTolerance,settings.audit):KktResidual();
+        const Eigen::VectorXd multipliers = audited ?
+            (witness.valid?witness.lambda:Eigen::VectorXd::Zero(current.constraints.size()).eval()) : leastSquaresMultipliers(current);
         const Eigen::VectorXd lagrangian =
             lagrangianGradient(current, multipliers);
         std::vector<unsigned char> active;
@@ -367,6 +375,23 @@ static SlqpLbfgsResult solveInternal(
         trace.kktInfinityNorm = projectedNorm;
         trace.meritValue = merit(current, settings.meritPenalty);
         trace.lbfgsHistorySize = static_cast<int>(history.s.size());
+        if(audited) {
+            trace.kkt=witness;trace.kktInfinityNorm=witness.full;
+            captureSlqpState(trace,current,result.beta);trace.activeMembership=active;
+            for(int i=0;i<betaCount;++i)if(active[i])trace.activeMembership[i]=result.beta(i)<=settings.activeSetTolerance?1:2;
+            trace.membershipHash=slqpMembershipHash(trace.activeMembership);
+            trace.historyBefore=history.s.size();
+            if(iteration==0 || previousMembership!=trace.activeMembership) {
+                trace.historyResetReason=iteration==0?"NEW_SOLVE_OR_PARTITION":"ACTIVE_MEMBERSHIP_CHANGED";
+                history.resetForMembership(previousMembership,trace.activeMembership);
+            }
+            trace.historyAfter=history.s.size();previousMembership=trace.activeMembership;
+            trace.lbfgsHistorySize=history.s.size();
+            if(!witness.valid) {
+                result.trace.push_back(trace);result.status=SlqpStatus::NumericalUnknown;
+                result.diagnostic=witness.status;return finish();
+            }
+        }
         for (unsigned char fixed : active)
         {
             trace.activeVariables += fixed != 0U;
@@ -374,14 +399,15 @@ static SlqpLbfgsResult solveInternal(
 
         if (
             equalityNorm <= settings.equalityTolerance &&
-            projectedNorm <= settings.projectedGradientTolerance
+            (audited ? (witness.valid && witness.boundPrimal<=settings.projectedGradientTolerance &&
+                witness.stationarity<=settings.projectedGradientTolerance && witness.dualSign<=settings.projectedGradientTolerance &&
+                witness.complementarity<=settings.projectedGradientTolerance) : projectedNorm <= settings.projectedGradientTolerance)
         )
         {
             result.trace.push_back(trace);
             result.status = SlqpStatus::Converged;
-            result.diagnostic = "SLQP equality and projected-gradient tolerances met";
-            result.traceHash = hashTrace(result.trace, paper);
-            return result;
+            result.diagnostic = audited?"FIRST_ORDER_KKT_TOLERANCES_MET; no minimum or physical certificate":"SLQP equality and projected-gradient tolerances met";
+            return finish();
         }
 
         const auto applyFreeInverse = [&history, &active](
@@ -426,16 +452,20 @@ static SlqpLbfgsResult solveInternal(
         Eigen::VectorXd direction =
             -inverseGradient - inverseConstraint * qpMultipliers;
 
-        if (!direction.allFinite() || direction.norm() <= 1e-15)
+        trace.linearizedConstraintResidual=(current.constraintJacobian*direction+current.constraints).lpNorm<1>();
+        const bool infeasible=equalityNorm>settings.equalityTolerance;
+        bool needRestoration=audited && infeasible && (!direction.allFinite()||direction.norm()<=1e-15 ||
+            !std::isfinite(trace.linearizedConstraintResidual)||trace.linearizedConstraintResidual>settings.equalityTolerance);
+
+        if ((!direction.allFinite() || direction.norm() <= 1e-15) && !needRestoration)
         {
             result.trace.push_back(trace);
             result.status = SlqpStatus::LineSearchExhausted;
             result.diagnostic = "SLQP subproblem produced no usable direction";
-            result.traceHash = hashTrace(result.trace, paper);
-            return result;
+            return finish();
         }
 
-        double step = maximumBoundStep(result.beta, direction, betaCount);
+        double step = needRestoration?0.:maximumBoundStep(result.beta, direction, betaCount);
         const double oldMerit = merit(current, settings.meritPenalty);
         const double predicted = std::max(
             1e-14,
@@ -452,18 +482,20 @@ static SlqpLbfgsResult solveInternal(
             ++trace.lineSearchEvaluations;
             candidateBeta = result.beta + step * direction;
             candidateBeta.head(betaCount) = candidateBeta.head(betaCount).cwiseMax(0.0).cwiseMin(1.0);
-            candidate = evaluate(candidateBeta);
+            try {candidate = checkedEvaluate(candidateBeta);} catch(...) {if(!audited)throw;trace.objectiveTrials.push_back({step,INFINITY,false,false,"INVALID_EVALUATION_OR_CALLBACK_EXCEPTION"});step*=settings.lineSearchReduction;continue;}
+            if(audited)trace.objectiveTrials.push_back({step,candidate.constraints.lpNorm<1>(),true,false,"INSUFFICIENT_MERIT_DECREASE"});
             if (
                 merit(candidate, settings.meritPenalty) <=
                 oldMerit - settings.armijo * step * predicted
             )
             {
                 accepted = true;
+                if(audited){trace.objectiveTrials.back().accepted=true;trace.objectiveTrials.back().reason="ACCEPTED";}
                 break;
             }
             step *= settings.lineSearchReduction;
         }
-        if (!accepted)
+        if (!accepted && !(audited&&infeasible))
         {
             // A stale L-BFGS metric can cease to be a descent metric after a
             // large active-set change.  Retry the same linearized equality
@@ -505,13 +537,15 @@ static SlqpLbfgsResult solveInternal(
                 ++trace.lineSearchEvaluations;
                 candidateBeta = result.beta + step * direction;
                 candidateBeta.head(betaCount) = candidateBeta.head(betaCount).cwiseMax(0.0).cwiseMin(1.0);
-                candidate = evaluate(candidateBeta);
+                try {candidate = checkedEvaluate(candidateBeta);} catch(...) {if(!audited)throw;trace.objectiveTrials.push_back({step,INFINITY,false,false,"INVALID_EVALUATION_OR_CALLBACK_EXCEPTION"});step*=settings.lineSearchReduction;continue;}
+                if(audited)trace.objectiveTrials.push_back({step,candidate.constraints.lpNorm<1>(),true,false,"INSUFFICIENT_MERIT_DECREASE"});
                 if (
                     merit(candidate, settings.meritPenalty) <=
                     oldMerit - settings.armijo * step * fallbackPredicted
                 )
                 {
                     accepted = true;
+                    if(audited) {trace.objectiveTrials.back().accepted=true;trace.objectiveTrials.back().reason="ACCEPTED";trace.historyResetReason+=";FIRST_ORDER_FALLBACK";}
                     trace.usedFirstOrderFallback = true;
                     history = LbfgsHistory();
                     history.capacity = settings.lbfgsMemory;
@@ -520,35 +554,76 @@ static SlqpLbfgsResult solveInternal(
                 step *= settings.lineSearchReduction;
             }
         }
+        if(audited && !accepted && infeasible) {
+            trace.restoration=solveRestoration(current,result.beta,betaCount,settings.audit);
+            trace.restoration.reason=needRestoration?"UNUSABLE_OR_INACCURATE_EQUALITY_DIRECTION":"MERIT_SEARCH_FAILED_WHILE_INFEASIBLE";
+            const double oldResidual=current.constraints.lpNorm<1>();
+            const double improvement=oldResidual-trace.restoration.predictedResidual;
+            if(trace.restoration.direction.size()==result.beta.size() && trace.restoration.direction.allFinite() &&
+               std::isfinite(improvement)&&improvement>0.) {
+                direction=trace.restoration.direction;step=1.;
+                for(int lineSearch=0;lineSearch<settings.maximumLineSearchSteps&&step>1e-14;++lineSearch) {
+                    ++trace.lineSearchEvaluations;
+                    candidateBeta=result.beta+step*direction;
+                    bool valid=true;
+                    try {candidate=checkedEvaluate(candidateBeta);}catch(...) {valid=false;}
+                    const double residual=valid?candidate.constraints.lpNorm<1>():INFINITY;
+                    const bool sufficient=valid&&std::isfinite(residual)&&residual<oldResidual &&
+                        residual<=oldResidual-settings.armijo*step*improvement;
+                    trace.restoration.trials.push_back({step,residual,valid,sufficient,
+                        sufficient?"ACCEPTED":valid?"INSUFFICIENT_ACTUAL_CONSTRAINT_DECREASE":"INVALID_EVALUATION_OR_CALLBACK_EXCEPTION"});
+                    if(sufficient) {accepted=true;trace.restoration.accepted=true;break;}
+                    step*=settings.lineSearchReduction;
+                }
+            }
+            if(accepted) {
+                history=LbfgsHistory();history.capacity=settings.lbfgsMemory;
+                trace.historyResetReason+=";RESTORATION_ACCEPTED";
+            } else {
+                result.status=trace.restoration.status=="Optimal"?SlqpStatus::RestorationStalled:SlqpStatus::NumericalUnknown;
+                result.diagnostic="local restoration made no accepted progress; UNKNOWN, no infeasibility certificate";
+            }
+        }
         trace.acceptedStep = accepted ? step : 0.0;
-        result.trace.push_back(trace);
         if (!accepted)
         {
-            result.status = SlqpStatus::LineSearchExhausted;
-            result.diagnostic = "SLQP merit-function line search was exhausted";
-            result.traceHash = hashTrace(result.trace, paper);
-            return result;
+            result.trace.push_back(trace);
+            if(!trace.restoration.attempted) {
+                result.status = SlqpStatus::LineSearchExhausted;
+                result.diagnostic = "SLQP merit-function line search was exhausted";
+            }return finish();
         }
 
-        const Eigen::VectorXd nextMultipliers = leastSquaresMultipliers(candidate);
+        const Eigen::VectorXd nextMultipliers = audited?multipliers:leastSquaresMultipliers(candidate);
         const Eigen::VectorXd stepVector = candidateBeta - result.beta;
         const Eigen::VectorXd gradientChange =
             lagrangianGradient(candidate, nextMultipliers) - lagrangian;
-        history.update(stepVector, gradientChange);
+        if(!trace.restoration.accepted) {
+            trace.curvaturePairAccepted=history.update(stepVector, gradientChange);
+            trace.curvaturePairRejected=!trace.curvaturePairAccepted;
+        }
+        trace.historyAfter=history.s.size();result.trace.push_back(trace);
         result.beta = std::move(candidateBeta);
         result.evaluation = std::move(candidate);
     }
 
     result.status = SlqpStatus::MaximumIterations;
     result.diagnostic = "SLQP reached its iteration limit";
-    result.traceHash = hashTrace(result.trace, paper);
-    return result;
+    return finish();
 }
 
 SlqpLbfgsResult solveSlqpLbfgs(const AdaptiveFillFunctional& functional,
     const Eigen::VectorXd& initialBeta,const SlqpLbfgsSettings& settings)
 {
-    return solveInternal([&functional](const Eigen::VectorXd& beta){return functional.evaluate(beta);},initialBeta,settings,initialBeta.size(),false);
+    if(settings.algorithm!=SlqpAlgorithm::LegacyV3)
+        throw std::invalid_argument("audited algorithm requires PAPER_GIVENS at spin interfaces");
+    return solveInternal({initialBeta.size(),initialBeta.size(),[&functional](const Eigen::VectorXd& beta){return functional.evaluate(beta);}},initialBeta,settings,false);
+}
+
+SlqpLbfgsResult solveSlqpLbfgs(const EqualityBoxProblem& problem,
+    const Eigen::VectorXd& initial,const SlqpLbfgsSettings& settings)
+{
+    return solveInternal(problem, initial, settings, false);
 }
 
 SlqpLbfgsResult solveSlqpLbfgsPaper(const AdaptiveFillFunctional& functional,
@@ -558,10 +633,10 @@ SlqpLbfgsResult solveSlqpLbfgsPaper(const AdaptiveFillFunctional& functional,
     if(initialBeta.size()!=n||!std::isfinite(initialPhi)||(!angle&&initialPhi!=0.))
         throw std::invalid_argument("invalid joint Givens dimensions or initial phi (static requires zero)");
     Eigen::VectorXd state(n+(angle?1:0));state.head(n)=initialBeta;if(angle)state(n)=initialPhi;
-    auto result=solveInternal([&](const Eigen::VectorXd& x) {
+    auto result=solveInternal({state.size(),n,[&](const Eigen::VectorXd& x) {
         if(!x.allFinite())throw std::invalid_argument("nonfinite joint Givens state");
         return functional.evaluatePaper(x.head(n),angle?x(n):0.);
-    },state,settings,n,true);
+    }},state,settings,true);
     result.formulation=Spin2014Formulation::PaperGivens;
     result.initialPhi=initialPhi;result.finalPhi=angle?result.beta(n):0.;
     result.beta=result.beta.head(n).eval();
