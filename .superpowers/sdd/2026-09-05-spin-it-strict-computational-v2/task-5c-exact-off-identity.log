@@ -1,0 +1,21 @@
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++
+MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS:BOOL=OFF
+MAKE_IT_STAND_BUILD_PYTHON:BOOL=OFF
+MAKE_IT_STAND_BUILD_REACHABILITY:BOOL=OFF
+MAKE_IT_STAND_BUILD_SPIN_IT_2014:BOOL=ON
+MAKE_IT_STAND_BUILD_SPIN_IT_FASTER:BOOL=OFF
+MAKE_IT_STAND_BUILD_VIEWER:BOOL=OFF
+MAKE_IT_STAND_ENABLE_PAPER_PYTHON_TESTS:BOOL=OFF
+MAKE_IT_STAND_ENABLE_PYBULLET_TESTS:BOOL=OFF
+3937b70f2ef32d72d4dfd04318b27f7b03775835671af138b2e790cb60fd9d83  build/spin-2014-enabled-contract/spin-it-2014-surface-value-regression
+36b8379cbdfc191f6258a9891e1a379fe40b6310f93f6f281345067b8530dca6  build/spin-2014-enabled-contract/spin-it-2014-surface-differential-regression
+99b19de105654c62d6373891f23622788918158ac89cd8f216f64a32f1b2818d  build/spin-2014-enabled-contract/libmake_it_stand_core.a
+72fcd9470ddc0bed149523aeeaf10ce8389d446a6cf4fe838c28433f0891a61d  build/spin-2014-enabled-contract/CMakeCache.txt
+	linux-vdso.so.1 (0x00007cb515aab000)
+	libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007cb515600000)
+	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007cb515a49000)
+	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007cb515200000)
+	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007cb515960000)
+	/lib64/ld-linux-x86-64.so.2 (0x00007cb515aad000)
+: && /usr/bin/c++ -fPIC -O3 -DNDEBUG  CMakeFiles/spin-it-2014-surface-value-regression.dir/tests/spin_it_2014_surface_value_regression.cpp.o -o spin-it-2014-surface-value-regression  libmake_it_stand_core.a  lib/libhighs.a  /usr/lib/x86_64-linux-gnu/libz.so && :

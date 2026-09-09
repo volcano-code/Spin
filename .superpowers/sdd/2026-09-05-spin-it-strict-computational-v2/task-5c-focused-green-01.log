@@ -1,0 +1,100 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 9
+    Start  9: spin-it-2014-source-surface-octree
+
+9: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-source-surface-octree-regression
+9: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+9: Test timeout computed to be: 3600
+9: source surface hierarchy, signed material, queries, hashes, validation passed; faster=1 exact=1
+1/5 Test  #9: spin-it-2014-source-surface-octree ..........   Passed    1.36 sec
+test 10
+    Start 10: spin-it-2014-source-surface-octree-level9
+
+10: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-source-surface-octree-regression "--level9"
+10: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+10: Test timeout computed to be: 3600
+10: depth9 nodes=2097993 internal=262249 boundary=786448 full=506360 empty=542936 max_level=9 stored_cell_bytes=302110992 peak_rss_KiB=349060 seconds=20.0084 volume=0.122093 uncertainty=0.00585949 partition=652de7d6b99c64445640902e891a98f85f76c4a8b5a93b6ef34471954a5bc137
+2/5 Test #10: spin-it-2014-source-surface-octree-level9 ...   Passed   20.03 sec
+test 11
+    Start 11: spin-it-2014-surface-value
+
+11: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-surface-value-regression
+11: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+11: Test timeout computed to be: 1500
+11: surface value analytic, signed, covariance, invalid-input checks passed
+3/5 Test #11: spin-it-2014-surface-value ..................   Passed    0.00 sec
+test 12
+    Start 12: spin-it-2014-surface-value-allocation
+
+12: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-surface-value-regression "--allocation"
+12: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+12: Test timeout computed to be: 1500
+12: allocation-sensitive subprocess failed
+4/5 Test #12: spin-it-2014-surface-value-allocation .......***Failed    0.00 sec
+test 24
+    Start 24: spin-it-2014-surface-differential
+
+24: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/spin-it-2014-surface-differential-regression
+24: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+24: Test timeout computed to be: 1500
+24: [PASS] scenario=spin-it-2014-surface-differential error=4.45924e-12
+5/5 Test #24: spin-it-2014-surface-differential ...........   Passed    0.00 sec
+
+The following tests passed:
+	spin-it-2014-source-surface-octree
+	spin-it-2014-source-surface-octree-level9
+	spin-it-2014-surface-value
+	spin-it-2014-surface-differential
+
+80% tests passed, 1 tests failed out of 5
+
+Label Time Summary:
+deformation       =   0.00 sec*proc (1 test)
+exact-geometry    =  21.38 sec*proc (2 tests)
+native            =  21.38 sec*proc (2 tests)
+regression        =   0.00 sec*proc (1 test)
+spin-it           =   0.00 sec*proc (1 test)
+spin-it-2014      =  21.39 sec*proc (3 tests)
+
+Total Test time (real) =  21.39 sec
+
+The following tests FAILED:
+	 12 - spin-it-2014-surface-value-allocation (Failed)
+Errors while running CTest
+Output from these tests are in: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.
+Command exited with non-zero status 8
+	Command being timed: "ctest --test-dir build/strict-v2-spin -R ^spin-it-2014-(source-surface-octree.*|surface-value.*|surface-differential)$ -V"
+	User time (seconds): 21.22
+	System time (seconds): 0.16
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:21.39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 349060
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 1
+	Minor (reclaiming a frame) page faults: 175198
+	Voluntary context switches: 26
+	Involuntary context switches: 337
+	Swaps: 0
+	File system inputs: 16
+	File system outputs: 64
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 8

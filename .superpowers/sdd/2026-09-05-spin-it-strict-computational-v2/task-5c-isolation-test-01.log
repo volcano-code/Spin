@@ -1,0 +1,94 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 5
+    Start  5: spin-it-2014-source-surface-octree
+
+5: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-octree-regression
+5: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+5: Test timeout computed to be: 3600
+5: source surface hierarchy, signed material, queries, hashes, validation passed; faster=0 exact=1
+1/5 Test  #5: spin-it-2014-source-surface-octree ..........   Passed    1.47 sec
+test 6
+    Start  6: spin-it-2014-source-surface-octree-level9
+
+6: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-octree-regression "--level9"
+6: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+6: Test timeout computed to be: 3600
+6: depth9 nodes=2097993 internal=262249 boundary=786448 full=506360 empty=542936 max_level=9 stored_cell_bytes=302110992 peak_rss_KiB=349024 seconds=19.6844 volume=0.122093 uncertainty=0.00585949 partition=652de7d6b99c64445640902e891a98f85f76c4a8b5a93b6ef34471954a5bc137
+2/5 Test  #6: spin-it-2014-source-surface-octree-level9 ...   Passed   19.70 sec
+test 7
+    Start  7: spin-it-2014-surface-value
+
+7: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-value-regression
+7: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+7: Test timeout computed to be: 1500
+7: surface value analytic, signed, covariance, invalid-input checks passed
+3/5 Test  #7: spin-it-2014-surface-value ..................   Passed    0.00 sec
+test 8
+    Start  8: spin-it-2014-surface-value-allocation
+
+8: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-value-regression "--allocation"
+8: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+8: Test timeout computed to be: 1500
+8: value-only succeeds with 32 MiB headroom; dense differential allocation fails as expected, N=1000000
+4/5 Test  #8: spin-it-2014-surface-value-allocation .......   Passed    0.00 sec
+test 20
+    Start 20: spin-it-2014-surface-differential
+
+20: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-differential-regression
+20: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+20: Test timeout computed to be: 1500
+20: [PASS] scenario=spin-it-2014-surface-differential error=4.45924e-12
+5/5 Test #20: spin-it-2014-surface-differential ...........   Passed    0.00 sec
+
+The following tests passed:
+	spin-it-2014-source-surface-octree
+	spin-it-2014-source-surface-octree-level9
+	spin-it-2014-surface-value
+	spin-it-2014-surface-value-allocation
+	spin-it-2014-surface-differential
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+deformation       =   0.00 sec*proc (1 test)
+exact-geometry    =  21.16 sec*proc (2 tests)
+native            =  21.16 sec*proc (2 tests)
+regression        =   0.00 sec*proc (1 test)
+spin-it           =   0.00 sec*proc (1 test)
+spin-it-2014      =  21.16 sec*proc (3 tests)
+
+Total Test time (real) =  21.17 sec
+	Command being timed: "ctest --test-dir build/task-5c-no-faster-20260909 -R ^spin-it-2014-(source-surface-octree.*|surface-value.*|surface-differential)$ -V"
+	User time (seconds): 20.98
+	System time (seconds): 0.16
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:21.17
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 349024
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 186911
+	Voluntary context switches: 24
+	Involuntary context switches: 782
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 48
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

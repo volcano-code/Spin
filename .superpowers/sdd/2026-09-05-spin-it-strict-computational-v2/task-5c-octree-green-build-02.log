@@ -1,0 +1,19 @@
+[ 73%] Built target highs
+[ 73%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SourceSurfaceOctree.cpp.o
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Number_types/include/CGAL/number_type_basic.h:32,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Number_types/include/CGAL/Gmpq.h:25,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:5:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+[ 73%] Linking CXX static library libmake_it_stand_core.a
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/spin-it-2014-source-surface-octree-regression.dir/tests/spin_it_2014_source_surface_octree_regression.cpp.o
+[100%] Linking CXX executable spin-it-2014-source-surface-octree-regression
+[100%] Built target spin-it-2014-source-surface-octree-regression

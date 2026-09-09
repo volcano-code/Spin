@@ -1,0 +1,62 @@
+[ 72%] Built target highs
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/spin-it-2014-surface-value-regression.dir/tests/spin_it_2014_surface_value_regression.cpp.o
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp: In lambda function:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:27:46: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   27 |                         else close(spin2014::integrateSurfaceRawMoments(vertices,b.f).values(),boxMoments({-2,1,3},{1,5,7}),"allocation value");
+      |                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                              differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp: In function ‘int main(int, char**)’:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:37:25: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   37 |         close(spin2014::integrateSurfaceRawMoments(b.v,b.f,2.5).values(),2.5*boxMoments({-2,1,3},{1,5,7}),"translated box all ten/density");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                         differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:40:38: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   40 |         const auto moments=spin2014::integrateSurfaceRawMoments(t.v,t.f);
+      |                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                      differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:43:25: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   43 |         close(spin2014::integrateSurfaceRawMoments(t.v,t.f,3).values(),3*tetraMoments(t.v),"translated tetra density");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                         differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:44:25: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   44 |         close(spin2014::integrateSurfaceRawMoments(t.v,t.f).values(),moments.transformed(Eigen::Matrix3d::Identity(),shift).values(),"translation covariance");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                         differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:46:25: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   46 |         close(spin2014::integrateSurfaceRawMoments(cavity.v,cavity.f).values(),boxMoments({-2,1,3},{1,5,7})-boxMoments({-1,2,4},{0,3,5}),"signed cavity");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                         differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:47:25: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   47 |         close(spin2014::integrateSurfaceRawMoments(t.v,t.f).values(),spin2014::differentiateSurfaceRawMoments(t.v,t.f).moments.values(),"differential compatibility");
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                         differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp: In lambda function:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:48:96: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   48 |         for(double rho:{0.,-1.,std::numeric_limits<double>::infinity()}) rejects([&]{spin2014::integrateSurfaceRawMoments(b.v,b.f,rho);},"invalid density");
+      |                                                                                                ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                                                differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp: In lambda function:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:50:31: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   50 |         rejects([&]{spin2014::integrateSurfaceRawMoments(bad.v,bad.f);},"nonfinite vertex");
+      |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                               differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp: In lambda function:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:51:31: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   51 |         rejects([&]{spin2014::integrateSurfaceRawMoments(b.v,b.f.topRows(11));},"open chain");
+      |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                               differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp: In lambda function:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:52:53: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   52 |         bad=b; bad.f(0,0)=99; rejects([&]{spin2014::integrateSurfaceRawMoments(bad.v,bad.f);},"bad index");
+      |                                                     ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                     differentiateSurfaceRawMoments
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp: In lambda function:
+/data/xvxinyao/make-it-balance-paper-sim/tests/spin_it_2014_surface_value_regression.cpp:53:52: error: ‘integrateSurfaceRawMoments’ is not a member of ‘spin2014’; did you mean ‘differentiateSurfaceRawMoments’?
+   53 |         bad=b; bad.v*=1e100; rejects([&]{spin2014::integrateSurfaceRawMoments(bad.v,bad.f);},"moment overflow");
+      |                                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                    differentiateSurfaceRawMoments
+gmake[3]: *** [CMakeFiles/spin-it-2014-surface-value-regression.dir/build.make:76: CMakeFiles/spin-it-2014-surface-value-regression.dir/tests/spin_it_2014_surface_value_regression.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1154: CMakeFiles/spin-it-2014-surface-value-regression.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1161: CMakeFiles/spin-it-2014-surface-value-regression.dir/rule] Error 2
+gmake: *** [Makefile:628: spin-it-2014-surface-value-regression] Error 2

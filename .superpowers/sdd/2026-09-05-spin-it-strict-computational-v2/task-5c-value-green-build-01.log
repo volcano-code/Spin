@@ -1,0 +1,13 @@
+[ 72%] Built target highs
+[ 73%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SurfaceRawMomentDifferential.cpp.o
+[ 73%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/CageSpinDeformation.cpp.o
+[ 75%] Linking CXX static library libmake_it_stand_core.a
+[100%] Built target make_it_stand_core
+[100%] Building CXX object CMakeFiles/spin-it-2014-surface-value-regression.dir/tests/spin_it_2014_surface_value_regression.cpp.o
+[100%] Linking CXX executable spin-it-2014-surface-value-regression
+[100%] Built target spin-it-2014-surface-value-regression
+[ 71%] Built target highs
+[ 98%] Built target make_it_stand_core
+[ 98%] Building CXX object CMakeFiles/spin-it-2014-surface-differential-regression.dir/tests/spin_it_2014_surface_differential_regression.cpp.o
+[100%] Linking CXX executable spin-it-2014-surface-differential-regression
+[100%] Built target spin-it-2014-surface-differential-regression

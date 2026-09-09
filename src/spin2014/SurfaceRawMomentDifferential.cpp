@@ -23,10 +23,12 @@ Eigen::Array3d cycle(const Eigen::Array3d& v)
 
 namespace spin2014
 {
-SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
+namespace {
+physics::RawMassMoments10 integrate(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
-    double density
+    double density,
+    Eigen::MatrixXd* jacobian
 )
 {
     if (vertices.cols() != 3 || vertices.rows() == 0 || !vertices.allFinite() ||
@@ -50,8 +52,7 @@ SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
         1./60, 1./60, 1./60
     };
     Eigen::Matrix<double, 10, 1> values = Eigen::Matrix<double, 10, 1>::Zero();
-    SurfaceRawMomentDifferential result;
-    result.jacobian = Eigen::MatrixXd::Zero(10, 3 * vertices.rows());
+    if (jacobian) *jacobian = Eigen::MatrixXd::Zero(10, 3 * vertices.rows());
     for (Eigen::Index face = 0; face < faces.rows(); ++face)
     {
         const Eigen::Array3d a = vertices.row(faces(face, 0)).transpose();
@@ -74,6 +75,11 @@ SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
 
         Eigen::Matrix<double, 10, 1> local;
         local << n.x()*h1.x(), (n*h3).matrix(), (n*h8).matrix(), (n*h4).matrix();
+        for (int printed = 0; printed < 10; ++printed)
+        {
+            values(nativeRow[printed]) += density*factor[printed]*local(printed);
+        }
+        if (!jacobian) continue;
         const std::array<Eigen::Matrix3d, 3> dn = {skew(v)-skew(u), -skew(v), skew(u)};
         const std::array<Eigen::Array3d, 3> d3 = {2*a+b+c, a+2*b+c, a+b+2*c};
         const Eigen::Array3d d5a = 6*a+2*b+2*c, d6b = 2*a+6*b+2*c;
@@ -85,10 +91,6 @@ SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
             cycle(a)*d5c + cycle(b)*d6c + cycle(c)*d7c
         };
         const std::array<Eigen::Array3d, 3> d4 = {h5, h6, h7};
-        for (int printed = 0; printed < 10; ++printed)
-        {
-            values(nativeRow[printed]) += density*factor[printed]*local(printed);
-        }
         for (int vertex = 0; vertex < 3; ++vertex)
         {
             Eigen::Matrix<double, 10, 3> block;
@@ -110,7 +112,7 @@ SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
             }
             for (int printed = 0; printed < 10; ++printed)
             {
-                result.jacobian.block<1, 3>(nativeRow[printed], 3*faces(face, vertex)) +=
+                jacobian->block<1, 3>(nativeRow[printed], 3*faces(face, vertex)) +=
                     density*factor[printed]*block.row(printed);
             }
         }
@@ -121,11 +123,24 @@ SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
     mass.secondMoment << values(4), values(9), values(8),
                          values(9), values(5), values(7),
                          values(8), values(7), values(6);
-    result.moments = physics::RawMassMoments10::fromMassMoments(mass);
-    if (!result.moments.isFinite() || !result.jacobian.allFinite())
+    const auto result = physics::RawMassMoments10::fromMassMoments(mass);
+    if (!result.isFinite() || (jacobian && !jacobian->allFinite()))
     {
         throw std::overflow_error("raw-moment differential overflowed");
     }
+    return result;
+}
+} // namespace
+physics::RawMassMoments10 integrateSurfaceRawMoments(
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& faces, double density)
+{
+    return integrate(vertices, faces, density, nullptr);
+}
+SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& faces, double density)
+{
+    SurfaceRawMomentDifferential result;
+    result.moments = integrate(vertices, faces, density, &result.jacobian);
     return result;
 }
 } // namespace spin2014

@@ -1,0 +1,1408 @@
+CMake Deprecation Warning at libigl/cmake/libigl.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  cmake/FindLIBIGL.cmake:34 (include)
+  CMakeLists.txt:91 (find_package)
+
+
+-- Creating target: igl::core (igl)
+BOOST_ROOT: 
+-- Using header-only CGAL
+-- Targetting Unix Makefiles
+-- Using /usr/bin/c++ compiler.
+-- __cplusplus is 201703
+--   --> Do not link with Boost.Thread
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48")  
+-- Boost include dirs: /home/lin/anaconda3/include
+-- Boost libraries:    
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48") found components: thread system 
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Creating target: igl::cgal (igl_cgal)
+-- HIGHS version: 1.14.0
+-- Git hash: 7df0786de3
+-- Build C++ library: ON
+-- Build C++ executable: OFF
+-- Build Fortran: OFF
+-- Build CSharp: OFF
+-- Build Python: OFF
+-- Build all tests: OFF
+-- ZLIB: ON
+-- Build examples: OFF
+-- Build pdlp with GPU: OFF
+-- Use FindCUDAConf: OFF
+-- Build GPU with delayed loading: OFF
+-- Build HIPO: OFF
+-- Build OpenBLAS: OFF
+-- Build type: RelWithDebInfo
+-- Found long size: 8
+-- Found long long size: 8
+-- Found int64_t size: 8
+-- Found unsigned long size: 8
+-- Found unsigned long long size: 8
+-- Found uint64_t size: 8
+-- Found int * size: 8
+-- IPO / LTO supported by compiler: YES
+-- IPO / LTO: disabled by default when building a static library; set CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON to enable
+-- FAST_BUILD set to on.
+-- Build C++ example: OFF
+-- Build CSharp example: OFF
+-- Build dotnet package: OFF
+-- No CSharp support
+-- .Net: Use .Net Framework 2.1 support: ON
+-- Found pybind11: /home/lin/anaconda3/lib/python3.13/site-packages/pybind11/include (found version "3.0.1")
+-- Configuring done (0.9s)
+-- Generating done (0.1s)
+-- Build files have been written to: /data/xvxinyao/make-it-balance-paper-sim/build/strict-v2-spin
+[ 73%] Built target highs
+[ 73%] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SourceSurfaceOctree.cpp.o
+In file included from /home/lin/anaconda3/include/boost/smart_ptr/detail/requires_cxx11.hpp:9,
+                 from /home/lin/anaconda3/include/boost/smart_ptr/shared_ptr.hpp:17,
+                 from /home/lin/anaconda3/include/boost/shared_ptr.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:41,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/kernel_basic.h:34,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:47,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Number_types/include/CGAL/number_type_basic.h:32,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Number_types/include/CGAL/Gmpq.h:25,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:5:
+/home/lin/anaconda3/include/boost/bind.hpp:36:1: note: ‘#pragma message: The practice of declaring the Bind placeholders (_1, _2, ...) in the global namespace is deprecated. Please use <boost/bind/bind.hpp> + using namespace boost::placeholders, or define BOOST_BIND_GLOBAL_PLACEHOLDERS to retain the current behavior.’
+   36 | BOOST_PRAGMA_MESSAGE(
+      | ^~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp: In member function ‘void spin2014::{anonymous}::Digest::moments(const physics::RawMassMoments10&)’:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:45:81: error: ‘begin’ was not declared in this scope
+   45 |     void moments(const physics::RawMassMoments10& m) {for(double value:m.values()) real(value);}
+      |                                                                                 ^
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:45:81: note: suggested alternatives:
+In file included from /usr/include/c++/13/string:53,
+                 from /usr/include/c++/13/bits/locale_classes.h:40,
+                 from /usr/include/c++/13/bits/ios_base.h:41,
+                 from /usr/include/c++/13/ios:44,
+                 from /usr/include/c++/13/istream:40,
+                 from /usr/include/c++/13/sstream:40,
+                 from /usr/include/c++/13/complex:45,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/eigen/Eigen/Core:96,
+                 from /data/xvxinyao/make-it-balance-paper-sim/include/physics/MassProperties.h:3,
+                 from /data/xvxinyao/make-it-balance-paper-sim/include/physics/RawMassMoments10.h:3,
+                 from /data/xvxinyao/make-it-balance-paper-sim/include/spin2014/SourceSurfaceOctree.h:2,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:1:
+/usr/include/c++/13/bits/range_access.h:114:37: note:   ‘std::begin’
+  114 |   template<typename _Tp> const _Tp* begin(const valarray<_Tp>&) noexcept;
+      |                                     ^~~~~
+In file included from /home/lin/anaconda3/include/boost/mpl/begin_end.hpp:17,
+                 from /home/lin/anaconda3/include/boost/mpl/iter_fold.hpp:18,
+                 from /home/lin/anaconda3/include/boost/variant/detail/initializer.hpp:28,
+                 from /home/lin/anaconda3/include/boost/variant/variant.hpp:30,
+                 from /home/lin/anaconda3/include/boost/variant.hpp:17,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/Object.h:38:
+/home/lin/anaconda3/include/boost/mpl/begin_end_fwd.hpp:22:38: note:   ‘boost::mpl::begin’
+   22 | template< typename Sequence > struct begin;
+      |                                      ^~~~~
+In file included from /home/lin/anaconda3/include/boost/range/functions.hpp:18,
+                 from /home/lin/anaconda3/include/boost/range/iterator_range_core.hpp:38,
+                 from /home/lin/anaconda3/include/boost/lexical_cast.hpp:30,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/exceptions.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/assertions_impl.h:35,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../STL_Extension/include/CGAL/assertions.h:362,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/basic.h:43:
+/home/lin/anaconda3/include/boost/range/begin.hpp:110:61: note:   ‘boost::range_adl_barrier::begin’
+  110 | inline BOOST_DEDUCED_TYPENAME range_iterator<const T>::type begin( const T& r )
+      |                                                             ^~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh/include/CGAL/Surface_mesh/Surface_mesh.h:45,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Surface_mesh/include/CGAL/Surface_mesh.h:27,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:7:
+/home/lin/anaconda3/include/boost/foreach.hpp:696:1: note:   ‘boost::foreach_detail_::begin’
+  696 | begin(auto_any_t col, type2type<T *, C> *, boost::mpl::true_ *) // null-terminated C-style strings
+      | ^~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:45:81: error: ‘end’ was not declared in this scope
+   45 |     void moments(const physics::RawMassMoments10& m) {for(double value:m.values()) real(value);}
+      |                                                                                 ^
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:45:81: note: suggested alternatives:
+/usr/include/c++/13/bits/range_access.h:116:37: note:   ‘std::end’
+  116 |   template<typename _Tp> const _Tp* end(const valarray<_Tp>&) noexcept;
+      |                                     ^~~
+/home/lin/anaconda3/include/boost/mpl/begin_end_fwd.hpp:23:38: note:   ‘boost::mpl::end’
+   23 | template< typename Sequence > struct end;
+      |                                      ^~~
+In file included from /home/lin/anaconda3/include/boost/range/functions.hpp:19:
+/home/lin/anaconda3/include/boost/range/end.hpp:104:61: note:   ‘boost::range_adl_barrier::end’
+  104 | inline BOOST_DEDUCED_TYPENAME range_iterator<const T>::type end( const T& r )
+      |                                                             ^~~
+/home/lin/anaconda3/include/boost/foreach.hpp:736:1: note:   ‘boost::foreach_detail_::end’
+  736 | end(auto_any_t, type2type<T *, C> *, boost::mpl::true_ *) // null-terminated C-style strings
+      | ^~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp: In member function ‘void spin2014::SourceSurfaceOctree::Data::visit(std::size_t, spin2014::SourceSurfaceCell, const std::vector<long unsigned int>&, const std::vector<spin2014::{anonymous}::OriginalTriangle>&, const CGAL::Side_of_triangle_mesh<CGAL::Surface_mesh<CGAL::Point_3<CGAL::Simple_cartesian<CGAL::Gmpq> > >, CGAL::Simple_cartesian<CGAL::Gmpq> >&)’:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: error: no matching function for call to ‘do_intersect(const spin2014::{anonymous}::Triangle&, const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3&)’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits_2.h:25,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Line_2_intersection.h:35,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/intersection_2_1.h:31,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/intersection_2.h:31,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Kernel/function_objects.h:37,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/function_objects.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Cartesian/Cartesian_base.h:71,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Cartesian_kernel/include/CGAL/Simple_cartesian.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:6:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_2<R>&, const Line_2<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Line_2_intersection.h:207:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  207 | CGAL_DO_INTERSECT_FUNCTION_SELF(Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Line_2_intersection.h:207:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  207 | CGAL_DO_INTERSECT_FUNCTION_SELF(Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_2<R_>&, const Line_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Line_2_intersection.h:164:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  164 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Line_2_intersection.h:164:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  164 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_2<R>&, const Segment_2<R_>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Line_2_intersection.h:164:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  164 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Line_2_intersection.h:164:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  164 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_2<R_>&, const Segment_2<R_>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Segment_2_intersection.h:458:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  458 | CGAL_DO_INTERSECT_FUNCTION_SELF(Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Segment_2_intersection.h:458:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  458 | CGAL_DO_INTERSECT_FUNCTION_SELF(Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_2<R>&, const Line_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Line_2_intersection.h:171:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  171 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Line_2_intersection.h:171:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  171 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_2<R>&, const Ray_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Line_2_intersection.h:171:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  171 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Line_2_intersection.h:171:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  171 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_2<R>&, const Segment_2<R_>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Segment_2_intersection.h:274:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  274 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Segment_2_intersection.h:274:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  274 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_2<R_>&, const Ray_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Segment_2_intersection.h:274:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  274 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Segment_2_intersection.h:274:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  274 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_2<R>&, const Ray_2<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Ray_2_intersection.h:262:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  262 | CGAL_DO_INTERSECT_FUNCTION_SELF(Ray_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Ray_2_intersection.h:262:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  262 | CGAL_DO_INTERSECT_FUNCTION_SELF(Ray_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Point_2<R>&, const Line_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Line_2_intersection.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Line_2_intersection.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_2<R>&, const Point_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Line_2_intersection.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Line_2_intersection.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Line_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Point_2<R>&, const Ray_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Ray_2_intersection.h:86:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   86 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Ray_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Ray_2_intersection.h:86:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   86 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Ray_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_2<R>&, const Point_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Ray_2_intersection.h:86:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   86 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Ray_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Ray_2_intersection.h:86:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   86 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Ray_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Point_2<R>&, const Segment_2<R_>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Segment_2_intersection.h:87:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   87 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Segment_2_intersection.h:87:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   87 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_2<R_>&, const Point_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Segment_2_intersection.h:87:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   87 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Segment_2_intersection.h:87:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   87 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Segment_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Point_2<R>&, const Point_2<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Point_2_intersection.h:60:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   60 | CGAL_DO_INTERSECT_FUNCTION_SELF(Point_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Point_2_intersection.h:60:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   60 | CGAL_DO_INTERSECT_FUNCTION_SELF(Point_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Point_2<R>&, const Triangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Triangle_2_intersection.h:163:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  163 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Triangle_2_intersection.h:163:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  163 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_2<R>&, const Point_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Triangle_2_intersection.h:163:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  163 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Triangle_2_intersection.h:163:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  163 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_2<R>&, const Triangle_2<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Triangle_2_Triangle_2_do_intersect.h:176:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  176 | CGAL_DO_INTERSECT_FUNCTION_SELF(Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Triangle_2_Triangle_2_do_intersect.h:176:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  176 | CGAL_DO_INTERSECT_FUNCTION_SELF(Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_2<R>&, const Triangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Triangle_2_intersection.h:199:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  199 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Triangle_2_intersection.h:199:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  199 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_2<R>&, const Line_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Triangle_2_intersection.h:199:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  199 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Triangle_2_intersection.h:199:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  199 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_2<R>&, const Triangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Triangle_2_intersection.h:205:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  205 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Triangle_2_intersection.h:205:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  205 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_2<R>&, const Ray_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Triangle_2_intersection.h:205:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  205 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Triangle_2_intersection.h:205:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  205 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_2<R_>&, const Triangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Triangle_2_intersection.h:203:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  203 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Triangle_2_intersection.h:203:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  203 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_2<R>&, const Segment_2<R_>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Triangle_2_intersection.h:203:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  203 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Triangle_2_intersection.h:203:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  203 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Triangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_2<R>&, const Iso_rectangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Iso_rectangle_2_intersection.h:224:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  224 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Iso_rectangle_2_intersection.h:224:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  224 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_rectangle_2<R>&, const Line_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Iso_rectangle_2_intersection.h:224:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  224 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Line_2_Iso_rectangle_2_intersection.h:224:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  224 | CGAL_DO_INTERSECT_FUNCTION(Line_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_rectangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_2<R>&, const Iso_rectangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Iso_rectangle_2_intersection.h:211:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  211 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Iso_rectangle_2_intersection.h:211:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  211 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_rectangle_2<R>&, const Ray_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Iso_rectangle_2_intersection.h:211:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  211 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Ray_2_Iso_rectangle_2_intersection.h:211:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  211 | CGAL_DO_INTERSECT_FUNCTION(Ray_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_rectangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_2<R_>&, const Iso_rectangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Iso_rectangle_2_intersection.h:237:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  237 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Iso_rectangle_2_intersection.h:237:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  237 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_rectangle_2<R>&, const Segment_2<R_>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Iso_rectangle_2_intersection.h:237:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  237 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Segment_2_Iso_rectangle_2_intersection.h:237:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  237 | CGAL_DO_INTERSECT_FUNCTION(Segment_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_rectangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Point_2<R>&, const Iso_rectangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Iso_rectangle_2_intersection.h:84:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   84 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Iso_rectangle_2_intersection.h:84:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   84 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_rectangle_2<R>&, const Point_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Iso_rectangle_2_intersection.h:84:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   84 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Point_2_Iso_rectangle_2_intersection.h:84:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   84 | CGAL_DO_INTERSECT_FUNCTION(Point_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_rectangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_rectangle_2<R>&, const Iso_rectangle_2<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Iso_rectangle_2_Iso_rectangle_2_intersection.h:95:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   95 | CGAL_DO_INTERSECT_FUNCTION_SELF(Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Iso_rectangle_2_Iso_rectangle_2_intersection.h:95:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   95 | CGAL_DO_INTERSECT_FUNCTION_SELF(Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_rectangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_2<R>&, const Iso_rectangle_2<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Triangle_2_Iso_rectangle_2_intersection.h:336:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  336 | CGAL_DO_INTERSECT_FUNCTION(Triangle_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Triangle_2_Iso_rectangle_2_intersection.h:336:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  336 | CGAL_DO_INTERSECT_FUNCTION(Triangle_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_rectangle_2<R>&, const Triangle_2<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Triangle_2_Iso_rectangle_2_intersection.h:336:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  336 | CGAL_DO_INTERSECT_FUNCTION(Triangle_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Triangle_2_Iso_rectangle_2_intersection.h:336:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  336 | CGAL_DO_INTERSECT_FUNCTION(Triangle_2, Iso_rectangle_2, 2)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_rectangle_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/intersection_2_3.h:31,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/intersection_2.h:33:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Circle_2_Circle_2_intersection.h:56:1: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Circle_2<R_>&, const Circle_2<R_>&)’
+   56 | do_intersect(const Circle_2<K> & circ1,
+      | ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Circle_2_Circle_2_intersection.h:56:1: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Circle_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/intersection_2_3.h:32:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Circle_2_Line_2_intersection.h:61:1: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Circle_2<R_>&, const Line_2<R>&)’
+   61 | do_intersect(const Circle_2<K> & c,
+      | ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Circle_2_Line_2_intersection.h:61:1: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Circle_2<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Circle_2_Line_2_intersection.h:71:1: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_2<R>&, const Circle_2<R_>&)’
+   71 | do_intersect(const Line_2<K> & l,
+      | ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Circle_2_Line_2_intersection.h:71:1: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_2<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Plane_3<R>&, const Line_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:71:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   71 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:71:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   71 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_3<R>&, const Plane_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:71:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   71 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:71:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   71 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_3<R>&, const Line_3<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:76:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   76 | CGAL_DO_INTERSECT_FUNCTION_SELF(Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:76:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   76 | CGAL_DO_INTERSECT_FUNCTION_SELF(Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_3<R_>&, const Segment_3<R_>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:79:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   79 | CGAL_DO_INTERSECT_FUNCTION_SELF(Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:79:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   79 | CGAL_DO_INTERSECT_FUNCTION_SELF(Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_3<R>&, const Segment_3<R_>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_3<R_>&, const Line_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:82:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   82 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_3<R>&, const Ray_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_3<R>&, const Line_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Line_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_3<R_>&, const Ray_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:88:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   88 | CGAL_DO_INTERSECT_FUNCTION(Segment_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:88:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   88 | CGAL_DO_INTERSECT_FUNCTION(Segment_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_3<R>&, const Segment_3<R_>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:88:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   88 | CGAL_DO_INTERSECT_FUNCTION(Segment_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:88:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   88 | CGAL_DO_INTERSECT_FUNCTION(Segment_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_3<R>&, const Ray_3<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:91:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   91 | CGAL_DO_INTERSECT_FUNCTION_SELF(Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:91:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   91 | CGAL_DO_INTERSECT_FUNCTION_SELF(Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Plane_3<R>&, const Sphere_3<R_>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:94:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   94 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Sphere_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:94:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   94 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Sphere_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Sphere_3<R_>&, const Plane_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:94:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   94 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Sphere_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:94:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   94 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Sphere_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Sphere_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Sphere_3<R_>&, const Sphere_3<R_>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:97:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   97 | CGAL_DO_INTERSECT_FUNCTION_SELF(Sphere_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:97:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+   97 | CGAL_DO_INTERSECT_FUNCTION_SELF(Sphere_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Sphere_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Plane_3<R>&, const Ray_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:100:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  100 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:100:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  100 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_3<R>&, const Plane_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:100:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  100 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:100:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  100 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Plane_3<R>&, const Segment_3<R_>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:103:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  103 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:103:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  103 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_3<R_>&, const Plane_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:103:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  103 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:103:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  103 | CGAL_DO_INTERSECT_FUNCTION(Plane_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Plane_3<R>&, const Plane_3<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:163:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  163 | CGAL_DO_INTERSECT_FUNCTION_SELF(Plane_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:163:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  163 | CGAL_DO_INTERSECT_FUNCTION_SELF(Plane_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3_1.h:32,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3.h:32,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Kernel_23/include/CGAL/Kernel/function_objects.h:38:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:167:1: note: candidate: ‘template<class R> bool CGAL::do_intersect(const Plane_3<R>&, const Plane_3<R>&, const Plane_3<R>&)’
+  167 | do_intersect(const Plane_3<R> &plane1, const Plane_3<R> &plane2,
+      | ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:167:1: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_cuboid_3<R>&, const Iso_cuboid_3<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:172:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  172 | CGAL_DO_INTERSECT_FUNCTION_SELF(Iso_cuboid_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:172:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  172 | CGAL_DO_INTERSECT_FUNCTION_SELF(Iso_cuboid_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_cuboid_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_cuboid_3<R>&, const Line_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:173:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  173 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:173:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  173 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_cuboid_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_3<R>&, const Iso_cuboid_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:173:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  173 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:173:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  173 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_cuboid_3<R>&, const Ray_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:174:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  174 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:174:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  174 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_cuboid_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_3<R>&, const Iso_cuboid_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:174:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  174 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:174:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  174 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Iso_cuboid_3<R>&, const Segment_3<R_>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:175:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  175 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:175:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  175 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Iso_cuboid_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_3<R_>&, const Iso_cuboid_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:175:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  175 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Intersections_3/intersection_3_1_impl.h:175:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  175 | CGAL_DO_INTERSECT_FUNCTION(Iso_cuboid_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Line_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Line_3_do_intersect.h:121:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  121 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Line_3_do_intersect.h:121:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  121 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_3<R>&, const Triangle_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Line_3_do_intersect.h:121:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  121 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Line_3_do_intersect.h:121:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  121 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Line_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Plane_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Plane_3_do_intersect.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Plane_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Plane_3_do_intersect.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Plane_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Plane_3<R>&, const Triangle_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Plane_3_do_intersect.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Plane_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Plane_3_do_intersect.h:85:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   85 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Plane_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Point_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Point_3_do_intersect.h:108:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  108 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Point_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Point_3_do_intersect.h:108:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  108 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Point_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Point_3<R>&, const Triangle_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Point_3_do_intersect.h:108:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  108 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Point_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Point_3_do_intersect.h:108:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  108 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Point_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Point_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Ray_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Ray_3_do_intersect.h:384:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  384 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Ray_3_do_intersect.h:384:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  384 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_3<R>&, const Triangle_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Ray_3_do_intersect.h:384:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  384 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Ray_3_do_intersect.h:384:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  384 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Ray_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Segment_3<R_>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Segment_3_do_intersect.h:333:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  333 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Segment_3_do_intersect.h:333:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  333 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_3<R_>&, const Triangle_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Segment_3_do_intersect.h:333:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  333 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Segment_3_do_intersect.h:333:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+  333 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Segment_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Triangle_3<R>&)’
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Triangle_3_do_intersect.h:454:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  454 | CGAL_DO_INTERSECT_FUNCTION_SELF(Triangle_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:108:3: note:   template argument deduction/substitution failed:
+  108 |   do_intersect(const A<K> & a, const A<K> & b) {                          \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Triangle_3_do_intersect.h:454:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION_SELF’
+  454 | CGAL_DO_INTERSECT_FUNCTION_SELF(Triangle_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Tetrahedron_3<R>&)’
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Tetrahedron_3_do_intersect.h:76:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   76 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Tetrahedron_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:96:3: note:   template argument deduction/substitution failed:
+   96 |   do_intersect(const A<K>& a, const B<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Tetrahedron_3_do_intersect.h:76:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   76 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Tetrahedron_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Tetrahedron_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Tetrahedron_3<R>&, const Triangle_3<R>&)’
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Tetrahedron_3_do_intersect.h:76:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   76 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Tetrahedron_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_2/include/CGAL/Intersection_traits.h:101:3: note:   template argument deduction/substitution failed:
+  101 |   do_intersect(const B<K>& a, const A<K>& b) {             \
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/Triangle_3_Tetrahedron_3_do_intersect.h:76:1: note: in expansion of macro ‘CGAL_DO_INTERSECT_FUNCTION’
+   76 | CGAL_DO_INTERSECT_FUNCTION(Triangle_3, Tetrahedron_3, 3)
+      | ^~~~~~~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Tetrahedron_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3.h:48:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Line_3_do_intersect.h:160:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(Bbox_3, const Line_3<R>&)’
+  160 | bool do_intersect(const CGAL::Bbox_3 a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Line_3_do_intersect.h:160:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Line_3_do_intersect.h:166:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Line_3<R>&, const Bbox_3&)’
+  166 | bool do_intersect(const Line_3<K>& a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Line_3_do_intersect.h:166:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Line_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Ray_3_do_intersect.h:29,
+                 from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3.h:49:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Segment_3_do_intersect.h:440:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(Bbox_3, const Segment_3<R_>&)’
+  440 | bool do_intersect(const CGAL::Bbox_3 a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Segment_3_do_intersect.h:440:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Segment_3_do_intersect.h:446:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Segment_3<R_>&, const Bbox_3&)’
+  446 | bool do_intersect(const Segment_3<K>& a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Segment_3_do_intersect.h:446:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Segment_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Ray_3_do_intersect.h:70:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(Bbox_3, const Ray_3<R>&)’
+   70 | bool do_intersect(const CGAL::Bbox_3 a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Ray_3_do_intersect.h:70:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Ray_3_do_intersect.h:76:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Ray_3<R>&, const Bbox_3&)’
+   76 | bool do_intersect(const Ray_3<K>& a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Ray_3_do_intersect.h:76:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Ray_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3.h:51:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Plane_3_do_intersect.h:133:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(Bbox_3, const Plane_3<R>&)’
+  133 | bool do_intersect(const CGAL::Bbox_3 a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Plane_3_do_intersect.h:133:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Plane_3_do_intersect.h:139:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Plane_3<R>&, const Bbox_3&)’
+  139 | bool do_intersect(const Plane_3<K>& a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Plane_3_do_intersect.h:139:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Plane_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3.h:52:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Sphere_3_do_intersect.h:110:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Bbox_3&, const Sphere_3<R_>&)’
+  110 | bool do_intersect(const CGAL::Bbox_3& a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Sphere_3_do_intersect.h:110:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Sphere_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Sphere_3_do_intersect.h:116:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Sphere_3<R_>&, const Bbox_3&)’
+  116 | bool do_intersect(const Sphere_3<K>& a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Sphere_3_do_intersect.h:116:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Sphere_3<R_>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3.h:53:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Triangle_3_do_intersect.h:393:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(Bbox_3, const Triangle_3<R>&)’
+  393 | bool do_intersect(const CGAL::Bbox_3 a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Triangle_3_do_intersect.h:393:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:57: note:   ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} is not derived from ‘const CGAL::Triangle_3<R>’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Triangle_3_do_intersect.h:399:6: note: candidate: ‘template<class K> bool CGAL::do_intersect(const Triangle_3<R>&, const Bbox_3&)’
+  399 | bool do_intersect(const Triangle_3<K>& a,
+      |      ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Triangle_3_do_intersect.h:399:6: note:   template argument deduction/substitution failed:
+/data/xvxinyao/make-it-balance-paper-sim/src/spin2014/SourceSurfaceOctree.cpp:132:69: note:   cannot convert ‘exactBox’ (type ‘const CGAL::Type_equality_wrapper<CGAL::Cartesian_base_no_ref_count<CGAL::Gmpq, CGAL::Simple_cartesian<CGAL::Gmpq> >, CGAL::Simple_cartesian<CGAL::Gmpq> >::Iso_cuboid_3’ {aka ‘const CGAL::Iso_cuboid_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’}) to type ‘const CGAL::Bbox_3&’
+  132 |             if(overlap(t.bounds,b) && CGAL::do_intersect(t.triangle,exactBox)) touching.push_back(candidate);
+      |                                                                     ^~~~~~~~
+In file included from /data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/intersection_3.h:47:
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Bbox_3_do_intersect.h:37:3: note: candidate: ‘bool CGAL::do_intersect(const Bbox_3&, const Bbox_3&)’
+   37 |   do_intersect(const CGAL::Bbox_3& c,
+      |   ^~~~~~~~~~~~
+/data/xvxinyao/make-it-balance-paper-sim/libigl/external/cgal/Installation/lib/cmake/CGAL/../../../../Intersections_3/include/CGAL/internal/Intersections_3/Bbox_3_Bbox_3_do_intersect.h:37:36: note:   no known conversion for argument 1 from ‘const spin2014::{anonymous}::Triangle’ {aka ‘const CGAL::Triangle_3<CGAL::Simple_cartesian<CGAL::Gmpq> >’} to ‘const CGAL::Bbox_3&’
+   37 |   do_intersect(const CGAL::Bbox_3& c,
+      |                ~~~~~~~~~~~~~~~~~~~~^
+gmake[3]: *** [CMakeFiles/make_it_stand_core.dir/build.make:1000: CMakeFiles/make_it_stand_core.dir/src/spin2014/SourceSurfaceOctree.cpp.o] Error 1
+gmake[2]: *** [CMakeFiles/Makefile2:1021: CMakeFiles/make_it_stand_core.dir/all] Error 2
+gmake[1]: *** [CMakeFiles/Makefile2:1163: CMakeFiles/spin-it-2014-source-surface-octree-regression.dir/rule] Error 2
+gmake: *** [Makefile:628: spin-it-2014-source-surface-octree-regression] Error 2

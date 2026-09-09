@@ -255,6 +255,10 @@ endif()
 if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
     list(APPEND MAKE_IT_STAND_CORE_SOURCES src/verification/ExactBoundaryAudit.cpp src/verification/ExactMaterialRegion.cpp src/verification/ExactBoundaryDistance.cpp)
     list(APPEND MAKE_IT_STAND_CORE_HEADERS include/verification/ExactBoundaryAudit.h include/verification/ExactMaterialRegion.h)
+    if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
+        list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceSurfaceOctree.cpp)
+        list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceSurfaceOctree.h)
+    endif()
 endif()
 
 add_library(
@@ -450,6 +454,17 @@ if(BUILD_TESTING)
         endif()
     endif()
     if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
+        if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+            add_executable(spin-it-2014-source-surface-octree-regression tests/spin_it_2014_source_surface_octree_regression.cpp)
+            target_link_libraries(spin-it-2014-source-surface-octree-regression PRIVATE make_it_stand::core)
+            add_test(NAME spin-it-2014-source-surface-octree COMMAND spin-it-2014-source-surface-octree-regression)
+            add_test(NAME spin-it-2014-source-surface-octree-level9 COMMAND spin-it-2014-source-surface-octree-regression --level9)
+            set_tests_properties(spin-it-2014-source-surface-octree spin-it-2014-source-surface-octree-level9 PROPERTIES LABELS "spin-it-2014;exact-geometry;native" TIMEOUT 3600)
+        endif()
+        add_executable(spin-it-2014-surface-value-regression tests/spin_it_2014_surface_value_regression.cpp)
+        target_link_libraries(spin-it-2014-surface-value-regression PRIVATE make_it_stand::core)
+        add_test(NAME spin-it-2014-surface-value COMMAND spin-it-2014-surface-value-regression)
+        add_test(NAME spin-it-2014-surface-value-allocation COMMAND spin-it-2014-surface-value-regression --allocation)
         add_executable(
             spin-it-2014-adaptive-domain-regression
             tests/spin_it_2014_adaptive_domain_regression.cpp

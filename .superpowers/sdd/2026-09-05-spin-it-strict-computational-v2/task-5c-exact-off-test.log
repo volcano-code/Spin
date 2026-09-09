@@ -1,0 +1,74 @@
+Internal ctest changing into directory: /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract/DartConfiguration.tcl
+Test project /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 1
+    Start  1: spin-it-2014-surface-value
+
+1: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract/spin-it-2014-surface-value-regression
+1: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract
+1: Test timeout computed to be: 1500
+1: surface value analytic, signed, covariance, invalid-input checks passed
+1/3 Test  #1: spin-it-2014-surface-value ..............   Passed    0.00 sec
+test 2
+    Start  2: spin-it-2014-surface-value-allocation
+
+2: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract/spin-it-2014-surface-value-regression "--allocation"
+2: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract
+2: Test timeout computed to be: 1500
+2: value-only succeeds with 32 MiB headroom; dense differential allocation fails as expected, N=1000000
+2/3 Test  #2: spin-it-2014-surface-value-allocation ...   Passed    0.01 sec
+test 14
+    Start 14: spin-it-2014-surface-differential
+
+14: Test command: /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract/spin-it-2014-surface-differential-regression
+14: Working Directory: /data/xvxinyao/make-it-balance-paper-sim/build/spin-2014-enabled-contract
+14: Test timeout computed to be: 1500
+14: [PASS] scenario=spin-it-2014-surface-differential error=4.45924e-12
+3/3 Test #14: spin-it-2014-surface-differential .......   Passed    0.00 sec
+
+The following tests passed:
+	spin-it-2014-surface-value
+	spin-it-2014-surface-value-allocation
+	spin-it-2014-surface-differential
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+deformation     =   0.00 sec*proc (1 test)
+regression      =   0.00 sec*proc (1 test)
+spin-it         =   0.00 sec*proc (1 test)
+spin-it-2014    =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   0.01 sec
+	Command being timed: "ctest --test-dir build/spin-2014-enabled-contract -j1 -R ^spin-it-2014-surface-(value.*|differential)$ -V"
+	User time (seconds): 0.01
+	System time (seconds): 0.00
+	Percent of CPU this job got: 107%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.01
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18492
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 13845
+	Voluntary context switches: 18
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 32
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

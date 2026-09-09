@@ -8,6 +8,16 @@
 namespace spin2014
 {
 
+/** Value-only supplement Algorithm 1, with no dense vertex Jacobian.
+ * Coordinates retain caller length units; moments have units rho*length^(3+d)
+ * for monomial degree d. Positive finite density is required. Signed closed
+ * components (including reversed cavities) are integrated without repair;
+ * closure/finite/degeneracy checks do not establish material legality.
+ */
+physics::RawMassMoments10 integrateSurfaceRawMoments(
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& faces,
+    double density = 1.0);
+
 
 struct SurfaceRawMomentDifferential
 {
