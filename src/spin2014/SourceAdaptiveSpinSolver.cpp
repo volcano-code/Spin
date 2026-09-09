@@ -1,4 +1,5 @@
 #include "spin2014/SourceAdaptiveSpinSolver.h"
+#include "SourceAdaptiveSpinEndpoint.h"
 #include "spin2014/SlqpAuditTrace.h"
 #include "manufacturing/SlicerValidation.h"
 #include <cmath>
@@ -44,7 +45,8 @@ void finish(SourceAdaptiveSpinResult& r) {
     r.outputHash=manufacturing::computeContentSha256(o.str());
 }
 }
-SourceAdaptiveSpinResult solveSourceAdaptiveSpin(const SourceAdaptiveSpinRequest& r) {
+SourceAdaptiveSpinResult detail::solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest& r,
+    SourceAdaptiveSpinEndpoint* endpoint) {
     validateSourceAdaptiveSpinRequest(r);SourceAdaptiveSpinResult out;out.inputHash=computeSourceAdaptiveSpinRequestHash(r);out.finalPhi=r.initialPhi;out.geometryDepth=r.source->config().maximumDepth;out.maximumOptimizationLevel=r.maximumOptimizationLevel;
     try {
         SourceAdaptiveDomain domain(r.source,r.initialLevel,r.maximumOptimizationLevel,r.maximumLeafCount);
@@ -101,8 +103,15 @@ SourceAdaptiveSpinResult solveSourceAdaptiveSpin(const SourceAdaptiveSpinRequest
         out.binaryMoments=r.source->outerSurfaceMoments().scaledDensity(r.density)-domain.removedMoments(binary).scaledDensity(r.density);
         out.binaryCheck=checkSourceBinaryMoments(*r.source,*out.binaryCuboids,*out.binaryMoments,r.objective,out.finalPhi,r.density,r.binaryConstraintTolerance);
         out.status=out.binaryCheck->passed?SourceAdaptiveSpinStatus::BinaryMomentValidated:SourceAdaptiveSpinStatus::BinaryValidationFailed;out.diagnostic=out.binaryCheck->diagnostic;
+        if(endpoint && out.status==SourceAdaptiveSpinStatus::BinaryMomentValidated) {
+            endpoint->domain.emplace(std::move(domain));
+            endpoint->binary=std::move(binary);
+        }
     }catch(const std::length_error& e){out.status=SourceAdaptiveSpinStatus::ResourceLimitReached;out.diagnostic=e.what();}
     catch(const std::bad_alloc&){out.status=SourceAdaptiveSpinStatus::ResourceLimitReached;out.diagnostic="RESOURCE_LIMIT: source allocation";}
     finish(out);return out;
+}
+SourceAdaptiveSpinResult solveSourceAdaptiveSpin(const SourceAdaptiveSpinRequest& r) {
+    return detail::solveSourceAdaptiveSpinEndpoint(r,nullptr);
 }
 }

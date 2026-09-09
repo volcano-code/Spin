@@ -1,4 +1,5 @@
 #include "verification/ExactMaterialRegion.h"
+#include "verification/ExactCuboidUnion.h"
 #include "verification/Sha256.h"
 #include "ExactBoundaryDistance.h"
 #include <CGAL/Gmpq.h>
@@ -6,11 +7,15 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 #include <CGAL/Nef_polyhedron_3.h>
+#include <CGAL/Surface_mesh.h>
+#include <CGAL/boost/graph/convert_nef_polyhedron_to_polygon_mesh.h>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
+#include <map>
+#include <functional>
 
 namespace verification {
 namespace {
@@ -333,5 +338,233 @@ ExactBoundaryClearanceFacts checkExactBoundaryClearance(
     } catch (const std::exception& e) { r.error=e.what(); }
     catch (...) { r.error="unknown exact boundary distance failure"; }
     return r;
+}
+
+void validateExactCuboidUnionSettings(const ExactCuboidUnionSettings& s) {
+    const auto limit=static_cast<std::size_t>(std::numeric_limits<int>::max());
+    for(auto value:{s.maximumInputCuboids,s.maximumOutputVertices,s.maximumOutputTriangles,
+            s.maximumIntermediateComplexity})
+        if(value==0 || value>limit)
+            throw std::invalid_argument("cuboid union budgets must be positive and fit signed native indices");
+}
+
+std::string hashExactCuboidUnionSettings(const ExactCuboidUnionSettings& s) {
+    validateExactCuboidUnionSettings(s);
+    return digest({"exact-cuboid-union-settings-v1","IMPLEMENTATION_DEFAULT",
+        std::to_string(s.maximumInputCuboids),std::to_string(s.maximumOutputVertices),
+        std::to_string(s.maximumOutputTriangles),std::to_string(s.maximumIntermediateComplexity)});
+}
+
+namespace {
+ExactNefComplexity complexity(const Nef& n) {
+    return {n.number_of_vertices(),n.number_of_halfedges(),n.number_of_halffacets(),n.number_of_volumes()};
+}
+
+// Checks explicit live structures and conservative known-growth preflights.
+// CGAL's internal temporary allocations are not an allocator/cgroup hard cap.
+class UnionBudget {
+    const ExactCuboidUnionSettings& settings_;
+    ExactCuboidUnionFacts& facts_;
+public:
+    UnionBudget(const ExactCuboidUnionSettings& s,ExactCuboidUnionFacts& f):settings_(s),facts_(f) {}
+    void preflight(std::size_t requested) const {
+        if(requested>settings_.maximumIntermediateComplexity)
+            throw std::length_error("RESOURCE_LIMIT: exact union intermediate complexity");
+    }
+    void observed(std::size_t actual) {
+        facts_.peakComplexity=std::max(facts_.peakComplexity,actual);
+        preflight(actual);
+    }
+    void validate(Nef& set,std::size_t otherLive) {
+        observed(otherLive+complexity(set).total());
+        checked(set,"cuboid union structure");
+        if(set.volumes_begin()==set.volumes_end() || set.volumes_begin()->mark())
+            throw std::runtime_error("cuboid union has marked unbounded exterior");
+        preflight(otherLive+3*complexity(set).total());
+        Nef regular=set.regularization();
+        observed(otherLive+complexity(set).total()+complexity(regular).total());
+        checked(regular,"cuboid union regularization");
+        Nef delta=set.symmetric_difference(regular);
+        observed(otherLive+complexity(set).total()+complexity(regular).total()+complexity(delta).total());
+        checked(delta,"cuboid union regularity equality");
+        if(!delta.is_empty()) throw std::runtime_error("cuboid union is not regular closed");
+    }
+};
+
+Nef boxSolid(const ExactCuboid& box) {
+    Eigen::MatrixXd vertices(8,3);
+    Eigen::MatrixXi faces(12,3);
+    for(int i=0;i<8;++i) for(int axis=0;axis<3;++axis)
+        vertices(i,axis)=(i&(1<<axis))?box.upper(axis):box.lower(axis);
+    faces<<0,2,1,1,2,3,4,5,6,5,7,6,0,1,4,1,5,4,
+        2,6,3,3,6,7,0,4,2,2,4,6,1,3,5,3,7,5;
+    std::vector<int> components(12,0);
+    Polyhedron surface;
+    ComponentBuilder builder(vertices,faces,components,0,false);
+    surface.delegate(builder);
+    return Nef(surface);
+}
+
+struct Nonrepresentable : std::runtime_error {using std::runtime_error::runtime_error;};
+
+std::size_t triangulatedBoundarySize(const Nef& solid) {
+    std::size_t bothOrientations=0;
+    for(auto facet=solid.halffacets_begin();facet!=solid.halffacets_end();++facet) {
+        std::size_t vertices=0,cycles=0;
+        for(auto cycle=facet->facet_cycles_begin();cycle!=facet->facet_cycles_end();++cycle) {
+            if(!cycle.is_shalfedge()) throw std::runtime_error("simple union facet has non-polygon cycle");
+            Nef::SHalfedge_around_facet_const_circulator current(cycle),end(current);
+            std::size_t ringSize=0;
+            do {++ringSize;++current;} while(current!=end);
+            if(ringSize<3) throw std::runtime_error("simple union facet has short polygon cycle");
+            vertices+=ringSize;++cycles;
+        }
+        if(cycles==0) throw std::runtime_error("simple union facet has no polygon cycle");
+        // Planar constrained triangulation with n boundary vertices and h holes
+        // has n+2h-2 triangles; simple exact constraints need no Steiner points.
+        bothOrientations+=vertices+2*cycles-4;
+    }
+    if(bothOrientations%2) throw std::runtime_error("union facet twins disagree on triangulation size");
+    return bothOrientations/2;
+}
+
+// Exact Surface_mesh conversion visits the outer shell of every bounded SNC
+// volume, including unmarked voids; the pinned converter uses mark-dependent
+// orientation and constrained exact triangulation for polygon facets/holes.
+std::pair<Eigen::MatrixXd,Eigen::MatrixXi> exportUnion(
+    const Nef& solid,const ExactCuboidUnionSettings& settings) {
+    const auto counts=complexity(solid);
+    // Count actual polygon cycles, including holes, before triangulation.
+    // Output-cap equality must not fail due to a loose growth estimate.
+    const auto triangleCount=triangulatedBoundarySize(solid);
+    if(counts.vertices>settings.maximumOutputVertices ||
+            triangleCount>settings.maximumOutputTriangles)
+        throw std::length_error("RESOURCE_LIMIT: exact union conversion preflight");
+    CGAL::Surface_mesh<Kernel::Point_3> mesh;
+    CGAL::convert_nef_polyhedron_to_polygon_mesh(solid,mesh,true);
+    if(mesh.number_of_vertices()>settings.maximumOutputVertices ||
+            mesh.number_of_faces()>settings.maximumOutputTriangles)
+        throw std::length_error("RESOURCE_LIMIT: exact union triangulated output");
+    if(mesh.number_of_vertices()!=counts.vertices || mesh.number_of_faces()!=triangleCount)
+        throw std::runtime_error("exact converter output disagrees with polygon-cycle counts");
+    using Vertex=std::array<double,3>;
+    std::map<Vertex,int> ordered;
+    std::vector<Vertex> converted(mesh.number_of_vertices());
+    for(auto v:mesh.vertices()) {
+        const auto& point=mesh.point(v);
+        Vertex value;
+        for(int axis=0;axis<3;++axis) {
+            double d=CGAL::to_double(point[axis]);
+            if(!std::isfinite(d) || CGAL::Gmpq(d)!=point[axis])
+                throw Nonrepresentable("exact union vertex does not roundtrip through binary64");
+            value[axis]=(d==0)?0:d;
+        }
+        converted[static_cast<std::size_t>(v)]=value;
+        ordered.emplace(value,0);
+    }
+    Eigen::MatrixXd vertices(ordered.size(),3);
+    int index=0;
+    for(auto& entry:ordered) {
+        entry.second=index;
+        for(int axis=0;axis<3;++axis) vertices(index,axis)=entry.first[axis];
+        ++index;
+    }
+    std::vector<std::array<int,3>> triangles;
+    for(auto f:mesh.faces()) {
+        std::array<int,3> triangle;
+        int count=0;
+        for(auto v:CGAL::vertices_around_face(mesh.halfedge(f),mesh)) {
+            if(count==3) throw std::runtime_error("CGAL export returned non-triangle");
+            triangle[count++]=ordered.at(converted[static_cast<std::size_t>(v)]);
+        }
+        if(count!=3) throw std::runtime_error("CGAL export returned incomplete triangle");
+        std::rotate(triangle.begin(),std::min_element(triangle.begin(),triangle.end()),triangle.end());
+        triangles.push_back(triangle);
+    }
+    std::sort(triangles.begin(),triangles.end());
+    Eigen::MatrixXi faces(triangles.size(),3);
+    for(std::size_t i=0;i<triangles.size();++i)
+        for(int j=0;j<3;++j) faces(i,j)=triangles[i][j];
+    return {std::move(vertices),std::move(faces)};
+}
+}
+
+ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>& boxes,
+    const ExactCuboidUnionSettings& settings) {
+    validateExactCuboidUnionSettings(settings);
+    for(const auto& b:boxes)
+        if(!b.lower.allFinite() || !b.upper.allFinite() || (b.upper.array()<=b.lower.array()).any())
+            throw std::invalid_argument("cuboid union requires finite strictly positive binary64 boxes");
+    ExactCuboidUnion result;
+    auto& facts=result.facts_;
+    facts.settings=settings;facts.inputCuboids=boxes.size();
+    std::ostringstream input;
+    input.imbue(std::locale::classic());input<<std::hexfloat<<boxes.size()<<';';
+    for(const auto& b:boxes) for(int axis=0;axis<3;++axis) input<<b.lower(axis)<<','<<b.upper(axis)<<';';
+    facts.inputDigest=digest({facts.algorithm,facts.backend,hashExactCuboidUnionSettings(settings),input.str()});
+    try {
+        if(boxes.size()>settings.maximumInputCuboids)
+            throw std::length_error("RESOURCE_LIMIT: exact union input cuboids");
+        UnionBudget budget(settings,facts);
+        // Depth-first balanced reduction holds only logarithmically many
+        // sub-results; source input order remains part of the input identity.
+        std::function<Nef(std::size_t,std::size_t,std::size_t)> reduce;
+        reduce=[&](std::size_t begin,std::size_t end,std::size_t otherLive)->Nef {
+            if(begin==end) {Nef empty;budget.validate(empty,otherLive);return empty;}
+            if(end-begin==1) {
+                budget.preflight(otherLive+64); // triangulated cube: 8V+36H+12F+2 volumes
+                Nef box=boxSolid(boxes[begin]);budget.validate(box,otherLive);return box;
+            }
+            const auto mid=begin+(end-begin)/2;
+            Nef left=reduce(begin,mid,otherLive);
+            Nef right=reduce(mid,end,otherLive+complexity(left).total());
+            const auto operands=complexity(left).total()+complexity(right).total();
+            budget.preflight(otherLive+2*operands);
+            Nef united=left.join(right);
+            ++facts.booleanOperations;
+            budget.validate(united,otherLive+operands);
+            return united;
+        };
+        Nef united=reduce(0,boxes.size(),0);
+        facts.finalComplexity=complexity(united);
+        facts.simple=united.is_simple();
+        if(!*facts.simple) {
+            facts.status="NONMANIFOLD_GEOMETRY";
+            facts.diagnostic="exact union is not simple; edge/point contacts are not repaired";
+        } else {
+            auto arrays=boxes.empty()?std::make_pair(Eigen::MatrixXd(0,3),Eigen::MatrixXi(0,3)):exportUnion(united,settings);
+            auto region=boxes.empty()?emptyExactMaterialRegion():makeExactMaterialRegion(arrays.first,arrays.second);
+            if(!region.facts().valid || !region.facts().completed)
+                throw std::runtime_error("exported signed boundary invalid: "+region.facts().error);
+            const auto live=complexity(united).total()+complexity(region.data_->solid).total();
+            budget.observed(live);
+            budget.preflight(2*live);
+            Nef difference=united.symmetric_difference(region.data_->solid);
+            budget.observed(live+complexity(difference).total());
+            checked(difference,"exported union exact inclusive roundtrip");
+            facts.roundtripEqual=difference.is_empty();
+            if(!*facts.roundtripEqual) throw std::runtime_error("exported union differs from exact original set");
+            facts.meshDigest=region.facts().inputDigest;
+            facts.status="EXACT_UNION_VALIDATED";
+            facts.diagnostic=boxes.empty()?"explicit empty algebra union":"exact signed boundary and inclusive roundtrip validated";
+            result.region_=std::make_shared<const ExactMaterialRegion>(std::move(region));
+            result.vertices_=std::move(arrays.first);result.faces_=std::move(arrays.second);
+        }
+    } catch(const Nonrepresentable& e) {facts.status="NONREPRESENTABLE_GEOMETRY";facts.diagnostic=e.what();}
+    catch(const std::length_error& e) {facts.status="RESOURCE_LIMIT_UNKNOWN";facts.diagnostic=e.what();}
+    catch(const std::bad_alloc&) {facts.status="RESOURCE_LIMIT_UNKNOWN";facts.diagnostic="exact union allocation failure";}
+    catch(const std::exception& e) {facts.status="GEOMETRY_UNKNOWN";facts.diagnostic=e.what();}
+    catch(...) {facts.status="GEOMETRY_UNKNOWN";facts.diagnostic="unknown exact union failure";}
+    if(facts.status!="EXACT_UNION_VALIDATED") {
+        result.region_.reset();
+        result.vertices_.resize(0,3);result.faces_.resize(0,3);
+    }
+    const auto& c=facts.finalComplexity;
+    facts.outputDigest=digest({facts.inputDigest,facts.status,facts.diagnostic,facts.meshDigest,
+        facts.simple?(*facts.simple?"simple":"nonsimple"):"unknown",
+        facts.roundtripEqual?(*facts.roundtripEqual?"equal":"unequal"):"unknown",
+        std::to_string(c.vertices),std::to_string(c.halfedges),std::to_string(c.halffacets),std::to_string(c.volumes),
+        std::to_string(facts.booleanOperations),std::to_string(facts.peakComplexity),facts.complexityDefinition});
+    return result;
 }
 } // namespace verification

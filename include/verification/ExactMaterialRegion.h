@@ -5,6 +5,9 @@
 #include <optional>
 
 namespace verification {
+struct ExactCuboid;
+struct ExactCuboidUnionSettings;
+class ExactCuboidUnion;
 
 struct ExactMaterialRegionFacts {
     std::string algorithm = "signed-shell-nef-regular-closed-v1";
@@ -69,6 +72,7 @@ private:
     friend ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion&, const ExactMaterialRegion&);
     friend ExactMaterialPartitionFacts checkExactMaterialPartition(const ExactMaterialRegion&, const std::vector<ExactMaterialRegion>&);
     friend ExactBoundaryClearanceFacts checkExactBoundaryClearance(const ExactMaterialRegion&, const ExactMaterialRegion&, double);
+    friend ExactCuboidUnion makeExactCuboidUnion(const std::vector<ExactCuboid>&,const ExactCuboidUnionSettings&);
 };
 
 // Malformed input throws invalid_argument; invalid boundaries/nesting retain
