@@ -54,12 +54,16 @@ SourceAdaptiveSpinResult solveSourceAdaptiveSpin(const SourceAdaptiveSpinRequest
         const auto problem=SpinIt2014MomentProblem::fromObjective(r.objective,r.inertiaWeight,r.centerWeight);
         for(int i=0;i<r.maximumAdaptivePasses;++i){SourceAdaptivePass p;p.index=i;p.before=domain.leaves();p.beforeHash=domain.partitionHash();p.inputBeta=beta;p.inputPhi=out.finalPhi;
             try {
+                // Empty beta is not a source optimization, even when an angular
+                // objective would give the shared solver a phi-only state.
+                if(domain.leaves().empty())
+                    throw std::invalid_argument("empty conservative source partition: no fill variables");
                 AdaptiveFillFunctional f(domain,problem,r.laplacianWeight,r.density);
                 p.solve=solveSlqpLbfgsPaper(f,beta,out.finalPhi,r.slqp);
             }catch(const std::bad_alloc&){throw;}catch(const std::length_error&){throw;}
             catch(const std::exception& e){
-                // The existing solver can reject an empty prefix or an initial
-                // nonfinite evaluation before producing a trace. Keep the valid
+                // The source guard or an initial nonfinite solver evaluation
+                // can reject the state before producing a trace. Keep the valid
                 // partition/state and explicit invalid KKT; never infer success.
                 p.solve.status=SlqpStatus::NumericalUnknown;p.solve.diagnostic=std::string("initial/source solve evaluation unavailable: ")+e.what();
                 p.solve.beta=beta;p.solve.initialPhi=p.solve.finalPhi=out.finalPhi;

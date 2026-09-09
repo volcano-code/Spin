@@ -163,9 +163,64 @@ void numericalFailureTests() {
     r=fixedRequest();r.objective=Spin2014Objective::YoYo;r.inertiaWeight=std::numeric_limits<double>::max();
     auto overflow=solveSourceAdaptiveSpin(r);require(overflow.status==SourceAdaptiveSpinStatus::RelaxationUnknown && !overflow.binaryCheck && overflow.finalPartition.size()==2 && (overflow.relaxedFill.array()==.5).all(),"nonfinite objective retains initial state and explicit UNKNOWN");
 }
-int main(int argc,char**) {try {
+void emptySourceAllObjectives() {
+    SourceAdaptiveSpinRequest r;
+    // The outer is symmetric about the origin, so an angular phi-only problem
+    // can have a valid KKT and zero equalities despite having no carve variables.
+    r.source=source(cube(-.5,.5),cube(.39,.40),3,{-1,-1,-1},2);
+    r.initialLevel=2;r.maximumOptimizationLevel=3;
+    require(r.source->carveableMoments().mass()==0,"empty-source fixture has no accepted material");
+    bool allUnknown=true;
+    for(auto objective:{Spin2014Objective::StaticLowering,Spin2014Objective::YoYo,
+            Spin2014Objective::TopInertiaOnly,Spin2014Objective::TopLoweringOnly,
+            Spin2014Objective::TopMassAndLowering}) {
+        r.objective=objective;r.initialPhi=objective==Spin2014Objective::StaticLowering?0:.37;
+        auto result=solveSourceAdaptiveSpin(r);
+        std::cout<<"empty-source objective="<<spin2014ObjectiveToken(objective)
+                 <<" status="<<sourceAdaptiveSpinStatusToken(result.status)
+                 <<" binary_check="<<result.binaryCheck.has_value()<<'\n';
+        allUnknown &= result.status==SourceAdaptiveSpinStatus::RelaxationUnknown &&
+            !result.binaryCheck && !result.binaryCuboids && !result.binaryMoments &&
+            result.binaryFill.size()==0 && result.relaxedFill.size()==0 &&
+            result.finalPartition.empty() && result.finalPhi==r.initialPhi &&
+            result.passes.size()==1 && !result.passes.front().solve.finalKkt.valid &&
+            result.passes.front().solve.trace.empty();
+    }
+    require(allUnknown,"empty conservative source must stay UNKNOWN for every objective, without phi-only KKT/binary grant");
+}
+void canonicalCuboidEndpoints() {
+    auto s=source(cube(0,1),cube(.125,.875),5,{-.3,-.2,-.1},1.4);
+    SourceAdaptiveDomain d(s,4,5);
+    auto output=sourceBinaryCuboids(d,Eigen::VectorXd::Ones(d.leaves().size()),1000000);
+    std::size_t mismatches=0,stored=0,virtualDescendants=0;
+    bool lowerPlaneSeven=false,upperPlaneSeven=false;
+    for(const auto& b:output.cuboids) {
+        const auto q=s->cell(b.cell.level,b.cell.coordinates);
+        require(q.kind==SourceSurfaceCellKind::Full,"emitted actual source cell is accepted FULL");
+        if(q.index==SourceSurfaceCell::noIndex)++virtualDescendants;else ++stored;
+        for(int axis=0;axis<3;++axis) {
+            // Independently evaluate the specified once-rounded canonical plane;
+            // literal plane 7 below additionally anchors the reported regression.
+            const double lo=std::fma(std::ldexp(double(b.cell.coordinates[axis]),-b.cell.level),1.4,s->config().rootOrigin(axis));
+            const double hi=std::fma(std::ldexp(double(b.cell.coordinates[axis])+1,-b.cell.level),1.4,s->config().rootOrigin(axis));
+            mismatches+=(b.lower(axis)!=lo);mismatches+=(b.upper(axis)!=hi);
+        }
+        if(b.cell.level==4 && b.cell.coordinates[0]==7){lowerPlaneSeven=true;mismatches+=(b.lower.x()!=.3125);}
+        if(b.cell.level==4 && b.cell.coordinates[0]==6){upperPlaneSeven=true;mismatches+=(b.upper.x()!=.3125);}
+    }
+    std::cout<<"canonical-endpoints cuboids="<<output.cuboids.size()<<" stored="<<stored
+             <<" virtual="<<virtualDescendants<<" mismatches="<<mismatches<<'\n';
+    require(stored>0 && virtualDescendants>0 && lowerPlaneSeven && upperPlaneSeven,"canonical fixture exercises stored and virtual FULL cells and both plane-7 endpoints");
+    require(mismatches==0,"emitted cuboid lower/upper endpoints must exactly equal the source canonical dyadic planes");
+    const auto expected=s->outerSurfaceMoments()-d.removedMoments(Eigen::VectorXd::Ones(d.leaves().size()));
+    auto checked=checkSourceBinaryMoments(*s,output,expected,Spin2014Objective::StaticLowering,0,1,1e-6);
+    require(checked.independentMoments.has_value() && checked.normalizedMomentError<=1e-10,"canonical endpoints retain independent tetrahedron moment agreement");
+}
+int main(int argc,char** argv) {try {
+    if(argc>1 && std::string(argv[1])=="--empty-source"){emptySourceAllObjectives();return 0;}
+    if(argc>1 && std::string(argv[1])=="--canonical-cuboids"){canonicalCuboidEndpoints();return 0;}
     if(argc>1){auto s=source(cube(0,1),cube(.25,.75),9);SourceAdaptiveDomain d(s,2,9);require(s->stats().maximumVisitedLevel==9 && d.leaves().size()==8,"genuine geometry9 coarse partition");graph(d);rusage u{};getrusage(RUSAGE_SELF,&u);std::cout<<"geometry_depth9 nodes="<<s->cells().size()<<" optimization_leaves="<<d.leaves().size()<<" face_keys="<<d.faceKeyCount()<<" rss_KiB="<<u.ru_maxrss<<'\n';return 0;}
-    numericalFailureTests();partitionTests();functionalTests();binaryTests();solverTests();std::cout<<"source adaptive tests passed; faster="<<MAKE_IT_STAND_HAS_SPIN_IT_FASTER<<'\n';
+    emptySourceAllObjectives();canonicalCuboidEndpoints();numericalFailureTests();partitionTests();functionalTests();binaryTests();solverTests();std::cout<<"source adaptive tests passed; faster="<<MAKE_IT_STAND_HAS_SPIN_IT_FASTER<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
 #else
 #include <iostream>

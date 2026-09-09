@@ -18,6 +18,9 @@ struct SourceSurfaceOctreeConfig {
 };
 
 enum class SourceSurfaceCellKind : std::uint8_t { Internal, Boundary, Full, Empty };
+struct SourceSurfaceCellBounds {
+    Eigen::Vector3d lower,upper;
+};
 struct SourceSurfaceCell {
     static constexpr std::size_t noIndex = std::numeric_limits<std::size_t>::max();
     std::size_t index = noIndex, parent = noIndex, firstChild = noIndex;
@@ -72,6 +75,12 @@ public:
      * All other returned cells exactly match stored scientific contributions.
      */
     SourceSurfaceCell cell(int level, std::array<std::uint32_t,3> coordinates) const;
+    /** Canonical represented dyadic planes used by geometry classification and
+     * moments, including virtual descendants. Each plane is rounded once by
+     * FMA so coincident boundaries agree across levels and all consumers.
+     */
+    SourceSurfaceCellBounds cellBounds(int level,
+        std::array<std::uint32_t,3> coordinates) const;
 private:
     struct Data;
     std::shared_ptr<const Data> data_;

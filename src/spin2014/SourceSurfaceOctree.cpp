@@ -55,6 +55,13 @@ Bounds bounds(const SourceSurfaceOctreeConfig& c,int level,const std::array<std:
     }
     return b;
 }
+void validateCellKey(const SourceSurfaceOctreeConfig& config,int level,
+    const std::array<std::uint32_t,3>& xyz) {
+    if(level<0 || level>config.maximumDepth)
+        throw std::out_of_range("source octree query level outside configured depth");
+    for(auto x:xyz) if(x>=(std::uint32_t(1)<<level))
+        throw std::out_of_range("source octree query coordinate outside root");
+}
 physics::RawMassMoments10 cuboid(const Bounds& b) {
     const Eigen::Vector3d length=b.hi-b.lo;
     const double volume=length.prod();
@@ -234,8 +241,7 @@ const std::string& SourceSurfaceOctree::partitionSha256() const {return data_->p
 const SourceSurfaceOctreeStats& SourceSurfaceOctree::stats() const {return data_->stats;}
 const std::vector<SourceSurfaceCell>& SourceSurfaceOctree::cells() const {return data_->cells;}
 SourceSurfaceCell SourceSurfaceOctree::cell(int level,std::array<std::uint32_t,3> xyz) const {
-    if(level<0 || level>data_->config.maximumDepth) throw std::out_of_range("source octree query level outside configured depth");
-    for(auto x:xyz) if(x>=(std::uint32_t(1)<<level)) throw std::out_of_range("source octree query coordinate outside root");
+    validateCellKey(data_->config,level,xyz);
     std::size_t index=0;
     while(true) {
         const auto& node=data_->cells[index];
@@ -249,5 +255,11 @@ SourceSurfaceCell SourceSurfaceOctree::cell(int level,std::array<std::uint32_t,3
         unsigned child=0; for(int a=0;a<3;++a) child|=((xyz[a]>>shift)&1)<<a;
         index=node.firstChild+child;
     }
+}
+SourceSurfaceCellBounds SourceSurfaceOctree::cellBounds(int level,
+    std::array<std::uint32_t,3> xyz) const {
+    validateCellKey(data_->config,level,xyz);
+    const auto b=bounds(data_->config,level,xyz);
+    return {b.lo,b.hi};
 }
 } // namespace spin2014

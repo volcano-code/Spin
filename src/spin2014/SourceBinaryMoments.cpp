@@ -13,8 +13,9 @@ SourceBinaryCuboids sourceBinaryCuboids(const SourceAdaptiveDomain& domain,const
     const auto& source=domain.source();const auto& cfg=source.config();
     std::function<void(SourcePartitionKey)> visit=[&](SourcePartitionKey key){auto q=source.cell(key.level,key.coordinates);if(q.moments.mass()==0)return;
         if(q.kind==SourceSurfaceCellKind::Full){if(r.cuboids.size()>=cap)throw std::length_error("RESOURCE_LIMIT: binary output cuboids");
-            SourceRemovedCuboid b;b.cell=key;const double side=std::ldexp(cfg.rootSide,-key.level);
-            for(int a=0;a<3;++a){b.lower(a)=cfg.rootOrigin(a)+side*key.coordinates[a];b.upper(a)=cfg.rootOrigin(a)+side*(key.coordinates[a]+1);}
+            SourceRemovedCuboid b;b.cell=key;
+            const auto canonical=source.cellBounds(key.level,key.coordinates);
+            b.lower=canonical.lower;b.upper=canonical.upper;
             if(!b.lower.allFinite()||!b.upper.allFinite()||(b.upper.array()<=b.lower.array()).any())throw std::overflow_error("invalid binary cuboid arithmetic");r.cuboids.push_back(b);return;}
         if(key.level>=cfg.maximumDepth)throw std::logic_error("nonfull terminal has positive carveable contribution");
         for(int k=0;k<8;++k){auto child=key;++child.level;for(int a=0;a<3;++a)child.coordinates[a]=2*key.coordinates[a]+((k>>a)&1);visit(child);}

@@ -86,3 +86,58 @@ No subagent/reviewer was spawned. The controller independently derived expected 
 The original source oracle still excludes unresolved closed boundary cells conservatively. Source geometry and optimization depths are different quantities. Uniform adjacency is over bounding cells. Exact common-value recursive merging and mandatory post-merge resolve are explicit implementation defaults because paper terminal details are incomplete. All numerical bounds/guards/default controls are implementation choices, not published author parameters. Only single density is integrated; dual material, deformation/cage integration, Python exposure, CAD/manifold generation and original-case completion remain pending.
 
 Empty-variable or nonfinite initial source evaluations currently terminate as explicit numerical UNKNOWN, since the shared audited solver has no zero-variable solve contract; no alternative dummy optimizer is substituted. The report does not claim convergence for those cases.
+
+## Fix round 1/5 — accepted independent review findings
+
+Fix base: `45e47eac6cbbee481c1cad162fd997a77ca56e9a`. The preceding report/evidence remains the historical pre-review record. Its empty-source claim was incomplete: an angular objective creates an unbounded phi coordinate even with zero beta variables, and the shared general solver can legitimately solve that phi-only problem. That behavior must not grant a source-adaptive binary status. The independent review also identified emitter multiply/add rounding that differed from the source oracle's canonical FMA endpoints. Both Important findings were accepted by the controller; this round changes only these two issues and their regression coverage.
+
+### Reproduction and fixes
+
+1. Wrote all-five-objective empty-source tests before editing production, using a centered symmetric original outer, a tiny design with zero conservative accepted cells, and nonzero initial phi for angular objectives. `--empty-source` failed at the review base: StaticLowering returned UNKNOWN, but YoYo and all three top objectives returned `BINARY_MOMENT_VALIDATED` with binary checks. The test requires UNKNOWN, no binary moment/list/check/fill, unchanged empty partition, carried phi, an invalid/unavailable KKT and an empty SLQP trace for every objective.
+2. Wrote the shifted non-dyadic-root emitter test before editing production. Root origin `(-.3,-.2,-.1)`, side 1.4, source depth 5, optimization level 4. It checks every lower/upper endpoint on all axes against independently evaluated once-rounded dyadic planes and also anchors both level-4 x-plane-7 endpoint roles to the exact literal `0.3125`. The actual selected FULL list contains 512 cuboids: 224 stored cells and 288 virtual descendants. The RED run found 1,664 mismatches (including the additional literal checks), even though approximate moment tolerance could have accepted the discrepancy.
+3. Added an objective-independent empty-partition guard before constructing/calling the shared paper solver. The existing source numerical-UNKNOWN recording path preserves the valid partition, beta and phi and records unavailable KKT/trace explicitly. This supersedes the earlier implementation's reliance on an empty general-solver state being rejected. No shared general SLQP semantics, objective definitions or callbacks were changed.
+4. Added `SourceSurfaceOctree::cellBounds`, with the same query-key validation and the same existing canonical `bounds` FMA calculation used for geometry classification and source cell moments. The cuboid emitter obtains lower/upper endpoints from this method. The source FMA arithmetic itself is unchanged; the emitter no longer separately multiplies and adds. Stored and virtual accepted cells now emit exactly the geometry that the source oracle represents.
+5. Kept the independent signed-tetrahedron checker unchanged. The canonical-endpoint regression additionally reintegrates the emitted list through that checker and confirms its ten-moment agreement. Exact endpoint identity is a separate gate and was not replaced by, or weakened to, the moment tolerance.
+
+### Fix-round evidence
+
+All commands ran in `/data/xvxinyao/make-it-balance-paper-sim`, using the existing caches, at most `-j3`, sequential heavy batches, `ulimit -v 25165824` and `timeout 3600`. Initial free space was approximately 1.4 TiB. No old evidence path was overwritten.
+
+- Test-only build before production fixes: `build/task-5d-fix1-build-red-01.log`.
+- Actual empty-source RED, exit 1: `build/task-5d-fix1-red-empty-01.log`, from `build/task-5c-no-faster-20260909/spin-it-2014-source-adaptive-regression --empty-source`.
+- Actual canonical-endpoint RED, exit 1: `build/task-5d-fix1-red-endpoints-01.log`, from the same executable with `--canonical-cuboids`.
+- Empty guard implemented and separately verified GREEN before the endpoint change: `build/task-5d-fix1-build-empty-01.log`, `build/task-5d-fix1-green-empty-01.log`.
+- Endpoint source-boundary integration build: `build/task-5d-fix1-build-endpoints-01.log`.
+- Final focused FasterOFF build and verbose CTest: `build/task-5d-fix1-build-focused-01.log`, `build/task-5d-fix1-green-focused-01.log`. Source adaptive (including binary/functionals), source geometry, and legacy fill functional all passed **3/3 in 2.77 seconds**. All five empty objectives were UNKNOWN, all 512 emitted cuboids had **zero exact endpoint mismatches**, and independent tetrahedron moments agreed.
+- The fixed quarter-fill regression remains `BINARY_VALIDATION_FAILED` with four actual solves, raw residual `0.00012207031249999306`, normalized residual `7.6293945312495663e-06` and moment error `6.9388939039072284e-18`. Request, adaptive-trace, partition and output scientific hashes are unchanged from the historical fixed-case values recorded above. No fixture/tolerance retuning occurred.
+- Final main all-target build passed: `build/task-5d-fix1-all-target-build-01.log`. The full registered suite passed **196/196**, zero failures/NotRun/Skipped, in **351.02 seconds**, on its single fix-round full run: `build/task-5d-fix1-full-ctest-01.log`. Both depth-9 source tests, legacy lattice/cage/Python tests and the exact-disabled linked fixture passed. There were no failed full-suite cases to suppress or retry.
+
+The amended source, executable, core-library, extension and cache SHA-256 manifest is `build/task-5d-fix1-source-bin-cache-hashes-01.log`. It includes the changed source-oracle header/implementation, source runner/emitter, regression tests, unchanged CMake content, both native source-adaptive/source-geometry executables, both core archives, both caches and the main Python extension. Current principal identities are:
+
+| Fix-round artifact | SHA-256 |
+|---|---|
+| FasterOFF adaptive executable | `85f8b94f635b92304ea8f919e6c6b5ca046c11080507b7489bf0507a6fcf84aa` |
+| FasterOFF source-geometry executable | `0d0a036f82f12e72fca8722d88d490018e1be030ce084d2afefbda565d5f5bdb` |
+| FasterOFF core library | `ff51c3c93c4df4fb27ad3b46c7257352a630286bf077f470a3f6421f328adaef` |
+| Main adaptive executable | `28c9be2977564bda931959987130df00cd3e3e5ad9f07c6601f4cc6bee31d2b4` |
+| Main core library | `71911fd761334402723ac04b8314d444ad366085d75c47a68157abc171c54772` |
+| Main Python extension | `55768270bc1f0282fb468a6c88f2fa7cb10217ed08126e7163ab0d33b6eb56b9` |
+
+The two existing cache hashes and CMake content hash remain unchanged. The earlier report's source/binary manifests identify the pre-fix build, not the amended binaries.
+
+The full-suite exact-disabled 2014 dependency fixture freshly compiled and ran successfully in 90.69 seconds. Its current executable/cache hashes are retained in `build/task-5d-fix1-exact-off-hashes-01.log`; this fix did not alter shared general SLQP or the exact-disabled API.
+
+Post-suite `sha256sum -c` verified all amended source/binary/cache manifest entries and both exact-disabled entries. The immutable fix-round RED/build/GREEN/full-suite evidence hash list is `build/task-5d-fix1-evidence-hashes-01.log`. Full-suite log SHA-256: `68887c883904896c9108562a1df4294a6491b801d9eab3bdaeab017278949ab9`. Final free space remained approximately 1.4 TiB. `git diff --check` passed. No broader test rerun or source change followed this green full run.
+
+Implementer self-review confirmed that the new guard is independent of objective/phi and never calls the shared solver for an empty source partition; its UNKNOWN pass retains explicit invalid KKT and absent binary artifacts. The source bounds accessor validates the same keys as `cell()` and forwards to the original FMA bounds function without changing source classification, geometry moments or source hashes. The emitter alone consumes those endpoints; independent tetrahedron integration remains unchanged. Both accepted findings are addressed; fresh controller verification/re-review remains separate from this implementer disposition.
+
+### Review disposition and deferred ledger
+
+| Finding | Disposition |
+|---|---|
+| Important: angular phi-only empty source grants binary status | Fixed by the source-only objective-independent guard; real RED/GREEN across all five objectives. |
+| Important: emitter endpoints differ from source canonical planes | Fixed using a source-owned validated canonical bounds method; real RED/GREEN covers lower/upper endpoints, all axes and stored/virtual FULL cells. |
+| Minor: compressed hashing/topology statements | Deferred as directed to later readability/whole-branch work; no broad reformat in this round. |
+| Minor: inherited libigl CMake deprecation warning | Deferred/nonblocking; no dependency upgrade. A pre-existing Boost bind deprecation pragma is also visible when rebuilding the source-oracle translation unit. |
+
+The independent checker still does not certify manifoldness, self-intersections, wall thickness, stability, a sealed artifact or original-case paper success. Overall status remains **PARTIAL_BLOCKED**. No agents, controller-note edits, Section 6.6 refresh, historical experiment mutation, merge, push, tag or release is part of this fix round.
