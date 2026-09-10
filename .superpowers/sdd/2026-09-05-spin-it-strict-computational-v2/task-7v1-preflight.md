@@ -1,0 +1,29 @@
+# Task7v1 preflight / controller ledger
+
+Binding spec user's approved strict M0-M8 plan; current Task7 geometry viewer slice. Previous Task5f accepted, commits e1db0ee/5b60db6; do not repeat implementation. BASE5b60db63f71dcd014faaf3397198dd4b76d924a2. Existing linked worktree/branch confirmed, not submodule; no AGENTS in project/ancestors. MaintrackedSHA93e32af47ab1957a1efcb6716437656be129053f4269d2169378fcd95b05a35e preserved. /datafree1.4TiB; DISPLAY=:1, XDG_SESSION_TYPE=x11 (desktop identity still requires observation).
+
+| Shared interface | Produced / consumed | Finding / decision |
+|---|---|---|
+| Task5f/spin_bundle -> native viewer | Recomputed immutable geometry, not solver-execution authentication | Strict loader must call independent load_spin_artifact; cannot elevate native-run JSON. |
+| Legacy main -> strict entry | Legacy text flag and separate mesh files vs strict checked material | Separate early entry, legacy remains labelled; no bypass through old geometry_sealed. |
+| Python checker -> C++ renderer | Model-frame typed arrays and calculated facts | In-process embedding avoids stale exported OBJ/metadata pair; imported code/native paths checked, no buildattestation claim. |
+| Eigenaxes -> display | Full inertia eigenspaces vs repeated-vector nonuniqueness | Display only unique axes; report repeated subspace. |
+| Support -> display | Actual point data, not support certificate | No bbox rectangle represented as support hull; UNKNOWN stays UNKNOWN. |
+| New tests -> presets | Headless checking and actual native admission | Python checks existing headless; new viewer build for embed/CLI, no GUI mock pass. |
+| Rendering -> physics | Cutaway/explode changes display only | Explicitly labelled, no geometry writeback or physics/release promotion. |
+
+Ruling: implement geometry-only strict viewer admission and display as Task7v1, preserving solver trace replay as a later task — geometry bundle cannot authenticate native-run.json, and user forbids hand-filled success — cost if wrong: later verified-run replay adapter integration, not a weakened final requirement. This subset does not close Task7/M6. User explicitly continued the already proposed sealed-result OpenGL step; no new scientific scope/approval inferred.
+
+Ruling: use embedded selected Python checker in existing native executable rather than trusting exported metadata — exact independent seal path already exists and must not be duplicated — cost if wrong: additional optional Python embedding build complexity, isolated behind viewer+Python+exact feature checks.
+
+Baseline original result-view CTest1/1 passed0.00s in build/task-7a-baseline-01.log; requested source baseline running separately. First regex did not match source test; corrected to actual ^source-spin-material-python$, never claim two tests from first command. Controller owns baseline only, no concurrent builder.
+
+Source baseline completed actual10/10,35.361s,CTest1/1,35.45s exit0 (`build/task-7a-source-baseline-01.log`). Ownership handed to /root/sealed_spin_native_viewer (fresh gpt-6-astra/high, per SDD architecture/integration judgment); no helpers or GUI launch. Controller only disjoint read-only desktop observations/acceptance derivation and scoped notes. Actual xrandr: DISPLAY=:1, DP-0 physical monitor connected primary1920x1080 at144Hz,598x336mm. No virtual desktop started.
+
+Naming correction: existing tracked task-7a-report.md/logs belong to completed FasterSection6.6; discovered from agent inventory before report write. Rename ONLY new current brief/preflight/acceptance and future outputs Task7v1. Existing historical report bytes unchanged (gitstatus check), old new baseline build/task-7a-* preserved. No old scientific implementation repeated. task-7-brief.md generated from plan is generic Task7, not old report.
+
+Controller read actual RED: build/task-7a-red-python-01.log6failures at missing module assertion; additional nativeunavailable entry and seventh eigenaxis test in task-7a-red-native-01.log. This is availability RED, not proof every negative path executed before feature existed. Controller read intermediate GREEN build/task-7v1-green-python-01.log7/7,32.635s. No final implementation or GUI completion claim yet. Historical task-7a-report.md matches HEAD and SHA49795bf4e416a43cd984826fe18bb9c9272306a00344d43009c3dc912f6fdc91.
+
+Intermediate native findings: fresh configure initially downloaded graphicdeps despite old cache hints; worker pinscheck pending finalreport, configure02 LIBIGL_SKIP_DOWNLOAD=ON. Nativebuild01 failed with firsterror MeshGL.h uint32_t missing, subsequentdirtyfieldcascades; caller-sidecstdint supplied, build02 actuallylinks100%. NEW embed RPATH warning distinct from historicalCMakedeprecations: unpreloadedviewer picks Condalibstdc++ and failsGLIBCXX_3.4.32. Preloadednativecheck reached admission but libiglconstructorusage text pollutedJSON stdout (actual2testERROR log). Original implementer owns narrowruntime/order/stdoutfix and regression; no controllerproductionchanges, no GUI launched. Allfailedlogs retained.
+
+Handoff e780f7acbcbe0cd0a2d1c928c72433c37764ce91; report fully read (draft plus final additions). Main199/199518.63s, controller independently counted199Passed records, noFailed/NotRun/Skipped; logSHA5b179bab7852771da053b33f69f713ff4b25084701b07827f4d8c72144bc7897. Actualhashlist11/11OK afterhandoff, mainDSO9308...unchanged; separateviewerDSO6fffa... andexe2bb587.... Controller native postcommit rerun3/3,14.665s,CTest1/1,14.79s,exit0 (build/task-7v1-controller-native-01.log). Unsupportedlegacyfeatureflagsreject beforewindow. Fresh review_sealed_spin_native_viewer assigned full66326byteBASE..e780package, read-only, no duplicate tests/builds/helpers. Worker source/build released. Controller has no active native jobs afterfocusedrerun; GUI stillpendingreview.
