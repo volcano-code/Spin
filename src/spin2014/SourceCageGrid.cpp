@@ -53,14 +53,17 @@ void validate(const SourceSurfaceCageConfig& root,const SourceCageGridConfig& c)
        c.maximumInterpolationValues>bytesMax/sizeof(double))
         throw std::length_error("RESOURCE_LIMIT: invalid source cage grid cell/node/edge/interpolation budget");
     // Binary searches below rely on strictly increasing represented planes.
-    // Check finest spacing against the largest root-endpoint ULP, as the
-    // upstream oracle does, but at the requested finer level.
+    // A rounded value's exact preimage can include BOTH midpoint endpoints
+    // under ties-to-even. Its width is at most the largest root-endpoint ULP,
+    // for either sign and across binades. Exact plane separation must therefore
+    // be STRICTLY greater than this bound; equality can collapse two planes.
+    // Conservatively reject equality even when a particular aligned root works.
     const double step=std::ldexp(root.rootSide,-c.fineLevel);
     for(int a=0;a<3;++a) {
         const double magnitude=std::max(std::abs(plane(root,0,a,0)),std::abs(plane(root,0,a,1)));
         const double spacing=std::nextafter(magnitude,std::numeric_limits<double>::infinity())-magnitude;
-        if(!std::isfinite(step) || step<=0 || step<spacing)
-            throw std::invalid_argument("source cage grid finer coordinates numerically collapse");
+        if(!std::isfinite(step) || step<=0 || step<=spacing)
+            throw std::invalid_argument("source cage grid finer coordinate spacing is numerically unsupported");
     }
 }
 } // namespace

@@ -176,6 +176,30 @@ int main() {
             p(axis)=std::nextafter(b,q(1,axis)); a.embed(p);
         }
     });
+    for(int crossing=0;crossing<3;++crossing) test(
+        crossing==0?"positive_binade_crossing_must_not_create_zero_width_fine_cells":
+        crossing==1?"negative_binade_crossing_equal_ULP_requires_explicit_rejection":
+                    "aligned_equal_ULP_root_documents_conservative_rejection",[&] {
+        const double binade=std::ldexp(1.,48);
+        SourceSurfaceCageConfig c;
+        c.rootOrigin.x()=crossing==0?std::nextafter(binade,0.):crossing==1?-binade-.5:binade;
+        Eigen::Vector3d lo,hi;
+        for(int a=0;a<3;++a) {lo(a)=std::fma(.25,c.rootSide,c.rootOrigin(a)); hi(a)=std::fma(.75,c.rootSide,c.rootOrigin(a));}
+        const auto mesh=box(lo,hi);
+        // Construct outside the expected-rejection catch: an upstream failure
+        // is a broken fixture, never evidence of the grid's behavioral RED.
+        const SourceSurfaceCage upstream(mesh.v,mesh.f,c);
+        require(upstream.boundaryAudit().facts().boundaryValid && upstream.selectedCells().size()==216,"binade fixture is an actual valid coarse source cage");
+        for(int i=0;i<8;++i) require(std::fma(double(i)/8,1.,c.rootOrigin.x())<std::fma(double(i+1)/8,1.,c.rootOrigin.x()),"coarse planes are strictly increasing");
+        int collapsed=0;
+        for(int i=0;i<16;++i) if(std::fma(double(i)/16,1.,c.rootOrigin.x())==std::fma(double(i+1)/16,1.,c.rootOrigin.x())) ++collapsed;
+        require(crossing==0?collapsed==7:collapsed==0,"independent FMA evidence distinguishes collapsed and otherwise valid equal-ULP grids");
+        std::cout<<"binade fixture "<<crossing<<": upstream valid 216 cells; independently collapsed fine intervals="<<collapsed<<'\n';
+        bool rejected=false;
+        try {const SourceCageGrid invalid(upstream,config);}
+        catch(const std::invalid_argument& e) {rejected=std::string(e.what()).find("numerically")!=std::string::npos;}
+        require(rejected,"equal-ULP finer root must reject explicitly before publishing grid");
+    });
     test("invalid_dimensions_nonfinite_inputs_and_each_resource_budget_reject",[&] {
         for(int level:{-1,0,3,21}) {auto c=config; c.fineLevel=level; rejects([&]{SourceCageGrid bad(coarse,c);},"fine level must be greater and at most20");}
         for(int which=0;which<4;++which) for(std::size_t value:{std::size_t(0),std::numeric_limits<std::size_t>::max()}) {

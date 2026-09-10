@@ -21,7 +21,10 @@ struct SourceCageGridConfig {
  * No root lattice allocation, culling, coarsening, solver, geometry seal,
  * feasibility, BBW convergence, physical simulation or paper-case authority.
  * Resource failures throw length_error containing RESOURCE_LIMIT; malformed
- * inputs (including numerically collapsed finer coordinates) invalid_argument.
+ * inputs (including numerically unsupported finer coordinates) invalid_argument.
+ * The fine step must exceed the maximum ULP at the root endpoints, ensuring
+ * distinct represented planes. Equality is conservatively rejected even when
+ * a particular aligned root would have distinct planes; no recenter/coarsening.
  * Source/cage hashes retain upstream meanings. configSha256 binds the domain
  * convention, upstream cage config and all fine-grid parameters/budgets;
  * outputSha256 also binds source/cage output and every derived array.

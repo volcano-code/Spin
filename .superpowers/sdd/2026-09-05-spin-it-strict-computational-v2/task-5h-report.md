@@ -2,7 +2,7 @@
 
 Base: `59ed96c12e8f24582f14459056c05f74d9c15492`, branch `spin-it-strict-computational-v2`.
 Implementation identity: `volcano <xuxinyao307@gmail.com>`.
-Status: **DONE**. Focused RED/GREEN, final all-target build, full CTest, and FasterOFF focused build/test completed successfully. No known correctness concerns in the requested scope.
+Initial implementation status at `4c6f89b` (pre-review/pre-fix): **DONE**. The original verification evidence below describes that commit, not the later review correction. The reviewer subsequently found an equal-ULP coordinate-collapse defect; see the appended Fix round 1 report for the corrected behavior and its covering evidence.
 
 ## Scope and API
 
@@ -119,7 +119,7 @@ source cage grid SYNTHETIC_REGRESSION: 0 failed groups; no BBW or physics author
 100% tests passed, 0 tests failed out of 1
 ```
 
-## Final integration checks
+## Initial integration checks (pre-fix commit 4c6f89b)
 
 After the final production/test/CMake changes, ran the main all-target build and full CTest **once each**, sequentially, with the same `set -o pipefail`, `ulimit -v 25165824`, `timeout 3600` shell guards:
 
@@ -150,7 +150,7 @@ Final `git diff --check` passed. Final main tracked diff SHA-256 remained exactl
 | fasteroff-build-01.log | b6c6db9dc0d5a412babece7a3d48efb32beee076437f650f875d98c512ce2388 |
 | fasteroff-ctest-01.log | 7d0a761e3399ac4db707296dbeb785d0431cf220ee4f0fddb2778179d60507b4 |
 
-### Independent controller output check
+### Initial independent controller output check (pre-fix)
 
 After the final main all-target build, the controller compiled a separate diagnostic executable with `/usr/bin/c++` against the stable core archive, into `build/task-5h-controller-8bSTgg/`, without touching project sources or the CMake build. I read the actual resulting `check.log`: two independent checks passed, with literal actual counts `[1728,2197,6084,218]`, complete actual connectivity/handle-map validation, and maximum six-query multilinear field error `1.3877787807814457e-17`. `run1.json` and `run2.json` are byte-identical. This remains SYNTHETIC_GRID_INTERPOLATION_NOT_BBW evidence.
 
@@ -177,7 +177,7 @@ All paths below are relative to `build/task-5h-evidence-20260910/`; retained `/t
 | task-5h-capacity-green-build-20260910-01.log | ddea5ded42588fc1bb9e187012f16c2e0e4de8c245d2932458a71c6ef902fbb4 |
 | task-5h-capacity-green-ctest-20260910-01.log | 7894f72cc3fcaf5d06db27dc7b465d8cbab69ecf4f17b7512bf730f28055ac70 |
 
-### Stable implementation artifact hashes
+### Initial implementation artifact hashes (pre-fix)
 
 | Artifact | SHA-256 |
 |---|---|
@@ -188,7 +188,7 @@ All paths below are relative to `build/task-5h-evidence-20260910/`; retained `/t
 | build/strict-v2-spin/spin-it-2014-source-cage-grid-regression | 7b105c58615c14a47776e447657d77b7f568bc522f43338b5e8f667dd95b4111 |
 | build/task-5c-no-faster-20260909/spin-it-2014-source-cage-grid-regression | e5edfb2ffaba84db41c952e659464b49cc75fac9d619728c43f8d96f84d6ec06 |
 
-## Self-review and remaining scope
+## Initial self-review and remaining scope (pre-fix)
 
 Read the new header/source/tests and CMake diff. Confirmed selected-volume refinement, strict plane ordering, bounded candidate enumeration, lexicographic rather than linear-root tie priority, integer handle mapping, actual represented interval fractions, per-allocation capacity checks, and complete canonical hashing. Self-review found the temporary edge-set capacity gap; it received its own actual RED/GREEN cycle. No known correctness concern remains in the requested increment.
 
@@ -197,3 +197,88 @@ The new API/header/source/test are gated by 2014 AND exact geometry, outside Fas
 No helper/reviewer subagents were used. Implementation, configure and project build/test ownership remained with this implementer; the controller separately derived analytic acceptance and prepared an external diagnostic probe without modifying the production build. Main checkout was never written; tracked main diff SHA-256 matched `93e32af47ab1957a1efcb6716437656be129053f4269d2169378fcd95b05a35e` before work and during verification. Final preservation check is recorded with the integration results.
 
 Scoped commit files: this report, `CMakeLists.txt`, `include/spin2014/SourceCageGrid.h`, `src/spin2014/SourceCageGrid.cpp`, and `tests/spin_it_2014_source_cage_grid_regression.cpp`. Controller notes/brief/progress and documentation audit changes are excluded; raw evidence remains under the isolated build evidence directory.
+
+## Fix round 1 — collapse-proof finer-coordinate guard
+
+Fix base: `4c6f89b8ef5a72a47e4ca6ac872ecf22dd122990`. The review's sole Important finding was verified before changing production. No upstream source-oracle code, legacy API, CMake registration, or controller documentation is changed in this correction.
+
+### Actual reproduction and cause
+
+Added three real source/cage/grid tests before implementing the fix. Each constructs an actual exact-audited `SourceSurfaceCage` with 216 selected cells, outside the catch that expects grid rejection. Thus an upstream fixture failure cannot count as grid RED. Each independently checks that all nine coarse x-planes are strictly increasing. Unit side, coarse level3/fine level4:
+
+- Positive binade crossing: x-origin `nextafter(2^48,0)`. The actual upstream cage succeeds; seven adjacent canonical FMA fine-plane pairs coincide. The current grid constructor nevertheless returns successfully, causing the behavioral test to fail.
+- Negative binade crossing: x-origin `-2^48-.5`. Actual upstream cage succeeds; zero fine intervals coincide. The equal-ULP grid nevertheless must reject under the new explicitly conservative support boundary.
+- Positive aligned root: x-origin `2^48`. Actual upstream cage succeeds; zero fine intervals coincide. This explicitly tests/document the otherwise valid aligned equal-ULP inputs deliberately rejected by the guard.
+
+The old test `step < spacing` allowed equality. Under nearest-even rounding, the exact preimage of a floating value can include both midpoint endpoints. Two exact FMA plane values separated by exactly one ULP can therefore round to the same value, notably when the origin has a half-ULP phase inherited from the smaller binade. This breaks distinct-node positions, positive cell widths and per-node interpolation identity.
+
+The minimal production correction requires `step > maximumEndpointULP` (rejects `step <= spacing`). For either sign, throughout the root interval, the width of any rounding preimage is at most the largest endpoint ULP; at a binade boundary the width is no larger than that bound. Exact neighboring dyadic planes separated by strictly more than that width cannot round together. The power-of-two-scaled root step is exact unless subnormal rounding occurs; even then a rounded step strictly above the representable ULP bound implies the exact step is above it, by monotonic rounding. This gives the sign-general strict-increase condition required by represented-plane binary search. The public header explicitly documents conservative rejection of equality, even for otherwise valid aligned roots. Rejection remains `invalid_argument` with a numerical-unsupported diagnostic; no recentering, coarsening, relocation, clamping or changed FMA coordinates.
+
+All accepted ordinary inputs retain the same domain, arrays, mapping, interpolation and identity serialization. No version-string change is made: this repairs the constructor's enforcement of its existing distinct represented-plane contract. Numerically marginal equal-ULP inputs now reject instead of publishing a grid. The upstream oracle's related guard is deliberately not edited; it remains separate parked work.
+
+### Actual fix RED/GREEN evidence
+
+Every command ran in `/data/xvxinyao/make-it-balance-paper-sim` with `set -o pipefail`, `ulimit -v 25165824`, `timeout 3600`, at most three compile jobs, sequential project builds/tests, and a unique original `tee` log in `build/task-5h-fix1-evidence-20260910/`. No full 201-test suite was rerun during the fix iteration: its earlier 201/201 result is pre-fix evidence only, explicitly labeled above.
+
+RED commands, after adding the tests and before changing the production guard:
+
+```bash
+timeout 3600 cmake --build build/strict-v2-spin --target spin-it-2014-source-cage-grid-regression -j3 2>&1 | tee build/task-5h-fix1-evidence-20260910/red-build-01.log
+timeout 3600 ctest --test-dir build/strict-v2-spin -R '^spin-it-2014-source-cage-grid$' -V 2>&1 | tee build/task-5h-fix1-evidence-20260910/red-ctest-01.log
+```
+
+Build exit0. CTest exit8 with three failed groups (all nine existing groups passed). Actual captured output:
+
+```text
+binade fixture 0: upstream valid 216 cells; independently collapsed fine intervals=7
+FAIL positive_binade_crossing_must_not_create_zero_width_fine_cells: equal-ULP finer root must reject explicitly before publishing grid
+binade fixture 1: upstream valid 216 cells; independently collapsed fine intervals=0
+FAIL negative_binade_crossing_equal_ULP_requires_explicit_rejection: equal-ULP finer root must reject explicitly before publishing grid
+binade fixture 2: upstream valid 216 cells; independently collapsed fine intervals=0
+FAIL aligned_equal_ULP_root_documents_conservative_rejection: equal-ULP finer root must reject explicitly before publishing grid
+source cage grid SYNTHETIC_REGRESSION: 3 failed groups; no BBW or physics authority
+```
+
+After the strict guard/header documentation change, covering GREEN commands:
+
+```bash
+timeout 3600 cmake --build build/strict-v2-spin --target spin-it-2014-source-cage-grid-regression spin-it-2014-source-surface-cage-regression spin-it-2014-source-surface-octree-regression -j3 2>&1 | tee build/task-5h-fix1-evidence-20260910/main-green-build-01.log
+timeout 3600 ctest --test-dir build/strict-v2-spin -R '^spin-it-2014-source-(cage-grid|surface-cage|surface-octree(-level9)?)$' -V 2>&1 | tee build/task-5h-fix1-evidence-20260910/main-green-ctest-01.log
+```
+
+Both exit0: **4/4 CTests passed**, including source cage, source octree, and source octree level9; total23.47 seconds. The grid regression passes all **12 groups** including the three new binade cases, in1.20 seconds. The old upstream regression prints `faster=1 exact=1`; its level9 result remains 2,097,993 stored nodes and the same partition hash `652de7d6b99c64445640902e891a98f85f76c4a8b5a93b6ef34471954a5bc137`.
+
+FasterOFF covering commands, after the main covering run finished:
+
+```bash
+timeout 3600 cmake --build build/task-5c-no-faster-20260909 --target spin-it-2014-source-cage-grid-regression spin-it-2014-source-surface-cage-regression spin-it-2014-source-surface-octree-regression -j3 2>&1 | tee build/task-5h-fix1-evidence-20260910/fasteroff-green-build-01.log
+timeout 3600 ctest --test-dir build/task-5c-no-faster-20260909 -R '^spin-it-2014-source-(cage-grid|surface-cage|surface-octree(-level9)?)$' -V 2>&1 | tee build/task-5h-fix1-evidence-20260910/fasteroff-green-ctest-01.log
+```
+
+Both exit0: **4/4 CTests passed**, grid **12/12 groups** passed in1.20 seconds, total23.61 seconds. Upstream octree output explicitly reports `faster=0 exact=1`; the same level9 partition hash is preserved. No configure step or dependency update was needed. Build and test outputs contain no new diagnostics/warnings.
+
+### Fix evidence hashes and final review
+
+Original, retained log paths are under `build/task-5h-fix1-evidence-20260910/`:
+
+| Log | SHA-256 |
+|---|---|
+| red-build-01.log | 0ea92c9c1318cbe2a0534622ab018a30c2e775d93e97729d1fe7e7d2673883bf |
+| red-ctest-01.log | b3c410a64a25877badc5c348d7dff2181aba5efce9896c4c5d413cc4100f08e1 |
+| main-green-build-01.log | 48f3043a9fad67f5c5a55824916f68901c43e354bcb4fe12dbf222c595bb4a14 |
+| main-green-ctest-01.log | 840ecefa00c042940ab70582a108f2840071ee6d30e1a3f9b94ea53bf2bf00cb |
+| fasteroff-green-build-01.log | f88c350b0a6484d214576c134f6e44f2783d8c6208d628e8a11f725823432baa |
+| fasteroff-green-ctest-01.log | cfb50af28280454a745231e94e94b4b4b9312bb1215d42b728f006cf0ab415f0 |
+
+Corrected artifact hashes (supersede the pre-fix artifact hashes above):
+
+| Artifact | SHA-256 |
+|---|---|
+| include/spin2014/SourceCageGrid.h | 7acc63d8862e611d208d77a9175f8cb34f3dbc60bd520b32f2d8dd40a947964f |
+| src/spin2014/SourceCageGrid.cpp | b9e21d6468a2bd3ea9bc2303637f829e29c10fcaef4eff8a00d3ed0a71c6f9d9 |
+| tests/spin_it_2014_source_cage_grid_regression.cpp | 0ca7e7b92141d906d2efe15ca8bb14e89533bebca6aa6f392f046032960a77e0 |
+| build/strict-v2-spin/libmake_it_stand_core.a | b85b3d04a7af9b86a811e6d02b9dd0c06fc0a7bbdd27520b88d468c1080ca6dd |
+
+Fix status: **DONE**. Self-review confirms the single stricter guard plus its diagnostic/docs and three regressions address the reported collapse cause. The conservative equal-ULP rejection is deliberate and visible in the API; no accepted grid is silently modified. No solver/scientific authority changes. The upstream numerical-guard issue remains outside this bounded fix. Fresh full-suite verification/re-review and regeneration of the controller probe are left to the controller's next explicitly scheduled stage; no pre-fix artifact is presented as post-fix evidence.
+
+`git diff --check` passed; main tracked diff SHA-256 is still `93e32af47ab1957a1efcb6716437656be129053f4269d2169378fcd95b05a35e`. Only the grid header/source, regression test, and this appended report are committed in fix1; controller documentation and all previous outputs/logs remain untouched. Source/build/test ownership is released with the fix handoff.
