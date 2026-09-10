@@ -38,8 +38,11 @@ the root; there is no clipping. Dyadic plane coordinates use
 `fma(ldexp(integer, -level), side, origin)` so the same plane has identical
 represented coordinates at every level. Numerical collapse, nonfinite arithmetic,
 and zero/overflowed cell volume fail construction. Extremely small coordinate
-spacing is conservatively rejected when the requested step is below the largest
-binary64 spacing over the root. Moment sums remain subject to binary64 rounding.
+spacing is conservatively rejected when the requested step is at or below the
+largest binary64 spacing over the root. This strict bound can reject some valid
+aligned equal-ULP roots; it is a numerical admission limit, not physical
+infeasibility. No recentering or coarsening is performed. Moment sums remain
+subject to binary64 rounding.
 
 ## Closed boundary exclusion
 
@@ -110,3 +113,20 @@ Identical inputs and configuration produce identical scientific hashes. Hashes
 identify the calculation and do not grant feasibility, sealing, or reproduction
 status. Existing lattice `AdaptiveVoxelDomain::source()` and solver/cage contracts
 are unchanged.
+
+## Task5i numerical-admission correction (2026-09-10)
+
+An independently reproduced root at x-origin `nextafter(2^48,0)`, side1,
+maximumDepth4 has a positive first interval but seven collapsed later intervals.
+The previous equality-admitting check passed configuration validation and failed
+later during the actual source traversal. The correction rejects unsupported
+precision at admission. Negative and aligned equal-ULP fixtures have no collapsed
+intervals; their rejection documents the conservative policy, not extra defects.
+
+Focused native RED/GREEN evidence and ordinary-output compatibility checks are
+retained under `build/task-5i-evidence-20260910-0FF6Vb/` and
+`build/task-5i-controller-W6WCqr/`. Independent rational-to-binary64 plane checks
+and the actual finer-grid export agree with the intended bound; ordinary source,
+configuration, partition and finer-grid outputs are unchanged. Full verification
+and independent review are recorded in the Task5i controller evidence. This is a
+numerical prerequisite, not a new original-paper case or BBW/deformation result.
