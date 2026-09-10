@@ -59,3 +59,9 @@ Task5g只补完整源表面cage几何。它为后续权重和优化提供完整�
 2026-09-10 后续核查补充：2011原文也公开了逐handle求解后归一化的加速变体，因此不能把“存在归一化”本身判为不忠实。必须分别验证对应原始问题及后处理结果，不能混用最优性声明；还需要cage面上的线性约束。具体源码证据及下一求解器验收条件见 [BBW契约核查](spin2014_bbw_contract_audit.md)。
 
 最终修正后验收：`da1bd34` 的全部目标重新构建成功，已注册CTest **201/201通过，482.35秒**，测试ID无重复或遗漏，无NotRun/Skipped记录。原始输出保留在 `build/task-5h-final-AkTS5P/`；源码、实际二进制、独立导出和日志SHA见 `.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5h-controller-verification.md`。独立复审已通过。本轮没有新增原论文案例或OpenGL结果；总体状态仍为 `PARTIAL_BLOCKED`。
+
+## Task5j：FEM能量与完整节点约束已验收（2026-09-10）
+
+新增`SourceCageFem`，不改旧BBW接口：完整细网格上的体积FEM、显式两种质量离散、`KᵀM⁻¹K`的矩阵无显式Q应用，以及所有边界细节点的约束。标准夹具保留218个粗handles，实际约束866个细边界节点。独立有理数对照、重复输出、FasterOFF3/3和全量202/202通过；独立审查无必须修复问题。详见 [FEM验收记录](spin2014_source_cage_fem.md)。
+
+这补齐了上述第2步的能量/边界前提，**尚未完成实际BBW权重求解及KKT验收**。beta/phi/完整handles联合变形、最终变形材料封存、原始Dancing Couple等实验仍保持原有门槛，不因新增测试而升级。
