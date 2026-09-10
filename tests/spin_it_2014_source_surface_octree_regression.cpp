@@ -37,6 +37,11 @@ int main(int argc,char**) {
             return 0;
         }
         auto tree=build(outer,design);
+        std::cout<<"ordinary source/config/partition="<<tree.sourceSha256()<<'/'<<tree.configSha256()<<'/'<<tree.partitionSha256()<<'\n';
+        require(tree.sourceSha256()=="d05f34b01ef35d581ec903f9e803deb12402faddf93a0b6f209a464d0bf4297a" &&
+            tree.configSha256()=="fc5b062c289ae11c288f542f9bf193a0a43f656f81d42f9bc8ca1143d46b43ef" &&
+            tree.partitionSha256()=="3c4531f7bab657f722244a74b82dad6bc08c63a23ad6747e0d0e54df8538565f",
+            "ordinary source/config/partition identities remain compatible");
         close(tree.outerSurfaceMoments().values(),boxMoments({0,0,0},{1,1,1}),"original outer moments");
         const double h=1./32;
         close(tree.carveableMoments().values(),boxMoments(Eigen::Vector3d::Constant(.25+h),Eigen::Vector3d::Constant(.75-h)),"depth5 all moments");
@@ -122,6 +127,74 @@ int main(int argc,char**) {
         config.rootSide=.5; rejects(construct,"root clipping");
         config.rootSide=1; config.rootOrigin.x()=std::numeric_limits<double>::quiet_NaN(); rejects(construct,"NaN root");
         config.rootOrigin=Eigen::Vector3d::Constant(1e16); config.rootSide=4; config.maximumDepth=20; rejects(construct,"collapsed dyadic coordinates");
+        {
+            const double binade=std::ldexp(1.,48);
+            const std::array<double,3> origins{
+                std::nextafter(binade,0.),
+                -binade-.5,
+                binade
+            };
+            const std::array<int,3> expectedCollapsed{7,0,0};
+            std::array<bool,3> earlyNumerical{},lateCollapse{},completed{};
+            for(std::size_t which=0;which<origins.size();++which) {
+                SourceSurfaceOctreeConfig precision;
+                precision.rootOrigin.x()=origins[which];
+                precision.rootSide=1.;
+                precision.maximumDepth=3;
+                Eigen::Vector3d outerLo,outerHi,designLo,designHi;
+                for(int axis=0;axis<3;++axis) {
+                    outerLo(axis)=std::fma(.125,precision.rootSide,precision.rootOrigin(axis));
+                    outerHi(axis)=std::fma(.875,precision.rootSide,precision.rootOrigin(axis));
+                    designLo(axis)=std::fma(.25,precision.rootSide,precision.rootOrigin(axis));
+                    designHi(axis)=std::fma(.75,precision.rootSide,precision.rootOrigin(axis));
+                }
+                const auto precisionOuter=box(outerLo,outerHi);
+                const auto precisionDesign=box(designLo,designHi);
+                const SourceSurfaceOctree wider(precisionOuter.v,precisionOuter.f,
+                    precisionDesign.v,precisionDesign.f,precision);
+                require(wider.stats().maximumVisitedLevel==3 &&
+                    wider.outerSurfaceMoments().mass()>wider.designSurfaceMoments().mass() &&
+                    wider.designSurfaceMoments().mass()>0,
+                    "strictly wider spacing accepts valid closed nested polyhedra");
+
+                precision.maximumDepth=4;
+                int collapsed=0,ordered=0;
+                for(int i=0;i<16;++i) {
+                    const double lo=std::fma(double(i)/16,precision.rootSide,precision.rootOrigin.x());
+                    const double hi=std::fma(double(i+1)/16,precision.rootSide,precision.rootOrigin.x());
+                    collapsed+=lo==hi;
+                    ordered+=lo<hi;
+                }
+                require(collapsed==expectedCollapsed[which] && ordered==16-collapsed,
+                    "independent FMA plane order/count at equal-ULP boundary");
+                require(std::fma(0.,precision.rootSide,precision.rootOrigin.x())<
+                    std::fma(1./16,precision.rootSide,precision.rootOrigin.x()),
+                    "first fine interval is noncollapsed");
+                try {
+                    const SourceSurfaceOctree unsupported(precisionOuter.v,precisionOuter.f,
+                        precisionDesign.v,precisionDesign.f,precision);
+                    completed[which]=true;
+                } catch(const std::invalid_argument& e) {
+                    const std::string message=e.what();
+                    earlyNumerical[which]=message.find("numerically unsupported")!=std::string::npos &&
+                        message.find("infeasib")==std::string::npos;
+                } catch(const std::overflow_error& e) {
+                    lateCollapse[which]=std::string(e.what()).find("collapsed coordinates")!=std::string::npos;
+                }
+                std::cout<<"source octree equal-ULP case "<<which
+                         <<": represented_planes="<<17-collapsed
+                         <<" ordered_intervals="<<ordered
+                         <<" collapsed_intervals="<<collapsed
+                         <<" early_numerical="<<earlyNumerical[which]
+                         <<" late_collapse="<<lateCollapse[which]
+                         <<" completed="<<completed[which]<<'\n';
+            }
+            require(earlyNumerical==std::array<bool,3>{true,true,true},
+                "equal-ULP source roots reject early as unsupported numerical input");
+            require(lateCollapse==std::array<bool,3>{false,false,false} &&
+                completed==std::array<bool,3>{false,false,false},
+                "numerical rejection precedes construction and is not a completed solve");
+        }
         config.rootOrigin.setZero(); config.rootSide=1e110; rejects(construct,"volume overflow");
         auto bad=design; bad.f.conservativeResize(11,3); rejects([&]{build(outer,bad);},"open mesh");
         bad=design; bad.f=design.f.rowwise().reverse(); rejects([&]{build(outer,bad);},"flipped root");

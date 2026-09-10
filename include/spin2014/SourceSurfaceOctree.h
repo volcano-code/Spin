@@ -46,6 +46,10 @@ struct SourceSurfaceOctreeStats {
  * contribute zero carveable moments and their entire volume as uncertainty.
  * The resulting cuboid sum is a conservative geometry approximation. Uncertainty
  * is a volume bound, not a ten-moment relative-error or feasibility certificate.
+ * The finest step must strictly exceed the maximum root-endpoint ULP so all
+ * represented dyadic planes remain distinct. Equal-ULP inputs are conservatively
+ * rejected as numerically unsupported even when a particular alignment works;
+ * the implementation does not recenter, modify geometry, or coarsen the request.
  * No occupancy input, optimizer, repair, or mesh/cage export is provided.
  */
 class SourceSurfaceOctree {

@@ -82,12 +82,17 @@ void validateConfig(const SourceSurfaceOctreeConfig& c) {
         throw std::length_error("RESOURCE_LIMIT: invalid source octree node budget");
     const auto root=bounds(c,0,{0,0,0});
     cuboid(root);
+    // The exact preimage of one rounded value can span both midpoint
+    // endpoints under ties-to-even. Its width is bounded by the largest ULP
+    // at either root endpoint, for both signs and across binades. Requiring a
+    // strictly larger finest step is sufficient for every FMA plane to remain
+    // distinct; equality is conservatively unsupported even when aligned.
     const double step=std::ldexp(c.rootSide,-c.maximumDepth);
     for(int a=0;a<3;++a) {
         const double magnitude=std::max(std::abs(root.lo(a)),std::abs(root.hi(a)));
         const double spacing=std::nextafter(magnitude,std::numeric_limits<double>::infinity())-magnitude;
-        if(step<spacing || !std::isfinite(step) || step<=0)
-            throw std::invalid_argument("source octree dyadic coordinates numerically collapse");
+        if(!std::isfinite(step) || step<=0 || step<=spacing)
+            throw std::invalid_argument("source octree finest coordinate spacing is numerically unsupported");
     }
     cuboid(bounds(c,c.maximumDepth,{0,0,0}));
 }
