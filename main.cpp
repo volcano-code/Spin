@@ -433,6 +433,7 @@ void draw_spin_result_window()
 		ImGuiWindowFlags_NoSavedSettings);
 	ImGui::TextWrapped("%s", resultWindowTitle.c_str());
 	ImGui::Text("Mode: %s", state.spinMetadata.mode.c_str());
+	ImGui::TextWrapped("LEGACY / UNVERIFIED: no independent sealed-bundle admission.");
 	ImGui::Separator();
 	bool changed = false;
 	changed |= ImGui::Checkbox("Fixed outer shell", &showSpinOuter);
@@ -467,7 +468,7 @@ void draw_spin_result_window()
 			state.spinMetadata.buoyantStabilityMargin);
 	}
 	ImGui::TextWrapped(
-		"Read-only sealed result; explode changes display only, never geometry."
+		"Read-only legacy/unverified result; explode changes display only, never geometry."
 	);
 	ImGui::End();
 }
@@ -742,8 +743,23 @@ void draw_workflow_control_window()
 	ImGui::End();
 }
 
+#ifdef MAKE_IT_STAND_SEALED_SPIN_VIEW
+#include "viewer/SealedSpinView.h"
+#endif
+
 int main(int argc, char *argv[])
 {
+#ifdef MAKE_IT_STAND_SEALED_SPIN_VIEW
+	const int sealedResult = sealed_spin_view::run(argc, argv);
+	if (sealedResult >= 0) return sealedResult;
+#else
+	if (argc > 1 && (std::string(argv[1]) == "--sealed-spin-bundle" ||
+	                 std::string(argv[1]) == "--check-sealed-spin-bundle"))
+	{
+		std::cerr << "sealed-spin unavailable: viewer requires Python embedding and exact geometry support\n";
+		return EXIT_FAILURE;
+	}
+#endif
 	try
 	{
 		initState(argc, argv);

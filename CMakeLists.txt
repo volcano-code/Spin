@@ -303,9 +303,13 @@ endif()
 
 if(MAKE_IT_STAND_BUILD_PYTHON)
     set(PYBIND11_FINDPYTHON ON)
+    set(MAKE_IT_STAND_PYTHON_COMPONENTS Interpreter Development.Module)
+    if(MAKE_IT_STAND_BUILD_VIEWER AND MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+        list(APPEND MAKE_IT_STAND_PYTHON_COMPONENTS Development.Embed)
+    endif()
     find_package(
         Python 3.10
-        COMPONENTS Interpreter Development.Module
+        COMPONENTS ${MAKE_IT_STAND_PYTHON_COMPONENTS}
         REQUIRED
     )
     find_package(Python3 3.10 COMPONENTS Interpreter REQUIRED)
@@ -397,6 +401,24 @@ endif()
 
 if(MAKE_IT_STAND_BUILD_VIEWER)
     add_executable(make_it_stand_viewer main.cpp)
+    if(MAKE_IT_STAND_BUILD_PYTHON AND MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+        target_sources(make_it_stand_viewer PRIVATE src/viewer/SealedSpinView.cpp)
+        target_link_libraries(make_it_stand_viewer PRIVATE pybind11::embed)
+        target_compile_definitions(make_it_stand_viewer PRIVATE
+            MAKE_IT_STAND_SEALED_SPIN_VIEW=1
+            IGL_VIEWER_VIEWER_QUIET=1
+            SEALED_SPIN_PYTHON="${MAKE_IT_STAND_PYTHON_EXECUTABLE_REAL}"
+            SEALED_SPIN_SOURCE_PYTHON="${CMAKE_CURRENT_SOURCE_DIR}/python"
+            SEALED_SPIN_EXTENSION="$<TARGET_FILE:_make_it_stand>")
+        add_dependencies(make_it_stand_viewer _make_it_stand)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND EXISTS "${MAKE_IT_STAND_COMPILER_LIBSTDCXX}")
+            get_filename_component(MAKE_IT_STAND_VIEWER_CXX_RUNTIME "${MAKE_IT_STAND_COMPILER_LIBSTDCXX}" REALPATH)
+            get_filename_component(MAKE_IT_STAND_VIEWER_RUNTIME_DIR "${MAKE_IT_STAND_VIEWER_CXX_RUNTIME}" DIRECTORY)
+            # Embed's Python library directory may also contain an older C++
+            # runtime. The freshly compiled native executable needs its compiler's.
+            set_property(TARGET make_it_stand_viewer PROPERTY BUILD_RPATH "${MAKE_IT_STAND_VIEWER_RUNTIME_DIR}")
+        endif()
+    endif()
     set_target_properties(
         make_it_stand_viewer
         PROPERTIES OUTPUT_NAME "make-it-stand"
@@ -438,6 +460,18 @@ if(BUILD_TESTING)
         set_tests_properties(exact-geometry-dependency-contract PROPERTIES
             LABELS "verification;exact-geometry;cmake" TIMEOUT 120)
         if(MAKE_IT_STAND_BUILD_PYTHON)
+            add_test(NAME sealed-spin-view-python
+                COMMAND "${Python3_EXECUTABLE}" -m unittest test_sealed_spin_view.SealedSpinViewTests -v)
+            set_tests_properties(sealed-spin-view-python PROPERTIES
+                LABELS "verification;exact-geometry;python;native;viewer" TIMEOUT 300
+                ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV}")
+            if(MAKE_IT_STAND_BUILD_VIEWER)
+                add_test(NAME sealed-spin-view-native
+                    COMMAND "${Python3_EXECUTABLE}" -m unittest test_sealed_spin_view.NativeSealedSpinViewTests -v)
+                set_tests_properties(sealed-spin-view-native PROPERTIES
+                    LABELS "verification;exact-geometry;native;viewer" TIMEOUT 300
+                    ENVIRONMENT "${MAKE_IT_STAND_PYTHON_TEST_ENV};MAKE_IT_STAND_SEALED_VIEWER=$<TARGET_FILE:make_it_stand_viewer>")
+            endif()
             add_test(NAME sealed-spin-artifact-python
                 COMMAND "${Python3_EXECUTABLE}" -m unittest test_sealed_spin_artifact test_spin_bundle -v)
             set_tests_properties(sealed-spin-artifact-python PROPERTIES
