@@ -97,3 +97,13 @@ identical to the coarse cage's piecewise-triangular boundary function.
 Computational FEM masses are not physical material masses. Actual BBW weights
 alone do not complete joint handle/filling optimization, its shape derivatives
 and safeguards, original-case evidence, sealed material or independent physics.
+
+## Task5l follow-up (2026-09-11)
+
+The specific non-dyadic FEM boundary error above is now fixed in `dd5428c`.
+Direct opposite-edge areas avoid the `1-w1-w2` cancellation without widening
+tolerances or altering points. The original1.7-scale input now passes all four
+BBW combinations and deterministic repeats. Independent exact-rational boundary
+checks and scoped review passed; see [boundary-fix evidence](spin2014_fem_boundary_fix.md).
+This supersedes that particular open blocker, not the remaining joint-shape,
+original-case, physics or whole-current-tree verification gaps.
