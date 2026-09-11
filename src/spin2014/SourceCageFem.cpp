@@ -97,11 +97,22 @@ std::vector<Row> boundaryRows(const SourceCageGrid& g,const SourceCageFemConfig&
         for(int d=0;d<3;++d) {lo[d]*=factor; hi[d]*=factor;}
         for(std::uint32_t i=lo[u];i<=hi[u];++i) for(std::uint32_t j=lo[v];j<=hi[v];++j) {
             Key key=lo; key[u]=i; key[v]=j; const int n=findNode(g,key);
-            const Vec point=g.nodePositions().row(n).transpose().cast<long double>(),r=point-p[0];
-            const long double w1=(r[u]*b[v]-r[v]*b[u])/det,w2=(a[u]*r[v]-a[v]*r[u])/det;
-            const std::array<long double,3> w{1-w1-w2,w1,w2};
-            if(!std::isfinite(w[0]) || !std::isfinite(w1) || !std::isfinite(w2))throw std::overflow_error("source cage FEM nonfinite barycentric coordinates");
-            if(w[0]<0 || w1<0 || w2<0)continue;
+            const Vec point=g.nodePositions().row(n).transpose().cast<long double>();
+            const std::array<Vec,3> offset{p[0]-point,p[1]-point,p[2]-point};
+            std::array<long double,3> w;
+            // Evaluate all three opposite-edge areas directly. Computing the
+            // first weight as 1-w1-w2 can turn an exact axis-aligned edge zero
+            // negative through cancellation, excluding it from both faces.
+            // Shared edges use reversed identical operands; no tolerance,
+            // clamping, normalization or change to represented points occurs.
+            for(int k=0;k<3;++k) {
+                const Vec& first=offset[(k+1)%3];
+                const Vec& second=offset[(k+2)%3];
+                w[k]=(first[u]*second[v]-first[v]*second[u])/det;
+                if(!std::isfinite(w[k]))
+                    throw std::overflow_error("source cage FEM nonfinite barycentric coordinates");
+            }
+            if(w[0]<0 || w[1]<0 || w[2]<0)continue;
             std::array<Entry,3> row{}; int count=0; long double sum=0; Vec residual=Vec::Zero();
             for(int k=0;k<3;++k) if(w[k]!=0) {
                 const double weight=represented(w[k],"source cage FEM boundary weight unrepresentable");
@@ -200,6 +211,7 @@ struct SourceCageFem::Data {
         boundary=boundaryRows(grid,config);
         Digest cfg; cfg.string("source-cage-fem-Freudenthal-0-7-positive-IMPLEMENTATION_DEFAULT-v1");
         cfg.string("RESTRICTED_GRID_VORONOI-Vbrick/8-or-BARYCENTRIC_TET-Vtet/4-Q=KtMinvK-E=half-sum-xQx-v1");
+        cfg.string("NODAL-boundary-three-direct-opposite-edge-areas-v2");
         cfg.string(grid.configSha256()); cfg.integer(static_cast<unsigned>(config.massRule));
         cfg.integer(config.maximumTetrahedra); cfg.integer(config.maximumAssemblyEntries); cfg.integer(config.maximumStiffnessEntries);
         cfg.integer(config.maximumBoundaryEntries); cfg.integer(config.maximumEvaluationValues); cfg.real(boundaryValidationTolerance); configHash=cfg.finish();

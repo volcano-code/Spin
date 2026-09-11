@@ -130,11 +130,20 @@ int main() {
             });
             test("translation_scale_weights_and_unscaled_energy",[&] {
                 const SourceCageFem base(makeGrid(cube(.3,.7)),fc); const SourceCageBbw a(base,c); validated(a,protocol);
-                const Eigen::Vector3d origin(-.5,-.25,-.125); const double s=2;
-                auto mesh=cube(.3,.7); mesh.v=(s*mesh.v).rowwise()+origin.transpose();
-                const SourceCageFem shifted(makeGrid(mesh,origin,s),fc); const SourceCageBbw b(shifted,c); validated(b,protocol);
-                near((a.finalWeights()-b.finalWeights()).cwiseAbs().maxCoeff(),0);
-                near(b.rawAssessment().energy,a.rawAssessment().energy/s);
+                for(double s:{2.,1.7}) {
+                    const Eigen::Vector3d origin=s==2?Eigen::Vector3d(-.5,-.25,-.125):Eigen::Vector3d(-.3,-.2,-.1);
+                    auto mesh=cube(.3,.7); mesh.v=(s*mesh.v).rowwise()+origin.transpose();
+                    const SourceCageFem shifted(makeGrid(mesh,origin,s),fc);
+                    const SourceCageBbw b(shifted,c),repeat(shifted,c);
+                    validated(b,protocol); validated(repeat,protocol);
+                    require(b.outputSha256()==repeat.outputSha256() && b.finalWeights()==repeat.finalWeights(),"transformed actual solves deterministic");
+                    const double difference=(a.finalWeights()-b.finalWeights()).cwiseAbs().maxCoeff();
+                    near(difference,0);
+                    near(b.rawAssessment().energy,a.rawAssessment().energy/s);
+                    std::cout<<"COVARIANCE mass="<<int(mass)<<" protocol="<<int(protocol)<<" scale="<<s
+                             <<" weightDifference="<<difference<<" rawKkt="<<b.rawAssessment().projectedGradientResidual
+                             <<" energy="<<b.rawAssessment().energy<<" hash="<<b.outputSha256()<<'\n';
+                }
             });
         }
     }

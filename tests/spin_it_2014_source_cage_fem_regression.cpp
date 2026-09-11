@@ -145,6 +145,35 @@ int main() {
     });
     for(auto rule:{SourceCageFemMassRule::RESTRICTED_GRID_VORONOI,SourceCageFemMassRule::BARYCENTRIC_TET}) {
     SourceCageFemConfig massConfig; massConfig.massRule=rule;
+    test(rule==SourceCageFemMassRule::RESTRICTED_GRID_VORONOI?"voronoi_nondyadic_medium_boundary_complete":"barycentric_nondyadic_medium_boundary_complete",[&] {
+        // Regression: 1-w1-w2 roundoff must not exclude an actual edge node
+        // from both adjacent triangles. Keep the original failing transform.
+        const Eigen::Vector3d origin(-.3,-.2,-.1);
+        auto mesh=cube(.3,.7);
+        mesh.v=(1.7*mesh.v).rowwise()+origin.transpose();
+        const auto transformed=grid(mesh,2,3,origin,1.7);
+        require(transformed.cells().size()==64 && transformed.nodeKeys().size()==125,"unchanged original valid grid");
+        const auto inputHash=transformed.outputSha256();
+        const SourceCageFem actual(transformed,massConfig);
+        require(actual.boundaryConstraints().size()==98,"all 98 exposed nodes, including non-handle edges");
+        // Key(6,6,5) lies on two exposed faces, halfway along their shared
+        // coarse edge in parameter space. Use actual represented endpoints,
+        // not nominal 1/2, for the independent two-handle interpolation.
+        const auto& edge=boundary(actual,node(transformed,{6,6,5}));
+        require(edge.entries.size()==2,"shared-edge node has exactly its two handles");
+        const long double low=transformed.nodePositions()(node(transformed,{6,6,4}),2);
+        const long double high=transformed.nodePositions()(node(transformed,{6,6,6}),2);
+        const long double pos=transformed.nodePositions()(node(transformed,{6,6,5}),2);
+        for(const auto& entry:edge.entries) {
+            const auto key=transformed.nodeKeys()[transformed.handleNodeIndices()[entry.handleIndex]];
+            require(key==Key{6,6,4} || key==Key{6,6,6},"no off-edge handle introduced");
+            near(entry.weight,static_cast<double>(key[2]==4?(high-pos)/(high-low):(pos-low)/(high-low)),1e-15);
+        }
+        topology(actual); constraints(actual);
+        require(transformed.outputSha256()==inputHash,"no geometry repair or recentering");
+        const SourceCageFem repeat(transformed,massConfig);
+        require(actual.outputSha256()==repeat.outputSha256(),"deterministic actual boundary solve");
+    });
     test(rule==SourceCageFemMassRule::RESTRICTED_GRID_VORONOI?"voronoi_independent_brick_and_energy":"barycentric_independent_brick_and_energy",[&] {
         // All actual production cells assembled against independent brick formula.
         const auto tiny=grid(cube(.3,.4),2,3); const SourceCageFem tf(tiny,massConfig);
