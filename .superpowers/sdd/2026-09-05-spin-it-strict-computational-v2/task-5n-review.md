@@ -1,0 +1,9 @@
+# Task5n independent review and controller disposition
+
+Reviewer /root/review_spin2014_dependency_isolation (fresh sol/high, no history) reviewed the actual99cfbf0..596cde5 package. Spec PASS; quality Approved; no Critical, Important or Minor findings. No builds or suites rerun. Exact-final retained contract/isolation logs matched their SHA and all four actual child exit statuses were0. Current six protected Faster hashes also matched the report. Historical main preservation remains controller-owned evidence, not proven solely by diff.
+
+Reviewed admission at CMakeLists.txt1170 and dependency script10–31; function-scoped allocation/containment at allocator29–44; direct logs/prelaunchRUNNING at script35–48; actual OFF/ON/build/runtime assertions58–112. Behavioral test covers sentinels, repeated allocations, invalid/source/symlink roots, concurrency, live output and numeric failure. Pre-existing CMake deprecation warnings disclosed, not introduced or suppressed. Approved only the dependency-isolation contract, never full paper reproduction or broad-suite safety.
+
+Controller independently read29 unique Passed records matching label registration (including actual source Python test), final3/3 unlabelled2014 tests and final1/1 actual dependency. Recomputed all five owned source/doc SHA, four principal CTest-log SHA and audited-output SHA against report: all match. Stable FasterOFF archive85a80297bbb7d82dd176df016f821757f11d3e6b1ff4012a304de9d35f9fdc24 unchanged; no solver source changes. Main tracked-diffSHA93e32af47ab1957a1efcb6716437656be129053f4269d2169378fcd95b05a35e unchanged. All six external Faster file hashes match preflight and remain unstaged. GlobalPARTIAL_BLOCKED.
+
+Task5n accepted. NextTask5o is immutable actual-source/full-BBW binding, with separate joint SLQP, deformation geometry, paper regularizer and final artifact gates. Other dependency scripts have NOT been granted safe-workspace authority.
