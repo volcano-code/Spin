@@ -18,6 +18,7 @@ namespace spin2014
 
 struct CageSpinDeformationRequest
 {
+    // Legacy dense mesh adapter: both outer and void material use unit density.
     spin::TriangleMesh outerSurface;
     std::vector<spin::TriangleMesh> voidCells;
     Eigen::MatrixXd outerWeights;
@@ -45,16 +46,31 @@ struct CageSpinDeformationEvaluation
     Eigen::VectorXd constraints;
     Eigen::MatrixXd fillConstraintJacobian;
     Eigen::MatrixXd handleConstraintJacobian;
+    // Raw order: mass, x, y, z, xx, yy, zz, yz, xz, xy.
+    // Signed derivatives of finalMoments, including the negative void term.
+    Eigen::MatrixXd momentFillJacobian;
+    Eigen::MatrixXd momentHandleJacobian;
     physics::RawMassMoments10 finalMoments;
     Eigen::MatrixXd deformedOuterVertices;
     std::vector<Eigen::MatrixXd> deformedVoidCellVertices;
 };
 
+// Total gradients include all regularizers. Raw moment phi column is zero.
+struct CageSpinPaperEvaluation
+{
+    CageSpinDeformationEvaluation deformation;
+    double angleGradient = 0.0;
+    Eigen::VectorXd jointGradient;
+    Eigen::MatrixXd jointConstraintJacobian;
+    Eigen::MatrixXd rawMomentJacobian;
+};
 
 /**
  * Section 6 joint fill/deformation functional with analytic derivatives.
  * Handle rotations remain fixed; optimized parameters are translations and
  * uniform scales through the existing affine LBS map.
+ * The uniform outer graph Laplacian is an IMPLEMENTATION_DEFAULT, not the
+ * paper's rotation-aware Sorkine operator or recovered author discretization.
  */
 class CageSpinDeformationFunctional
 {
@@ -64,6 +80,17 @@ public:
     );
 
     Eigen::VectorXd initialHandleParameters() const;
+    Eigen::Index betaCount() const noexcept;
+    bool paperHasAngle() const noexcept;
+    Eigen::Index paperHandleOffset() const noexcept;
+    Eigen::Index jointParameterCount() const noexcept;
+    // Layout: [beta, phi if paperHasAngle(), existing free handle parameters].
+    // StaticLowering has no angle column and evaluatePaper requires phi == 0.
+    CageSpinPaperEvaluation evaluatePaper(
+        const Eigen::VectorXd& beta, double phi,
+        const Eigen::VectorXd& handleParameters
+    ) const;
+    CageSpinPaperEvaluation evaluatePaperJoint(const Eigen::VectorXd& state) const;
     const Eigen::MatrixXi& outerFaces() const noexcept;
     const std::vector<spin::TriangleMesh>& voidCells() const noexcept;
     double minimumShellThickness() const noexcept;
@@ -74,6 +101,9 @@ public:
 
 private:
     struct CellModel;
+    CageSpinDeformationEvaluation evaluateGeometryRegularization(
+        const Eigen::VectorXd& beta, const Eigen::VectorXd& handleParameters
+    ) const;
 
     spin::TriangleMesh outerSurface_;
     std::vector<spin::TriangleMesh> voidCells_;

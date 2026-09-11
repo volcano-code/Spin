@@ -1,6 +1,7 @@
 #include "spin2014/CageSpinDeformation.h"
 
 #include "spin2014/SurfaceRawMomentDifferential.h"
+#include "spin2014/Spin2014GivensProblem.h"
 
 #include <Eigen/Core>
 
@@ -68,6 +69,34 @@ void validateWeights(
         weights,
         handles.size()
     );
+}
+
+void chainSpin(
+    spin2014::CageSpinDeformationEvaluation& result,
+    double objective,
+    const Eigen::Matrix<double, 10, 1>& gradient,
+    const Eigen::VectorXd& constraints,
+    const Eigen::MatrixXd& jacobian
+)
+{
+    result.spinObjective = objective;
+    result.objective += objective;
+    result.fillGradient += result.momentFillJacobian.transpose() * gradient;
+    result.handleGradient += result.momentHandleJacobian.transpose() * gradient;
+    result.constraints = constraints;
+    result.fillConstraintJacobian = jacobian * result.momentFillJacobian;
+    result.handleConstraintJacobian = jacobian * result.momentHandleJacobian;
+    if (!std::isfinite(result.objective) || !std::isfinite(result.spinObjective) ||
+        !std::isfinite(result.fillRegularizationEnergy) ||
+        !std::isfinite(result.shapeEnergy) || !std::isfinite(result.displacementEnergy) ||
+        !result.fillGradient.allFinite() || !result.handleGradient.allFinite() ||
+        !result.constraints.allFinite() || !result.fillConstraintJacobian.allFinite() ||
+        !result.handleConstraintJacobian.allFinite() ||
+        !result.momentFillJacobian.allFinite() || !result.momentHandleJacobian.allFinite() ||
+        !result.finalMoments.values().allFinite() || !result.deformedOuterVertices.allFinite())
+        throw std::invalid_argument("nonfinite cage functional output");
+    for (const auto& vertices : result.deformedVoidCellVertices)
+        if (!vertices.allFinite()) throw std::invalid_argument("nonfinite cage cell geometry");
 }
 
 
@@ -152,6 +181,57 @@ Eigen::VectorXd CageSpinDeformationFunctional::initialHandleParameters() const
     return outerModel_.initialParameters();
 }
 
+Eigen::Index CageSpinDeformationFunctional::betaCount() const noexcept
+{ return static_cast<Eigen::Index>(voidCells_.size()); }
+bool CageSpinDeformationFunctional::paperHasAngle() const noexcept
+{ return problem_.objective() != Spin2014Objective::StaticLowering; }
+Eigen::Index CageSpinDeformationFunctional::paperHandleOffset() const noexcept
+{ return betaCount() + (paperHasAngle() ? 1 : 0); }
+Eigen::Index CageSpinDeformationFunctional::jointParameterCount() const noexcept
+{ return paperHandleOffset() + handles_.optimizableParameterCount(); }
+CageSpinPaperEvaluation CageSpinDeformationFunctional::evaluatePaper(
+    const Eigen::VectorXd& beta, double phi,
+    const Eigen::VectorXd& handleParameters) const
+{
+    if (!std::isfinite(phi) || (!paperHasAngle() && phi != 0.0))
+        throw std::invalid_argument("invalid explicit cage angle");
+    CageSpinPaperEvaluation result;
+    result.deformation = evaluateGeometryRegularization(beta, handleParameters);
+    auto& d = result.deformation;
+    Spin2014GivensProblem::Vector11 state;
+    state.head<10>() = d.finalMoments.values();
+    state(10) = phi;
+    const auto spinValue = Spin2014GivensProblem(
+        problem_.objective(), problem_.inertiaWeight(), problem_.centerWeight()
+    ).evaluate(state);
+    chainSpin(d, spinValue.objective, spinValue.objectiveGradient.head<10>(),
+              spinValue.constraints, spinValue.constraintJacobian.leftCols(10));
+    result.angleGradient = spinValue.objectiveGradient(10);
+    result.jointGradient = Eigen::VectorXd::Zero(jointParameterCount());
+    result.jointGradient.head(betaCount()) = d.fillGradient;
+    result.jointGradient.tail(handleParameters.size()) = d.handleGradient;
+    result.jointConstraintJacobian = Eigen::MatrixXd::Zero(d.constraints.size(), jointParameterCount());
+    result.jointConstraintJacobian.leftCols(betaCount()) = d.fillConstraintJacobian;
+    result.jointConstraintJacobian.rightCols(handleParameters.size()) = d.handleConstraintJacobian;
+    result.rawMomentJacobian = Eigen::MatrixXd::Zero(10, jointParameterCount());
+    result.rawMomentJacobian.leftCols(betaCount()) = d.momentFillJacobian;
+    result.rawMomentJacobian.rightCols(handleParameters.size()) = d.momentHandleJacobian;
+    if (paperHasAngle())
+    {
+        result.jointGradient(betaCount()) = result.angleGradient;
+        result.jointConstraintJacobian.col(betaCount()) = spinValue.constraintJacobian.col(10);
+    }
+    return result;
+}
+CageSpinPaperEvaluation CageSpinDeformationFunctional::evaluatePaperJoint(
+    const Eigen::VectorXd& state) const
+{
+    if (state.size() != jointParameterCount() || !state.allFinite())
+        throw std::invalid_argument("invalid assembled cage state");
+    return evaluatePaper(state.head(betaCount()), paperHasAngle() ? state(betaCount()) : 0.,
+                         state.tail(handles_.optimizableParameterCount()));
+}
+
 
 const Eigen::MatrixXi& CageSpinDeformationFunctional::outerFaces() const noexcept
 {
@@ -177,6 +257,18 @@ CageSpinDeformationEvaluation CageSpinDeformationFunctional::evaluate(
     const Eigen::VectorXd& handleParameters
 ) const
 {
+    auto result = evaluateGeometryRegularization(beta, handleParameters);
+    const auto spinValue = problem_.evaluate(result.finalMoments.values());
+    chainSpin(result, spinValue.objective, spinValue.objectiveGradient,
+              spinValue.constraints, spinValue.constraintJacobian);
+    return result;
+}
+
+CageSpinDeformationEvaluation CageSpinDeformationFunctional::evaluateGeometryRegularization(
+    const Eigen::VectorXd& beta,
+    const Eigen::VectorXd& handleParameters
+) const
+{
     if (
         beta.size() != static_cast<Eigen::Index>(voidCells_.size()) ||
         !beta.allFinite() || (beta.array() < 0.0).any() ||
@@ -194,9 +286,9 @@ CageSpinDeformationEvaluation CageSpinDeformationFunctional::evaluate(
         result.deformedOuterVertices, outerSurface_.faces
     );
     Eigen::Matrix<double, 10, 1> raw = outer.moments.values();
-    Eigen::MatrixXd momentHandleJacobian =
+    result.momentHandleJacobian =
         outer.jacobian * outerModel_.jacobian();
-    Eigen::MatrixXd momentFillColumns(10, beta.size());
+    result.momentFillJacobian.resize(10, beta.size());
     result.deformedVoidCellVertices.reserve(voidCells_.size());
 
     for (std::size_t index = 0; index < voidCells_.size(); ++index)
@@ -208,13 +300,11 @@ CageSpinDeformationEvaluation CageSpinDeformationFunctional::evaluate(
             differentiateSurfaceRawMoments(deformed, voidCells_[index].faces);
         const Eigen::Index column = static_cast<Eigen::Index>(index);
         raw -= beta(column) * cell.moments.values();
-        momentFillColumns.col(column) = cell.moments.values();
-        momentHandleJacobian -= beta(column) *
+        result.momentFillJacobian.col(column) = -cell.moments.values();
+        result.momentHandleJacobian -= beta(column) *
             cell.jacobian * cellModels_[index]->lbs.jacobian();
     }
     result.finalMoments = fromVector(raw);
-    const spin::SpinMomentEvaluation spinValue = problem_.evaluate(raw);
-    result.spinObjective = spinValue.objective;
     result.fillRegularizationEnergy = 0.5 * fillLaplacianWeight_ *
         beta.dot(fillLaplacian_ * beta);
 
@@ -225,11 +315,10 @@ CageSpinDeformationEvaluation CageSpinDeformationFunctional::evaluate(
     result.shapeEnergy = biharmonicWeight_ * laplacianPositions.squaredNorm();
     result.displacementEnergy =
         displacementWeight_ * displacement.squaredNorm();
-    result.objective = result.spinObjective + result.fillRegularizationEnergy +
+    result.objective = result.fillRegularizationEnergy +
         result.shapeEnergy + result.displacementEnergy;
 
     result.fillGradient =
-        -momentFillColumns.transpose() * spinValue.objectiveGradient +
         fillLaplacianWeight_ * fillLaplacian_ * beta;
     const Eigen::MatrixXd vertexShapeGradient =
         2.0 * biharmonicWeight_ *
@@ -242,13 +331,7 @@ CageSpinDeformationEvaluation CageSpinDeformationFunctional::evaluate(
             vertexShapeGradient.row(row).transpose();
     }
     result.handleGradient =
-        momentHandleJacobian.transpose() * spinValue.objectiveGradient +
         outerModel_.jacobian().transpose() * stackedShapeGradient;
-    result.constraints = spinValue.constraints;
-    result.fillConstraintJacobian =
-        -spinValue.constraintJacobian * momentFillColumns;
-    result.handleConstraintJacobian =
-        spinValue.constraintJacobian * momentHandleJacobian;
     return result;
 }
 
