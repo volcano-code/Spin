@@ -1167,7 +1167,16 @@ if(BUILD_TESTING)
     add_test(
         NAME spin-2014-dependency-contract
         COMMAND "${CMAKE_COMMAND}"
+            "-DMAKE_IT_STAND_DEPENDENCY_TEST_BINARY_ROOT=${CMAKE_CURRENT_BINARY_DIR}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_spin_it_2014_dependency.cmake"
+    )
+    add_test(
+        NAME spin-2014-dependency-isolation
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTEST_BINARY_ROOT=${CMAKE_CURRENT_BINARY_DIR}"
+            "-DDEPENDENCY_SCRIPT=${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_spin_it_2014_dependency.cmake"
+            "-DALLOCATOR_HELPER=${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/allocate_retained_test_directory.cmake"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/assert_spin_it_2014_dependency_isolation.cmake"
     )
     set_tests_properties(
         spin-faster-dependency-contract
@@ -1176,7 +1185,7 @@ if(BUILD_TESTING)
             TIMEOUT 180
     )
     set_tests_properties(
-        spin-2014-dependency-contract
+        spin-2014-dependency-contract spin-2014-dependency-isolation
         PROPERTIES
             LABELS "spin-it;spin-it-2014;build-system"
             TIMEOUT 240
