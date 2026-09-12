@@ -1,0 +1,177 @@
+Start testing: Sep 12 21:56 CST
+----------------------------------------------------------
+10/177 Testing: spin-it-2014-source-cage-guarded-slqp
+10/177 Test: spin-it-2014-source-cage-guarded-slqp
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-guarded-slqp-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-guarded-slqp" start time: Sep 12 21:56 CST
+Output:
+----------------------------------------------------------
+objective=4 final=MAXIMUM_ITERATIONS guard_calls=3 values=3 derivatives=3 digest=5816c0a5c05d95e0d113c3b4018e7653d20b3317f7159709a15f2029dd459252 PASS
+objective=3 final=MAXIMUM_ITERATIONS guard_calls=7 values=7 derivatives=3 digest=7cc95da27b50b4eb7a44cb1018946782498bbd4fc4506bdc90229060af080142 PASS
+objective=1 final=MAXIMUM_ITERATIONS guard_calls=7 values=7 derivatives=3 digest=c1c19257c36e61c4335a750d3e2a012afc93f16c4f93a2ac994af4b249a7f61f PASS
+objective=2 final=MAXIMUM_ITERATIONS guard_calls=7 values=7 derivatives=3 digest=70da087c0c548ff864b58c932815c7d36337035e3b37334a02e2dff9ee2a3053 PASS
+objective=0 final=MAXIMUM_ITERATIONS guard_calls=10 values=10 derivatives=3 digest=42eb0d17dc8d9fe0ba11f25a9debfca93dbe13c173dd84e4f6a47b859f8197ca PASS
+actual-source guarded SLQP PASS
+<end of output>
+Test time =  64.59 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-guarded-slqp" end time: Sep 12 21:57 CST
+"spin-it-2014-source-cage-guarded-slqp" time elapsed: 00:01:04
+----------------------------------------------------------
+
+11/177 Testing: spin-it-2014-source-cage-guarded-slqp-allocation
+11/177 Test: spin-it-2014-source-cage-guarded-slqp-allocation
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-guarded-slqp-regression" "--allocation"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-guarded-slqp-allocation" start time: Sep 12 21:57 CST
+Output:
+----------------------------------------------------------
+allocation ordinal=1 retained resource records=1
+allocation ordinal=2 retained resource records=1
+allocation ordinal=3 retained resource records=1
+allocation ordinal=4 retained resource records=1
+allocation ordinal=5 retained resource records=1
+allocation ordinal=6 retained resource records=1
+allocation ordinal=7 retained resource records=1
+allocation ordinal=8 retained resource records=1
+allocation ordinal=9 retained resource records=1
+allocation ordinal=10 retained resource records=1
+allocation ordinal=11 retained resource records=1
+allocation ordinal=12 retained resource records=1
+allocation ordinal=13 retained resource records=1
+allocation ordinal=14 retained resource records=1
+allocation ordinal=15 retained resource records=1
+allocation ordinal=16 retained resource records=1
+allocation ordinal=17 retained resource records=1
+allocation ordinal=18 retained resource records=1
+allocation ordinal=19 retained resource records=1
+allocation ordinal=20 retained resource records=1
+allocation ordinal=21 retained resource records=1
+allocation ordinal=22 retained resource records=1
+allocation ordinal=23 retained resource records=1
+allocation ordinal=24 retained resource records=1
+allocation ordinal=25 retained resource records=1
+allocation ordinal=26 retained resource records=1
+allocation ordinal=27 retained resource records=1
+allocation ordinal=28 retained resource records=1
+allocation ordinal=29 retained resource records=1
+allocation ordinal=30 retained resource records=1
+allocation ordinal=31 retained resource records=1
+allocation ordinal=32 retained resource records=1
+allocation ordinal=33 retained resource records=1
+allocation ordinal=34 retained resource records=1
+allocation ordinal=35 retained resource records=1
+allocation ordinal=36 retained resource records=1
+allocation ordinal=37 retained resource records=1
+allocation ordinal=38 retained resource records=1
+allocation ordinal=39 retained resource records=1
+allocation ordinal=40 retained resource records=1
+allocation ordinal=41 retained resource records=1
+allocation ordinal=42 retained resource records=1
+allocation ordinal=43 retained resource records=1
+allocation ordinal=44 retained resource records=1
+allocation ordinal=45 retained resource records=1
+allocation ordinal=46 retained resource records=1
+allocation ordinal=47 retained resource records=1
+allocator resource gate PASS injected=48 retained=47
+<end of output>
+Test time =   2.21 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-guarded-slqp-allocation" end time: Sep 12 21:57 CST
+"spin-it-2014-source-cage-guarded-slqp-allocation" time elapsed: 00:00:02
+----------------------------------------------------------
+
+12/177 Testing: spin-it-2014-source-cage-guarded-slqp-move
+12/177 Test: spin-it-2014-source-cage-guarded-slqp-move
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-guarded-slqp-regression" "--move"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-guarded-slqp-move" start time: Sep 12 21:57 CST
+Output:
+----------------------------------------------------------
+move-only audit validity PASS
+<end of output>
+Test time =   3.96 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-guarded-slqp-move" end time: Sep 12 21:57 CST
+"spin-it-2014-source-cage-guarded-slqp-move" time elapsed: 00:00:03
+----------------------------------------------------------
+
+26/177 Testing: source-spin-material-python
+26/177 Test: source-spin-material-python
+Command: "/home/lin/anaconda3/bin/python3" "-m" "unittest" "test_source_spin_material_bridge" "-v"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"source-spin-material-python" start time: Sep 12 21:57 CST
+Output:
+----------------------------------------------------------
+test_actual_source_material_entrypoint_exists (test_source_spin_material_bridge.SourceBridgeAvailabilityTests.test_actual_source_material_entrypoint_exists) ... ok
+test_all_affine_cross_terms_use_model_units (test_source_spin_material_bridge.SourceMaterialTests.test_all_affine_cross_terms_use_model_units) ... ok
+test_direct_native_lossless_mesh_and_settings_boundary (test_source_spin_material_bridge.SourceMaterialTests.test_direct_native_lossless_mesh_and_settings_boundary) ... ok
+test_literal_fixture_and_full_trace (test_source_spin_material_bridge.SourceMaterialTests.test_literal_fixture_and_full_trace) ... ok
+test_persisted_bundle_reintegrates_and_rejects_tampering (test_source_spin_material_bridge.SourceMaterialTests.test_persisted_bundle_reintegrates_and_rejects_tampering) ... ok
+test_quarter_fill_and_all_empty_objectives_do_not_seal (test_source_spin_material_bridge.SourceMaterialTests.test_quarter_fill_and_all_empty_objectives_do_not_seal) ... ok
+test_repeat_density_and_copy_ownership (test_source_spin_material_bridge.SourceMaterialTests.test_repeat_density_and_copy_ownership) ... ok
+test_resource_and_wall_failures_keep_numerical_status (test_source_spin_material_bridge.SourceMaterialTests.test_resource_and_wall_failures_keep_numerical_status) ... ok
+test_settings_and_target_rejections (test_source_spin_material_bridge.SourceMaterialTests.test_settings_and_target_rejections) ... ok
+test_runner_persists_actual_success_failure_and_freshness (test_source_spin_material_bridge.SourceRunnerTests.test_runner_persists_actual_success_failure_and_freshness) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 24.036s
+
+OK
+<end of output>
+Test time =  24.12 sec
+----------------------------------------------------------
+Test Passed.
+"source-spin-material-python" end time: Sep 12 21:57 CST
+"source-spin-material-python" time elapsed: 00:00:24
+----------------------------------------------------------
+
+49/177 Testing: spin-it-2014-python
+49/177 Test: spin-it-2014-python
+Command: "/home/lin/anaconda3/bin/python3" "-m" "unittest" "test_spin_it_2014.SpinIt2014PythonTests" "-v"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-python" start time: Sep 12 21:57 CST
+Output:
+----------------------------------------------------------
+test_audited_profile_exports_independently_checkable_kkt (test_spin_it_2014.SpinIt2014PythonTests.test_audited_profile_exports_independently_checkable_kkt) ... ok
+test_binary_constraint_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_binary_constraint_tolerance_must_be_positive) ... ok
+test_cage_api_rejects_non_artifact_before_native_execution (test_spin_it_2014.SpinIt2014PythonTests.test_cage_api_rejects_non_artifact_before_native_execution) ... ok
+test_objective_selector_must_match_mode (test_spin_it_2014.SpinIt2014PythonTests.test_objective_selector_must_match_mode) ... ok
+test_objective_weights_must_be_finite_and_nonnegative (test_spin_it_2014.SpinIt2014PythonTests.test_objective_weights_must_be_finite_and_nonnegative) ... ok
+test_paper_givens_native_joint_angle_and_rejections (test_spin_it_2014.SpinIt2014PythonTests.test_paper_givens_native_joint_angle_and_rejections) ... ok
+test_sealed_deterministic_static_artifact_and_viewer_bundle (test_spin_it_2014.SpinIt2014PythonTests.test_sealed_deterministic_static_artifact_and_viewer_bundle) ... ok
+test_slqp_gradient_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_gradient_tolerance_must_be_positive) ... ok
+test_slqp_iteration_limit_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_iteration_limit_must_be_positive) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.029s
+
+OK
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-python" end time: Sep 12 21:57 CST
+"spin-it-2014-python" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 12 21:57 CST
+
+exact-geometry =  94.89 sec*proc
+
+native =  94.89 sec*proc
+
+python =  24.23 sec*proc
+
+regression =   0.11 sec*proc
+
+spin-it =   0.11 sec*proc
+
+spin-it-2014 =  95.00 sec*proc
+
+synthetic-regression =  70.77 sec*proc
+

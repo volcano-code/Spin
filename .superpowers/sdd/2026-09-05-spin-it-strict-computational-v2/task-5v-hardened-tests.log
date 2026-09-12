@@ -1,0 +1,25 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 10: spin-it-2014-source-cage-guarded-slqp
+1/5 Test #10: spin-it-2014-source-cage-guarded-slqp ..............   Passed   64.59 sec
+    Start 11: spin-it-2014-source-cage-guarded-slqp-allocation
+2/5 Test #11: spin-it-2014-source-cage-guarded-slqp-allocation ...   Passed    2.21 sec
+    Start 12: spin-it-2014-source-cage-guarded-slqp-move
+3/5 Test #12: spin-it-2014-source-cage-guarded-slqp-move .........   Passed    3.96 sec
+    Start 26: source-spin-material-python
+4/5 Test #26: source-spin-material-python ........................   Passed   24.12 sec
+    Start 49: spin-it-2014-python
+5/5 Test #49: spin-it-2014-python ................................   Passed    0.11 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+exact-geometry          =  94.89 sec*proc (4 tests)
+native                  =  94.89 sec*proc (4 tests)
+python                  =  24.23 sec*proc (2 tests)
+regression              =   0.11 sec*proc (1 test)
+spin-it                 =   0.11 sec*proc (1 test)
+spin-it-2014            =  95.00 sec*proc (5 tests)
+synthetic-regression    =  70.77 sec*proc (3 tests)
+
+Total Test time (real) =  95.00 sec

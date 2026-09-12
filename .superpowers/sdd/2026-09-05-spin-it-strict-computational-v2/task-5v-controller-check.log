@@ -1,0 +1,11 @@
+PASS mode0 calls=13 accepted=2 geometry_reject=6 shrink_after_geometry_reject=6 final=1 moments_error=5.159064892142704e-16
+PASS mode1 calls=9 accepted=2 geometry_reject=2 shrink_after_geometry_reject=2 final=1 moments_error=5.476433392064884e-16
+PASS mode2 calls=9 accepted=2 geometry_reject=2 shrink_after_geometry_reject=2 final=1 moments_error=6.159970341046092e-16
+PASS mode3 calls=9 accepted=2 geometry_reject=2 shrink_after_geometry_reject=2 final=1 moments_error=4.1077196715996975e-16
+PASS mode4 calls=5 accepted=2 geometry_reject=1 shrink_after_geometry_reject=1 final=1 moments_error=5.736353175452229e-16
+PASS initial_reject calls=1 accepted=0 geometry_reject=0 shrink_after_geometry_reject=0 final=0 moments_error=None
+PASS guard_cap calls=18 accepted=0 geometry_reject=0 shrink_after_geometry_reject=0 final=4 moments_error=None
+PASS source_cap calls=18 accepted=0 geometry_reject=1 shrink_after_geometry_reject=1 final=4 moments_error=None
+PASS restoration calls=16 accepted=1 geometry_reject=9 shrink_after_geometry_reject=8 final=1 moments_error=3.1999290653212646e-16
+PASS exhaustion calls=10 accepted=0 geometry_reject=5 shrink_after_geometry_reject=3 final=1 moments_error=8.401687753920101e-16
+PASS 10 actual-source audits; independent linkage/KKT/moments/distances; no seal or reproduction grant

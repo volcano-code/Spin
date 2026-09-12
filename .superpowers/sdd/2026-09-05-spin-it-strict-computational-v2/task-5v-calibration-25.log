@@ -1,0 +1,353 @@
+PROBE objective=4 clearance=0 available=1 status=MAXIMUM_ITERATIONS digest=5816c0a5c05d95e0d113c3b4018e7653d20b3317f7159709a15f2029dd459252
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=2 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=1 accepted=1
+PROBE objective=4 clearance=0.0050000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=d9c7b0630aa25dd93d54677d949888b444239790c69678aa23a0baa636915955
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=2 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=1 accepted=1
+PROBE objective=4 clearance=0.02 available=1 status=MAXIMUM_ITERATIONS digest=462c7c6d1a45ee181e6587c72329f63b702de9591b11f9213c9b963d6a449378
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=2 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=1 accepted=1
+PROBE objective=4 clearance=0.031 available=1 status=MAXIMUM_ITERATIONS digest=e5a4ae272b61b384d43d148d53cd1dc37ad8e6dfba5fe88005d651ab1074fb9d
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=2 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=1 accepted=1
+PROBE objective=4 clearance=0.040000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=768f5a0f8b34278d2137f2e0ccaf3c1ef91270366491d7ef72d850862a695d0b
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=2 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=1 accepted=1
+PROBE objective=3 clearance=0 available=1 status=MAXIMUM_ITERATIONS digest=7cc95da27b50b4eb7a44cb1018946782498bbd4fc4506bdc90229060af080142
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=3 clearance=0.0050000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=70af3d53d35781ded185bcc7d77885e91c42d5b36b154b76d28aea7c4b75b9b5
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=3 clearance=0.02 available=1 status=MAXIMUM_ITERATIONS digest=5f684ead2e459c8f711d5982f04c7fb457b6a177499a4af94bdde0d40ec21232
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=3 clearance=0.031 available=1 status=MAXIMUM_ITERATIONS digest=ad1895cb6308a47b61a2ed595ff9317a8fb1fcc1d8b7c78e6b91e1354709919e
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=7 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=0 accepted=0
+ objective step=0.03125 valid=1 accepted=1
+PROBE objective=3 clearance=0.040000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=1a09c07cb820d0084d9d26124cb024c67c35561698be169a906f6833bece5364
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=7 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=0 accepted=0
+ objective step=0.03125 valid=1 accepted=1
+PROBE objective=1 clearance=0 available=1 status=MAXIMUM_ITERATIONS digest=c1c19257c36e61c4335a750d3e2a012afc93f16c4f93a2ac994af4b249a7f61f
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=1 clearance=0.0050000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=17db7f5e6e9377d2d2833df2ca8723b570fe1ecadc6a69ff04d2bfe5c1418aed
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=1 clearance=0.02 available=1 status=MAXIMUM_ITERATIONS digest=77c65bbd12db194f473e4a47cbf291c83ac3c1ba15379dc2c6b5f6d464e1118e
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=1 clearance=0.031 available=1 status=MAXIMUM_ITERATIONS digest=0d705ef5cca8e67244a46570d2b082efa2b5faa3893f54704e1afc99630bad61
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=7 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=0 accepted=0
+ objective step=0.03125 valid=1 accepted=1
+PROBE objective=1 clearance=0.040000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=381ee6b256b336297fa225d54b19185868bf9e36b0497755d6709dd432f09fab
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=7 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=0 accepted=0
+ objective step=0.03125 valid=1 accepted=1
+PROBE objective=2 clearance=0 available=1 status=MAXIMUM_ITERATIONS digest=70da087c0c548ff864b58c932815c7d36337035e3b37334a02e2dff9ee2a3053
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=2 clearance=0.0050000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=b78e67027271ed3b23b3ab6c16ce9a387ca7903f2c497e0174214558237cbbc4
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=2 clearance=0.02 available=1 status=MAXIMUM_ITERATIONS digest=5a0432d196944c40c8af8820493341e7335b228fe8edf5701b5900050fdf29fe
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=1 accepted=1
+PROBE objective=2 clearance=0.031 available=1 status=MAXIMUM_ITERATIONS digest=e677eeec7d5cdc1409696c6af7a60fdde8e47a52d66fdb5c050dd8c5eec195fd
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=7 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=0 accepted=0
+ objective step=0.03125 valid=1 accepted=1
+PROBE objective=2 clearance=0.040000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=cdcb48ab725fd15465e840ee0f446e53db1eedf4c9776ddc0fc587018065e399
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=6 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=7 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ objective step=0.0625 valid=0 accepted=0
+ objective step=0.03125 valid=1 accepted=1
+PROBE objective=0 clearance=0 available=1 status=MAXIMUM_ITERATIONS digest=42eb0d17dc8d9fe0ba11f25a9debfca93dbe13c173dd84e4f6a47b859f8197ca
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage paper handle scale must be positive
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=6 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=7 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=8 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=9 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=0.70067111309411578 valid=0 accepted=0
+ objective step=0.35033555654705789 valid=0 accepted=0
+ objective step=0.17516777827352895 valid=0 accepted=0
+ objective step=0.087583889136764473 valid=0 accepted=0
+ objective step=0.043791944568382236 valid=0 accepted=0
+ objective step=0.021895972284191118 valid=0 accepted=0
+ objective step=0.010947986142095559 valid=0 accepted=0
+ objective step=0.0054739930710477796 valid=1 accepted=1
+PROBE objective=0 clearance=0.0050000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=c8b0c737ceed2f70c8997f553bc54112a48dc388de5dfe8ac23938267eb78787
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage paper handle scale must be positive
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=6 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=7 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=8 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=9 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=0.70067111309411578 valid=0 accepted=0
+ objective step=0.35033555654705789 valid=0 accepted=0
+ objective step=0.17516777827352895 valid=0 accepted=0
+ objective step=0.087583889136764473 valid=0 accepted=0
+ objective step=0.043791944568382236 valid=0 accepted=0
+ objective step=0.021895972284191118 valid=0 accepted=0
+ objective step=0.010947986142095559 valid=0 accepted=0
+ objective step=0.0054739930710477796 valid=1 accepted=1
+PROBE objective=0 clearance=0.02 available=1 status=MAXIMUM_ITERATIONS digest=90f6bca0a830b21538840997672c8e57dfcfd713476ea7fda2d9af6068d4b680
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage paper handle scale must be positive
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=6 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=7 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=8 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=9 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=0.70067111309411578 valid=0 accepted=0
+ objective step=0.35033555654705789 valid=0 accepted=0
+ objective step=0.17516777827352895 valid=0 accepted=0
+ objective step=0.087583889136764473 valid=0 accepted=0
+ objective step=0.043791944568382236 valid=0 accepted=0
+ objective step=0.021895972284191118 valid=0 accepted=0
+ objective step=0.010947986142095559 valid=0 accepted=0
+ objective step=0.0054739930710477796 valid=1 accepted=1
+PROBE objective=0 clearance=0.031 available=1 status=MAXIMUM_ITERATIONS digest=afbb887101f691f830e504564174d5fe34311b95967bc68cf15b3e1b68fbbaab
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage paper handle scale must be positive
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=6 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=7 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=8 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=9 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage paper handle scale must be positive
+ attempt=10 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=11 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=12 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=13 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=14 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=15 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=0.70067111309411578 valid=0 accepted=0
+ objective step=0.35033555654705789 valid=0 accepted=0
+ objective step=0.17516777827352895 valid=0 accepted=0
+ objective step=0.087583889136764473 valid=0 accepted=0
+ objective step=0.043791944568382236 valid=0 accepted=0
+ objective step=0.021895972284191118 valid=0 accepted=0
+ objective step=0.010947986142095559 valid=0 accepted=0
+ objective step=0.0054739930710477796 valid=0 accepted=0
+ restoration step=1 valid=0 accepted=0
+ restoration step=0.5 valid=0 accepted=0
+ restoration step=0.25 valid=0 accepted=0
+ restoration step=0.125 valid=0 accepted=0
+ restoration step=0.0625 valid=0 accepted=0
+ restoration step=0.03125 valid=1 accepted=1
+PROBE objective=0 clearance=0.040000000000000001 available=1 status=MAXIMUM_ITERATIONS digest=70464b9729834010b7b445534f0210617596f9aaad2db651b1726283caab8751
+ attempt=0 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=1 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage paper handle scale must be positive
+ attempt=2 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=3 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage moments final mass must be positive; no geometry legality granted
+ attempt=4 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=5 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=6 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=7 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=8 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=9 outcome=UNKNOWN derivatives=0 stage=1 reason=source cage paper handle scale must be positive
+ attempt=10 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=11 outcome=REJECTED_GEOMETRY derivatives=0 stage=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+ attempt=12 outcome=REJECTED_GEOMETRY derivatives=0 stage=4 reason=primitive not subset of actual outer material
+ attempt=13 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=14 outcome=REJECTED_GEOMETRY derivatives=0 stage=5 reason=outer/domain contact or insufficient conservative clearance
+ attempt=15 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ attempt=16 outcome=CHECKS_PASSED derivatives=1 stage=6 reason=
+ objective step=0.70067111309411578 valid=0 accepted=0
+ objective step=0.35033555654705789 valid=0 accepted=0
+ objective step=0.17516777827352895 valid=0 accepted=0
+ objective step=0.087583889136764473 valid=0 accepted=0
+ objective step=0.043791944568382236 valid=0 accepted=0
+ objective step=0.021895972284191118 valid=0 accepted=0
+ objective step=0.010947986142095559 valid=0 accepted=0
+ objective step=0.0054739930710477796 valid=0 accepted=0
+ restoration step=1 valid=0 accepted=0
+ restoration step=0.5 valid=0 accepted=0
+ restoration step=0.25 valid=0 accepted=0
+ restoration step=0.125 valid=0 accepted=0
+ restoration step=0.0625 valid=0 accepted=0
+ restoration step=0.03125 valid=0 accepted=0
+ restoration step=0.015625 valid=1 accepted=1

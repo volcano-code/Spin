@@ -1,0 +1,1 @@
+FAIL: pre-move const reference cannot retain stale passing scalar or material availability

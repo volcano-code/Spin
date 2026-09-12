@@ -1,0 +1,37 @@
+[1/37] Building CXX object CMakeFiles/spin-it-2014-source-cage-guarded-slqp-regression.dir/tests/spin_it_2014_source_cage_guarded_slqp_regression.cpp.o
+[2/37] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SourceCageSlqp.cpp.o
+[3/37] Linking CXX static library libmake_it_stand_core.a
+[4/37] Linking CXX executable spin-it-2014-source-conforming-boundary-regression
+[5/37] Linking CXX executable spin-it-2014-source-bbw-joint-regression
+[6/37] Linking CXX executable spin-it-2014-source-cage-moments-regression
+[7/37] Linking CXX executable spin-it-2014-source-cage-paper-regression
+[8/37] Linking CXX executable spin-it-2014-source-cage-shape-regression
+[9/37] Linking CXX executable spin-it-2014-source-cage-slqp-regression
+[10/37] Linking CXX executable spin-it-2014-source-cage-geometry-regression
+[11/37] Linking CXX executable spin-it-2014-source-cage-guarded-slqp-regression
+[12/37] Linking CXX executable spin-it-2014-source-cage-paper-allocation-probe
+[13/37] Linking CXX executable spin-it-2014-source-cage-fem-regression
+[14/37] Linking CXX executable spin-it-2014-source-cage-binding-regression
+[15/37] Linking CXX executable spin-it-2014-source-cage-grid-regression
+[16/37] Linking CXX executable spin-it-2014-source-cage-bbw-regression
+[17/37] Linking CXX executable spin-it-2014-source-surface-cage-regression
+[18/37] Linking CXX executable spin-it-2014-source-material-regression
+[19/37] Linking CXX executable spin-it-2014-source-adaptive-regression
+[20/37] Linking CXX executable spin-it-2014-surface-value-regression
+[21/37] Linking CXX executable spin-it-2014-source-surface-octree-regression
+[22/37] Linking CXX executable spin-it-2014-adaptive-domain-regression
+[23/37] Linking CXX executable spin-it-2014-fill-functional-regression
+[24/37] Linking CXX executable spin-it-2014-slqp-regression
+[25/37] Linking CXX executable spin-it-2014-audited
+[26/37] Linking CXX executable spin-it-2014-end-to-end
+[27/37] Linking CXX executable spin-it-2014-modes-regression
+[28/37] Linking CXX executable spin-it-2014-givens-regression
+[29/37] Linking CXX executable spin-it-2014-objectives-regression
+[30/37] Linking CXX executable spin-it-2014-resolution-ladder
+[31/37] Linking CXX executable spin-it-2014-dual-material-regression
+[32/37] Linking CXX executable spin-it-2014-surface-differential-regression
+[33/37] Linking CXX executable spin-it-2014-api-regression
+[34/37] Linking CXX executable spin-it-2014-cage-functional-regression
+[35/37] Linking CXX executable spin-it-2014-automatic-cage-regression
+[36/37] Linking CXX executable spin-it-2014-cage-solver-regression
+[37/37] Linking CXX shared module python/_make_it_stand.cpython-313-x86_64-linux-gnu.so

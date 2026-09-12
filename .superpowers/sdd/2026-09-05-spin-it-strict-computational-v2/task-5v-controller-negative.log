@@ -1,0 +1,51 @@
+REJECT scope
+REJECT false seal
+REJECT false feasibility
+REJECT legacy promoted
+REJECT mode identity
+REJECT missing call
+REJECT missing guard
+REJECT missing stage
+REJECT missing final recheck
+REJECT checker undercount
+REJECT value undercount
+REJECT gradient undercount
+REJECT incomplete value count
+REJECT call budget forged
+REJECT callback identity
+REJECT stage offset
+REJECT stage order
+REJECT first pass rejected
+REJECT final pass incomplete
+REJECT final check not invoked
+REJECT raw state tamper
+REJECT wrong state digest
+REJECT wrong value digest
+REJECT missing trial
+REJECT accept invalid trial
+REJECT mismatched next state
+REJECT mismatched final
+REJECT wrong KKT
+REJECT false convergence
+REJECT wrong material moment
+REJECT wrong density
+REJECT primitive omitted
+REJECT owner changed
+REJECT clearance changed
+REJECT nonfinite state
+REJECT nonfinite moment
+REJECT resource promoted
+REJECT work after resource latch
+REJECT gradient after latch
+REJECT resource outcome hidden
+REJECT restoration direction changed
+REJECT restoration accepted hidden
+REJECT restoration step changed
+REJECT restoration residual changed
+REJECT exhaustion history changed
+REJECT exhaustion converged
+REJECT exact distance changed
+REJECT outer winding changed
+REJECT missing case
+REJECT duplicate identity
+PASS 50 actual-export corruptions rejected; no synthetic positive pass injected

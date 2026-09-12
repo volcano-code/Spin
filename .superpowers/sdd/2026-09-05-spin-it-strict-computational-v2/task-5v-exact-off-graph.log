@@ -1,0 +1,7 @@
+427:LIBIGL_SKIP_DOWNLOAD:BOOL=ON
+481:MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS:BOOL=OFF
+490:MAKE_IT_STAND_BUILD_SPIN_IT_2014:BOOL=ON
+493:MAKE_IT_STAND_BUILD_SPIN_IT_FASTER:BOOL=OFF
+b3cb021ac901a4d87be256fe6aa1c14a0e91153e36d3c0110e30410b0687c42f  build/task-5c-no-faster-20260909/spin-2014-dependency-contract-runs/run-ef5629b3f01b7249/enabled/build.ninja
+PASS: actual fresh exact-OFF graph excludes guarded adapter, source adapter, geometry checker and their targets.
+PASS: assigned actual source graph excludes foreign implementation paths.

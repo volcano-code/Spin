@@ -1,0 +1,52 @@
+EXHAUSTION lines=1 status=RESTORATION_STALLED displacement=0 digest=a3f39220b0ff17bbed157b17702c492c6af5cde79e046c10132033b652dfbc0c
+ attempt=0 outcome=CHECKS_PASSED
+ attempt=1 outcome=UNKNOWN
+ attempt=2 outcome=UNKNOWN
+ attempt=3 outcome=CHECKS_PASSED
+ objective step=1 valid=0 accepted=0
+ restoration step=1 valid=0 accepted=0
+EXHAUSTION lines=2 status=RESTORATION_STALLED displacement=0 digest=6075072526c16731075cf8b896fe5b1d52411dbd5c7f81626c6bc4f5839a54b0
+ attempt=0 outcome=CHECKS_PASSED
+ attempt=1 outcome=UNKNOWN
+ attempt=2 outcome=UNKNOWN
+ attempt=3 outcome=UNKNOWN
+ attempt=4 outcome=REJECTED_GEOMETRY
+ attempt=5 outcome=CHECKS_PASSED
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ restoration step=1 valid=0 accepted=0
+ restoration step=0.5 valid=0 accepted=0
+EXHAUSTION lines=3 status=RESTORATION_STALLED displacement=0 digest=df2158a7473367107d758b894330b165d09c8c6b4c4a0dd19566795518657aac
+ attempt=0 outcome=CHECKS_PASSED
+ attempt=1 outcome=UNKNOWN
+ attempt=2 outcome=UNKNOWN
+ attempt=3 outcome=REJECTED_GEOMETRY
+ attempt=4 outcome=UNKNOWN
+ attempt=5 outcome=REJECTED_GEOMETRY
+ attempt=6 outcome=REJECTED_GEOMETRY
+ attempt=7 outcome=CHECKS_PASSED
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ restoration step=1 valid=0 accepted=0
+ restoration step=0.5 valid=0 accepted=0
+ restoration step=0.25 valid=0 accepted=0
+EXHAUSTION lines=4 status=RESTORATION_STALLED displacement=0 digest=20c3717b1f2d645c83c2fdc1317f96e0011ae792b8f9adcd267a2679ae58f5f7
+ attempt=0 outcome=CHECKS_PASSED
+ attempt=1 outcome=UNKNOWN
+ attempt=2 outcome=UNKNOWN
+ attempt=3 outcome=REJECTED_GEOMETRY
+ attempt=4 outcome=REJECTED_GEOMETRY
+ attempt=5 outcome=UNKNOWN
+ attempt=6 outcome=REJECTED_GEOMETRY
+ attempt=7 outcome=REJECTED_GEOMETRY
+ attempt=8 outcome=REJECTED_GEOMETRY
+ attempt=9 outcome=CHECKS_PASSED
+ objective step=1 valid=0 accepted=0
+ objective step=0.5 valid=0 accepted=0
+ objective step=0.25 valid=0 accepted=0
+ objective step=0.125 valid=0 accepted=0
+ restoration step=1 valid=0 accepted=0
+ restoration step=0.5 valid=0 accepted=0
+ restoration step=0.25 valid=0 accepted=0
+ restoration step=0.125 valid=0 accepted=0
