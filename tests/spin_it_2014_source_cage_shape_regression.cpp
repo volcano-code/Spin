@@ -142,8 +142,15 @@ void mathematical() {
     throwsAs<std::invalid_argument>([&]{LinearizedRotationLaplacian bad(rest,faces,{});},"out of range face");
     auto bad=rest;bad.row(0)=bad.row(1);
     throwsAs<std::invalid_argument>([&]{LinearizedRotationLaplacian x(bad,mesh.f,{});},"zero area");
+    bad=rest;
     bad.conservativeResize(rest.rows()+1,3);bad.row(rest.rows()).setZero();
-    throwsAs<std::invalid_argument>([&]{LinearizedRotationLaplacian x(bad,mesh.f,{});},"isolated vertex");
+    bool isolatedRejected=false;
+    try {LinearizedRotationLaplacian x(bad,mesh.f,{});}
+    catch(const std::invalid_argument& e) {
+        isolatedRejected=true;
+        require(std::string(e.what()).find("isolated vertex")!=std::string::npos,"isolated vertex fixture must reach isolated-vertex validation");
+    }
+    require(isolatedRejected,"isolated vertex");
     throwsAs<std::invalid_argument>([&]{op.evaluateValues(Eigen::MatrixXd::Zero(3,2),1.,0.);},"malformed deformed shape");
     Eigen::MatrixXd planar(4,3);planar<<0,0,0,1,0,0,1,1,0,0,1,0;
     Eigen::MatrixXi triangles(2,3);triangles<<0,1,2,0,2,3;
