@@ -1,0 +1,32 @@
+Start testing: Sep 13 03:12 CST
+----------------------------------------------------------
+10/179 Testing: spin-it-2014-source-cage-adaptive-solver
+10/179 Test: spin-it-2014-source-cage-adaptive-solver
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-adaptive-solver-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-adaptive-solver" start time: Sep 13 03:12 CST
+Output:
+----------------------------------------------------------
+KNOWN_SOLUTION_VALIDATION inclusive epsilon endpoints PASS
+KNOWN_SOLUTION_VALIDATION multiple passes PASS
+initial geometry outcome=3 reason=actual guarded solve geometry rejected; no adaptation
+guard final=0 first attempt=1
+adaptive solver regression PASS; no feasibility, binary, seal, physics or paper grant
+<end of output>
+Test time =  35.49 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-adaptive-solver" end time: Sep 13 03:12 CST
+"spin-it-2014-source-cage-adaptive-solver" time elapsed: 00:00:35
+----------------------------------------------------------
+
+End testing: Sep 13 03:12 CST
+
+exact-geometry =  35.49 sec*proc
+
+native =  35.49 sec*proc
+
+spin-it-2014 =  35.49 sec*proc
+
+synthetic-regression =  35.49 sec*proc
+

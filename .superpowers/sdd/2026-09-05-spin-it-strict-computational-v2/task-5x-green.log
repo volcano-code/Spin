@@ -1,0 +1,14 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 10: spin-it-2014-source-cage-adaptive-solver
+1/1 Test #10: spin-it-2014-source-cage-adaptive-solver ...   Passed   35.49 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+exact-geometry          =  35.49 sec*proc (1 test)
+native                  =  35.49 sec*proc (1 test)
+spin-it-2014            =  35.49 sec*proc (1 test)
+synthetic-regression    =  35.49 sec*proc (1 test)
+
+Total Test time (real) =  35.50 sec

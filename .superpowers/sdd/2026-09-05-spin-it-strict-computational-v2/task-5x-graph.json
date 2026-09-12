@@ -1,0 +1,93 @@
+{
+  "update": {
+    "files_updated": 3,
+    "total_nodes": 53,
+    "total_edges": 567,
+    "changed_files": [
+      "CMakeLists.txt",
+      "docs/spin2014_source_cage_adaptive_solver.md",
+      "include/spin/QuadricMomentEvaluator.h",
+      "include/spin2014/SourceCageAdaptiveSolver.h",
+      "src/spin/QuadricHollowingSolver.cpp",
+      "src/spin/QuadricMomentEvaluator.cpp",
+      "src/spin2014/SourceCageAdaptiveSolver.cpp",
+      "tests/quadric_moment_evaluator_regression.cpp",
+      "tests/spin_it_2014_source_cage_adaptive_solver_regression.cpp"
+    ],
+    "dependent_files": [],
+    "stale_files_removed": 0,
+    "errors": [],
+    "python_resolution": null,
+    "rescript_resolution": null,
+    "spring_resolution": null,
+    "event_resolution": null,
+    "temporal_resolution": null,
+    "hcl_resolution": null,
+    "scoped_resolution": null,
+    "status": "ok",
+    "build_type": "incremental",
+    "base_resolved": "d81bc808806fbff24fd40fad4c6d5e16e5dc3dc0",
+    "summary": "Incremental update: 3 files re-parsed, 53 nodes and 567 edges updated. Changed: ['CMakeLists.txt', 'docs/spin2014_source_cage_adaptive_solver.md', 'include/spin/QuadricMomentEvaluator.h', 'include/spin2014/SourceCageAdaptiveSolver.h', 'src/spin/QuadricHollowingSolver.cpp', 'src/spin/QuadricMomentEvaluator.cpp', 'src/spin2014/SourceCageAdaptiveSolver.cpp', 'tests/quadric_moment_evaluator_regression.cpp', 'tests/spin_it_2014_source_cage_adaptive_solver_regression.cpp']. Dependents also updated: [].",
+    "postprocess_level": "full",
+    "bare_edges_resolved": 0,
+    "cpp_scoped_edges_resolved": 0,
+    "signatures_updated": true,
+    "fts_indexed": 5693,
+    "fts_rebuilt": true,
+    "flows_detected": 0,
+    "communities_detected": 0,
+    "summaries_computed": true,
+    "postprocess_timing": {
+      "signatures_s": 2.733096,
+      "fts_s": 0.030269,
+      "flows_s": 0.0513,
+      "communities_s": 0.000094,
+      "summaries_s": 0.106375
+    },
+    "_graph": {
+      "updated_at": "2026-09-13T03:16:35",
+      "age_seconds": 5,
+      "built_at_sha": "97f7e12c4a8152779f5ad0691325e261e63b769e",
+      "built_on_branch": "spin-it-strict-computational-v2",
+      "head_sha": "97f7e12c4a8152779f5ad0691325e261e63b769e",
+      "head_matches_build": true
+    }
+  },
+  "stats": {
+    "status": "ok",
+    "summary": "Graph statistics for make-it-balance-paper-sim:\n  Files: 422\n  Total nodes: 5693\n  Total edges: 60832\n  Languages: bash, c, cpp, python\n  Last updated: 2026-09-13T03:16:35\n\nNodes by kind:\n  Class: 564\n  File: 422\n  Function: 4275\n  Test: 432\n\nEdges by kind:\n  CALLS: 47098\n  CONTAINS: 5292\n  IMPORTS_FROM: 2996\n  INHERITS: 86\n  REFERENCES: 171\n  TESTED_BY: 5189\n\nEmbeddings: 0 nodes embedded\n  (install sentence-transformers for semantic search)",
+    "total_nodes": 5693,
+    "total_edges": 60832,
+    "nodes_by_kind": {
+      "Class": 564,
+      "File": 422,
+      "Function": 4275,
+      "Test": 432
+    },
+    "edges_by_kind": {
+      "CALLS": 47098,
+      "CONTAINS": 5292,
+      "IMPORTS_FROM": 2996,
+      "INHERITS": 86,
+      "REFERENCES": 171,
+      "TESTED_BY": 5189
+    },
+    "languages": [
+      "bash",
+      "c",
+      "cpp",
+      "python"
+    ],
+    "files_count": 422,
+    "last_updated": "2026-09-13T03:16:35",
+    "embeddings_count": 0,
+    "_graph": {
+      "updated_at": "2026-09-13T03:16:35",
+      "age_seconds": 5,
+      "built_at_sha": "97f7e12c4a8152779f5ad0691325e261e63b769e",
+      "built_on_branch": "spin-it-strict-computational-v2",
+      "head_sha": "97f7e12c4a8152779f5ad0691325e261e63b769e",
+      "head_matches_build": true
+    }
+  }
+}

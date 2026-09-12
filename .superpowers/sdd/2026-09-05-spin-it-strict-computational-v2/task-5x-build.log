@@ -1,0 +1,64 @@
+[0/1] Re-running CMake...
+CMake Deprecation Warning at /data/xvxinyao/make-it-balance-paper-sim/libigl/cmake/libigl.cmake:1 (cmake_minimum_required):
+  Compatibility with CMake < 3.5 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value or use a ...<max> suffix to tell
+  CMake that the project does not need compatibility with older versions.
+Call Stack (most recent call first):
+  cmake/FindLIBIGL.cmake:34 (include)
+  CMakeLists.txt:91 (find_package)
+
+
+-- Creating target: igl::core (igl)
+BOOST_ROOT: 
+-- Using header-only CGAL
+-- Targetting Ninja
+-- Using /usr/bin/c++ compiler.
+-- __cplusplus is 201703
+--   --> Do not link with Boost.Thread
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48")  
+-- Boost include dirs: /home/lin/anaconda3/include
+-- Boost libraries:    
+-- Found Boost: /home/lin/anaconda3/lib/cmake/Boost-1.82.0/BoostConfig.cmake (found suitable version "1.82.0", minimum required is "1.48") found components: thread system 
+-- Using gcc version 4 or later. Adding -frounding-math
+-- Creating target: igl::cgal (igl_cgal)
+-- HIGHS version: 1.14.0
+-- Git hash: 7df0786de3
+-- Build C++ library: ON
+-- Build C++ executable: OFF
+-- Build Fortran: OFF
+-- Build CSharp: OFF
+-- Build Python: OFF
+-- Build all tests: OFF
+-- ZLIB: ON
+-- Build examples: OFF
+-- Build pdlp with GPU: OFF
+-- Use FindCUDAConf: OFF
+-- Build GPU with delayed loading: OFF
+-- Build HIPO: OFF
+-- Build OpenBLAS: OFF
+-- Build type: Release
+-- Found long size: 8
+-- Found long long size: 8
+-- Found int64_t size: 8
+-- Found unsigned long size: 8
+-- Found unsigned long long size: 8
+-- Found uint64_t size: 8
+-- Found int * size: 8
+-- IPO / LTO supported by compiler: YES
+-- IPO / LTO: disabled by default when building a static library; set CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON to enable
+-- FAST_BUILD set to on.
+-- Build C++ example: OFF
+-- Build CSharp example: OFF
+-- Build dotnet package: OFF
+-- No CSharp support
+-- .Net: Use .Net Framework 2.1 support: ON
+-- Found pybind11: /home/lin/anaconda3/lib/python3.13/site-packages/pybind11/include (found version "3.0.1")
+-- Configuring done (0.5s)
+-- Generating done (0.0s)
+-- Build files have been written to: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+[1/5] Building CXX object CMakeFiles/spin-it-2014-source-cage-adaptive-solver-regression.dir/tests/spin_it_2014_source_cage_adaptive_solver_regression.cpp.o
+[2/5] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SourceCageAdaptiveSolver.cpp.o
+[3/5] Linking CXX static library libmake_it_stand_core.a
+[4/5] Linking CXX executable spin-it-2014-source-cage-adaptive-solver-regression

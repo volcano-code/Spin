@@ -1,0 +1,4 @@
+KNOWN_SOLUTION_VALIDATION multiple passes PASS
+initial geometry outcome=4 reason=guarded solve lacks fresh completed final geometry/material evidence
+guard final=0 first attempt=1
+actual initial geometry rejection prevents adaptation

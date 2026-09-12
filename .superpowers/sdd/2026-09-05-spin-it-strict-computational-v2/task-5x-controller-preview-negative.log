@@ -1,0 +1,24 @@
+REJECT: missing case
+REJECT: duplicate ID
+REJECT: paper grant
+REJECT: hidden middle pass
+REJECT: reused history
+REJECT: false KKT stationarity
+REJECT: wrong callback hash
+REJECT: wrong intermediate functional
+REJECT: wrong rebound beta
+REJECT: wrong raw mass
+REJECT: forged terminal material
+REJECT: nonfinite trace
+REJECT: pending relabeled solved
+REJECT: missing failed callbacks
+Traceback (most recent call last):
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5x-controller-negative.py", line 48, in <module>
+    corruption('rebind_geometry_reject', 'deleted failed rebind', lambda c: c['passes'][0].pop('rebind'))
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5x-controller-negative.py", line 31, in corruption
+    must_reject(label, value, checker.verify)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5x-controller-negative.py", line 25, in must_reject
+    raise AssertionError('corrupted evidence accepted: '+label)
+AssertionError: corrupted evidence accepted: deleted failed rebind

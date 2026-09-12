@@ -1,0 +1,17 @@
+REJECT: missing case
+REJECT: duplicate ID
+REJECT: paper grant
+REJECT: hidden middle pass
+REJECT: reused history
+REJECT: false KKT stationarity
+REJECT: wrong callback hash
+REJECT: wrong intermediate functional
+REJECT: wrong rebound beta
+REJECT: wrong raw mass
+REJECT: forged terminal material
+REJECT: nonfinite trace
+REJECT: pending relabeled solved
+REJECT: missing failed callbacks
+REJECT: deleted failed rebind
+REJECT: pre-admission failure forged as solved
+PASS: 16 actual-export corruptions rejected

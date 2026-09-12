@@ -1,0 +1,4 @@
+KNOWN_SOLUTION_VALIDATION multiple passes PASS
+initial geometry outcome=3 reason=actual guarded solve geometry rejected; no adaptation
+guard final=0 first attempt=1
+adaptive solver regression PASS; no feasibility, binary, seal, physics or paper grant

@@ -1,0 +1,1 @@
+FAIL: actual guarded adaptive solver cannot retain solved and pending endpoints across fresh passes

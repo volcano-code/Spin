@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5x-controller-check.py", line 248, in <module>
+    error = verify_rows(rows)
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5x-controller-check.py", line 242, in verify_rows
+    return max(verify(c) for c in rows)
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5x-controller-check.py", line 242, in <genexpr>
+    return max(verify(c) for c in rows)
+               ~~~~~~^^^
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5x-controller-check.py", line 234, in verify
+    assert solved is not None and pending is not None
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
