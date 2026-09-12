@@ -26,7 +26,8 @@ namespace spin2014
 {
 detail::TriangleMomentValues detail::surfaceTriangleMoments(
     const Eigen::Vector3d& av, const Eigen::Vector3d& bv,
-    const Eigen::Vector3d& cv, TriangleMomentJacobian* jacobian)
+    const Eigen::Vector3d& cv, TriangleMomentJacobian* jacobian,
+    NormalOverflowCategory normalOverflow)
 {
     const Eigen::Array3d a=av.array(), b=bv.array(), c=cv.array();
     if (!a.isFinite().all() || !b.isFinite().all() || !c.isFinite().all())
@@ -36,7 +37,11 @@ detail::TriangleMomentValues detail::surfaceTriangleMoments(
         1./120,1./120,1./120,1./60,1./60,1./60};
     const Eigen::Vector3d u=bv-av, v=cv-av;
     const Eigen::Array3d n=u.cross(v).array();
-    if (!n.isFinite().all()) throw std::overflow_error("surface triangle normal overflow");
+    if (!n.isFinite().all()) {
+        if (normalOverflow==NormalOverflowCategory::LegacyInvalidArgument)
+            throw std::invalid_argument("surface triangle is degenerate or nonfinite");
+        throw std::overflow_error("surface triangle normal overflow");
+    }
     if (n.abs().maxCoeff()==0) throw std::invalid_argument("surface triangle is degenerate");
     const Eigen::Array3d h1=a+b+c;
     const Eigen::Array3d h2=a*a+b*(a+b);
@@ -103,7 +108,8 @@ physics::RawMassMoments10 integrate(
         detail::TriangleMomentJacobian localJacobian;
         values += density*detail::surfaceTriangleMoments(
             vertices.row(faces(face,0)).transpose(),vertices.row(faces(face,1)).transpose(),
-            vertices.row(faces(face,2)).transpose(),jacobian ? &localJacobian : nullptr);
+            vertices.row(faces(face,2)).transpose(),jacobian ? &localJacobian : nullptr,
+            detail::NormalOverflowCategory::LegacyInvalidArgument);
         if (!jacobian) continue;
         for (int vertex = 0; vertex < 3; ++vertex)
             jacobian->block<10,3>(0,3*faces(face,vertex)) += density*localJacobian.block<10,3>(0,3*vertex);

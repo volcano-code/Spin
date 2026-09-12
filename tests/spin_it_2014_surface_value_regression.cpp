@@ -8,6 +8,35 @@
 #include <sys/wait.h>
 #include <unistd.h>
 using namespace surface_test;
+void checkOverflowCategories() {
+    // Catches changing either legacy API's normal-overflow category or
+    // accidentally translating later polynomial overflow to invalid_argument.
+    bool categoriesPreserved=true;
+    for(bool normalOverflow:{true,false}) {
+        auto surface=cube(0.,1.);
+        surface.v*=normalOverflow?1e200:1e100;
+        const Eigen::Vector3d u=(surface.v.row(2)-surface.v.row(0)).transpose();
+        const Eigen::Vector3d v=(surface.v.row(1)-surface.v.row(0)).transpose();
+        require(surface.v.allFinite(),"overflow fixture coordinates must be finite");
+        require(u.cross(v).allFinite()!=normalOverflow,"distinguish normal from later polynomial overflow");
+        for(bool differential:{false,true}) {
+            bool expected=false;
+            const char* category="none";
+            try {
+                if(differential) spin2014::differentiateSurfaceRawMoments(surface.v,surface.f);
+                else spin2014::integrateSurfaceRawMoments(surface.v,surface.f);
+            } catch(const std::invalid_argument&) {
+                category="invalid_argument"; expected=normalOverflow;
+            } catch(const std::overflow_error&) {
+                category="overflow_error"; expected=!normalOverflow;
+            }
+            std::cout<<(differential?"differential":"value")<<' '
+                     <<(normalOverflow?"normal":"polynomial")<<" overflow category="<<category<<'\n';
+            categoriesPreserved &= expected;
+        }
+    }
+    require(categoriesPreserved,"both legacy APIs must preserve distinct normal and polynomial overflow categories");
+}
 int main(int argc,char**) {
     try {
         auto b=box({-2,1,3},{1,5,7});
@@ -56,6 +85,7 @@ int main(int argc,char**) {
         rejects([&]{spin2014::integrateSurfaceRawMoments(b.v,b.f.topRows(11));},"open chain");
         bad=b; bad.f(0,0)=99; rejects([&]{spin2014::integrateSurfaceRawMoments(bad.v,bad.f);},"bad index");
         bad=b; bad.v*=1e100; rejects([&]{spin2014::integrateSurfaceRawMoments(bad.v,bad.f);},"moment overflow");
+        checkOverflowCategories();
         std::cout<<"surface value analytic, signed, covariance, invalid-input checks passed\n";
     } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; return 1; }
 }

@@ -137,6 +137,17 @@ void invalidInputs(const SourceCageMomentFunctional& f) {
     throwsAs<std::overflow_error>([&]{f.evaluateValues(beta,huge);},"finite input arithmetic overflow");
     auto collapsed=p;
     const auto& cage=f.boundary().binding().bbw().fem().grid().cage();
+    // Source API arithmetic categories must not inherit the legacy surface
+    // normal-overflow classification. Check normal and later polynomial cases.
+    for(double scale:{1e200,1e100}) {
+        auto scaled=p;
+        for(std::size_t h=0;h<f.handleCount();++h) {
+            scaled[4*h]=scale;
+            scaled.segment<3>(4*h+1)=(scale-1)*cage.boundaryVertices().row(cage.handleVertexIndices()[h]).transpose();
+        }
+        throwsAs<std::overflow_error>([&]{f.evaluateValues(beta,scaled);},"source value normal/polynomial overflow stays arithmetic");
+        throwsAs<std::overflow_error>([&]{f.evaluate(beta,scaled);},"source derivative normal/polynomial overflow stays arithmetic");
+    }
     for(std::size_t h=0;h<f.handleCount();++h) {
         collapsed[4*h]=std::numeric_limits<double>::denorm_min();
         collapsed.segment<3>(4*h+1)=-cage.boundaryVertices().row(cage.handleVertexIndices()[h]).transpose();
