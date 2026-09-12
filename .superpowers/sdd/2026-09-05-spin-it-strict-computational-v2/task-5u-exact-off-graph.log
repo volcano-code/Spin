@@ -1,0 +1,6 @@
+427:LIBIGL_SKIP_DOWNLOAD:BOOL=ON
+481:MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS:BOOL=OFF
+490:MAKE_IT_STAND_BUILD_SPIN_IT_2014:BOOL=ON
+493:MAKE_IT_STAND_BUILD_SPIN_IT_FASTER:BOOL=OFF
+PASS: new geometry source/header/target absent from this exact-OFF graph
+a708b48cc2a82450d7f094f32d81e5044bccc4dae623463e2d3dfac26cc6e3da  build/task-5c-no-faster-20260909/spin-2014-dependency-contract-runs/run-2a58452101d1cb98/enabled/build.ninja

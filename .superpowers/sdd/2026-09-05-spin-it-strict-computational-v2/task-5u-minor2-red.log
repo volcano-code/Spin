@@ -1,0 +1,20 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 10: spin-it-2014-source-cage-geometry
+1/1 Test #10: spin-it-2014-source-cage-geometry ...***Failed    9.32 sec
+FAIL: self-intersection fixture must have actual exact intersecting triangle pairs
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+exact-geometry          =   9.32 sec*proc (1 test)
+native                  =   9.32 sec*proc (1 test)
+spin-it-2014            =   9.32 sec*proc (1 test)
+synthetic-regression    =   9.32 sec*proc (1 test)
+
+Total Test time (real) =   9.33 sec
+
+The following tests FAILED:
+	 10 - spin-it-2014-source-cage-geometry (Failed)
+Errors while running CTest

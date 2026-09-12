@@ -1,0 +1,1096 @@
+Start testing: Sep 12 17:04 CST
+----------------------------------------------------------
+10/174 Testing: spin-it-2014-source-cage-geometry
+10/174 Test: spin-it-2014-source-cage-geometry
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-geometry-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-geometry" start time: Sep 12 17:04 CST
+Output:
+----------------------------------------------------------
+actual-source geometry admission PASS digest=fd24826393927fd0f9a0ec74f0e83d2adb3906d9efe1f07610b351e93c5fcb85
+<end of output>
+Test time =  18.07 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-geometry" end time: Sep 12 17:04 CST
+"spin-it-2014-source-cage-geometry" time elapsed: 00:00:18
+----------------------------------------------------------
+
+11/174 Testing: spin-it-2014-source-cage-slqp
+11/174 Test: spin-it-2014-source-cage-slqp
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-slqp-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-slqp" start time: Sep 12 17:04 CST
+Output:
+----------------------------------------------------------
+objective 4 MAXIMUM_ITERATIONS records=12 invalid=0 PASS
+objective 3 MAXIMUM_ITERATIONS records=26 invalid=16 PASS
+objective 1 MAXIMUM_ITERATIONS records=26 invalid=16 PASS
+objective 2 MAXIMUM_ITERATIONS records=20 invalid=12 PASS
+objective 0 MAXIMUM_ITERATIONS records=11 invalid=3 PASS
+one-shot allocator faults=30 returned resource evidence=17 PASS
+actual source all-mode SLQP, KKT, provenance, caps and resource latch PASS
+<end of output>
+Test time =   6.36 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-slqp" end time: Sep 12 17:04 CST
+"spin-it-2014-source-cage-slqp" time elapsed: 00:00:06
+----------------------------------------------------------
+
+12/174 Testing: spin-it-2014-source-cage-shape
+12/174 Test: spin-it-2014-source-cage-shape
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-shape-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-shape" start time: Sep 12 17:04 CST
+Output:
+----------------------------------------------------------
+mathematical nullspaces, independent QR/FD, covariance, caps, invalid inputs PASS
+actual fixture=0 mode=STATIC_LOWERING columns=112 three-step QR FD PASS
+actual fixture=0 mode=TOP_INERTIA_ONLY columns=113 three-step QR FD PASS
+actual fixture=0 mode=TOP_MASS_AND_LOWERING columns=113 three-step QR FD PASS
+actual fixture=0 mode=TOP_LOWERING_ONLY columns=113 three-step QR FD PASS
+actual fixture=0 mode=YOYO columns=113 three-step QR FD PASS
+actual source/BBW identity and exact wrapper caps PASS
+actual fixture=1 mode=STATIC_LOWERING columns=112 three-step QR FD PASS
+actual fixture=1 mode=TOP_INERTIA_ONLY columns=113 three-step QR FD PASS
+actual fixture=1 mode=TOP_MASS_AND_LOWERING columns=113 three-step QR FD PASS
+actual fixture=1 mode=TOP_LOWERING_ONLY columns=113 three-step QR FD PASS
+actual fixture=1 mode=YOYO columns=113 three-step QR FD PASS
+actual source/BBW identity and exact wrapper caps PASS
+SYNTHETIC_REGRESSION source cage shape PASS
+<end of output>
+Test time =   1.08 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-shape" end time: Sep 12 17:04 CST
+"spin-it-2014-source-cage-shape" time elapsed: 00:00:01
+----------------------------------------------------------
+
+13/174 Testing: spin-it-2014-source-cage-paper
+13/174 Test: spin-it-2014-source-cage-paper
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-paper-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-paper" start time: Sep 12 17:04 CST
+Output:
+----------------------------------------------------------
+independent reference long-double mantissa bits=64
+CS YOYO columns=113 relative=5.50103e-12 absolute=1.27676e-14
+LD5 YOYO columns=113 h=0.0003 relative=3.58692e-11 absolute=3.27032e-14
+LD5 YOYO columns=113 h=0.0001 relative=7.55891e-11 absolute=8.35827e-14
+LD5 YOYO columns=113 h=3e-05 relative=2.316e-10 absolute=3.15554e-13
+FD discrepancy mode=YOYO column=94 h=0.0003 actual=-0.000191306 fd=-0.000191303 relative=1.3276e-05
+FD discrepancy mode=YOYO column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD discrepancy mode=YOYO column=111 h=0.0003 actual=0.0012863 fd=0.00128631 relative=2.90669e-06
+FD YOYO columns=113 h=0.0003 relative=1.3276e-05 absolute=1.06324e-07
+FD discrepancy mode=YOYO column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=YOYO column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=YOYO column=94 h=0.0001 actual=-0.000191306 fd=-0.000191306 relative=1.82015e-06
+FD YOYO columns=113 h=0.0001 relative=1.82015e-06 absolute=1.18066e-08
+FD discrepancy mode=YOYO column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=YOYO column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=YOYO column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=YOYO column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=YOYO column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=YOYO column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=YOYO column=94 h=3e-05 actual=-0.000191306 fd=-0.000191306 relative=1.08118e-06
+FD YOYO columns=113 h=3e-05 relative=5.95447e-06 absolute=1.0804e-09
+CS TOP_INERTIA_ONLY columns=113 relative=6.02589e-11 absolute=1.02782e-14
+LD5 TOP_INERTIA_ONLY columns=113 h=0.0003 relative=2.42445e-09 absolute=3.50988e-14
+LD5 TOP_INERTIA_ONLY columns=113 h=0.0001 relative=4.74852e-09 absolute=8.97639e-14
+LD5 TOP_INERTIA_ONLY columns=113 h=3e-05 relative=5.01335e-09 absolute=3.00555e-13
+FD discrepancy mode=TOP_INERTIA_ONLY column=64 h=0.0003 actual=6.08407e-06 fd=6.08297e-06 relative=0.000180011
+FD discrepancy mode=TOP_INERTIA_ONLY column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD TOP_INERTIA_ONLY columns=113 h=0.0003 relative=0.000180011 absolute=1.06325e-07
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=64 h=0.0001 actual=6.08407e-06 fd=6.08393e-06 relative=2.35039e-05
+FD TOP_INERTIA_ONLY columns=113 h=0.0001 relative=2.35039e-05 absolute=1.18122e-08
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=64 h=3e-05 actual=6.08407e-06 fd=6.08412e-06 relative=8.18688e-06
+FD TOP_INERTIA_ONLY columns=113 h=3e-05 relative=8.18688e-06 absolute=1.06744e-09
+CS TOP_LOWERING_ONLY columns=113 relative=3.33821e-12 absolute=8.12891e-15
+LD5 TOP_LOWERING_ONLY columns=113 h=0.0003 relative=7.44566e-11 absolute=3.32105e-14
+LD5 TOP_LOWERING_ONLY columns=113 h=0.0001 relative=2.95164e-10 absolute=4.71825e-14
+LD5 TOP_LOWERING_ONLY columns=113 h=3e-05 relative=3.55058e-10 absolute=2.00711e-13
+FD discrepancy mode=TOP_LOWERING_ONLY column=26 h=0.0003 actual=0.000277161 fd=0.000277161 relative=1.71801e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD TOP_LOWERING_ONLY columns=113 h=0.0003 relative=3.36451e-06 absolute=1.06325e-07
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD TOP_LOWERING_ONLY columns=113 h=0.0001 relative=1.75354e-06 absolute=1.18122e-08
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=105 h=3e-05 actual=-6.22508e-05 fd=-6.2251e-05 relative=2.18436e-06
+FD TOP_LOWERING_ONLY columns=113 h=3e-05 relative=5.95447e-06 absolute=1.06929e-09
+CS TOP_MASS_AND_LOWERING columns=113 relative=2.69896e-11 absolute=1.02245e-14
+LD5 TOP_MASS_AND_LOWERING columns=113 h=0.0003 relative=1.82294e-10 absolute=3.49561e-14
+LD5 TOP_MASS_AND_LOWERING columns=113 h=0.0001 relative=7.44647e-10 absolute=8.9082e-14
+LD5 TOP_MASS_AND_LOWERING columns=113 h=3e-05 relative=6.85705e-09 absolute=2.99e-13
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=26 h=0.0003 actual=-0.000298097 fd=-0.000298097 relative=1.58661e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=51 h=0.0003 actual=-3.63876e-05 fd=-3.63878e-05 relative=4.24741e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=60 h=0.0003 actual=-0.000789769 fd=-0.000789768 relative=1.29944e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=64 h=0.0003 actual=-0.000522385 fd=-0.000522386 relative=2.09413e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0003 relative=4.24741e-06 absolute=1.06325e-07
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0001 relative=1.75354e-06 absolute=1.18122e-08
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=71 h=3e-05 actual=0.000355919 fd=0.000355919 relative=1.42707e-06
+FD TOP_MASS_AND_LOWERING columns=113 h=3e-05 relative=5.95447e-06 absolute=1.06744e-09
+CS STATIC_LOWERING columns=112 relative=1.1911e-11 absolute=4.03844e-15
+LD5 STATIC_LOWERING columns=112 h=0.0003 relative=2.77424e-09 absolute=1.55971e-14
+LD5 STATIC_LOWERING columns=112 h=0.0001 relative=4.65326e-09 absolute=4.27361e-14
+LD5 STATIC_LOWERING columns=112 h=3e-05 relative=5.43886e-09 absolute=1.42085e-13
+FD discrepancy mode=STATIC_LOWERING column=72 h=0.0003 actual=2.34809e-06 fd=2.34808e-06 relative=5.58333e-06
+FD discrepancy mode=STATIC_LOWERING column=93 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD discrepancy mode=STATIC_LOWERING column=96 h=0.0003 actual=-9.61483e-06 fd=-9.61482e-06 relative=1.58215e-06
+FD STATIC_LOWERING columns=112 h=0.0003 relative=5.58333e-06 absolute=1.16429e-09
+FD discrepancy mode=STATIC_LOWERING column=12 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=STATIC_LOWERING column=12 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=STATIC_LOWERING column=72 h=0.0001 actual=2.34809e-06 fd=2.34808e-06 relative=4.8741e-06
+FD STATIC_LOWERING columns=112 h=0.0001 relative=4.8741e-06 absolute=1.2445e-10
+FD discrepancy mode=STATIC_LOWERING column=12 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=STATIC_LOWERING column=12 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=STATIC_LOWERING column=36 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=STATIC_LOWERING column=44 h=3e-05 actual=3.06621e-05 fd=3.0662e-05 relative=1.36918e-06
+FD discrepancy mode=STATIC_LOWERING column=62 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=STATIC_LOWERING column=72 h=3e-05 actual=2.34809e-06 fd=2.34805e-06 relative=1.80343e-05
+FD discrepancy mode=STATIC_LOWERING column=96 h=3e-05 actual=-9.61483e-06 fd=-9.61477e-06 relative=6.06623e-06
+FD STATIC_LOWERING columns=112 h=3e-05 relative=1.80343e-05 absolute=1.7949e-10
+CS YOYO columns=113 relative=1.47265e-12 absolute=2.16493e-15
+LD5 YOYO columns=113 h=0.0003 relative=3.04919e-11 absolute=1.49277e-14
+LD5 YOYO columns=113 h=0.0001 relative=2.14669e-10 absolute=4.76802e-14
+LD5 YOYO columns=113 h=3e-05 relative=8.88286e-10 absolute=1.06414e-13
+FD YOYO columns=113 h=0.0003 relative=2.40001e-07 absolute=5.97536e-08
+FD YOYO columns=113 h=0.0001 relative=2.37127e-07 absolute=6.63569e-09
+FD YOYO columns=113 h=3e-05 relative=4.83929e-07 absolute=5.9349e-10
+CS TOP_INERTIA_ONLY columns=113 relative=1.79401e-11 absolute=2.16493e-15
+LD5 TOP_INERTIA_ONLY columns=113 h=0.0003 relative=1.09125e-09 absolute=1.84703e-14
+LD5 TOP_INERTIA_ONLY columns=113 h=0.0001 relative=7.47078e-10 absolute=6.20981e-14
+LD5 TOP_INERTIA_ONLY columns=113 h=3e-05 relative=5.00733e-09 absolute=1.44943e-13
+FD discrepancy mode=TOP_INERTIA_ONLY column=28 h=0.0003 actual=1.40629e-05 fd=1.40629e-05 relative=1.01357e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=97 h=0.0003 actual=-9.99728e-06 fd=-9.99727e-06 relative=1.03231e-06
+FD TOP_INERTIA_ONLY columns=113 h=0.0003 relative=1.03231e-06 absolute=5.97533e-08
+FD TOP_INERTIA_ONLY columns=113 h=0.0001 relative=5.38038e-07 absolute=6.6368e-09
+FD discrepancy mode=TOP_INERTIA_ONLY column=28 h=3e-05 actual=1.40629e-05 fd=1.4063e-05 relative=8.53328e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=30 h=3e-05 actual=6.25268e-05 fd=6.25269e-05 relative=1.60747e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=50 h=3e-05 actual=-5.4429e-05 fd=-5.44292e-05 relative=3.27556e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=97 h=3e-05 actual=-9.99728e-06 fd=-9.99722e-06 relative=5.74279e-06
+FD TOP_INERTIA_ONLY columns=113 h=3e-05 relative=8.53328e-06 absolute=5.9534e-10
+CS TOP_LOWERING_ONLY columns=113 relative=1.47265e-12 absolute=6.46705e-15
+LD5 TOP_LOWERING_ONLY columns=113 h=0.0003 relative=3.04919e-11 absolute=5.68289e-14
+LD5 TOP_LOWERING_ONLY columns=113 h=0.0001 relative=2.14669e-10 absolute=1.80633e-13
+LD5 TOP_LOWERING_ONLY columns=113 h=3e-05 relative=8.88286e-10 absolute=6.35183e-13
+FD TOP_LOWERING_ONLY columns=113 h=0.0003 relative=2.40001e-07 absolute=5.97536e-08
+FD TOP_LOWERING_ONLY columns=113 h=0.0001 relative=2.37127e-07 absolute=6.6368e-09
+FD discrepancy mode=TOP_LOWERING_ONLY column=5 h=3e-05 actual=0.0001327 fd=0.0001327 relative=1.1054e-06
+FD TOP_LOWERING_ONLY columns=113 h=3e-05 relative=1.1054e-06 absolute=5.97191e-10
+CS TOP_MASS_AND_LOWERING columns=113 relative=1.47265e-12 absolute=2.55351e-15
+LD5 TOP_MASS_AND_LOWERING columns=113 h=0.0003 relative=3.04919e-11 absolute=1.5018e-14
+LD5 TOP_MASS_AND_LOWERING columns=113 h=0.0001 relative=2.14669e-10 absolute=3.94696e-14
+LD5 TOP_MASS_AND_LOWERING columns=113 h=3e-05 relative=8.88286e-10 absolute=1.31087e-13
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0003 relative=2.39999e-07 absolute=5.97532e-08
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0001 relative=2.37127e-07 absolute=6.6368e-09
+FD TOP_MASS_AND_LOWERING columns=113 h=3e-05 relative=7.94785e-07 absolute=5.9534e-10
+CS STATIC_LOWERING columns=112 relative=1.22364e-11 absolute=7.96585e-15
+LD5 STATIC_LOWERING columns=112 h=0.0003 relative=1.67985e-10 absolute=7.01148e-14
+LD5 STATIC_LOWERING columns=112 h=0.0001 relative=2.75862e-09 absolute=2.17827e-13
+LD5 STATIC_LOWERING columns=112 h=3e-05 relative=3.16705e-09 absolute=7.79168e-13
+FD STATIC_LOWERING columns=112 h=0.0003 relative=3.76078e-07 absolute=6.74797e-10
+FD discrepancy mode=STATIC_LOWERING column=36 h=0.0001 actual=0.00011723 fd=0.00011723 relative=1.10215e-06
+FD discrepancy mode=STATIC_LOWERING column=80 h=0.0001 actual=7.83077e-05 fd=7.83075e-05 relative=1.84421e-06
+FD STATIC_LOWERING columns=112 h=0.0001 relative=1.84421e-06 absolute=2.99796e-10
+FD discrepancy mode=STATIC_LOWERING column=80 h=3e-05 actual=7.83077e-05 fd=7.83074e-05 relative=3.25252e-06
+FD STATIC_LOWERING columns=112 h=3e-05 relative=3.25252e-06 absolute=6.48941e-10
+ordinary double finest-step discrepancies=41 (retained diagnostic, not claimed passing FD)
+source cage paper SYNTHETIC_REGRESSION PASS: independent LD5 and complex-step accuracy gates
+<end of output>
+Test time =  22.45 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-paper" end time: Sep 12 17:05 CST
+"spin-it-2014-source-cage-paper" time elapsed: 00:00:22
+----------------------------------------------------------
+
+14/174 Testing: spin-it-2014-source-cage-paper-allocation
+14/174 Test: spin-it-2014-source-cage-paper-allocation
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-paper-allocation-probe"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-paper-allocation" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+guard rejected former GEMM 10x8
+production helper 10x8 allocation-free PASS
+guard rejected former GEMM 10x104
+production helper 10x104 allocation-free PASS
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-paper-allocation" end time: Sep 12 17:05 CST
+"spin-it-2014-source-cage-paper-allocation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/174 Testing: spin-it-2014-source-cage-moments
+15/174 Test: spin-it-2014-source-cage-moments
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-moments-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-moments" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+FD beta step=0.0003 worst_relative=1.67491e-10 worst_absolute=5.56773e-13
+FD beta step=0.0001 worst_relative=3.66044e-10 worst_absolute=1.56165e-12
+FD beta step=3e-05 worst_relative=1.97233e-09 worst_absolute=5.93115e-12
+FD handles step=0.0003 worst_relative=7.69325e-08 worst_absolute=1.26546e-10
+FD handles step=0.0001 worst_relative=1.25577e-07 worst_absolute=1.45642e-11
+FD handles step=3e-05 worst_relative=4.15404e-07 worst_absolute=1.63991e-11
+FD beta step=0.0003 worst_relative=4.1326e-10 worst_absolute=9.07083e-12
+FD beta step=0.0001 worst_relative=9.45012e-10 worst_absolute=1.75539e-11
+FD beta step=3e-05 worst_relative=4.41479e-09 worst_absolute=7.08652e-11
+FD handles step=0.0003 worst_relative=1.43882e-07 worst_absolute=1.79722e-10
+FD handles step=0.0001 worst_relative=3.5638e-07 worst_absolute=6.88297e-11
+FD handles step=3e-05 worst_relative=5.56981e-07 worst_absolute=2.55935e-10
+source cage moments PASS
+<end of output>
+Test time =   1.51 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-moments" end time: Sep 12 17:05 CST
+"spin-it-2014-source-cage-moments" time elapsed: 00:00:01
+----------------------------------------------------------
+
+16/174 Testing: spin-it-2014-source-conforming-boundary
+16/174 Test: spin-it-2014-source-conforming-boundary
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-conforming-boundary-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-conforming-boundary" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+FACT primitives=496 patches=1968 points=2965 triangles=7944 config=f9c191745d8158702fa8bb12113a4b36bd5ba477e1bb27fcdccd461ccdae2fab output=00e3bcdbfca9b992f963a221fb3cee7e8ead67fe560cab0112cfce241e21871e
+PASS SYNTHETIC_REGRESSION shared source boundary/rest moments/nonaffine/full26handleBBW motion
+<end of output>
+Test time =   0.61 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-conforming-boundary" end time: Sep 12 17:05 CST
+"spin-it-2014-source-conforming-boundary" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/174 Testing: spin-it-2014-source-cage-binding
+17/174 Test: spin-it-2014-source-cage-binding
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-binding-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-binding" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+FACT source=6beb11aa4064bc447809986e92296a3c68c8476193a0f2d77f78c02a59b24fa6 bbw=c4fccbc0be3bca40485bfb169479b7ec4d35b49050e5e4ec3ef2b72be40da2b2 binding_config=9943e0f3bde071c82d49b6bd09179d0b272b22ec1140cc4c7cc7b7d5c2ccf835 binding_output=ac1698162cd63efb42eb63dad1e4bb94d8fec05e3f415d1e8a651e7f3dbfb469 primitives=496 points=997 volume=0.030517578125
+PASS SYNTHETIC_REGRESSION actual immutable source material/full BBW binding
+<end of output>
+Test time =   0.93 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-binding" end time: Sep 12 17:05 CST
+"spin-it-2014-source-cage-binding" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/174 Testing: spin-it-2014-source-bbw-joint
+18/174 Test: spin-it-2014-source-bbw-joint
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-bbw-joint-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-bbw-joint" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+source BBW joint step=0.001 relative error=1.09979e-06
+source BBW joint step=0.0001 relative error=1.09993e-08
+source BBW joint step=1e-05 relative error=1.11381e-10
+PASS mesh-based integration handles=26 jointColumns=107 BBW=0a56f039e35afe1e236135e4705a103d7929bed11add5e0c4f189ddafe8c6d8f
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-bbw-joint" end time: Sep 12 17:05 CST
+"spin-it-2014-source-bbw-joint" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/174 Testing: spin-it-2014-source-cage-bbw
+19/174 Test: spin-it-2014-source-cage-bbw
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-bbw-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-bbw" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+PASS actual_small_analytic_solve_all_boundary_rows
+FACT mass=0 protocol=0 rawEnergy=986.32191824594997 finalEnergy=986.32191824594997 rawPartition=1.3322676295501878e-15 normalizationChange=0 rawKkt=3.3306690738754696e-16 finalCoupledKkt=3.3306690738754696e-16 active=352 hash=c4fccbc0be3bca40485bfb169479b7ec4d35b49050e5e4ec3ef2b72be40da2b2
+PASS actual_702_variable_and_26_column_box_qps
+PASS disconnected_actual_solve_preserves_zero_influence
+COVARIANCE mass=0 protocol=0 scale=2 weightDifference=0 rawKkt=3.3306690738754696e-16 energy=493.16095912297499 hash=7b334cde1f2dacd66529a8dd096b8d3fc04f6e599c32abbaa9b027d095d9ac58
+COVARIANCE mass=0 protocol=0 scale=1.7 weightDifference=6.6613381477509392e-16 rawKkt=3.3306690738754696e-16 energy=580.1893636740881 hash=d56eb3bbb507f8e7b17c670b7fda97dac31e306d2b0704ad3342623d5fde5d7d
+PASS translation_scale_weights_and_unscaled_energy
+PASS actual_small_analytic_solve_all_boundary_rows
+FACT mass=0 protocol=1 rawEnergy=986.09626108137832 finalEnergy=987.19995278120484 rawPartition=0.098620684401333092 normalizationChange=0.032377709629242302 rawKkt=1.1102230246251565e-16 finalCoupledKkt=0.014648954198848485 active=310 hash=59d7852449e8b9c53a087d26109fa4f0767ea0ebbf9cc5c608e3569ab05199d5
+PASS actual_702_variable_and_26_column_box_qps
+PASS disconnected_actual_solve_preserves_zero_influence
+COVARIANCE mass=0 protocol=1 scale=2 weightDifference=0 rawKkt=1.1102230246251565e-16 energy=493.04813054068916 hash=ae858077ac398f69f655f58ddeb9f61700c4e737cf84a7ada7dcdef37f9ad4f3
+COVARIANCE mass=0 protocol=1 scale=1.7 weightDifference=3.9185092358515896e-16 rawKkt=2.2204460492503131e-16 energy=580.0566241655165 hash=bbfc0dbe498e7bf68fda6f7a54bbf805075c26ab38356b449bc48f44d5922b66
+PASS translation_scale_weights_and_unscaled_energy
+PASS actual_small_analytic_solve_all_boundary_rows
+FACT mass=1 protocol=0 rawEnergy=1003.32191824595 finalEnergy=1003.32191824595 rawPartition=1.3322676295501878e-15 normalizationChange=0 rawKkt=3.3306690738754696e-16 finalCoupledKkt=3.3306690738754696e-16 active=352 hash=8011eee8f5c8d66de585d26230d510076162a171e6ac31cc80b5e4769bd22359
+PASS actual_702_variable_and_26_column_box_qps
+PASS disconnected_actual_solve_preserves_zero_influence
+COVARIANCE mass=1 protocol=0 scale=2 weightDifference=0 rawKkt=3.3306690738754696e-16 energy=501.66095912297499 hash=9dd0c1f65cc5a0915b62f540ae48622cd8f30f9c36ab16e6ad14f1b8f19f3f7a
+COVARIANCE mass=1 protocol=0 scale=1.7 weightDifference=4.4408920985006262e-16 rawKkt=2.7755575615628914e-16 energy=590.1893636740881 hash=2cdb428bf64349c2fe06d97b376283b8aa6796b19486711523fc7b2ef0287a92
+PASS translation_scale_weights_and_unscaled_energy
+PASS actual_small_analytic_solve_all_boundary_rows
+FACT mass=1 protocol=1 rawEnergy=1003.0962610813783 finalEnergy=1004.1999527812048 rawPartition=0.098620684401333092 normalizationChange=0.032377709629242302 rawKkt=1.1102230246251565e-16 finalCoupledKkt=0.014648954198848485 active=310 hash=2f3082d97ba502f03625ef4c0aeccdcf171a0a698c50e94c3aed83aa60f0a679
+PASS actual_702_variable_and_26_column_box_qps
+PASS disconnected_actual_solve_preserves_zero_influence
+COVARIANCE mass=1 protocol=1 scale=2 weightDifference=0 rawKkt=1.1102230246251565e-16 energy=501.54813054068916 hash=7ae8689e318cd9476bd51ddb87eaf7181cc3646c09d64ea997a366e7c6c74197
+COVARIANCE mass=1 protocol=1 scale=1.7 weightDifference=3.9185092358515896e-16 rawKkt=1.6653345369377348e-16 energy=590.0566241655165 hash=08e46a14151ab90fe651eecaf507c095a6334aad1567ccdd44893fd59ec2461f
+PASS translation_scale_weights_and_unscaled_energy
+PASS independent_assessor_rejects_false_acceptance
+PASS iteration_time_resource_and_invalid_configuration_fail_closed
+source cage BBW SYNTHETIC_REGRESSION: 0 failed groups
+<end of output>
+Test time =   2.06 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-bbw" end time: Sep 12 17:05 CST
+"spin-it-2014-source-cage-bbw" time elapsed: 00:00:02
+----------------------------------------------------------
+
+20/174 Testing: spin-it-2014-source-cage-fem
+20/174 Test: spin-it-2014-source-cage-fem
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-fem-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-fem" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+PASS full_selected_union_fem_and_complete_boundary_nodes
+PASS voronoi_nondyadic_medium_boundary_complete
+PASS voronoi_independent_brick_and_energy
+PASS voronoi_actual_coordinate_translation_and_scale_covariance
+PASS barycentric_nondyadic_medium_boundary_complete
+PASS barycentric_independent_brick_and_energy
+PASS barycentric_actual_coordinate_translation_and_scale_covariance
+PASS large_shifted_nondyadic_root_requires_actual_unequal_intervals
+off-node triangular weight=0, trilinear transfer=0.125 (NODAL constraint only)
+PASS non_handle_face_edge_diagonal_rows_and_offnode_transfer_mismatch
+PASS cavity_tunnel_and_disconnected_component_boundaries_and_nullspaces
+PASS sparse_level20_no_root_expansion_resource_and_evaluation_validation
+PASS unrepresentable_fem_contributions_reject_after_valid_upstream_grid
+PASS immutable_inputs_full_configuration_output_hashes_and_field_semantics
+source cage FEM SYNTHETIC_REGRESSION: 0 failed groups; no BBW solve or physical mass authority
+<end of output>
+Test time =   1.97 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-fem" end time: Sep 12 17:05 CST
+"spin-it-2014-source-cage-fem" time elapsed: 00:00:01
+----------------------------------------------------------
+
+21/174 Testing: spin-it-2014-source-cage-grid
+21/174 Test: spin-it-2014-source-cage-grid
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-grid-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-grid" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+PASS refine_selected_volume_without_losing_full_cells_or_handles
+PASS multilinear_transfer_original_and_new_adaptive_vertices_without_resolve
+PASS closed_represented_ties_and_nextafter_do_not_snap_outside
+PASS sparse_refinement_preserves_cavity_tunnel_and_disconnected_components
+SYNTHETIC_REGRESSION sparse fineLevel20: 8 cells / 27 nodes / 54 edges; no optimization claim
+PASS tiny_sparse_level10_and_level20_avoid_root_lattice_expansion
+PASS nondyadic_root_uses_FMA_shared_planes_and_actual_interval_lengths
+binade fixture 0: upstream valid 216 cells; independently collapsed fine intervals=7
+PASS positive_binade_crossing_must_not_create_zero_width_fine_cells
+binade fixture 1: upstream valid 216 cells; independently collapsed fine intervals=0
+PASS negative_binade_crossing_equal_ULP_requires_explicit_rejection
+binade fixture 2: upstream valid 216 cells; independently collapsed fine intervals=0
+PASS aligned_equal_ULP_root_documents_conservative_rejection
+PASS invalid_dimensions_nonfinite_inputs_and_each_resource_budget_reject
+PASS temporary_container_capacity_budget_rejects_before_construction
+PASS copy_ownership_and_source_cage_config_output_identity_are_complete
+source cage grid SYNTHETIC_REGRESSION: 0 failed groups; no BBW or physics authority
+<end of output>
+Test time =   1.17 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-grid" end time: Sep 12 17:05 CST
+"spin-it-2014-source-cage-grid" time elapsed: 00:00:01
+----------------------------------------------------------
+
+22/174 Testing: spin-it-2014-source-surface-cage
+22/174 Test: spin-it-2014-source-surface-cage
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-cage-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-surface-cage" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+level9 GEOMETRY: nodes=73 selected=1 handles=8 triangles=12
+source surface cage regression passed; complete geometry only, no BBW/physics authority
+<end of output>
+Test time =   2.02 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-surface-cage" end time: Sep 12 17:05 CST
+"spin-it-2014-source-surface-cage" time elapsed: 00:00:02
+----------------------------------------------------------
+
+23/174 Testing: source-spin-material-python
+23/174 Test: source-spin-material-python
+Command: "/home/lin/anaconda3/bin/python3" "-m" "unittest" "test_source_spin_material_bridge" "-v"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"source-spin-material-python" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+test_actual_source_material_entrypoint_exists (test_source_spin_material_bridge.SourceBridgeAvailabilityTests.test_actual_source_material_entrypoint_exists) ... ok
+test_all_affine_cross_terms_use_model_units (test_source_spin_material_bridge.SourceMaterialTests.test_all_affine_cross_terms_use_model_units) ... ok
+test_direct_native_lossless_mesh_and_settings_boundary (test_source_spin_material_bridge.SourceMaterialTests.test_direct_native_lossless_mesh_and_settings_boundary) ... ok
+test_literal_fixture_and_full_trace (test_source_spin_material_bridge.SourceMaterialTests.test_literal_fixture_and_full_trace) ... ok
+test_persisted_bundle_reintegrates_and_rejects_tampering (test_source_spin_material_bridge.SourceMaterialTests.test_persisted_bundle_reintegrates_and_rejects_tampering) ... ok
+test_quarter_fill_and_all_empty_objectives_do_not_seal (test_source_spin_material_bridge.SourceMaterialTests.test_quarter_fill_and_all_empty_objectives_do_not_seal) ... ok
+test_repeat_density_and_copy_ownership (test_source_spin_material_bridge.SourceMaterialTests.test_repeat_density_and_copy_ownership) ... ok
+test_resource_and_wall_failures_keep_numerical_status (test_source_spin_material_bridge.SourceMaterialTests.test_resource_and_wall_failures_keep_numerical_status) ... ok
+test_settings_and_target_rejections (test_source_spin_material_bridge.SourceMaterialTests.test_settings_and_target_rejections) ... ok
+test_runner_persists_actual_success_failure_and_freshness (test_source_spin_material_bridge.SourceRunnerTests.test_runner_persists_actual_success_failure_and_freshness) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 23.338s
+
+OK
+<end of output>
+Test time =  23.42 sec
+----------------------------------------------------------
+Test Passed.
+"source-spin-material-python" end time: Sep 12 17:05 CST
+"source-spin-material-python" time elapsed: 00:00:23
+----------------------------------------------------------
+
+24/174 Testing: spin-it-2014-source-material
+24/174 Test: spin-it-2014-source-material
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-material-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-material" start time: Sep 12 17:05 CST
+Output:
+----------------------------------------------------------
+zero-carve cap4 status=RESOURCE_LIMIT_UNKNOWN product=0
+zero-carve full-chain peak=232
+scoped budgets builder_peak=320 relation_peak=336 partition_peak=230
+material product=f542ccbaa19982196f83abc62bc131f8010319c15102c9e90d7655b14b925b42 mesh=920dd72259050025e6ed85417082de89d43008c31d99674169c6b42d58238a9b union=498abc2b4dcb632e1d896c84b9e9af7b92395fa49f347dc397217dd74dd531d7 cuboids=72 operations=71 peak_complexity=627 material_budget_peak=627 material_budget_live_snapshot=229 final_complexity=46 residual=2.2204460492503131e-16 min_inertia=5.3170627925157348 moments=    7.8593750000000018                      0                      0             7.82421875     2.6600748697916665     2.6600748697916665     10.446207682291661 8.6736173798840355e-19 8.6736173798840355e-19                      0
+status=BINARY_MOMENT_VALIDATED input=83359bc0abc68ff056f49e18ec52ad6bb34d1121e0743f28d074cbab22d7f7a9 trace=72002479f41c4a8a4ef71731e1ff8bc41c42537cd2990e8dbd3417130838d246 output=39b18d241e42e8978295e6bb97c7e2e0c743c59893cee9ca609dbc355b6d9283 beta=                  1                   1 0.99999999999999989 0.99999999999999989
+pass=0 before=4ab114df2bf4dc2d1c590e0fe79b569cab8a13b12399782d7302193d0cb0f843 after=8753868839d71e2e81127670c7ed6b3b3599790ceaccc74d9cb76e0e2d5ce31b slqp=c81e2b9418b223866c774f6da5239d2c9d94beb1f3951b2a62e9f1cdbf900707
+{"iteration":0,"objective":0.9955714164381565,"state":[0.5,0.5,0.5,0.5],"gradient":[-0.0022314471215874043,-0.0022314471215874043,-0.0022314471215874043,-0.0022314471215874043],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,-0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022314471215874043,"dual_sign":0,"complementarity":0,"full":0.0022314471215874043},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":1,"objective":0.99555149832454337,"state":[0.5022314471215874,0.5022314471215874,0.5022314471215874,0.5022314471215874],"gradient":[-0.002231601415939144,-0.0022316014159390329,-0.0022316014159390329,-0.0022316014159389219],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,-0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.002231601415939144,"dual_sign":0,"complementarity":0,"full":0.002231601415939144},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":2,"objective":0.99553157745627174,"state":[0.50446304853752644,0.50446304853752644,0.50446304853752644,0.50446304853752644],"gradient":[-0.0022317557366295926,-0.0022317557366295926,-0.0022317557366295926,-0.0022317557366295926],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,-0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022317557366295926,"dual_sign":0,"complementarity":0,"full":0.0022317557366295926},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":3,"objective":0.99551165383268203,"state":[0.50669480427415603,0.50669480427415603,0.50669480427415603,0.50669480427415603],"gradient":[-0.0022319100836662997,-0.0022319100836664107,-0.0022319100836664107,-0.0022319100836665218],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,-0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022319100836665218,"dual_sign":0,"complementarity":0,"full":0.0022319100836665218},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":4,"objective":0.99549172745311254,"state":[0.50892671435782244,0.50892671435782244,0.50892671435782244,0.50892671435782244],"gradient":[-0.0022320644570563708,-0.0022320644570563708,-0.0022320644570563708,-0.0022320644570563708],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,-0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022320644570563708,"dual_sign":0,"complementarity":0,"full":0.0022320644570563708},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":5,"objective":0.9954717983169018,"state":[0.51115877881487881,0.51115877881487881,0.51115877881487881,0.51115877881487881],"gradient":[-0.0022322188568069112,-0.0022322188568069112,-0.0022322188568069112,-0.0022322188568069112],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,-0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022322188568069112,"dual_sign":0,"complementarity":0,"full":0.0022322188568069112},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":6,"objective":0.99545186642338879,"state":[0.51339099767168572,0.51339099767168572,0.51339099767168572,0.51339099767168572],"gradient":[-0.0022323732829248044,-0.0022323732829249154,-0.0022323732829249154,-0.0022323732829248044],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022323732829249154,"dual_sign":0,"complementarity":0,"full":0.0022323732829249154},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":7,"objective":0.99543193177191203,"state":[0.51562337095461053,0.51562337095461064,0.51562337095461064,0.51562337095461053],"gradient":[-0.0022325277354178219,-0.0022325277354173778,-0.0022325277354173778,-0.0022325277354178219],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022325277354178219,"dual_sign":0,"complementarity":0,"full":0.0022325277354178219},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":8,"objective":0.99541199436180905,"state":[0.51785589869002835,0.51785589869002802,0.51785589869002802,0.51785589869002835],"gradient":[-0.0022326822142915148,-0.0022326822142928471,-0.0022326822142928471,-0.0022326822142915148],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022326822142928471,"dual_sign":0,"complementarity":0,"full":0.0022326822142928471},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":9,"objective":0.99539205419241861,"state":[0.52008858090431986,0.52008858090432086,0.52008858090432086,0.52008858090431986],"gradient":[-0.0022328367195576515,-0.0022328367195537657,-0.0022328367195537657,-0.0022328367195578736],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022328367195578736,"dual_sign":0,"complementarity":0,"full":0.0022328367195578736},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":10,"objective":0.99537211126307767,"state":[0.52232141762387763,0.52232141762387463,0.52232141762387463,0.52232141762387763],"gradient":[-0.0022329912512095706,-0.00223299125122145,-0.00223299125122145,-0.0022329912512095706],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.00223299125122145,"dual_sign":0,"complementarity":0,"full":0.00223299125122145},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":11,"objective":0.99535216557312334,"state":[0.5245544088750872,0.52455440887509608,0.52455440887509608,0.5245544088750872],"gradient":[-0.0022331458092963441,-0.0022331458092607059,-0.0022331458092607059,-0.0022331458092963441],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022331458092963441,"dual_sign":0,"complementarity":0,"full":0.0022331458092963441},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":12,"objective":0.9953322171218939,"state":[0.52678755468438354,0.52678755468435678,0.52678755468435678,0.52678755468438354],"gradient":[-0.0022333003936985119,-0.0022333003938055374,-0.0022333003938055374,-0.0022333003936985119],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022333003938055374,"dual_sign":0,"complementarity":0,"full":0.0022333003938055374},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":13,"objective":0.99531226590872535,"state":[0.52902085507808205,0.52902085507816232,0.52902085507816232,0.52902085507808205],"gradient":[-0.0022334550048037638,-0.0022334550044825763,-0.0022334550044825763,-0.0022334550048037638],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022334550048037638,"dual_sign":0,"complementarity":0,"full":0.0022334550048037638},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":14,"objective":0.99529231193295542,"state":[0.53125431008288582,0.5312543100826449,0.5312543100826449,0.53125431008288582],"gradient":[-0.00223360964147723,-0.0022336096424409035,-0.0022336096424409035,-0.00223360964147723],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022336096424409035,"dual_sign":0,"complementarity":0,"full":0.0022336096424409035},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":15,"objective":0.99527235519391943,"state":[0.53348791972436305,0.5334879197250858,0.5334879197250858,0.53348791972436305],"gradient":[-0.0022337643071523861,-0.0022337643042614763,-0.0022337643042614763,-0.0022337643071523861],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022337643071523861,"dual_sign":0,"complementarity":0,"full":0.0022337643071523861},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":16,"objective":0.99525239569095469,"state":[0.53572168403151543,0.53572168402934728,0.53572168402934728,0.53572168403151543],"gradient":[-0.0022339189915576707,-0.0022339190002302889,-0.0022339190002302889,-0.0022339189915576707],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022339190002302889,"dual_sign":0,"complementarity":0,"full":0.0022339190002302889},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":17,"objective":0.99523243342339662,"state":[0.5379556030230731,0.53795560302957757,0.53795560302957757,0.5379556030230731],"gradient":[-0.0022340737255361898,-0.0022340736995183352,-0.0022340736995183352,-0.0022340737255361898],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022340737255361898,"dual_sign":0,"complementarity":0,"full":0.0022340737255361898},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":18,"objective":0.99521246839058175,"state":[0.54018967674860929,0.5401896767290959,0.5401896767290959,0.54018967674860929],"gradient":[-0.0022342284165872695,-0.0022342284946408331,-0.0022342284946408331,-0.0022342284165872695],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022342284946408331,"dual_sign":0,"complementarity":0,"full":0.0022342284946408331},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":19,"objective":0.99519250059184461,"state":[0.54242390516519656,0.54242390522373674,0.54242390522373674,0.54242390516519656],"gradient":[-0.0022343833422417969,-0.0022343831080811061,-0.0022343831080811061,-0.0022343833422417969],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022343833422417969,"dual_sign":0,"complementarity":0,"full":0.0022343833422417969},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":20,"objective":0.99517253002652162,"state":[0.54465828850743836,0.54465828833181784,0.54465828833181784,0.54465828850743836],"gradient":[-0.0022345376699357544,-0.0022345383724177159,-0.0022345383724177159,-0.0022345376699355324],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022345383724177159,"dual_sign":0,"complementarity":0,"full":0.0022345383724177159},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":21,"objective":0.99515255669394731,"state":[0.546892826177374,0.54689282670423556,0.54689282670423556,0.546892826177374],"gradient":[-0.002234693897390061,-0.0022346917899438434,-0.0022346917899438434,-0.002234693897390061],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.002234693897390061,"dual_sign":0,"complementarity":0,"full":0.002234693897390061},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":22,"objective":0.99513258059345722,"state":[0.54912752007476406,0.5491275184941794,0.5491275184941794,0.54912752007476406],"gradient":[-0.0022348445314699372,-0.0022348508538087009,-0.0022348508538087009,-0.0022348445314701593],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022348508538087009,"dual_sign":0,"complementarity":0,"full":0.0022348508538087009},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":23,"objective":0.99511260172438565,"state":[0.55136236460623411,0.5513623693479881,0.5513623693479881,0.55136236460623411],"gradient":[-0.0022350120516092531,-0.0022349930845931842,-0.0022349930845931842,-0.002235012051609031],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022350120516092531,"dual_sign":0,"complementarity":0,"full":0.0022350120516092531},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":24,"objective":0.99509262008606769,"state":[0.55359737665784325,0.55359736243258129,0.55359736243258129,0.55359737665784325],"gradient":[-0.0022351290195357087,-0.0022351859205834712,-0.0022351859205834712,-0.0022351290195357087],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022351859205834712,"dual_sign":0,"complementarity":0,"full":0.0022351859205834712},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":25,"objective":0.99507263567783977,"state":[0.55583250567737896,0.55583254835316476,0.55583254835316476,0.55583250567737896],"gradient":[-0.0022353977500932931,-0.0022352270469501168,-0.0022352270469501168,-0.0022353977500932931],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022353977500932931,"dual_sign":0,"complementarity":0,"full":0.0022353977500932931},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":26,"objective":0.99505264849905928,"state":[0.55806790342747226,0.55806777540011487,0.55806777540011487,0.55806790342747226],"gradient":[-0.0022352112987800155,-0.0022357234082095445,-0.0022357234082095445,-0.0022352112987800155],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022357234082095445,"dual_sign":0,"complementarity":0,"full":0.0022357234082095445},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":27,"objective":0.99503265854926692,"state":[0.56030311472625227,0.56030349880832442,0.56030349880832442,0.56030311472625227],"gradient":[-0.0022363904991302697,-0.0022348541708416825,-0.0022348541708416825,-0.0022363904991302697],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022363904991302697,"dual_sign":0,"complementarity":0,"full":0.0022363904991302697},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":28,"objective":0.9950126658296613,"state":[0.56253950522538254,0.5625383529791661,0.5625383529791661,0.56253950522538254],"gradient":[-0.0022334728505697399,-0.0022380818354353904,-0.0022380818354353904,-0.0022334728505697399],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022380818354353904,"dual_sign":0,"complementarity":0,"full":0.0022380818354353904},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":29,"objective":0.99499267035636052,"state":[0.56477297807595228,0.56477643481460149,0.56477643481460149,0.56477297807595228],"gradient":[-0.0022428458548500174,-0.0022290189002532879,-0.0022290189002532879,-0.0022428458548500174],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022428458548500174,"dual_sign":0,"complementarity":0,"full":0.0022428458548500174},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":30,"objective":0.99497267227975672,"state":[0.5670158239308023,0.56700545371485478,0.56700545371485478,0.5670158239308023],"gradient":[-0.0022153470067454162,-0.0022568278705356049,-0.0022568278705356049,-0.0022153470067456382],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022568278705356049,"dual_sign":0,"complementarity":0,"full":0.0022568278705356049},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":0,"history_after":1,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":31,"objective":0.9949526729587187,"state":[0.56923117093754783,0.56926228158539038,0.56926228158539038,0.56923117093754783],"gradient":[-0.0022984638219616382,-0.0021740212305912943,-0.0021740212305912943,-0.0022984638219616382],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0022984638219616382,"dual_sign":0,"complementarity":0,"full":0.0022984638219616382},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":1,"history_after":2,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":6.9388939039072284e-17,"final_state":false,"objective_trials":[{"step":0.026318989378220633,"constraint_l1":1.7347234759768071e-18,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":32,"objective":0.99114163072992556,"state":[0.99519549917764105,0.99999999999999978,1,0.99519549917764105],"gradient":[-0.011875246985306065,0.0073427563041288391,0.0073427563041292832,-0.011875246985306287],"constraints":[0,1.7347234759768071e-18],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":1.7347234759768071e-18,"bound_primal":0,"stationarity":0.011875246985306287,"dual_sign":0,"complementarity":0,"full":0.011875246985306287},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":";FIRST_ORDER_FALLBACK","history_before":2,"history_after":1,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":true,"linearized_constraint_residual":1.1275702593849246e-16,"final_state":false,"objective_trials":[{"step":0.40458112814864106,"constraint_l1":3.4694469519536142e-18,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":33,"objective":0.99110480325348371,"state":[1,0.99702925937075471,0.99702925937075493,1],"gradient":[0.0036751710649373104,-0.0082077914520437556,-0.0082077914520433115,0.0036751710649371994],"constraints":[-1.7347234759768071e-18,1.7347234759768071e-18],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":1.7347234759768071e-18,"bound_primal":0,"stationarity":0.0082077914520437556,"dual_sign":0,"complementarity":0,"full":0.0082077914520437556},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":1,"history_after":2,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":5.082197683525802e-21,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":8.6736173798840355e-19,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":34,"objective":0.99108476372801768,"state":[0.99892753837199888,0.99866028585845057,0.99866028585845046,0.99892753837199888],"gradient":[-0.0017318249212637804,-0.0028008349754571338,-0.0028008349754573558,-0.0017318249212636694],"constraints":[0,-8.6736173798840355e-19],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":8.6736173798840355e-19,"bound_primal":0,"stationarity":0.0028008349754573558,"dual_sign":0,"complementarity":0,"full":0.0028008349754573558},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":2,"history_after":3,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":8.4703294725430034e-22,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":3.4694469519536142e-18,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":35,"objective":0.99107783341315681,"state":[0.99943766170189274,0.99967178929463507,0.99967178929463496,0.99943766170189263],"gradient":[-0.0027346389506212043,-0.001798128579651892,-0.001798128579652114,-0.0027346389506217594],"constraints":[3.4694469519536142e-18,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0,0,0],"equality_primal":3.4694469519536142e-18,"bound_primal":0,"stationarity":0.0027346389506217594,"dual_sign":0,"complementarity":0,"full":0.0027346389506217594},"active_membership":[0,0,0,0],"membership_hash":"8fd3be9d7b1d153d0405c8ffac53cfbb262be73a09d625b3707749d8740b868a","history_reset_reason":"","history_before":3,"history_after":4,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":2.0328790734103208e-20,"final_state":false,"objective_trials":[{"step":0.02802825073393226,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":36,"objective":0.99107536561572962,"state":[0.99967601229887759,1,0.99999999999999989,0.99967601229887748],"gradient":[-0.0029143792059563856,-0.0016184284014666428,-0.0016184284014668648,-0.0029143792059564966],"constraints":[0,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-0,0],"alpha":[0,0,0,0],"eta":[0,0.0016184284014666428,0.0016184284014668648,0],"equality_primal":0,"bound_primal":0,"stationarity":0.0029143792059564966,"dual_sign":0,"complementarity":1.7968164750157998e-19,"full":0.0029143792059564966},"active_membership":[0,2,2,0],"membership_hash":"3e65c7e9c286d6481384a10b8e977445a1c2afdbe58cd67e52d66ff8ad0946a9","history_reset_reason":"ACTIVE_MEMBERSHIP_CHANGED","history_before":4,"history_after":1,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":0.1111686840409231,"constraint_l1":1.7347234759768071e-18,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":37,"objective":0.99107368710203958,"state":[1,1,0.99999999999999989,0.99999999999999989],"gradient":[-0.0022664152628740775,-0.0022664152628740775,-0.0022664152628742995,-0.0022664152628741885],"constraints":[1.7347234759768071e-18,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[0,0],"alpha":[0,0,0,0],"eta":[0.0022664152628740775,0.0022664152628740775,0.0022664152628742995,0.0022664152628741885],"equality_primal":1.7347234759768071e-18,"bound_primal":0,"stationarity":0,"dual_sign":0,"complementarity":2.5162264082049241e-19,"full":1.7347234759768071e-18},"active_membership":[2,2,2,2],"membership_hash":"52bd2e547e6a9c31b59f62f5e13a88752a45e32d50aa3fa00b4ad8fbae76a1d2","history_reset_reason":"ACTIVE_MEMBERSHIP_CHANGED","history_before":1,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+pass=1 before=8753868839d71e2e81127670c7ed6b3b3599790ceaccc74d9cb76e0e2d5ce31b after=8753868839d71e2e81127670c7ed6b3b3599790ceaccc74d9cb76e0e2d5ce31b slqp=66890833432872918ede832370da41f37cd835914ac0f585e11563ce3c0385d7
+{"iteration":0,"objective":0.99107368710203958,"state":[1,1,0.99999999999999989,0.99999999999999989],"gradient":[-0.0022664152628740775,-0.0022664152628740775,-0.0022664152628742995,-0.0022664152628741885],"constraints":[1.7347234759768071e-18,0],"constraint_jacobian":[[0.006591796875,0.006591796875,-0.006591796875,-0.006591796875],[0.006591796875,-0.006591796875,0.006591796875,-0.006591796875]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[0,0],"alpha":[0,0,0,0],"eta":[0.0022664152628740775,0.0022664152628740775,0.0022664152628742995,0.0022664152628741885],"equality_primal":1.7347234759768071e-18,"bound_primal":0,"stationarity":0,"dual_sign":0,"complementarity":2.5162264082049241e-19,"full":1.7347234759768071e-18},"active_membership":[2,2,2,2],"membership_hash":"52bd2e547e6a9c31b59f62f5e13a88752a45e32d50aa3fa00b4ad8fbae76a1d2","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+wrapper=c8a6dbd6c6794904ad358b1709a41182fcca00beba590112a2c7b17d1fc933dd material_product=a7b2f3397f68afa440c6a83c684b15705ecabe79c69004313437ef12d6b8cc2b
+status=BINARY_VALIDATION_FAILED input=cd904916aa65fb83fec62313b5302323027367d29d99c2ed7ba60973d34e0d80 trace=688accd3a09fc6e7865657c25c0234ec1b38c56b427269057015da35d6e82e43 output=8da963bb5f27c4f8c059ef429cf4510ebb624ed44c7019316628f65352a640f0 beta=0.25000047855952834 0.25000811027521025 0.25000047855952834 0.25000811027521025 0.24999284403976074  0.2500004757554426 0.24999284403976074  0.2500004757554426
+pass=0 before=342f92d242dfb766726ae76636e81318b6782a82a7f288fcc950439f8fdc6aea after=6b171e65dd665646747e8c160343889bb4bd36cda69835b7a76f799753f37094 slqp=dd3409a82d56c5ebb89577de04670bb9398fabd33dc6ba1a90e38c4f8a87ff22
+{"iteration":0,"objective":0.24975568044459351,"state":[0.5,0.5],"gradient":[-0.0002444986023419915,-0.0002444986023419915],"constraints":[-0.0001220703125,0],"constraint_jacobian":[[-0.000244140625,-0.000244140625],[3.0517578125e-05,-3.0517578125e-05]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0014662751927972,0],"alpha":[0,0],"eta":[0,0],"equality_primal":0.0001220703125,"bound_primal":0,"stationarity":0,"dual_sign":0,"complementarity":0,"full":0.0001220703125},"active_membership":[0,0],"membership_hash":"0b2028de1a96da0849c5122e1c681c4ff11c900b218e5569bbd18579fa76a3cd","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":1,"objective":0.24987788496946095,"state":[0.25,0.25],"gradient":[-0.00024431952627423925,-0.00024431952627423925],"constraints":[0,0],"constraint_jacobian":[[-0.000244140625,-0.000244140625],[3.0517578125e-05,-3.0517578125e-05]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.000732779619284,0],"alpha":[0,0],"eta":[0,0],"equality_primal":0,"bound_primal":0,"stationarity":0,"dual_sign":0,"complementarity":0,"full":0},"active_membership":[0,0],"membership_hash":"0b2028de1a96da0849c5122e1c681c4ff11c900b218e5569bbd18579fa76a3cd","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+pass=1 before=6b171e65dd665646747e8c160343889bb4bd36cda69835b7a76f799753f37094 after=c5ac9d80060936217b46abfd18c6eab108e76f1fe78a80e921d05714a54b8d36 slqp=042dd6b06f986b9e8457bbd732d516e4abbec07651f89093f017a88af653bd3f
+{"iteration":0,"objective":0.24987788496946095,"state":[0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25],"gradient":[-5.3448624392604671e-05,-6.8711138744514955e-05,-5.3448624392604671e-05,-6.8711138744514955e-05,-5.3448624392604671e-05,-6.8711138744514955e-05,-5.3448624392604671e-05,-6.8711138744514955e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.000732779619284,-0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":1.5266242372025118e-05,"dual_sign":0,"complementarity":0,"full":1.5266242372025118e-05},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":1,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":2.0679515313825692e-25,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":1,"objective":0.24987788496239691,"state":[0.25000082595719508,0.25001608847154699,0.25000082595719508,0.25001608847154699,0.24998579090942435,0.25000105342377626,0.24998579090942435,0.25000105342377626],"gradient":[-5.367609119893979e-05,-3.8413576846807462e-05,-5.367609119893979e-05,-3.8413576846807462e-05,-8.3746186740341066e-05,-6.8483672388153227e-05,-8.3746186740285555e-05,-6.8483672388097716e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007327833059207,-0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":1.5031319722570019e-05,"dual_sign":0,"complementarity":0,"full":1.5031319722570019e-05},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"","history_before":1,"history_after":2,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":1.1632227364026952e-24,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":2,"objective":0.24987788473640282,"state":[0.25000047855952834,0.25000811027521025,0.25000047855952834,0.25000811027521025,0.24999284403976074,0.2500004757554426,0.24999284403976074,0.2500004757554426],"gradient":[-5.3445820420716661e-05,-5.3444903408861322e-05,-5.3445820420772172e-05,-5.3444903408861322e-05,-6.8714859955909535e-05,-6.8713942944165218e-05,-6.8714859955854024e-05,-6.8713942944165218e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007326804601082,0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":9.2934395364696739e-10,"dual_sign":0,"complementarity":0,"full":9.2934395364696739e-10},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"","history_before":2,"history_after":2,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+pass=2 before=c5ac9d80060936217b46abfd18c6eab108e76f1fe78a80e921d05714a54b8d36 after=23e1cf1eb46227b3ea171e954507aae6ebdc56fb3302261f1833e89d3332d5d8 slqp=7166c53ebac10d647e0daed8ef6cad8776b8181d83c8345b4692848ee28461a4
+{"iteration":0,"objective":0.24987788473640282,"state":[0.25000047855952834,0.25000811027521025,0.25000047855952834,0.25000811027521025,0.24999284403976074,0.2500004757554426,0.24999284403976074,0.2500004757554426],"gradient":[-5.3445820420716661e-05,-5.3444903408861322e-05,-5.3445820420772172e-05,-5.3444903408861322e-05,-6.8714859955909535e-05,-6.8713942944165218e-05,-6.8714859955854024e-05,-6.8713942944165218e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007326804601082,0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":9.2934395364696739e-10,"dual_sign":0,"complementarity":0,"full":9.2934395364696739e-10},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+pass=3 before=23e1cf1eb46227b3ea171e954507aae6ebdc56fb3302261f1833e89d3332d5d8 after=23e1cf1eb46227b3ea171e954507aae6ebdc56fb3302261f1833e89d3332d5d8 slqp=7166c53ebac10d647e0daed8ef6cad8776b8181d83c8345b4692848ee28461a4
+{"iteration":0,"objective":0.24987788473640282,"state":[0.25000047855952834,0.25000811027521025,0.25000047855952834,0.25000811027521025,0.24999284403976074,0.2500004757554426,0.24999284403976074,0.2500004757554426],"gradient":[-5.3445820420716661e-05,-5.3444903408861322e-05,-5.3445820420772172e-05,-5.3444903408861322e-05,-6.8714859955909535e-05,-6.8713942944165218e-05,-6.8714859955854024e-05,-6.8713942944165218e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007326804601082,0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":9.2934395364696739e-10,"dual_sign":0,"complementarity":0,"full":9.2934395364696739e-10},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+SYNTHETIC_REGRESSION source material tests passed; faster=0
+<end of output>
+Test time =  53.95 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-material" end time: Sep 12 17:06 CST
+"spin-it-2014-source-material" time elapsed: 00:00:53
+----------------------------------------------------------
+
+25/174 Testing: spin-it-2014-source-adaptive
+25/174 Test: spin-it-2014-source-adaptive
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-adaptive-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-adaptive" start time: Sep 12 17:06 CST
+Output:
+----------------------------------------------------------
+empty-source objective=STATIC_LOWERING status=RELAXATION_UNKNOWN binary_check=0
+empty-source objective=YOYO status=RELAXATION_UNKNOWN binary_check=0
+empty-source objective=TOP_INERTIA_ONLY status=RELAXATION_UNKNOWN binary_check=0
+empty-source objective=TOP_LOWERING_ONLY status=RELAXATION_UNKNOWN binary_check=0
+empty-source objective=TOP_MASS_AND_LOWERING status=RELAXATION_UNKNOWN binary_check=0
+canonical-endpoints cuboids=512 stored=224 virtual=288 mismatches=0
+FIXED SYNTHETIC_REGRESSION outcome=BINARY_VALIDATION_FAILED passes=4 beta=0.25000047855952834 0.25000811027521025 0.25000047855952834 0.25000811027521025 0.24999284403976074  0.2500004757554426 0.24999284403976074  0.2500004757554426 input_hash=cd904916aa65fb83fec62313b5302323027367d29d99c2ed7ba60973d34e0d80 trace_hash=688accd3a09fc6e7865657c25c0234ec1b38c56b427269057015da35d6e82e43 output_hash=8da963bb5f27c4f8c059ef429cf4510ebb624ed44c7019316628f65352a640f0
+pass=0 before=2 after=8 solve=CONVERGED beta=0.25 0.25 phi=0 before_hash=342f92d242dfb766726ae76636e81318b6782a82a7f288fcc950439f8fdc6aea after_hash=6b171e65dd665646747e8c160343889bb4bd36cda69835b7a76f799753f37094 slqp_hash=dd3409a82d56c5ebb89577de04670bb9398fabd33dc6ba1a90e38c4f8a87ff22
+{"iteration":0,"objective":0.24975568044459351,"accepted_step":1,"state":[0.5,0.5],"gradient":[-0.0002444986023419915,-0.0002444986023419915],"constraints":[-0.0001220703125,0],"constraint_jacobian":[[-0.000244140625,-0.000244140625],[3.0517578125e-05,-3.0517578125e-05]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0014662751927972,0],"alpha":[0,0],"eta":[0,0],"equality_primal":0.0001220703125,"bound_primal":0,"stationarity":0,"dual_sign":0,"complementarity":0,"full":0.0001220703125},"active_membership":[0,0],"membership_hash":"0b2028de1a96da0849c5122e1c681c4ff11c900b218e5569bbd18579fa76a3cd","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":true,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":1,"objective":0.24987788496946095,"accepted_step":0,"state":[0.25,0.25],"gradient":[-0.00024431952627423925,-0.00024431952627423925],"constraints":[0,0],"constraint_jacobian":[[-0.000244140625,-0.000244140625],[3.0517578125e-05,-3.0517578125e-05]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.000732779619284,0],"alpha":[0,0],"eta":[0,0],"equality_primal":0,"bound_primal":0,"stationarity":0,"dual_sign":0,"complementarity":0,"full":0},"active_membership":[0,0],"membership_hash":"0b2028de1a96da0849c5122e1c681c4ff11c900b218e5569bbd18579fa76a3cd","history_reset_reason":"","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+pass=1 before=8 after=8 solve=CONVERGED beta=0.25000047855952834 0.25000811027521025 0.25000047855952834 0.25000811027521025 0.24999284403976074  0.2500004757554426 0.24999284403976074  0.2500004757554426 phi=0 before_hash=6b171e65dd665646747e8c160343889bb4bd36cda69835b7a76f799753f37094 after_hash=c5ac9d80060936217b46abfd18c6eab108e76f1fe78a80e921d05714a54b8d36 slqp_hash=042dd6b06f986b9e8457bbd732d516e4abbec07651f89093f017a88af653bd3f
+{"iteration":0,"objective":0.24987788496946095,"accepted_step":1,"state":[0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25],"gradient":[-5.3448624392604671e-05,-6.8711138744514955e-05,-5.3448624392604671e-05,-6.8711138744514955e-05,-5.3448624392604671e-05,-6.8711138744514955e-05,-5.3448624392604671e-05,-6.8711138744514955e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.000732779619284,-0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":1.5266242372025118e-05,"dual_sign":0,"complementarity":0,"full":1.5266242372025118e-05},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":1,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":2.0679515313825692e-25,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":1,"objective":0.24987788496239691,"accepted_step":1,"state":[0.25000082595719508,0.25001608847154699,0.25000082595719508,0.25001608847154699,0.24998579090942435,0.25000105342377626,0.24998579090942435,0.25000105342377626],"gradient":[-5.367609119893979e-05,-3.8413576846807462e-05,-5.367609119893979e-05,-3.8413576846807462e-05,-8.3746186740341066e-05,-6.8483672388153227e-05,-8.3746186740285555e-05,-6.8483672388097716e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007327833059207,-0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":1.5031319722570019e-05,"dual_sign":0,"complementarity":0,"full":1.5031319722570019e-05},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"","history_before":1,"history_after":2,"curvature_pair_accepted":true,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":1.1632227364026952e-24,"final_state":false,"objective_trials":[{"step":1,"constraint_l1":0,"valid":true,"accepted":true,"reason":"ACCEPTED"}],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+{"iteration":2,"objective":0.24987788473640282,"accepted_step":0,"state":[0.25000047855952834,0.25000811027521025,0.25000047855952834,0.25000811027521025,0.24999284403976074,0.2500004757554426,0.24999284403976074,0.2500004757554426],"gradient":[-5.3445820420716661e-05,-5.3444903408861322e-05,-5.3445820420772172e-05,-5.3444903408861322e-05,-6.8714859955909535e-05,-6.8713942944165218e-05,-6.8714859955854024e-05,-6.8713942944165218e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007326804601082,0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":9.2934395364696739e-10,"dual_sign":0,"complementarity":0,"full":9.2934395364696739e-10},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"","history_before":2,"history_after":2,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+pass=2 before=8 after=8 solve=CONVERGED beta=0.25000047855952834 0.25000811027521025 0.25000047855952834 0.25000811027521025 0.24999284403976074  0.2500004757554426 0.24999284403976074  0.2500004757554426 phi=0 before_hash=c5ac9d80060936217b46abfd18c6eab108e76f1fe78a80e921d05714a54b8d36 after_hash=23e1cf1eb46227b3ea171e954507aae6ebdc56fb3302261f1833e89d3332d5d8 slqp_hash=7166c53ebac10d647e0daed8ef6cad8776b8181d83c8345b4692848ee28461a4
+{"iteration":0,"objective":0.24987788473640282,"accepted_step":0,"state":[0.25000047855952834,0.25000811027521025,0.25000047855952834,0.25000811027521025,0.24999284403976074,0.2500004757554426,0.24999284403976074,0.2500004757554426],"gradient":[-5.3445820420716661e-05,-5.3444903408861322e-05,-5.3445820420772172e-05,-5.3444903408861322e-05,-6.8714859955909535e-05,-6.8713942944165218e-05,-6.8714859955854024e-05,-6.8713942944165218e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007326804601082,0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":9.2934395364696739e-10,"dual_sign":0,"complementarity":0,"full":9.2934395364696739e-10},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+pass=3 before=8 after=8 solve=CONVERGED beta=0.25000047855952834 0.25000811027521025 0.25000047855952834 0.25000811027521025 0.24999284403976074  0.2500004757554426 0.24999284403976074  0.2500004757554426 phi=0 before_hash=23e1cf1eb46227b3ea171e954507aae6ebdc56fb3302261f1833e89d3332d5d8 after_hash=23e1cf1eb46227b3ea171e954507aae6ebdc56fb3302261f1833e89d3332d5d8 slqp_hash=7166c53ebac10d647e0daed8ef6cad8776b8181d83c8345b4692848ee28461a4
+{"iteration":0,"objective":0.24987788473640282,"accepted_step":0,"state":[0.25000047855952834,0.25000811027521025,0.25000047855952834,0.25000811027521025,0.24999284403976074,0.2500004757554426,0.24999284403976074,0.2500004757554426],"gradient":[-5.3445820420716661e-05,-5.3444903408861322e-05,-5.3445820420772172e-05,-5.3444903408861322e-05,-6.8714859955909535e-05,-6.8713942944165218e-05,-6.8714859955854024e-05,-6.8713942944165218e-05],"constraints":[0,0],"constraint_jacobian":[[-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-5.340576171875e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05,-6.866455078125e-05],[7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06,7.62939453125e-06,7.62939453125e-06,-7.62939453125e-06,-7.62939453125e-06]],"kkt":{"valid":true,"status":"WITNESS_LP_OPTIMAL_FIRST_ORDER","lambda":[-1.0007326804601082,0],"alpha":[0,0,0,0,0,0,0,0],"eta":[0,0,0,0,0,0,0,0],"equality_primal":0,"bound_primal":0,"stationarity":9.2934395364696739e-10,"dual_sign":0,"complementarity":0,"full":9.2934395364696739e-10},"active_membership":[0,0,0,0,0,0,0,0],"membership_hash":"44a44f8147dbe1dd5bef7560983bb99e89555b1bb2bdf58e37cce0b096e75c78","history_reset_reason":"NEW_SOLVE_OR_PARTITION","history_before":0,"history_after":0,"curvature_pair_accepted":false,"curvature_pair_rejected":false,"used_first_order_fallback":false,"linearized_constraint_residual":0,"final_state":true,"objective_trials":[],"restoration":{"attempted":false,"accepted":false,"lp_status":"","reason":"","direction":[],"predicted_residual":null,"trials":[]}}
+fixed_binary raw_residual=0.00012207031249999306 normalized_residual=7.6293945312495663e-06 moment_error=6.9388939039072284e-18 cuboids=0
+source adaptive tests passed; faster=0
+<end of output>
+Test time =   1.31 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-adaptive" end time: Sep 12 17:06 CST
+"spin-it-2014-source-adaptive" time elapsed: 00:00:01
+----------------------------------------------------------
+
+26/174 Testing: spin-it-2014-source-adaptive-geometry9
+26/174 Test: spin-it-2014-source-adaptive-geometry9
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-adaptive-regression" "--geometry9"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-adaptive-geometry9" start time: Sep 12 17:06 CST
+Output:
+----------------------------------------------------------
+geometry_depth9 nodes=2097993 optimization_leaves=8 face_keys=48 rss_KiB=352616
+<end of output>
+Test time =  18.68 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-adaptive-geometry9" end time: Sep 12 17:06 CST
+"spin-it-2014-source-adaptive-geometry9" time elapsed: 00:00:18
+----------------------------------------------------------
+
+27/174 Testing: spin-it-2014-source-surface-octree
+27/174 Test: spin-it-2014-source-surface-octree
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-octree-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-surface-octree" start time: Sep 12 17:06 CST
+Output:
+----------------------------------------------------------
+ordinary source/config/partition=d05f34b01ef35d581ec903f9e803deb12402faddf93a0b6f209a464d0bf4297a/fc5b062c289ae11c288f542f9bf193a0a43f656f81d42f9bc8ca1143d46b43ef/3c4531f7bab657f722244a74b82dad6bc08c63a23ad6747e0d0e54df8538565f
+source octree equal-ULP case 0: represented_planes=10 ordered_intervals=9 collapsed_intervals=7 early_numerical=1 late_collapse=0 completed=0
+source octree equal-ULP case 1: represented_planes=17 ordered_intervals=16 collapsed_intervals=0 early_numerical=1 late_collapse=0 completed=0
+source octree equal-ULP case 2: represented_planes=17 ordered_intervals=16 collapsed_intervals=0 early_numerical=1 late_collapse=0 completed=0
+source surface hierarchy, signed material, queries, hashes, validation passed; faster=0 exact=1
+<end of output>
+Test time =   1.48 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-surface-octree" end time: Sep 12 17:06 CST
+"spin-it-2014-source-surface-octree" time elapsed: 00:00:01
+----------------------------------------------------------
+
+28/174 Testing: spin-it-2014-source-surface-octree-level9
+28/174 Test: spin-it-2014-source-surface-octree-level9
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-octree-regression" "--level9"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-surface-octree-level9" start time: Sep 12 17:06 CST
+Output:
+----------------------------------------------------------
+depth9 nodes=2097993 internal=262249 boundary=786448 full=506360 empty=542936 max_level=9 stored_cell_bytes=302110992 peak_rss_KiB=350604 seconds=18.904865639 volume=0.12209314107894897 uncertainty=0.0058594942092895508 partition=652de7d6b99c64445640902e891a98f85f76c4a8b5a93b6ef34471954a5bc137
+depth9 moments= 0.12209314107894897 0.061046570539474487 0.061046570539474487 0.061046570539474487 0.033027303763977521 0.033027303763977514 0.033027303763977514 0.030523285269737244 0.030523285269737244 0.030523285269737244
+level_counts=1,8,64,512,1664,6272,24704,98432,393344,1572992,
+<end of output>
+Test time =  18.92 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-surface-octree-level9" end time: Sep 12 17:07 CST
+"spin-it-2014-source-surface-octree-level9" time elapsed: 00:00:18
+----------------------------------------------------------
+
+29/174 Testing: spin-it-2014-surface-value
+29/174 Test: spin-it-2014-surface-value
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-value-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-surface-value" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+value normal overflow category=invalid_argument
+differential normal overflow category=invalid_argument
+value polynomial overflow category=overflow_error
+differential polynomial overflow category=overflow_error
+surface value analytic, signed, covariance, invalid-input checks passed
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-surface-value" end time: Sep 12 17:07 CST
+"spin-it-2014-surface-value" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/174 Testing: spin-it-2014-surface-value-allocation
+30/174 Test: spin-it-2014-surface-value-allocation
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-value-regression" "--allocation"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-surface-value-allocation" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+value-only succeeds with 32 MiB headroom; dense differential allocation fails as expected, N=1000000
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-surface-value-allocation" end time: Sep 12 17:07 CST
+"spin-it-2014-surface-value-allocation" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/174 Testing: spin-it-2014-adaptive-domain
+31/174 Test: spin-it-2014-adaptive-domain
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-adaptive-domain-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-adaptive-domain" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-adaptive-domain leaves=8 hash=75cc1da7f2d5cdae642e9d1775a480b1f5a9b47cac6a1145dac6a42df21ad277
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-adaptive-domain" end time: Sep 12 17:07 CST
+"spin-it-2014-adaptive-domain" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/174 Testing: spin-it-2014-fill-functional
+32/174 Test: spin-it-2014-fill-functional
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-fill-functional-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-fill-functional" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-fill-functional variables=8 gradient_error=1.68823e-08 jacobian_error=2.65855e-10
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-fill-functional" end time: Sep 12 17:07 CST
+"spin-it-2014-fill-functional" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/174 Testing: spin-it-2014-audited
+33/174 Test: spin-it-2014-audited
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-audited"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-audited" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+status=CONVERGED x=0.75 residual=0
+subnormal_curvature=9.9998886718268301e-321 accepted=0 retained_inverse=0.125 retained_metric=1
+duplicate=CONVERGED inconsistent_L1=0.5 singular=RESTORATION_STALLED finite_failed_trials=24 invalid_trials=24 cap=WITNESS_LP_UNKNOWN: Iteration limit reached
+givens=CONVERGED kkt=6.3137399822221774e-11 phi=1.5707963268031664
+[PASS] audited actual KKT/restoration/analytic/Givens tests
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-audited" end time: Sep 12 17:07 CST
+"spin-it-2014-audited" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/174 Testing: spin-it-2014-slqp
+34/174 Test: spin-it-2014-slqp
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-slqp-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-slqp" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-slqp iterations=90 residual=5.55112e-17 hash=ba7371831d27b970aeab54b8c1c14f8b411023e16bd06c7fc0c8a9d27f9d9aae
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-slqp" end time: Sep 12 17:07 CST
+"spin-it-2014-slqp" time elapsed: 00:00:00
+----------------------------------------------------------
+
+35/174 Testing: spin-it-2014-end-to-end
+35/174 Test: spin-it-2014-end-to-end
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-end-to-end"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-end-to-end" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-end-to-end passes=1 residual=0 hash=d1721e8f1564bedf596f9eb88469a1b28bf9040930de3dbfbff9a6ba56275ad2
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-end-to-end" end time: Sep 12 17:07 CST
+"spin-it-2014-end-to-end" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/174 Testing: spin-it-2014-modes
+36/174 Test: spin-it-2014-modes
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-modes-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-modes" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-modes static/top/yo-yo
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-modes" end time: Sep 12 17:07 CST
+"spin-it-2014-modes" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/174 Testing: spin-it-2014-givens
+37/174 Test: spin-it-2014-givens
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-givens-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-givens" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+objective=0 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.7485261622895915e-11 second_order_hessian_absolute_diagnostic=2.2756674435964186e-06
+objective=0 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=7.279135990563305e-11 second_order_hessian_absolute_diagnostic=2.0481030038599357e-07
+objective=0 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=5.8150800515056653e-11 second_order_hessian_absolute_diagnostic=2.2757224105163232e-08
+objective=1 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+objective=1 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+objective=1 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+objective=2 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+objective=2 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+objective=2 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+objective=3 h=0.001 fourth_order_max_relative_or_zero_absolute_error=2.6709084823055174e-11 second_order_hessian_absolute_diagnostic=2.275667442264151e-06
+objective=3 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=5.1849906558028777e-11 second_order_hessian_absolute_diagnostic=2.0481066909106005e-07
+objective=3 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=1.2127399778849577e-10 second_order_hessian_absolute_diagnostic=2.2756390105627133e-08
+objective=4 h=0.001 fourth_order_max_relative_or_zero_absolute_error=1.9028729209619793e-12 second_order_hessian_absolute_diagnostic=3.7499994842704609e-07
+objective=4 h=0.00029999999999999997 fourth_order_max_relative_or_zero_absolute_error=7.3975393711912655e-13 second_order_hessian_absolute_diagnostic=3.3750142347521717e-08
+objective=4 h=0.0001 fourth_order_max_relative_or_zero_absolute_error=3.4671524910360554e-12 second_order_hessian_absolute_diagnostic=3.7519161111276844e-09
+joint status=CONVERGED residual=1.4213146065523828e-11 final_phi=1.5707963267947704 beta=0.20019255792412366 0.20019255789310009 0.20019255789310006 0.20019255792412366 0.20019255792412333 0.20019255789309925 0.20019255789309917  0.2001925579241233
+iteration=0 phi=1.7 accepted_step=1 residual=15.427096185954186
+iteration=1 phi=1.5678463028200025 accepted_step=1 residual=0.35667695203462219
+iteration=2 phi=1.5707999408452491 accepted_step=1 residual=4.1323696036701051e-06
+iteration=3 phi=1.5707969963841375 accepted_step=1 residual=2.7180425533175016e-10
+iteration=4 phi=1.5707963267947704 accepted_step=0 residual=1.4213146065523828e-11
+adaptive angle carry passes=2
+[PASS] spin-it-2014-givens analytic and integration contract
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-givens" end time: Sep 12 17:07 CST
+"spin-it-2014-givens" time elapsed: 00:00:00
+----------------------------------------------------------
+
+38/174 Testing: spin-it-2014-objectives
+38/174 Test: spin-it-2014-objectives
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-objectives-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-objectives" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-objectives five-objective API derivatives/density/hash
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-objectives" end time: Sep 12 17:07 CST
+"spin-it-2014-objectives" time elapsed: 00:00:00
+----------------------------------------------------------
+
+39/174 Testing: spin-it-2014-resolution-ladder
+39/174 Test: spin-it-2014-resolution-ladder
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-resolution-ladder"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-resolution-ladder" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+mode=SPINNING_TOP side=4 status=CONVERGED eq=0 kkt=0 line_evals=2 active_transitions=2 iterations=3
+mode=SPINNING_TOP side=8 status=CONVERGED eq=4.16334e-17 kkt=0 line_evals=12 active_transitions=12 iterations=13
+mode=SPINNING_TOP side=16 status=CONVERGED eq=8.32667e-17 kkt=0 line_evals=12 active_transitions=12 iterations=13
+mode=YO_YO side=4 status=CONVERGED eq=0 kkt=6.93889e-18 line_evals=0 active_transitions=0 iterations=1
+mode=YO_YO side=8 status=CONVERGED eq=6.93889e-18 kkt=4.11707e-08 line_evals=15 active_transitions=2 iterations=16
+mode=YO_YO side=16 status=CONVERGED eq=2.77556e-17 kkt=0 line_evals=8 active_transitions=6 iterations=9
+[PASS] scenario=spin-it-2014-resolution-ladder 4/8/16 top/yo-yo
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-resolution-ladder" end time: Sep 12 17:07 CST
+"spin-it-2014-resolution-ladder" time elapsed: 00:00:00
+----------------------------------------------------------
+
+40/174 Testing: spin-it-2014-dual-material
+40/174 Test: spin-it-2014-dual-material
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-dual-material-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-dual-material" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-dual-material mass=12.24 hash=7cf08574a6bc780ee14ecdc6a6c2b62d1440be41ef12a8cd6ef780c368c1117a
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-dual-material" end time: Sep 12 17:07 CST
+"spin-it-2014-dual-material" time elapsed: 00:00:00
+----------------------------------------------------------
+
+41/174 Testing: spin-it-2014-api
+41/174 Test: spin-it-2014-api
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-api-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-api" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-api status=CONVERGED
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-api" end time: Sep 12 17:07 CST
+"spin-it-2014-api" time elapsed: 00:00:00
+----------------------------------------------------------
+
+42/174 Testing: spin-it-2014-surface-differential
+42/174 Test: spin-it-2014-surface-differential
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-differential-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-surface-differential" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-surface-differential error=4.45924e-12
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-surface-differential" end time: Sep 12 17:07 CST
+"spin-it-2014-surface-differential" time elapsed: 00:00:00
+----------------------------------------------------------
+
+43/174 Testing: spin-it-2014-cage-functional
+43/174 Test: spin-it-2014-cage-functional
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-cage-functional-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-cage-functional" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+paper mode=0 step=0.001 relative error=1.44637e-06
+paper mode=0 step=0.0001 relative error=1.44692e-08
+paper mode=0 step=1e-05 relative error=2.52367e-10
+paper mode=1 step=0.001 relative error=7.84703e-07
+paper mode=1 step=0.0001 relative error=7.84736e-09
+paper mode=1 step=1e-05 relative error=2.29053e-10
+paper mode=2 step=0.001 relative error=7.84703e-07
+paper mode=2 step=0.0001 relative error=7.84736e-09
+paper mode=2 step=1e-05 relative error=2.12939e-10
+paper mode=3 step=0.001 relative error=2.52883e-06
+paper mode=3 step=0.0001 relative error=2.52879e-08
+paper mode=3 step=1e-05 relative error=2.56949e-10
+paper mode=4 step=0.001 relative error=3.74296e-07
+paper mode=4 step=0.0001 relative error=3.7426e-09
+paper mode=4 step=1e-05 relative error=6.57888e-11
+[PASS] scenario=spin-it-2014-cage-functional gradient=2.18515e-09 jacobian=7.87027e-10
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-cage-functional" end time: Sep 12 17:07 CST
+"spin-it-2014-cage-functional" time elapsed: 00:00:00
+----------------------------------------------------------
+
+44/174 Testing: spin-it-2014-cage-solver
+44/174 Test: spin-it-2014-cage-solver
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-cage-solver-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-cage-solver" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-cage-solver iterations=110 hash=75e5b90225251ab32359e5dd607dbb5a7e9d9822fa180d7bc6e61ae71aa21f7a
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-cage-solver" end time: Sep 12 17:07 CST
+"spin-it-2014-cage-solver" time elapsed: 00:00:00
+----------------------------------------------------------
+
+45/174 Testing: spin-it-2014-automatic-cage
+45/174 Test: spin-it-2014-automatic-cage
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-automatic-cage-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-automatic-cage" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+[PASS] scenario=spin-it-2014-automatic-cage handles=12 hash=00a9892440d2fd45d6c27e1e261591fc0e866c876a41361cc83337f87b576b3b
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-automatic-cage" end time: Sep 12 17:07 CST
+"spin-it-2014-automatic-cage" time elapsed: 00:00:00
+----------------------------------------------------------
+
+46/174 Testing: spin-it-2014-python
+46/174 Test: spin-it-2014-python
+Command: "/home/lin/anaconda3/bin/python3" "-m" "unittest" "test_spin_it_2014.SpinIt2014PythonTests" "-v"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-python" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+test_audited_profile_exports_independently_checkable_kkt (test_spin_it_2014.SpinIt2014PythonTests.test_audited_profile_exports_independently_checkable_kkt) ... ok
+test_binary_constraint_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_binary_constraint_tolerance_must_be_positive) ... ok
+test_cage_api_rejects_non_artifact_before_native_execution (test_spin_it_2014.SpinIt2014PythonTests.test_cage_api_rejects_non_artifact_before_native_execution) ... ok
+test_objective_selector_must_match_mode (test_spin_it_2014.SpinIt2014PythonTests.test_objective_selector_must_match_mode) ... ok
+test_objective_weights_must_be_finite_and_nonnegative (test_spin_it_2014.SpinIt2014PythonTests.test_objective_weights_must_be_finite_and_nonnegative) ... ok
+test_paper_givens_native_joint_angle_and_rejections (test_spin_it_2014.SpinIt2014PythonTests.test_paper_givens_native_joint_angle_and_rejections) ... ok
+test_sealed_deterministic_static_artifact_and_viewer_bundle (test_spin_it_2014.SpinIt2014PythonTests.test_sealed_deterministic_static_artifact_and_viewer_bundle) ... ok
+test_slqp_gradient_tolerance_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_gradient_tolerance_must_be_positive) ... ok
+test_slqp_iteration_limit_must_be_positive (test_spin_it_2014.SpinIt2014PythonTests.test_slqp_iteration_limit_must_be_positive) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.034s
+
+OK
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-python" end time: Sep 12 17:07 CST
+"spin-it-2014-python" time elapsed: 00:00:00
+----------------------------------------------------------
+
+47/174 Testing: spin-it-2014-paper-miniature
+47/174 Test: spin-it-2014-paper-miniature
+Command: "/home/lin/anaconda3/bin/python3" "-m" "unittest" "test_spin_it_2014_paper_runner.SpinIt2014PaperRunnerNativeTests" "-v"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-paper-miniature" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+test_ellipsoid_two_repeat_miniature_is_sealed_and_deterministic (test_spin_it_2014_paper_runner.SpinIt2014PaperRunnerNativeTests.test_ellipsoid_two_repeat_miniature_is_sealed_and_deterministic) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.081s
+
+OK
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-paper-miniature" end time: Sep 12 17:07 CST
+"spin-it-2014-paper-miniature" time elapsed: 00:00:00
+----------------------------------------------------------
+
+50/174 Testing: spin-2014-dependency-contract
+50/174 Test: spin-2014-dependency-contract
+Command: "/usr/bin/cmake" "-DMAKE_IT_STAND_DEPENDENCY_TEST_BINARY_ROOT=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909" "-P" "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency.cmake"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-2014-dependency-contract" start time: Sep 12 17:07 CST
+Output:
+----------------------------------------------------------
+SPIN_IT_2014_DEPENDENCY_RETAINED_DIR=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-dependency-contract-runs/run-2a58452101d1cb98
+-- 2014 ON / reachability OFF actual linked audit fixture: status=CONVERGED x=0.75 residual=0
+subnormal_curvature=9.9998886718268301e-321 accepted=0 retained_inverse=0.125 retained_metric=1
+duplicate=CONVERGED inconsistent_L1=0.5 singular=RESTORATION_STALLED finite_failed_trials=24 invalid_trials=24 cap=WITNESS_LP_UNKNOWN: Iteration limit reached
+givens=CONVERGED kkt=6.3137399822221774e-11 phi=1.5707963268031664
+[PASS] audited actual KKT/restoration/analytic/Givens tests
+
+<end of output>
+Test time =  89.66 sec
+----------------------------------------------------------
+Test Passed.
+"spin-2014-dependency-contract" end time: Sep 12 17:08 CST
+"spin-2014-dependency-contract" time elapsed: 00:01:29
+----------------------------------------------------------
+
+51/174 Testing: spin-2014-dependency-isolation
+51/174 Test: spin-2014-dependency-isolation
+Command: "/usr/bin/cmake" "-DTEST_BINARY_ROOT=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909" "-DDEPENDENCY_SCRIPT=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency.cmake" "-DALLOCATOR_HELPER=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/allocate_retained_test_directory.cmake" "-P" "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency_isolation.cmake"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-2014-dependency-isolation" start time: Sep 12 17:08 CST
+Output:
+----------------------------------------------------------
+-- Spin-It 2014 dependency isolation behavior passed: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-isolation-fixture-784a833c987b
+<end of output>
+Test time =   7.30 sec
+----------------------------------------------------------
+Test Passed.
+"spin-2014-dependency-isolation" end time: Sep 12 17:08 CST
+"spin-2014-dependency-isolation" time elapsed: 00:00:07
+----------------------------------------------------------
+
+End testing: Sep 12 17:08 CST
+
+api =   0.00 sec*proc
+
+bbw =   0.02 sec*proc
+
+build-system =  96.96 sec*proc
+
+deformation =   0.04 sec*proc
+
+dual-material =   0.00 sec*proc
+
+exact-geometry = 176.10 sec*proc
+
+geometry =   0.00 sec*proc
+
+native = 176.10 sec*proc
+
+objective =   0.00 sec*proc
+
+paper =   0.12 sec*proc
+
+python =  23.66 sec*proc
+
+regression =   0.31 sec*proc
+
+resolution =   0.01 sec*proc
+
+solver =   0.04 sec*proc
+
+spin-it =  97.26 sec*proc
+
+spin-it-2014 = 273.37 sec*proc
+
+synthetic-regression =  56.32 sec*proc
+

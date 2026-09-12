@@ -1,0 +1,8 @@
+cbfb1fbe5e23b5afaf65c9736f1786d85b03ef13e9c9f4f3d0ba5f8d3048fae0  tests/spin_it_2014_source_cage_geometry_regression.cpp
+610099f32a21d4bffd39218a73bdc54015ebebb5f4fee5c53948e222bd18d0b6  include/spin2014/SourceCageGeometry.h
+669706d44e397756a7fb33f8ef21053a2b0ee3a94283060c4b197bda1ffee749  src/spin2014/SourceCageGeometry.cpp
+c9b4a09c9b128e558feb2c13896ca3e074ec951a64c4eab79cb52484759fe72e  build/task-5c-no-faster-20260909/libmake_it_stand_core.a
+76bee264e92ed14f03c84a53b0d5cdc78cc5501ed218e8477a15800b86862522  build/task-5c-no-faster-20260909/spin-it-2014-source-cage-geometry-regression
+5f8d6c0cbed776ff360350aaf79fbaf4f131f81824ddc1158b6862fcf2b04f9b  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5u-minor2-red.log
+1c1f89167814b36bd1ba4f44104a808b3ba62104510927f2325807be34f0587a  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5u-minor2-green.log
+fb8ec5ba6570d10b803d80449c6be805dace06886fdc923878680fb5db53c53d  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5u-minor2-green-raw.log

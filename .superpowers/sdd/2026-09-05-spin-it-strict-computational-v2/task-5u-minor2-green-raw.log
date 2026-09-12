@@ -1,0 +1,28 @@
+Start testing: Sep 12 17:18 CST
+----------------------------------------------------------
+10/174 Testing: spin-it-2014-source-cage-geometry
+10/174 Test: spin-it-2014-source-cage-geometry
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-geometry-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-geometry" start time: Sep 12 17:18 CST
+Output:
+----------------------------------------------------------
+actual-source geometry admission PASS digest=fd24826393927fd0f9a0ec74f0e83d2adb3906d9efe1f07610b351e93c5fcb85
+<end of output>
+Test time =  17.91 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-geometry" end time: Sep 12 17:18 CST
+"spin-it-2014-source-cage-geometry" time elapsed: 00:00:17
+----------------------------------------------------------
+
+End testing: Sep 12 17:18 CST
+
+exact-geometry =  17.91 sec*proc
+
+native =  17.91 sec*proc
+
+spin-it-2014 =  17.91 sec*proc
+
+synthetic-regression =  17.91 sec*proc
+

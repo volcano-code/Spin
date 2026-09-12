@@ -1,0 +1,11 @@
+collapse power=45 outcome=CHECKS_PASSED stage=6 id=6 reason= digest=2d07afb2792ccb8d5a2bc5ccca63574d58c38cd56954ff66b07bb5ef4a179df4
+collapse power=46 outcome=CHECKS_PASSED stage=6 id=6 reason= digest=fe2ce50befdc40e069ef6b214442b8535c5947f1c02be320964fc6a22988e7a2
+collapse power=47 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material digest=b421366f3b293ca12220b0b987cf202292a6b6c8e288834be2d13ac35cf763c7
+collapse power=48 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material digest=4e81d7aed589f5a99882e4d9b2aa98c29f5cee16eec3ce6cabdfd94a73d3900d
+collapse power=49 outcome=UNKNOWN stage=1 id=18446744073709551615 reason=surface triangle is degenerate digest=3e80723f4ff59145421f16db849fd0e44820dff4804bedf918126717ae02f94a
+collapse power=50 outcome=UNKNOWN stage=1 id=18446744073709551615 reason=surface triangle is degenerate digest=d435eb35a89049519427154a7545886436468dc5ca8ed5cd544185e0c5a7cb9e
+collapse power=51 outcome=UNKNOWN stage=1 id=18446744073709551615 reason=surface triangle is degenerate digest=5c845f81636e375f976a44fc78b17d1c15e382723b2dae2377f169575f25dc69
+collapse power=52 outcome=UNKNOWN stage=1 id=18446744073709551615 reason=surface triangle is degenerate digest=9642a2b2d5cd1c79938c99737c3780b333970cd3e4d8a0768289729d64382608
+collapse power=53 outcome=UNKNOWN stage=1 id=18446744073709551615 reason=surface triangle is degenerate digest=effe53a22d001e2090efb3c04dfd4c7d84bc85e2f0223ceef5b29cda66d07de4
+collapse power=54 outcome=UNKNOWN stage=1 id=18446744073709551615 reason=surface triangle is degenerate digest=0d48f4f35fc3a6fed8fd73a29a777f3a362b2a5af78f2a8301d33369385bb7c0
+collapse power=55 outcome=UNKNOWN stage=1 id=18446744073709551615 reason=surface triangle is degenerate digest=fa50f911eeee4bf3fa4c09c8a879d63d01168266ed3502b5c7e38a0474cc27cc

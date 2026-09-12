@@ -1,0 +1,78 @@
+probe h=0 d=0.5 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=0 d=1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=0 d=-1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=1 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=1 d=1 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=1 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=2 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=2 d=1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=2 d=-1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=3 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=3 d=1 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=3 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=4 d=0.5 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=4 d=1 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=component 0 orientation violates positive roots and alternating nesting
+probe h=4 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=5 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=5 d=1 outcome=REJECTED_GEOMETRY stage=3 id=1 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=5 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=1 reason=primitive not subset of actual outer material
+probe h=6 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=6 d=1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=6 d=-1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=7 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=7 d=1 outcome=REJECTED_GEOMETRY stage=3 id=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=7 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=2 reason=primitive not subset of actual outer material
+probe h=8 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=1 reason=primitive not subset of actual outer material
+probe h=8 d=1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=8 d=-1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=9 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=9 d=1 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=9 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=10 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=10 d=1 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=10 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=11 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=11 d=1 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=11 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=1 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=12 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=12 d=1 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=12 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=0 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=13 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=1 reason=primitive not subset of actual outer material
+probe h=13 d=1 outcome=REJECTED_GEOMETRY stage=4 id=1 reason=primitive not subset of actual outer material
+probe h=13 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=1 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=14 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=14 d=1 outcome=REJECTED_GEOMETRY stage=4 id=0 reason=primitive not subset of actual outer material
+probe h=14 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=15 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=2 reason=primitive not subset of actual outer material
+probe h=15 d=1 outcome=REJECTED_GEOMETRY stage=4 id=2 reason=primitive not subset of actual outer material
+probe h=15 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=2 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=16 d=0.5 outcome=REJECTED_GEOMETRY stage=3 id=7 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=16 d=1 outcome=REJECTED_GEOMETRY stage=4 id=3 reason=primitive not subset of actual outer material
+probe h=16 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=3 reason=primitive not subset of actual outer material
+probe h=17 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=17 d=1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=17 d=-1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=18 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=18 d=1 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=18 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=4 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=19 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=19 d=1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=19 d=-1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=20 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=20 d=1 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=20 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=4 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=21 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=21 d=1 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=21 d=-1 outcome=REJECTED_GEOMETRY stage=3 id=4 reason=component 0 orientation violates positive roots and alternating nesting
+probe h=22 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=5 reason=primitive not subset of actual outer material
+probe h=22 d=1 outcome=REJECTED_GEOMETRY stage=4 id=5 reason=primitive not subset of actual outer material
+probe h=22 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=23 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=23 d=1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=23 d=-1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
+probe h=24 d=0.5 outcome=REJECTED_GEOMETRY stage=4 id=6 reason=primitive not subset of actual outer material
+probe h=24 d=1 outcome=REJECTED_GEOMETRY stage=4 id=6 reason=primitive not subset of actual outer material
+probe h=24 d=-1 outcome=REJECTED_GEOMETRY stage=4 id=4 reason=primitive not subset of actual outer material
+probe h=25 d=0.5 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=25 d=1 outcome=CHECKS_PASSED stage=6 id=6 reason=
+probe h=25 d=-1 outcome=REJECTED_GEOMETRY stage=2 id=18446744073709551615 reason=invalid exact boundary: closed=1, edge_manifold=1, vertex_manifold=1, oriented=1, nonzero_components=1, unreferenced_vertices=0, degenerate_faces=0, intersecti
