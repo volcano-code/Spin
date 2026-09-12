@@ -83,22 +83,40 @@ struct SourceCagePaperFunctional::Data {
     MomentMap map;
     std::size_t handlesOffset,n,k,derivativeValues;
     std::string configHash;
+    std::shared_ptr<const SourceCageShapeFunctional> shape;
     Data(const SourceCageMomentFunctional& s,const SourceCagePaperFunctionalConfig& c,const SourceCagePaperFrame& f)
         :source(s),config(c),frame(f),paper(c.objective,c.inertiaWeight,c.centerWeight),map(frameMap(f)) {
         if(!std::isfinite(c.fillWeight) || c.fillWeight<0)throw std::invalid_argument("source cage paper invalid fill weight");
+        SourceCageShapeFunctionalConfig shapeConfig;
+        shapeConfig.operatorConfig=c.shapeOperatorConfig;
+        shapeConfig.shapeWeight=c.shapeWeight;shapeConfig.displacementWeight=c.displacementWeight;
+        shapeConfig.maximumHandleGradientValues=c.maximumShapeHandleGradientValues;
+        shapeConfig.maximumWeightValues=c.maximumShapeWeightValues;
+        SourceCageShapeFunctional::validateConfig(shapeConfig);
+        if(c.shapeWeight!=0 || c.displacementWeight!=0)
+            shape=std::make_shared<const SourceCageShapeFunctional>(source.boundary().binding(),shapeConfig);
         if(!c.maximumJointDerivativeValues)resource("zero derivative budget");
         capacity(c.maximumJointDerivativeValues);
         handlesOffset=sum(source.betaCount(),paper.hasAngle()?1:0);
         n=sum(handlesOffset,product(4,source.handleCount()));capacity(n);capacity(source.betaCount());
         k=paper.hasAngle()?(c.objective==Spin2014Objective::YoYo?6:5):2;
         derivativeValues=sum(product(11+k,n),source.betaCount());capacity(derivativeValues);
-        Digest hash;hash.string("source-cage-paper-config-v1");
+        Digest hash;hash.string("source-cage-paper-config-v2");
         hash.string("PAPER_GIVENS/fixed-frame/IMPLEMENTATION_DEFAULT:source-unit-adjacency-fill");
         hash.string(source.configSha256());hash.string(source.upstreamSha256());
         hash.string(spin2014ObjectiveToken(c.objective));
         hash.real(c.inertiaWeight);hash.real(c.centerWeight);hash.real(c.fillWeight);
         hash.integer(c.maximumJointDerivativeValues);hash.matrix(f.origin);hash.matrix(f.rotation);
         hash.integer(n);hash.integer(k);configHash=hash.finish();
+        Digest shapeHash;shapeHash.string(configHash);
+        shapeHash.string(shape?"source-linearized-rotation-shape-enabled":"source-shape-disabled");
+        shapeHash.real(c.shapeWeight);shapeHash.real(c.displacementWeight);
+        const auto& sc=c.shapeOperatorConfig;
+        shapeHash.integer(sc.maximumVertices);shapeHash.integer(sc.maximumOneRingVertices);shapeHash.integer(sc.maximumSparseValues);
+        shapeHash.integer(sc.maximumConstructionWorkspaceDoubles);shapeHash.integer(sc.maximumEvaluationWorkspaceDoubles);shapeHash.real(sc.relativeRankTolerance);
+        shapeHash.integer(c.maximumShapeHandleGradientValues);shapeHash.integer(c.maximumShapeWeightValues);
+        if(shape)shapeHash.string(shape->configSha256());
+        configHash=shapeHash.finish();
     }
 };
 SourceCagePaperFunctional::SourceCagePaperFunctional(const SourceCageMomentFunctional& source,
@@ -109,6 +127,7 @@ SourceCagePaperFunctional::SourceCagePaperFunctional(const SourceCageMomentFunct
 const SourceCageMomentFunctional& SourceCagePaperFunctional::source() const {return data_->source;}
 const SourceCagePaperFunctionalConfig& SourceCagePaperFunctional::config() const {return data_->config;}
 const SourceCagePaperFrame& SourceCagePaperFunctional::frame() const {return data_->frame;}
+const SourceCageShapeFunctional* SourceCagePaperFunctional::shapeFunctional() const {return data_->shape.get();}
 const SourceCagePaperFunctional::MomentMap& SourceCagePaperFunctional::worldToSpinMomentMap() const {return data_->map;}
 std::size_t SourceCagePaperFunctional::betaCount() const {return source().betaCount();}
 std::size_t SourceCagePaperFunctional::handleCount() const {return source().handleCount();}
@@ -157,6 +176,14 @@ SourceCagePaperEvaluation SourceCagePaperFunctional::run(const Eigen::VectorXd& 
         const Eigen::VectorXd laplacianBeta=source().boundary().binding().domain().uniformLaplacian()*beta;
         result.fillPenalty=.5*config().fillWeight*beta.dot(laplacianBeta);
         result.totalObjective=result.paperObjective+result.fillPenalty;
+        SourceCageShapeEvaluation shape;
+        if(data_->shape) {
+            const auto outer=result.world.deformedPoints.topRows(source().boundary().outerPointCount());
+            shape=derivatives?data_->shape->evaluate(outer):data_->shape->evaluateValues(outer);
+            result.shapeEnergy=shape.shapeEnergy;result.displacementEnergy=shape.displacementEnergy;
+            result.shapeOutputSha256=shape.outputSha256;
+            result.totalObjective+=result.shapeEnergy+result.displacementEnergy;
+        }
         if(!laplacianBeta.allFinite() || !std::isfinite(result.fillPenalty) || !std::isfinite(result.totalObjective))
             throw std::overflow_error("source cage paper fill or objective overflow");
         if(derivatives) {
@@ -172,6 +199,8 @@ SourceCagePaperEvaluation SourceCagePaperFunctional::run(const Eigen::VectorXd& 
                     result.jointConstraintJacobian(row,col)=paper.constraintJacobian.row(row).head<10>().dot(result.spinMomentJacobian.col(col));
             }
             for(std::size_t i=0;i<betaCount();++i)result.jointGradient[i]+=config().fillWeight*laplacianBeta[i];
+            if(data_->shape)for(std::size_t i=0;i<4*handleCount();++i)
+                result.jointGradient[handleOffset()+i]+=shape.handleGradient[i];
             if(hasAngle()) {
                 result.jointGradient[angleOffset()]+=paper.objectiveGradient[10];
                 result.jointConstraintJacobian.col(angleOffset())+=paper.constraintJacobian.col(10);
@@ -179,9 +208,10 @@ SourceCagePaperEvaluation SourceCagePaperFunctional::run(const Eigen::VectorXd& 
             if(!result.spinMomentJacobian.allFinite() || !result.jointGradient.allFinite() || !result.jointConstraintJacobian.allFinite())
                 throw std::overflow_error("source cage paper joint derivative overflow");
         }
-        Digest hash;hash.string("source-cage-paper-output-v1");hash.string(configSha256());
+        Digest hash;hash.string("source-cage-paper-output-v2");hash.string(configSha256());
         hash.string(result.world.outputSha256);hash.matrix(beta);hash.real(phi);hash.matrix(parameters);hash.integer(derivatives);
         hash.matrix(moments);hash.real(result.paperObjective);hash.real(result.fillPenalty);hash.real(result.totalObjective);
+        hash.real(result.shapeEnergy);hash.real(result.displacementEnergy);hash.string(result.shapeOutputSha256);
         hash.matrix(result.constraints);hash.matrix(result.jointGradient);hash.matrix(result.jointConstraintJacobian);hash.matrix(result.spinMomentJacobian);
         result.outputSha256=hash.finish();return result;
     } catch(const std::bad_alloc&) {resource("evaluation allocation failure");}

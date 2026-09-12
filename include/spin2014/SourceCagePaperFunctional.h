@@ -1,5 +1,6 @@
 #pragma once
 #include "spin2014/SourceCageMomentFunctional.h"
+#include "spin2014/SourceCageShapeFunctional.h"
 #include "spin2014/Spin2014GivensProblem.h"
 #include <limits>
 
@@ -13,6 +14,10 @@ struct SourceCagePaperFunctionalConfig {
     Spin2014Objective objective=Spin2014Objective::StaticLowering;
     double inertiaWeight=1.,centerWeight=1.,fillWeight=0.;
     std::size_t maximumJointDerivativeValues=10000000;
+    double shapeWeight=0.,displacementWeight=0.;
+    LinearizedRotationLaplacianConfig shapeOperatorConfig;
+    std::size_t maximumShapeHandleGradientValues=1000000;
+    std::size_t maximumShapeWeightValues=1000000;
 };
 struct SourceCagePaperEvaluation {
     SourceCageMomentEvaluation world;
@@ -24,12 +29,15 @@ struct SourceCagePaperEvaluation {
     Eigen::MatrixXd spinMomentJacobian;      // 10 x N, exactly zero phi column.
     bool hasJacobians=false;
     std::string outputSha256;
+    double shapeEnergy=0.,displacementEnergy=0.;
+    std::string shapeOutputSha256;
 };
 /** Immutable actual-source paper functional. Joint order [beta, optional phi,
  * all original handles (scale,tx,ty,tz)]. Static has no angle coordinate.
  * The fixed frame is explicit and never follows the moving center of mass.
  * Zero origin/identity rotation and unit-adjacency fill are IMPLEMENTATION_DEFAULT.
- * Reconstruct after partition/BBW changes. No shape energy, full joint Hessian,
+ * Reconstruct after partition/BBW changes. Optional original-surface shape and
+ * displacement use fixed linearized rotations. No full joint Hessian,
  * optimizer, geometry legality or original-paper reproduction is asserted.
  * Derivative cap covers (10+K+1)*N+B doubles, separately from upstream budgets.
  * Transform scratch is two fixed ten-vectors; no size-dependent GEMM packing.
@@ -44,6 +52,8 @@ public:
     const SourceCageMomentFunctional& source() const;
     const SourceCagePaperFunctionalConfig& config() const;
     const SourceCagePaperFrame& frame() const;
+    // Null exactly when both regularizer weights are zero (no LD construction).
+    const SourceCageShapeFunctional* shapeFunctional() const;
     const MomentMap& worldToSpinMomentMap() const;
     std::size_t betaCount() const;
     std::size_t handleCount() const;
