@@ -3,10 +3,12 @@
 int main() {std::cerr<<"FAIL: actual-source represented geometry admission is not implemented\n";return 1;}
 #else
 #include "spin2014/SourceCageGeometry.h"
+#include "verification/ExactBoundaryAudit.h"
 #include "source_surface_test_utils.h"
 #include <type_traits>
 #include <limits>
 #include <cstring>
+#include <map>
 #include <Eigen/QR>
 using namespace spin2014;
 using namespace surface_test;
@@ -24,6 +26,59 @@ SourceConformingBoundary fixture(bool hollow=false,bool disconnected=false) {
     return SourceConformingBoundary(SourceCageBinding(domain,bbw,{}),{});
 }
 void near(double a,double b,const char* label) {require(std::abs(a-b)<1e-11,label);}
+enum class MotionFailure {SelfIntersection,NegativeOrientation,Protrusion};
+struct InvalidMotion {
+    int handle;
+    double translation;
+    SourceCageGeometryStage stage;
+    MotionFailure failure;
+};
+// The displayed reason is truncated. Derive complete exact boundary facts from
+// the same actual output, preserving all primitive references and their winding.
+// First-encounter local indexing is independent of the checker's sorted mapping.
+void checkMotionFailure(const SourceCagePaperFunctional& source,const Eigen::VectorXd& state,
+                        const SourceCageGeometryAudit& rejected,MotionFailure expected) {
+    const auto& record=rejected.facts().records.back();
+    const std::string reason=record.reason.data();
+    if(expected==MotionFailure::Protrusion) {
+        require(reason=="primitive not subset of actual outer material","protrusion retains exact subset-failure reason");
+        return;
+    }
+    const auto evaluation=source.evaluateValues(state);
+    require(evaluation.outputSha256==rejected.facts().sourceOutputSha256,"failure-category audit uses the same actual source output");
+    const auto& boundary=source.source().boundary();
+    Mesh mesh;
+    if(record.stage==SourceCageGeometryStage::OuterRegion) {
+        mesh.v=evaluation.world.deformedPoints.topRows(boundary.outerPointCount());
+        mesh.f=boundary.binding().source().outerFaces();
+    } else {
+        const auto& refs=boundary.primitiveBoundaries().at(record.first);
+        std::map<std::size_t,int> local;
+        mesh.f.resize(refs.size(),3);
+        for(std::size_t face=0;face<refs.size();++face) {
+            auto triangle=boundary.triangles().at(refs[face].triangle);
+            if(refs[face].orientation<0)std::swap(triangle[1],triangle[2]);
+            for(int corner=0;corner<3;++corner) {
+                const auto entry=local.emplace(triangle[corner],int(local.size()));
+                mesh.f(face,corner)=entry.first->second;
+            }
+        }
+        mesh.v.resize(local.size(),3);
+        for(const auto& entry:local)mesh.v.row(entry.second)=evaluation.world.deformedPoints.row(entry.first);
+    }
+    const auto exact=verification::auditExactTriangleBoundary(mesh.v,mesh.f,verification::ExactBoundaryOrientation::AnyNonzero);
+    const auto& facts=exact.facts();
+    require(facts.intersectionCompleted,"full exact failure-category intersection scan completed");
+    if(expected==MotionFailure::SelfIntersection) {
+        require(!facts.intersectingPairs.empty(),"self-intersection fixture must have actual exact intersecting triangle pairs");
+        require(reason.rfind("invalid exact boundary:",0)==0,"self-intersection retains boundary-failure reason");
+    } else {
+        require(facts.boundaryValid&&facts.intersectionFree&&facts.componentVolumeSigns==std::vector<int>{-1},
+                "orientation fixture must be a valid intersection-free negative-volume boundary");
+        require(reason=="component 0 orientation violates positive roots and alternating nesting",
+                "negative orientation retains signed-nesting failure reason");
+    }
+}
 }
 int main(int argc,char** argv) {try {
     static_assert(!std::is_default_constructible_v<SourceCageGeometryAudit>);
@@ -122,11 +177,16 @@ int main(int argc,char** argv) {try {
     }
     low=settings;low.maximumExactStringBytes=1;
     require(SourceCageGeometryChecker(f,low).check(x).facts().outcome==SourceCageGeometryOutcome::ResourceLimit,"retained exact-string cap cannot admit");
-    for(const auto test:std::array<std::array<double,3>,4>{{{{2,1,int(SourceCageGeometryStage::OuterRegion)}},{{3,1,int(SourceCageGeometryStage::PrimitiveRegion)}},{{4,1,int(SourceCageGeometryStage::PrimitiveRegion)}},{{1,-1,int(SourceCageGeometryStage::PrimitiveSubset)}}}}) {
-        auto z=x;z.head(f.betaCount()).setZero();z[f.handleOffset()+4*int(test[0])+1]+=test[1];
+    for(const auto& test:std::array<InvalidMotion,4>{{
+        {2,1,SourceCageGeometryStage::OuterRegion,MotionFailure::SelfIntersection},
+        {3,1,SourceCageGeometryStage::PrimitiveRegion,MotionFailure::SelfIntersection},
+        {4,1,SourceCageGeometryStage::PrimitiveRegion,MotionFailure::NegativeOrientation},
+        {1,-1,SourceCageGeometryStage::PrimitiveSubset,MotionFailure::Protrusion}}}) {
+        auto z=x;z.head(f.betaCount()).setZero();z[f.handleOffset()+4*test.handle+1]+=test.translation;
         const auto rejected=checker.check(z);
         require(rejected.facts().outcome==SourceCageGeometryOutcome::RejectedGeometry,"actual outer intersection / primitive intersection / inversion / protrusion rejected");
-        require(int(rejected.facts().records.back().stage)==int(test[2]),"actual rejection stage retained");
+        require(rejected.facts().records.back().stage==test.stage,"actual rejection stage retained");
+        checkMotionFailure(f,z,rejected,test.failure);
     }
     auto invalid=x;invalid[f.handleOffset()]=0;
     const auto unknown=checker.check(invalid);
