@@ -1,0 +1,24 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 10: spin-it-2014-source-cage-slqp
+1/1 Test #10: spin-it-2014-source-cage-slqp ....***Failed    5.72 sec
+objective 4 MAXIMUM_ITERATIONS records=12 invalid=0 PASS
+objective 3 MAXIMUM_ITERATIONS records=26 invalid=16 PASS
+objective 1 MAXIMUM_ITERATIONS records=26 invalid=16 PASS
+objective 2 MAXIMUM_ITERATIONS records=20 invalid=12 PASS
+objective 0 MAXIMUM_ITERATIONS records=11 invalid=3 PASS
+RESOURCE_LIMIT: source cage paper combined joint outputs and fill scratch budget
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+exact-geometry          =   5.72 sec*proc (1 test)
+native                  =   5.72 sec*proc (1 test)
+spin-it-2014            =   5.72 sec*proc (1 test)
+synthetic-regression    =   5.72 sec*proc (1 test)
+
+Total Test time (real) =   5.72 sec
+
+The following tests FAILED:
+	 10 - spin-it-2014-source-cage-slqp (Failed)

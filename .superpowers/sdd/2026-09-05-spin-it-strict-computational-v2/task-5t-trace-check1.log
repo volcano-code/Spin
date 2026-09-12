@@ -1,0 +1,11 @@
+PASS fixture=0 mode=0 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=0.77319
+PASS fixture=0 mode=1 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=1.31408
+PASS fixture=0 mode=2 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=61.3955
+PASS fixture=0 mode=3 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=1054.21
+PASS fixture=0 mode=4 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=0.0141605
+PASS fixture=1 mode=0 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=0.816685
+PASS fixture=1 mode=1 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=1.01231
+PASS fixture=1 mode=2 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=0.898188
+PASS fixture=1 mode=3 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=0.47153
+PASS fixture=1 mode=4 states=7 accepted=6 status=MAXIMUM_ITERATIONS final_kkt=0.00473954
+PASS 10 actual-source joint traces; numerical-only, no geometry or reproduction grant.

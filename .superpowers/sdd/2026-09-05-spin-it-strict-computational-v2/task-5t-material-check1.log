@@ -1,0 +1,11 @@
+PASS fixture=0 mode=0 columns=113 value_scaled=8.645e-16 joint_derivative_scaled=1.929e-14 nonzero_relative=6.996e-12 nearzero_absolute=0.000e+00 shape_relative=7.290e-14 shape_nearzero_absolute=0.000e+00
+PASS fixture=0 mode=1 columns=113 value_scaled=5.768e-16 joint_derivative_scaled=4.794e-10 nonzero_relative=5.836e-09 nearzero_absolute=0.000e+00 shape_relative=7.517e-14 shape_nearzero_absolute=0.000e+00
+PASS fixture=0 mode=2 columns=113 value_scaled=2.475e-15 joint_derivative_scaled=4.863e-11 nonzero_relative=5.157e-09 nearzero_absolute=1.971e-18 shape_relative=1.408e-13 shape_nearzero_absolute=0.000e+00
+PASS fixture=0 mode=3 columns=113 value_scaled=1.999e-13 joint_derivative_scaled=7.125e-09 nonzero_relative=7.053e-11 nearzero_absolute=2.000e-18 shape_relative=3.929e-13 shape_nearzero_absolute=0.000e+00
+PASS fixture=0 mode=4 columns=112 value_scaled=7.303e-16 joint_derivative_scaled=4.534e-16 nonzero_relative=3.186e-11 nearzero_absolute=0.000e+00 shape_relative=1.853e-12 shape_nearzero_absolute=0.000e+00
+PASS fixture=1 mode=0 columns=113 value_scaled=1.118e-14 joint_derivative_scaled=3.014e-13 nonzero_relative=1.277e-10 nearzero_absolute=0.000e+00 shape_relative=8.212e-14 shape_nearzero_absolute=0.000e+00
+PASS fixture=1 mode=1 columns=113 value_scaled=6.747e-14 joint_derivative_scaled=2.045e-13 nonzero_relative=4.824e-10 nearzero_absolute=7.614e-18 shape_relative=3.988e-13 shape_nearzero_absolute=0.000e+00
+PASS fixture=1 mode=2 columns=113 value_scaled=4.149e-14 joint_derivative_scaled=7.407e-14 nonzero_relative=3.003e-11 nearzero_absolute=4.717e-18 shape_relative=2.678e-12 shape_nearzero_absolute=0.000e+00
+PASS fixture=1 mode=3 columns=113 value_scaled=8.606e-15 joint_derivative_scaled=2.060e-13 nonzero_relative=3.939e-09 nearzero_absolute=0.000e+00 shape_relative=5.301e-14 shape_nearzero_absolute=0.000e+00
+PASS fixture=1 mode=4 columns=112 value_scaled=7.004e-16 joint_derivative_scaled=5.476e-16 nonzero_relative=3.894e-11 nearzero_absolute=0.000e+00 shape_relative=2.604e-11 shape_nearzero_absolute=0.000e+00
+10 actual source cases verified; synthetic shape integration, not a joint solver or paper reproduction.

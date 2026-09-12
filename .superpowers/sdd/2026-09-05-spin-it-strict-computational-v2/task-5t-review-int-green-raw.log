@@ -1,0 +1,54 @@
+Start testing: Sep 12 16:22 CST
+----------------------------------------------------------
+10/173 Testing: spin-it-2014-source-cage-slqp
+10/173 Test: spin-it-2014-source-cage-slqp
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-slqp-regression"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-source-cage-slqp" start time: Sep 12 16:22 CST
+Output:
+----------------------------------------------------------
+objective 4 MAXIMUM_ITERATIONS records=12 invalid=0 PASS
+objective 3 MAXIMUM_ITERATIONS records=26 invalid=16 PASS
+objective 1 MAXIMUM_ITERATIONS records=26 invalid=16 PASS
+objective 2 MAXIMUM_ITERATIONS records=20 invalid=12 PASS
+objective 0 MAXIMUM_ITERATIONS records=11 invalid=3 PASS
+one-shot allocator faults=30 returned resource evidence=17 PASS
+actual source all-mode SLQP, KKT, provenance, caps and resource latch PASS
+<end of output>
+Test time =   6.34 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-source-cage-slqp" end time: Sep 12 16:22 CST
+"spin-it-2014-source-cage-slqp" time elapsed: 00:00:06
+----------------------------------------------------------
+
+32/173 Testing: spin-it-2014-audited
+32/173 Test: spin-it-2014-audited
+Command: "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-audited"
+Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+"spin-it-2014-audited" start time: Sep 12 16:22 CST
+Output:
+----------------------------------------------------------
+status=CONVERGED x=0.75 residual=0
+subnormal_curvature=9.9998886718268301e-321 accepted=0 retained_inverse=0.125 retained_metric=1
+duplicate=CONVERGED inconsistent_L1=0.5 singular=RESTORATION_STALLED finite_failed_trials=24 invalid_trials=24 cap=WITNESS_LP_UNKNOWN: Iteration limit reached
+givens=CONVERGED kkt=6.3137399822221774e-11 phi=1.5707963268031664
+[PASS] audited actual KKT/restoration/analytic/Givens tests
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"spin-it-2014-audited" end time: Sep 12 16:22 CST
+"spin-it-2014-audited" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 12 16:22 CST
+
+exact-geometry =   6.34 sec*proc
+
+native =   6.34 sec*proc
+
+spin-it-2014 =   6.34 sec*proc
+
+synthetic-regression =   6.34 sec*proc
+

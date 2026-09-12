@@ -1,0 +1,8 @@
+Current registered exact-OFF child: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-dependency-contract-runs/run-c2585319cac27b2a
+427:LIBIGL_SKIP_DOWNLOAD:BOOL=ON
+481:MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS:BOOL=OFF
+490:MAKE_IT_STAND_BUILD_SPIN_IT_2014:BOOL=ON
+493:MAKE_IT_STAND_BUILD_SPIN_IT_FASTER:BOOL=OFF
+b0e633950dc36b6a72935caf259d8c89ac62ae55601f2791460a4c84b358149f  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-dependency-contract-runs/run-c2585319cac27b2a/enabled/build.ninja
+PASS: adapter/test and concurrent foreign implementation paths absent from exact-OFF graph.
+PASS: concurrent foreign implementation paths absent from assigned source graph.
