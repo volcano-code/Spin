@@ -217,3 +217,99 @@ establish deformed inversion/intersection/overlap legality, minimum shell
 thickness, exact final partition/seal, physical feasibility, regularizer/SLQP
 completeness or an original-paper reproduction. Every fixture here remains
 `SYNTHETIC_REGRESSION`. The remaining strict scientific gates are unchanged.
+
+## Review repair — legacy normal-overflow compatibility
+
+Implementation repair commit: `47f969538d4e7bd985bf17b3d5b3808df1d6dbba`.
+The review identified an exception-category regression from kernel factoring:
+at base `6f61946`, finite triangle coordinates whose cross product becomes
+nonfinite threw `invalid_argument` through both legacy surface entry points.
+The initial shared kernel instead threw `overflow_error`. This repair restores
+that legacy category without changing the source functional's required
+arithmetic-overflow category.
+
+The private kernel now has an explicit `NormalOverflowCategory` policy.
+Its default is `Arithmetic`; the legacy integration wrapper alone selects
+`LegacyInvalidArgument`. Only the nonfinite-normal branch consults the policy.
+There is no exception catch or translation around the full polynomial
+calculation, so later moment/derivative arithmetic overflow still propagates as
+`overflow_error`. No formulas, public signatures, weights or scientific identity
+conventions changed. No CMake or foreign-file changes were needed.
+
+Category-specific tests were added to the existing surface-value regression
+**before** the repair. Closed cube coordinates scaled by `1e200` remain finite
+but yield a nonfinite cross product; scaling by `1e100` leaves that normal
+finite and reaches later polynomial overflow. The test independently checks
+this geometric distinction and exercises both public surface entry points.
+The actual native RED (`task-5q-fix-red.log`, exit 1) recorded:
+
+```
+value normal overflow category=overflow_error
+differential normal overflow category=overflow_error
+value polynomial overflow category=overflow_error
+differential polynomial overflow category=overflow_error
+```
+
+The failing assertion requires both legacy normal cases to be
+`invalid_argument`. After the narrow repair,
+`task-5q-fix-category-green.log` records both normal cases as
+`invalid_argument`, both polynomial cases as `overflow_error`, and exit 0.
+The actual source pipeline also tests positive finite uniform scales `1e200`
+and `1e100` through both value and derivative evaluations, requiring
+`overflow_error` for all four calls.
+
+The same canonical assigned build was rebuilt at `-j3` under the existing
+24 GiB address-space limit, with downloads disabled. `task-5q-fix-build.log`
+completed 57/57 steps, relinking every affected executable and Python module.
+The focused surface-value, allocation, differential and source-cage tests
+passed **4/4 in 1.58 s** (`task-5q-fix-focused.log`).
+
+The subsequent safe 35-test suite finished **34/35 passing in 228.47 s**,
+exit 8 (`task-5q-fix-safe-suite.log`). Its only failure was the existing Python
+runner freshness assertion, which correctly observed concurrent changes in
+two foreign files between begin and end capture:
+
+- `experiments/m1_general_differential/CMakeLists.txt`
+- `tests/polyhedral_moment_differential_regression.cpp`
+
+The retained failure is `build/task-5f-runner-test-gtpjptst/success/evidence.json`.
+Its source identity changed from `95bdc72c6326bdfb551cb49ee2c8e4947b983e02e8c67b6e893a150c067e4d26`
+to `33a5f7897ea8f33a41dc1f76dbd00ae94310ceb4e648a74b64eaa6d98a1ee60a`.
+No repair-owned source file changed during the suite. Both dependency checks
+passed; the actual retained contract run is `run-5734279cb05c4f28`, with
+contract `PASSED` and audited child exit 0.
+
+Following the controller's ruling, only the failed Python test was retried
+once, with no validator, source-selection or external-work changes. That
+separate retry passed **1/1 in 24.06 s**, exit 0
+(`task-5q-fix-python-recovery.log`). Its fresh retained evidence is
+`build/task-5f-runner-test-9nio4som/success/evidence.json`, with identical
+begin/end source identity
+`a29cf9639d9993ea279c34fe2b0c699efe002067251d3f1dc1a49a760d9aa5b2`
+and no changed source records. Both captures were independently compared in
+`task-5q-fix-freshness-audit.log`. The test's later deliberate input tampering
+still exercises `STALE_RESULT`. This is **34/35 plus a separate recovered
+1/1**, not a claim that the repair had one wholly passing 35-test invocation.
+
+Final repaired core archive SHA-256:
+`1bdd1c8eb43e474359d6cbf6732f0c5faf18768fb7d4939ccaf4eff3306e86f2`.
+The controller independently relinked exporter `export-fix` (SHA-256
+`83b5b87a7d8b1c2666d140e440fc8f8d26123e228eea0cc6c3c5cf798b6336ad`).
+Both new exports are byte-identical to each other and the pre-repair scientific
+exports (`3c4610f96af31682ea7073d1d269f13292b8a7ce335ee51d191c9cc6933e4617`).
+`fix-check1.log` and `fix-check2.log` in the controller directory repeat all
+112-column signed-tetrahedron/complex-step checks with the same maximum errors;
+`fix-negative.log` confirms all 12 corruption cases rejected.
+
+| Repair evidence | SHA-256 |
+|---|---|
+| `task-5q-fix-red.log` | `64106d0027031bd55bf090002e196cd61981640350d632eadc7aa6208689d868` |
+| `task-5q-fix-category-green.log` | `f2aa86e82915ff56c8757d9a17f7f1f93278492e87165d6dffc88af1d0a731d5` |
+| `task-5q-fix-focused.log` | `57fb2536281d8f8bf175e8ea28862129108c626f001f6197dc962a1ef42a9cc2` |
+| `task-5q-fix-safe-suite.log` | `4f769be2c85e5a4492e27dbdde75cefe5e015b7d29b6f13494c1f213c9c67c52` |
+| `task-5q-fix-python-recovery.log` | `dba0de5ccaa3327b8d8a292781bc9161f4c2ba9c6ec7e5b3389ef496dae57453` |
+
+The four-file implementation/test diff and `git diff --check` were reviewed
+before committing. Existing logs and failed evidence remain retained; no
+threshold or scientific gate was relaxed. Global `PARTIAL_BLOCKED` and the
+original geometry/solver/paper limitations remain unchanged.
