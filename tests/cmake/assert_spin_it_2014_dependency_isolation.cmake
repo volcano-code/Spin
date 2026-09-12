@@ -35,6 +35,10 @@ file(WRITE "${SUCCESS_SOURCE}/CMakeLists.txt" [=[
 cmake_minimum_required(VERSION 3.16)
 project(spin_2014_dependency_fixture LANGUAGES CXX)
 option(MAKE_IT_STAND_BUILD_SPIN_IT_2014 "" OFF)
+option(LIBIGL_SKIP_DOWNLOAD "" OFF)
+if(NOT LIBIGL_SKIP_DOWNLOAD)
+    message(FATAL_ERROR "fixture dependency downloads were not disabled")
+endif()
 if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
     add_executable(
         spin-it-2014-audited

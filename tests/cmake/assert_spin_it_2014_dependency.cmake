@@ -65,6 +65,7 @@ run_retained_child(
         -DMAKE_IT_STAND_BUILD_REACHABILITY=OFF
         -DMAKE_IT_STAND_BUILD_SPIN_IT_FASTER=OFF
         -DMAKE_IT_STAND_BUILD_SPIN_IT_2014=OFF
+        -DLIBIGL_SKIP_DOWNLOAD=ON
 )
 if(NOT "${configure-disabled_status}" STREQUAL "0")
     fail_retained_contract("disabled Spin-It 2014 configuration failed")
@@ -86,6 +87,7 @@ run_retained_child(
         -DMAKE_IT_STAND_BUILD_REACHABILITY=OFF
         -DMAKE_IT_STAND_BUILD_SPIN_IT_FASTER=OFF
         -DMAKE_IT_STAND_BUILD_SPIN_IT_2014=ON
+        -DLIBIGL_SKIP_DOWNLOAD=ON
 )
 if(NOT "${configure-enabled_status}" STREQUAL "0")
     fail_retained_contract("enabled Spin-It 2014 configuration failed")
