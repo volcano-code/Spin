@@ -223,3 +223,70 @@ probe activation to explicit argv. The controller's independent export/oracle
 work is separate and its final evidence is not claimed as worker-owned tests.
 Remaining concerns are the explicit native allocator limitation and the two
 unreached actual-source negative cases above. No solver hookup was attempted.
+
+## Review follow-up — Minor2 failure-category assertions
+
+Addressed only the review finding that the four invalid-motion cases asserted
+the rejection stage without distinguishing primitive self-intersection from
+negative orientation. The compressed production formatting Minor remains
+deferred as instructed. No production, header, CMake or documentation source was
+changed in this follow-up; only the regression test and this report changed.
+
+The four fixed actual-control states now carry an explicit expected failure
+category. Outer and primitive self-intersection must have a completed exact
+intersection scan with nonempty intersecting triangle pairs. The inversion
+fixture must have a valid, intersection-free AnyNonzero boundary with exactly
+one negative-volume component, plus the exact signed-nesting failure reason.
+Protrusion must retain the explicit actual-material subset-failure reason.
+
+Because displayed boundary reasons are truncated, the test evaluates the same
+actual SourceCagePaperFunctional state again and verifies its output SHA against
+the rejected audit. It rebuilds the exact outer mesh or the rejected primitive
+using all actual points/oriented references, with first-encounter local indexing
+(separate from production's sorted indexing), and reads full existing exact
+boundary facts. No synthetic success struct, invented category evidence, or
+manufactured label/hash is used. This validates which actual represented
+geometry failure each named fixture exercises; it does not claim an independent
+replacement for the pinned exact backend.
+
+Discriminating RED: temporarily substituted the actual orientation fixture
+(handle4,tx+1) for the primitive-intersection fixture (handle3,tx+1), retaining
+the expected PrimitiveRegion stage and SelfIntersection category. The stage
+assertion passed, then the new exact-facts assertion failed:
+
+```
+ctest --test-dir build/task-5c-no-faster-20260909 \
+  -R '^spin-it-2014-source-cage-geometry$' --output-on-failure
+FAIL: self-intersection fixture must have actual exact intersecting triangle pairs
+0% tests passed, 1 tests failed (9.32 seconds)
+```
+
+The genuine handle3 intersection fixture was then restored. Focused GREEN:
+the same registered command passed1/1 in17.91seconds. Both builds were scoped
+to `spin-it-2014-source-cage-geometry-regression` at-j3 and compiled/relinked
+only that test; the core library was not rebuilt. All runs retained the
+24GiB/60minute and single-thread runtime guards. Per controller instruction,
+no broad suite was rerun for this assertion-only change; the earlier40/40group
+remains the production validation evidence, supplemented by this focused test.
+
+Preserved logs beside this report:
+
+- `task-5u-minor2-red-build.log`, `task-5u-minor2-red.log`
+- `task-5u-minor2-green-build.log`, `task-5u-minor2-green.log`
+- `task-5u-minor2-green-raw.log`, `task-5u-minor2-artifacts.sha256`
+
+Test-only commit: `a4630c7 test(spin2014): distinguish actual geometry rejection causes`.
+Updated test source SHA256:
+`cbfb1fbe5e23b5afaf65c9736f1786d85b03ef13e9c9f4f3d0ba5f8d3048fae0`.
+Updated native regression binary SHA256:
+`76bee264e92ed14f03c84a53b0d5cdc78cc5501ed218e8477a15800b86862522`.
+Core SHA256 remains
+`c9b4a09c9b128e558feb2c13896ca3e074ec951a64c4eab79cb52484759fe72e`;
+production header/source hashes remain610099f3... /669706d4... as recorded in
+the original source manifest and the new follow-up artifact manifest.
+
+Self-review confirmed that the final cases restore the original handles2/3/4/1
+and translations+1/+1/+1/-1. The new checks distinguish failure causes even when
+the stage is identical. The original exact-contact/pair-overlap coverage gaps
+and native allocator caveat remain unchanged; this review fix adds no geometry
+or solver capability.
