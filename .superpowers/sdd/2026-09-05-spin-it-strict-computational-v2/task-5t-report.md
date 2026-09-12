@@ -286,3 +286,88 @@ and time-dependent LP termination remain explicit limitations.
 The identified actual-OOM record bookkeeping edge was fixed and its real
 allocator-fault RED/GREEN evidence is recorded above. Known configured-budget
 exhaustion and source resource failures remain separately covered natively.
+
+## Independent review fix: native trace coefficient indexing
+
+Review identified that bounding N by `INT_MAX/4` did not establish K×N ≤ INT_MAX
+for rotational objectives with K=5 or K=6. The unchanged generic
+`SlqpAuditTrace.cpp` serializer uses `for(int i=0; i<a.size(); ++i)` for the full
+constraint Jacobian. Defaults and the existing small fixtures were unaffected,
+but the adapter's accepted-cap contract was too broad. The finding was verified
+against that actual upstream loop before implementing the correction.
+
+Fix commit: `cccc1b9ee1a548e2830cdad9115f459258dd1e41`,
+`fix(spin2014): bound source SLQP native trace coefficient indices`, author
+`volcano <xuxinyao307@gmail.com>`. Exactly four owned files changed: source,
+header, regression and numerical documentation (19 inserted / 3 removed lines).
+No generic engine, geometry, objective, target, tolerance, fixture or foreign
+source was changed; CMake was unchanged.
+
+The public `maximumStateValues` cap must now be ≤ `INT_MAX/6`, conservatively
+covering all five objectives. Preflight also separately checks actual K×N with
+checked multiplication against INT_MAX, in addition to its existing state-loop,
+LP indexing, Eigen and byte limits. The header and numerical documentation state
+this explicit public-cap constraint.
+
+TDD used a small settings-only boundary case on the existing actual-source
+112-state fixture: `maximumStateValues=INT_MAX/6` must permit resource planning;
+one above must throw RESOURCE_LIMIT before allocation. No huge source mesh or
+matrix was constructed to test this integer boundary. This test was added before
+the production guard. Registered RED produced **0/1 passed, 5.37s**, failing
+`one-above native serialization state cap rejected before allocation` because
+the old production accepted that cap. Evidence:
+`build/task-5t-review-int-red-build.log` and
+`build/task-5t-review-int-red.log` (SHA256
+`8cbceeb9ddca18b656db67d4b67c7b40a23e50641fbc1c7b462f85eeb75d7c00`).
+
+```sh
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+ulimit -v 25165824
+timeout 3600 cmake --build build/task-5c-no-faster-20260909 \
+  --target spin-it-2014-source-cage-slqp-regression -j3
+timeout 3600 ctest --test-dir build/task-5c-no-faster-20260909 \
+  --output-on-failure -j1 -R '^spin-it-2014-source-cage-slqp$'
+```
+
+After the fix, the required affected native regression and relevant audited
+solver test were rebuilt and passed **2/2, 6.35s** (source-cage 6.34s, audited
+0.01s). The source-cage test still covers all five nonstationary objectives,
+initial failures, configured caps and the real one-shot allocator sweep.
+
+```sh
+timeout 3600 cmake --build build/task-5c-no-faster-20260909 \
+  --target spin-it-2014-source-cage-slqp-regression spin-it-2014-audited -j3
+timeout 3600 ctest --test-dir build/task-5c-no-faster-20260909 \
+  --output-on-failure -j1 \
+  -R '^(spin-it-2014-source-cage-slqp|spin-it-2014-audited)$'
+```
+
+GREEN build: `build/task-5t-review-int-green-build.log`.
+GREEN result: `build/task-5t-review-int-green.log`, SHA256
+`8b33667eda88c8fc5850459a77025bf7580fa771cc89607dc2208b4e7e943732`.
+Fresh raw result: `build/task-5t-review-int-green-raw.log`, SHA256
+`e5563e93057030ef9e68e3067ee40b33e55b032d0a8c50f1cb3a5746e15c5a84`.
+
+Scoped `build/task-5t-review-int-source-begin.sha256` and
+`build/task-5t-review-int-source-end.sha256` compare exactly, with SHA256
+`996d30fba57f9bf31dbec5fdfe4d9111fecc33f582f0e980d1e890a7806a1824`.
+Final review-fix core SHA256:
+`c3d33e9fb849ce959e54a9eeb24a51c24b4cdfbddd7c97151740b6d4a0a332be`.
+Source-cage regression SHA256:
+`76e1cc783ea28b1e469fc745520a654cf149c334ee0ae6f27d07da3955d82b4b`.
+Audited regression SHA256:
+`a6bafe9c26bfd93cc35c3f8bd27bedee128f8b65772a3c34457ef2a1082f3131`.
+
+Per the controller's narrowed review-fix validation scope, the 39-test group was
+not rerun for this guard. The 39/39, Python and exact-OFF results above remain
+historical **pre-review-fix** evidence; the fresh post-fix native evidence is
+the 2/2 run recorded here. The controller independently relinked and ran its
+actual-source exporter twice against the final review-fix core in
+`build/task-5t-controller-reviewfix-J6wJC4`. Both 10-trace and 10-endpoint checks
+passed; 46 trace and 36 material corruptions were rejected. Exact `cmp` passed
+for both repeated endpoint and raw trace files. The implementer inspected the
+four check logs, both negative-check logs and the exact-repeat comparisons.
+The exporter binary SHA256 reported by the controller is
+`7e09a092b1682963006f22649e2b7ddd14e7b7f3f99779c88c34336a9010de98`.
+The controller also confirmed unchanged scientific hashes relative to the
+pre-guard cases. Scientific and geometry-admission limits are unchanged.
