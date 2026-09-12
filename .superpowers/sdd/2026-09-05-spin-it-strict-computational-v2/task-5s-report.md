@@ -263,3 +263,66 @@ This report is committed separately with subject
 `docs(spin2014): record Task5s shape functional verification`; no controller
 helper, public status/gap document, foreign file, or whole folder is staged.
 The controller owns independent review and any later acceptance decision.
+
+## Review fix 1: isolated-vertex fixture (2026-09-12)
+
+Reviewer/controller identified a concrete negative-test coverage flaw: the
+isolated-vertex case reused `bad` after the preceding zero-area case had set
+row 0 equal to row 1. Its invalid_argument assertion therefore passed on an
+earlier zero-area rejection without reaching isolated-vertex validation.
+Inspection confirmed this data flow and the existing correct production
+isolated-vertex check. This was a test-only repair; production, CMake, component
+documentation, foreign files, and all numerical thresholds remained unchanged.
+
+Following review-reception/debugging/TDD instructions, first strengthened only
+the assertion to require the `isolated vertex` diagnostic. With the old malformed
+fixture, the affected registered test failed as expected. Then reset `bad=rest`
+before appending the isolated vertex. The diagnostic-specific assertion passed
+on the corrected fixture, and the entire affected shape regression passed.
+
+Exact build/run command for each phase (log suffix `red` or `green`):
+
+```sh
+bash -o pipefail -c 'ulimit -v 25165824; cmake --build /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909 --target spin-it-2014-source-cage-shape-regression -j3 2>&1 | tee build/task-5s-fix1-build-red.log && ctest --test-dir build/task-5c-no-faster-20260909 --output-on-failure -V -j1 -R "^spin-it-2014-source-cage-shape$" 2>&1 | tee build/task-5s-fix1-red.log'
+bash -o pipefail -c 'ulimit -v 25165824; cmake --build /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909 --target spin-it-2014-source-cage-shape-regression -j3 2>&1 | tee build/task-5s-fix1-build-green.log && ctest --test-dir build/task-5c-no-faster-20260909 --output-on-failure -V -j1 -R "^spin-it-2014-source-cage-shape$" 2>&1 | tee build/task-5s-fix1-green.log'
+```
+
+RED: **1/1 failed, 0.01s**, exit 8, diagnostic
+`isolated vertex fixture must reach isolated-vertex validation`.
+`build/task-5s-fix1-red.log` SHA256
+`b8c440107215f5e5e12bad1ae5e1ee1453219db023f148cf036da51337be5dce`.
+GREEN: **1/1 passed, 1.09s**, exit 0, including both actual fixtures/all five
+modes/all columns and the corrected isolated-vertex check.
+`build/task-5s-fix1-green.log` SHA256
+`4e45402166f151f2ec7d5618b0e749030b821609b474eaa339f7534f0afb1af9`.
+The build logs show only test translation-unit compilation and executable
+linking. Existing cache was used without configuring or downloading anything.
+
+Production/source/core before and after manifests are retained as
+`build/task-5s-fix1-production-before.sha256` and
+`build/task-5s-fix1-production-after.sha256`. `cmp` passed; their identical
+content SHA256 is
+`d723cf4c8e8256b9aebc967c2244f72db8d4dc5661e14508a2b4bcd843c15fc2`.
+The core stayed
+`6450f4e751ca0b3a61c5c4a7ab9c4f22cc9193715f2fd96a6cb320a101ded854`.
+These manifests cover the original eight non-test implementation/doc/CMake
+paths and the core archive. Test-source/executable states are retained in
+`build/task-5s-fix1-test-{before,red,green}.sha256`:
+
+| State | Test source SHA256 | Test executable SHA256 |
+| --- | --- | --- |
+| Before | `afcfdee54ad8749a0e9138dfba83653b360cf90ebc274c1480b5867ca38a8880` | `e36274aabc071ed251839e21cf0dceebb66010b1e9a135a078fd8f0b90299d43` |
+| RED | `bf02d71815da10a76abb805fcd23b39baff2f305bcaedc8b7f8e57d6325fc50f` | `98fe58f8c7e5ff2a4a26a4c2d91b3481d3ccf0925cce0b62ae08781133365d3a` |
+| GREEN | `394413b3e1a12aa25f28f01674a3ddd3e9cd3a27d8ca29438d4fb00ff02364d5` | `adbd83579130fbe0ba7eae15e481b7b023501e578454bc407fe84a6e31c57629` |
+
+The original **38/38** result above binds the original test state and unchanged
+production implementation. It did not establish isolated-vertex negative-case
+coverage because of this flaw. The post-fix run was the affected registered
+shape test only; no post-fix 38-test rerun is claimed or needed for this
+test-fixture-only correction. Historical logs remain retained.
+
+Test-only commit: `06f74a5` —
+`test(spin2014): isolate the shape operator isolated-vertex fixture`.
+Index inspection confirmed only that test path. This append is committed
+separately with subject `docs(spin2014): record Task5s isolated-vertex review fix`.
+No production correction or unresolved numerical concern arose from this fix.
