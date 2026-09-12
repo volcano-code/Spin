@@ -1,3 +1,54 @@
+#if defined(SPIN2014_PAPER_ALLOCATION_PROBE)
+// These macros belong only to this probe translation unit. Forcing dynamic
+// stack scratch through Eigen's allocator exposes GEMM packing under the same
+// guard as heap scratch; fixed-size local vectors still live on the stack.
+#include <stdexcept>
+#define EIGEN_RUNTIME_NO_MALLOC
+#define EIGEN_STACK_ALLOCATION_LIMIT 0
+#define eigen_assert(condition) do { if(!(condition)) throw std::runtime_error("probe: Eigen allocation forbidden"); } while(false)
+#include "spin2014/SourceCagePaperFunctional.h"
+#include <iostream>
+
+int main() {
+    try {
+        spin2014::SourceCagePaperFunctional::MomentMap map;
+        for(int i=0;i<10;++i)for(int j=0;j<10;++j)map(i,j)=.03*(i+1)-.02*j;
+        bool helpersPassed=true;
+        for(int columns:{8,104}) {
+            Eigen::MatrixXd input(10,columns),output(10,columns),expected(10,columns);
+            for(int i=0;i<10;++i)for(int j=0;j<columns;++j)input(i,j)=.01*(1+i+2*j);
+            for(int i=0;i<10;++i)for(int j=0;j<columns;++j) {
+                expected(i,j)=0;
+                for(int k=0;k<10;++k)expected(i,j)+=map(i,k)*input(k,j);
+            }
+            // Calibration must detect the actual former Eigen GEMM route,
+            // including buffers normally allocated by alloca rather than malloc.
+            Eigen::internal::set_is_malloc_allowed(false);
+            bool packingRejected=false;
+            try {output.noalias()=map*input;}
+            catch(const std::runtime_error&) {packingRejected=true;}
+            Eigen::internal::set_is_malloc_allowed(true);
+            if(!packingRejected)throw std::runtime_error("probe did not detect original GEMM packing");
+            std::cout<<"guard rejected former GEMM 10x"<<columns<<std::endl;
+
+            Eigen::internal::set_is_malloc_allowed(false);
+            bool helperPassed=true;
+            try {spin2014::detail::transformSourceCageMomentColumns(map,input,output);}
+            catch(const std::runtime_error& e) {
+                Eigen::internal::set_is_malloc_allowed(true);
+                std::cerr<<"production helper 10x"<<columns<<": "<<e.what()<<'\n';
+                helperPassed=false;helpersPassed=false;
+            }
+            Eigen::internal::set_is_malloc_allowed(true);
+            if(!helperPassed)continue;
+            if((output-expected).cwiseAbs().maxCoeff()>1e-12)
+                throw std::runtime_error("guarded transform disagrees with scalar reference");
+            std::cout<<"production helper 10x"<<columns<<" allocation-free PASS\n";
+        }
+        return helpersPassed?0:1;
+    } catch(const std::exception& e) {std::cerr<<e.what()<<'\n';return 1;}
+}
+#else
 #include "spin2014/SourceCagePaperFunctional.h"
 #include "source_surface_test_utils.h"
 #include <Eigen/Geometry>
@@ -360,3 +411,4 @@ int main() {
     }
     catch(const std::exception& e) {std::cerr<<e.what()<<'\n';return 1;}
 }
+#endif

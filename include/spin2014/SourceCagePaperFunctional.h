@@ -32,7 +32,9 @@ struct SourceCagePaperEvaluation {
  * Reconstruct after partition/BBW changes. No shape energy, full joint Hessian,
  * optimizer, geometry legality or original-paper reproduction is asserted.
  * Derivative cap covers (10+K+1)*N+B doubles, separately from upstream budgets.
- * The reused eleven-coordinate Givens workspace is bounded independently of N.
+ * Transform scratch is two fixed ten-vectors; no size-dependent GEMM packing.
+ * This constant scratch and the eleven-coordinate Givens workspace do not grow
+ * with N and are separate from the joint array cap.
  */
 class SourceCagePaperFunctional {
 public:
@@ -66,5 +68,19 @@ private:
     SourceCagePaperEvaluation run(const Eigen::VectorXd&,double,const Eigen::VectorXd&,bool) const;
     SourceCagePaperEvaluation runState(const Eigen::VectorXd&,bool) const;
 };
+namespace detail {
+// Internal operation on preallocated ten-row input/output matrices. Copy each
+// input into fixed storage so Eigen cannot select dynamic GEMM packing. The
+// two ten-vectors are constant stack workspace, independent of the column count.
+inline void transformSourceCageMomentColumns(const SourceCagePaperFunctional::MomentMap& map,
+    const Eigen::MatrixXd& input,Eigen::Ref<Eigen::MatrixXd> output) {
+    using Column=Eigen::Matrix<double,10,1>;
+    for(Eigen::Index column=0;column<input.cols();++column) {
+        const Column world=input.col(column);
+        const Column spin=map*world;
+        output.col(column)=spin;
+    }
+}
+}
 }
 #endif

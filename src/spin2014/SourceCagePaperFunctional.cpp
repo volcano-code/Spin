@@ -161,8 +161,8 @@ SourceCagePaperEvaluation SourceCagePaperFunctional::run(const Eigen::VectorXd& 
             throw std::overflow_error("source cage paper fill or objective overflow");
         if(derivatives) {
             result.spinMomentJacobian=Eigen::MatrixXd::Zero(10,stateCount());
-            result.spinMomentJacobian.leftCols(betaCount()).noalias()=data_->map*result.world.betaJacobian;
-            result.spinMomentJacobian.rightCols(4*handleCount()).noalias()=data_->map*result.world.handleJacobian;
+            detail::transformSourceCageMomentColumns(data_->map,result.world.betaJacobian,result.spinMomentJacobian.leftCols(betaCount()));
+            detail::transformSourceCageMomentColumns(data_->map,result.world.handleJacobian,result.spinMomentJacobian.rightCols(4*handleCount()));
             result.jointGradient.resize(stateCount());result.jointConstraintJacobian.resize(constraintCount(),stateCount());
             // Column-wise contraction keeps the chain-rule workspace fixed; no
             // 11 x N temporary or second copy of a global joint matrix.

@@ -81,8 +81,12 @@ local derivative workspace, independent of B, H and N.
 The default positive `maximumJointDerivativeValues` is 10,000,000 doubles.
 The derivative path checks the combined `(10+K+1) N + B` capacity before
 allocation: retained spin raw Jacobian, constraint Jacobian, objective gradient,
-and B-value sparse multiply scratch. Index, byte, sum and product arithmetic
-are checked. Upstream moment budgets remain independently enforced. No P×H,
+and B-value sparse multiply scratch. Each source Jacobian column is transformed
+using two fixed ten-vectors on the stack (20 doubles of constant workspace).
+This avoids Eigen GEMM packing buffers that would grow with the column count;
+the constant transform scratch and bounded local Givens workspace are separate
+from the joint array cap. Index, byte, sum and product arithmetic are checked.
+Upstream moment budgets remain independently enforced. No P×H,
 P×4H, or dense B×B array is created. The value-only path does not require the
 joint derivative budget and works with a cap too small for derivatives.
 
@@ -117,3 +121,11 @@ must meet 1e-6 relative error when its analytic magnitude exceeds 1e-7, or the
 predeclared 2e-9 absolute rule otherwise. No fixture or tolerance is changed.
 The task report preserves the raw ordinary double finite-subtraction
 discrepancies separately; these must not be called all-green double FD.
+
+The dedicated allocation regression compiles the same production-used inline
+column transform with translation-unit-local Eigen runtime allocation checking.
+It forces dynamic stack packing through the checked allocator, verifies that
+the former GEMM expression is rejected, then requires the actual helper to run
+with preallocated 10×8 and 10×104 outputs while allocation is forbidden. It
+checks the numerical result against scalar loops. This probe exercises no
+upstream evaluator; the normal regression continues linking the actual core.
