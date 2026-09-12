@@ -69,7 +69,9 @@ void validateSettings(const SourceCageSlqpSettings& settings) {
     const auto& b=settings.budget;
     if(!b.maximumStateValues||!b.maximumSourceEvaluations||!b.maximumTraceRows||!b.maximumCallbackRecords||!b.maximumAdapterBytes)
         resource("zero cap");
-    if(b.maximumStateValues>std::size_t(INT_MAX/4)||b.maximumSourceEvaluations>std::size_t(INT_MAX)||
+    // The unchanged generic trace serializer indexes every K x N coefficient
+    // with int; K can be six. Cap the public state budget conservatively too.
+    if(b.maximumStateValues>std::size_t(INT_MAX/6)||b.maximumSourceEvaluations>std::size_t(INT_MAX)||
        b.maximumTraceRows>std::size_t(INT_MAX)||b.maximumCallbackRecords>std::size_t(INT_MAX)||
        b.maximumAdapterBytes>std::size_t(std::numeric_limits<std::ptrdiff_t>::max()))resource("unrepresentable cap");
 }
@@ -133,6 +135,7 @@ SourceCageSlqpResources planSourceCageSlqpResources(const SourceCagePaperFunctio
     const auto p=std::size_t(f.source().boundary().points().rows()),outer=f.source().boundary().outerPointCount();
     if(n!=f.stateCount()||n>s.budget.maximumStateValues||n>std::size_t(INT_MAX/4)||
        add(n,mul(2,k))>std::size_t(INT_MAX)||(k!=2&&k!=5&&k!=6))resource("state or native LP dimensions");
+    if(mul(k,n)>std::size_t(INT_MAX))resource("native trace matrix coefficient count");
     const auto i=std::size_t(s.solver.maximumIterations),l=std::size_t(s.solver.maximumLineSearchSteps),m=std::size_t(s.solver.lbfgsMemory);
     r.stateValues=n;r.constraints=k;r.traceRows=add(i,1);r.callbackRecords=add(2,mul(mul(3,i),l));
     if(r.traceRows>s.budget.maximumTraceRows||r.callbackRecords>s.budget.maximumCallbackRecords)

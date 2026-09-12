@@ -7,6 +7,7 @@
 namespace spin2014 {
 // All defaults and accounting factors are IMPLEMENTATION_DEFAULT.
 struct SourceCageSlqpBudget {
+    // Cannot exceed INT_MAX/6: generic trace matrices use int coefficient indices.
     std::size_t maximumStateValues=100000;
     std::size_t maximumSourceEvaluations=10000; // Includes the final direct evaluation.
     std::size_t maximumTraceRows=1000;

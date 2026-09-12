@@ -74,8 +74,11 @@ and feasibility tolerance 1e-9. HiGHS uses one thread, parallel off, seed zero,
 simplex, and presolve on. Adapter caps default to 100000 state values, 10000
 actual source calls, 1000 trace rows, 100000 call records and 512 MiB known-buffer
 budget. Caps reject zero and unrepresentable values; they never shrink the
-problem or increase silently. State capacity also respects the generic/native
-integer loops and HiGHS N+2K indexing.
+problem or increase silently. The public state cap cannot exceed `INT_MAX/6`,
+conservatively covering every objective because the unchanged generic trace
+serializer visits K×N matrix coefficients using an `int` counter and K can be
+six. Preflight additionally checks the actual K×N coefficient count with checked
+multiplication, as well as generic/native state loops and HiGHS N+2K indexing.
 
 `planSourceCageSlqpResources` checks additions, products, bytes and matrix index
 capacity before size-dependent adapter allocation. Let N=B+a+4H, K=2/5/6,

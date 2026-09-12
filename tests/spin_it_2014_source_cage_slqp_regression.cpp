@@ -11,6 +11,7 @@ int main() {std::cerr<<"FAIL: typed actual-source audited joint SLQP adapter is 
 #include <cstdlib>
 #include <cstring>
 #include <new>
+#include <climits>
 // Test-only, one-shot real allocator failure. No production callback or hook.
 // Sweep actual 65-byte SHA result allocations rather than assuming an ordinal.
 namespace allocator_probe {
@@ -177,6 +178,14 @@ int main() {try {
     const auto changedResult=solveSourceCageSlqp(changed,initialState(changed),s);
     require(changedResult.scientificSha256!=reference.scientificSha256&&changedResult.numerical.trace.front().historyBefore==0,"source rebinding resets history and identity");
     const auto plan=planSourceCageSlqpResources(f,s);
+    // The generic trace serializer visits K*N matrix coefficients using int.
+    // Reject oversized public caps without allocating an oversized source.
+    auto nativeCap=s;nativeCap.budget.maximumStateValues=std::size_t(INT_MAX)/6;
+    require(planSourceCageSlqpResources(f,nativeCap).stateValues==112,
+        "exact conservative native serialization state cap permits small source");
+    ++nativeCap.budget.maximumStateValues;
+    rejects<std::length_error>([&]{planSourceCageSlqpResources(f,nativeCap);},
+        "one-above native serialization state cap rejected before allocation");
     auto exact=s;exact.budget.maximumStateValues=f.stateCount();exact.budget.maximumTraceRows=plan.traceRows;
     exact.budget.maximumCallbackRecords=plan.callbackRecords;exact.budget.maximumAdapterBytes=plan.requiredBytes;
     require(solveSourceCageSlqp(f,x,exact).finalEvaluationAvailable,"exact accounting caps permit solve");
