@@ -1,0 +1,20 @@
+CMakeLists.txt: FAILED
+include/spin2014/SourceCageGuardedSlqp.h: OK
+src/spin2014/SourceCageSlqp.cpp: OK
+build/task-5c-no-faster-20260909/libmake_it_stand_core.a: FAILED
+.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5v-controller-export.cpp: OK
+.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5v-controller-check.py: OK
+.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5v-controller-negative.py: OK
+.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5u-controller-check.py: OK
+.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5t-controller-check.py: OK
+/usr/bin/c++: OK
+/home/lin/anaconda3/bin/python: OK
+/home/lin/anaconda3/lib/libboost_system.a: OK
+/usr/lib/x86_64-linux-gnu/libgmp.so: OK
+/usr/lib/x86_64-linux-gnu/libmpfr.so: OK
+/home/lin/anaconda3/lib/libboost_thread.a: OK
+build/task-5c-no-faster-20260909/lib/libhighs.a: OK
+/usr/lib/x86_64-linux-gnu/libz.so: OK
+tests/source_surface_test_utils.h: OK
+sha256sum: WARNING: 2 computed checksums did NOT match
+STALE_RESULT: frozen source, helper, dependency or core inputs differ

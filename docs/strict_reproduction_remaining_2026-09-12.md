@@ -213,11 +213,35 @@ Task5u 完成时尚未接入 SLQP；该后续工作现由下方 Task5v 完成限
 重新验证材料；上述两类几何负例缺口继续保留。没有新增原论文模型或
 OpenGL 物理仿真成功数，不能据此宣称两篇论文完整复现。
 
+## 后续推进：Task5w 自适应分区的实际材料重绑定
+
+新增独立的 `rebindSourceCageAdaptive` 事务：从实际材料函数复制分区，执行
+分数单元细分与同值近二值兄弟合并，完整保留 BBW、全部手柄参数、角变量、
+密度、坐标系和数值配置，重建材料绑定、公共边界与论文函数。输入与输出
+均重新检查实际几何和材料；失败不发布新检查点，旧输入保持不变。
+
+这一层不自动执行完整多轮自适应优化，也不继承旧 KKT、L-BFGS 历史或
+通过标记。新检查点可以送入已有受保护求解器，重新开始数值求解。
+静止或全局仿射情形的质量矩守恒，与一般非仿射细分后的几何近似变化
+分开记录；不能用静止分区的质量矩守恒冒充变形材料守恒。
+
+Build Graph 辅助确认了旧自适应入口仅处理填充率，以及新入口的依赖边界。
+其 C++ 导入/调用解析不完整，检查仍以实际源码、原生运行和独立积分为准。
+本轮最终验证与审查记录见下方 Task5w 链接，不将图节点数作为正确性指标。
+
+仍需补齐“旧几何通过、细分后新几何拒绝”的可靠实际负例；已尝试的
+44组固定模式保留，不能用输入拒绝、资源失败或舍入级间距差异替代。
+旧 Task5u 的实际接触、正体积重叠负例也仍然开放。完整自适应循环、
+二值材料重新验证/封存、连续映射合法性、原论文案例及 Faster 其余缺口
+没有因本次接口接通而自动完成；总体保持 `PARTIAL_BLOCKED`。
+
 因此目前不能给出可信的“已完成百分之多少”。终点仍是逐项满足
 `VERIFIED_COMPUTATIONAL_REPRODUCTION`，并永久区分作者逐位一致性；
 实物打印和真实旋转/水槽实验依既定范围为 `NOT_IN_SCOPE`。
 
 相关证据：[实际材料联合求解](spin2014_source_cage_slqp.md)、
+[自适应重绑定](spin2014_source_cage_adaptive_rebind.md)、
+[Task5w 独立验证](../.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5w-controller-verification.md)、
 [实际变形几何检查器](spin2014_source_cage_geometry.md)、
 [几何保护联合求解](spin2014_source_cage_guarded_slqp.md)、
 [本轮独立验证](../.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5v-controller-verification.md)、

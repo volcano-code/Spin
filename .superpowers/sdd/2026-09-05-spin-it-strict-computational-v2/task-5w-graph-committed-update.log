@@ -1,0 +1,3 @@
+INFO: Python import resolution: {'files_indexed': 139, 'imports_updated': 0, 'imports_resolved': 0, 'imports_ambiguous': 0}
+INFO: FTS index rebuilt: 5624 rows indexed
+Incremental: 3 files updated, 56 nodes, 867 edges (postprocess=full)

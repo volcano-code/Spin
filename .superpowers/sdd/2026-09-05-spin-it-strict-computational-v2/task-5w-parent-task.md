@@ -1,0 +1,4 @@
+## Task 5: Remaining complete 2014 method (M3)
+
+Restore explicit Givens phi and equality constraints; source-surface native sparse octree with boundary subtrees, initial midlevel, genuine level9 refinement, continuous solve, split/merge, Laplacian and binary validation. Implement full SLQP/active-set/feasibility-restoration/L-BFGS/merit/KKT and history changes. Extract complete cage from intersecting cells (no handle subsampling), finer-grid BBW, trilinear interpolation, joint beta/h optimization and published regularizers with precommit geometry checks. Full dual-density material products, measured cavities and original manual-cut digital replay. All original cases need original asset/pose/thickness/weights; missing data blocks, expected hollow-only insufficiency remains a valid comparison outcome. T-Rex baseline must use identical inputs and discretization.
+

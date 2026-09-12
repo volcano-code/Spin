@@ -1,0 +1,729 @@
+{
+  "status": "ok",
+  "pattern": "callees_of",
+  "target": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+  "description": "Find all functions called by a given function",
+  "summary": "Found 34 result(s) for callees_of('/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)')",
+  "result_count": 34,
+  "results_omitted": 0,
+  "results": [
+    {
+      "id": 3421,
+      "kind": "Function",
+      "name": "validateSourceAdaptiveSpinRequest",
+      "qualified_name": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.validateSourceAdaptiveSpinRequest(const SourceAdaptiveSpinRequest&)",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line_start": 14,
+      "line_end": 25,
+      "language": "cpp",
+      "parent_name": "spin2014",
+      "is_test": false
+    },
+    {
+      "id": 3422,
+      "kind": "Function",
+      "name": "computeSourceAdaptiveSpinRequestHash",
+      "qualified_name": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.computeSourceAdaptiveSpinRequestHash(const SourceAdaptiveSpinRequest&)",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line_start": 26,
+      "line_end": 31,
+      "language": "cpp",
+      "parent_name": "spin2014",
+      "is_test": false
+    },
+    {
+      "kind": "Function",
+      "name": "config",
+      "qualified_name": "config",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "Eigen::VectorXd::Constant",
+      "qualified_name": "Eigen::VectorXd::Constant",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "size",
+      "qualified_name": "size",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "leaves",
+      "qualified_name": "leaves",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "partitionHash",
+      "qualified_name": "partitionHash",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "snapshot",
+      "qualified_name": "snapshot"
+    },
+    {
+      "kind": "Function",
+      "name": "SpinIt2014MomentProblem::fromObjective",
+      "qualified_name": "SpinIt2014MomentProblem::fromObjective",
+      "resolution": "ambiguous",
+      "candidates": [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/include/spin2014/SpinIt2014MomentProblem.h::spin2014.SpinIt2014MomentProblem.fromObjective(Spin2014Objective,double,double)",
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SpinIt2014MomentProblem.cpp::spin2014.SpinIt2014MomentProblem.fromObjective(Spin2014Objective,double,double)"
+      ],
+      "candidate_count": 2,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "empty",
+      "qualified_name": "empty",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "std::invalid_argument",
+      "qualified_name": "std::invalid_argument",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "solveSlqpLbfgsPaper",
+      "qualified_name": "solveSlqpLbfgsPaper"
+    },
+    {
+      "kind": "Function",
+      "name": "std::string",
+      "qualified_name": "std::string",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "what",
+      "qualified_name": "what",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "resize",
+      "qualified_name": "resize",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "head",
+      "qualified_name": "head",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "finalState",
+      "qualified_name": "finalState",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "hashAuditedSlqp",
+      "qualified_name": "hashAuditedSlqp"
+    },
+    {
+      "kind": "Function",
+      "name": "beta",
+      "qualified_name": "beta"
+    },
+    {
+      "kind": "Function",
+      "name": "splitFractionalLeaves",
+      "qualified_name": "splitFractionalLeaves",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "mergeBinarySiblings",
+      "qualified_name": "mergeBinarySiblings",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "std::move",
+      "qualified_name": "std::move",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "swap",
+      "qualified_name": "swap",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "push_back",
+      "qualified_name": "push_back",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "finish",
+      "qualified_name": "finish",
+      "resolution": "unresolved",
+      "candidates": [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.(anonymous).finish(SourceAdaptiveSpinResult&)"
+      ],
+      "candidate_count": 1,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "back",
+      "qualified_name": "back",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "cast<double>",
+      "qualified_name": "cast<double>",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "array",
+      "qualified_name": "array",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "sourceBinaryCuboids",
+      "qualified_name": "sourceBinaryCuboids"
+    },
+    {
+      "kind": "Function",
+      "name": "scaledDensity",
+      "qualified_name": "scaledDensity",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "outerSurfaceMoments",
+      "qualified_name": "outerSurfaceMoments",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "removedMoments",
+      "qualified_name": "removedMoments",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    },
+    {
+      "kind": "Function",
+      "name": "checkSourceBinaryMoments",
+      "qualified_name": "checkSourceBinaryMoments"
+    },
+    {
+      "kind": "Function",
+      "name": "emplace",
+      "qualified_name": "emplace",
+      "resolution": "unresolved",
+      "candidates": [],
+      "candidate_count": 0,
+      "candidates_truncated": false
+    }
+  ],
+  "edges": [
+    {
+      "id": 26780,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.validateSourceAdaptiveSpinRequest(const SourceAdaptiveSpinRequest&)",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 50,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26781,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.computeSourceAdaptiveSpinRequestHash(const SourceAdaptiveSpinRequest&)",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 50,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26782,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "config",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 50,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26783,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "Eigen::VectorXd::Constant",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 53,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26784,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "size",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 53,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26785,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "leaves",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 53,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26787,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "partitionHash",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 54,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26788,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "snapshot",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 54,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26789,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "SpinIt2014MomentProblem::fromObjective",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 56,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "ambiguous_targets": [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/include/spin2014/SpinIt2014MomentProblem.h::spin2014.SpinIt2014MomentProblem.fromObjective(Spin2014Objective,double,double)",
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SpinIt2014MomentProblem.cpp::spin2014.SpinIt2014MomentProblem.fromObjective(Spin2014Objective,double,double)"
+      ],
+      "ambiguous_target_count": 2,
+      "ambiguous_targets_truncated": false
+    },
+    {
+      "id": 26792,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "empty",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 61,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26794,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "std::invalid_argument",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 62,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26795,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "solveSlqpLbfgsPaper",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 64,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26796,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "std::string",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 70,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26797,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "what",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 70,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26799,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "resize",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 73,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26800,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "head",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 74,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26802,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "finalState",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 74,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26803,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "hashAuditedSlqp",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 75,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26807,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "beta",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 79,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26808,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "splitFractionalLeaves",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 85,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26809,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "mergeBinarySiblings",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 86,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26810,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "std::move",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 87,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26811,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "swap",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 87,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26815,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "push_back",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 92,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26818,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "finish",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 93,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.(anonymous).finish(SourceAdaptiveSpinResult&)"
+      ],
+      "unresolved_target_count": 1,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26819,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "back",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 94,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26822,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "cast<double>",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 98,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26823,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "array",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 98,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26824,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "sourceBinaryCuboids",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 100,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26826,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "scaledDensity",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 103,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26827,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "outerSurfaceMoments",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 103,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26828,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "removedMoments",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 103,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    },
+    {
+      "id": 26829,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "checkSourceBinaryMoments",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 104,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED"
+    },
+    {
+      "id": 26830,
+      "kind": "CALLS",
+      "source": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp::spin2014.detail.solveSourceAdaptiveSpinEndpoint(const SourceAdaptiveSpinRequest&,SourceAdaptiveSpinEndpoint*)",
+      "target": "emplace",
+      "file_path": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/src/spin2014/SourceAdaptiveSpinSolver.cpp",
+      "line": 107,
+      "confidence": 1.0,
+      "confidence_tier": "EXTRACTED",
+      "unresolved_targets": [],
+      "unresolved_target_count": 0,
+      "unresolved_targets_truncated": false
+    }
+  ]
+}

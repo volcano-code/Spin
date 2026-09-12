@@ -1,0 +1,113 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+      Start 10: spin-it-2014-source-cage-adaptive-rebind
+ 1/44 Test #10: spin-it-2014-source-cage-adaptive-rebind ...........   Passed   17.69 sec
+      Start 11: spin-it-2014-source-cage-guarded-slqp
+ 2/44 Test #11: spin-it-2014-source-cage-guarded-slqp ..............   Passed   65.40 sec
+      Start 12: spin-it-2014-source-cage-guarded-slqp-allocation
+ 3/44 Test #12: spin-it-2014-source-cage-guarded-slqp-allocation ...   Passed    2.25 sec
+      Start 13: spin-it-2014-source-cage-guarded-slqp-move
+ 4/44 Test #13: spin-it-2014-source-cage-guarded-slqp-move .........   Passed    3.94 sec
+      Start 14: spin-it-2014-source-cage-geometry
+ 5/44 Test #14: spin-it-2014-source-cage-geometry ..................   Passed   17.81 sec
+      Start 15: spin-it-2014-source-cage-slqp
+ 6/44 Test #15: spin-it-2014-source-cage-slqp ......................   Passed    6.37 sec
+      Start 16: spin-it-2014-source-cage-shape
+ 7/44 Test #16: spin-it-2014-source-cage-shape .....................   Passed    1.12 sec
+      Start 17: spin-it-2014-source-cage-paper
+ 8/44 Test #17: spin-it-2014-source-cage-paper .....................   Passed   22.56 sec
+      Start 18: spin-it-2014-source-cage-paper-allocation
+ 9/44 Test #18: spin-it-2014-source-cage-paper-allocation ..........   Passed    0.00 sec
+      Start 19: spin-it-2014-source-cage-moments
+10/44 Test #19: spin-it-2014-source-cage-moments ...................   Passed    1.58 sec
+      Start 20: spin-it-2014-source-conforming-boundary
+11/44 Test #20: spin-it-2014-source-conforming-boundary ............   Passed    0.60 sec
+      Start 21: spin-it-2014-source-cage-binding
+12/44 Test #21: spin-it-2014-source-cage-binding ...................   Passed    0.94 sec
+      Start 22: spin-it-2014-source-bbw-joint
+13/44 Test #22: spin-it-2014-source-bbw-joint ......................   Passed    0.11 sec
+      Start 23: spin-it-2014-source-cage-bbw
+14/44 Test #23: spin-it-2014-source-cage-bbw .......................   Passed    2.08 sec
+      Start 24: spin-it-2014-source-cage-fem
+15/44 Test #24: spin-it-2014-source-cage-fem .......................   Passed    2.00 sec
+      Start 25: spin-it-2014-source-cage-grid
+16/44 Test #25: spin-it-2014-source-cage-grid ......................   Passed    1.19 sec
+      Start 26: spin-it-2014-source-surface-cage
+17/44 Test #26: spin-it-2014-source-surface-cage ...................   Passed    1.98 sec
+      Start 27: source-spin-material-python
+18/44 Test #27: source-spin-material-python ........................   Passed   24.14 sec
+      Start 28: spin-it-2014-source-material
+19/44 Test #28: spin-it-2014-source-material .......................   Passed   54.41 sec
+      Start 29: spin-it-2014-source-adaptive
+20/44 Test #29: spin-it-2014-source-adaptive .......................   Passed    1.32 sec
+      Start 30: spin-it-2014-source-adaptive-geometry9
+21/44 Test #30: spin-it-2014-source-adaptive-geometry9 .............   Passed   19.30 sec
+      Start 31: spin-it-2014-source-surface-octree
+22/44 Test #31: spin-it-2014-source-surface-octree .................   Passed    1.51 sec
+      Start 32: spin-it-2014-source-surface-octree-level9
+23/44 Test #32: spin-it-2014-source-surface-octree-level9 ..........   Passed   18.90 sec
+      Start 33: spin-it-2014-surface-value
+24/44 Test #33: spin-it-2014-surface-value .........................   Passed    0.00 sec
+      Start 34: spin-it-2014-surface-value-allocation
+25/44 Test #34: spin-it-2014-surface-value-allocation ..............   Passed    0.01 sec
+      Start 35: spin-it-2014-adaptive-domain
+26/44 Test #35: spin-it-2014-adaptive-domain .......................   Passed    0.00 sec
+      Start 36: spin-it-2014-fill-functional
+27/44 Test #36: spin-it-2014-fill-functional .......................   Passed    0.00 sec
+      Start 37: spin-it-2014-audited
+28/44 Test #37: spin-it-2014-audited ...............................   Passed    0.01 sec
+      Start 38: spin-it-2014-slqp
+29/44 Test #38: spin-it-2014-slqp ..................................   Passed    0.00 sec
+      Start 39: spin-it-2014-end-to-end
+30/44 Test #39: spin-it-2014-end-to-end ............................   Passed    0.00 sec
+      Start 40: spin-it-2014-modes
+31/44 Test #40: spin-it-2014-modes .................................   Passed    0.00 sec
+      Start 41: spin-it-2014-givens
+32/44 Test #41: spin-it-2014-givens ................................   Passed    0.01 sec
+      Start 42: spin-it-2014-objectives
+33/44 Test #42: spin-it-2014-objectives ............................   Passed    0.00 sec
+      Start 43: spin-it-2014-resolution-ladder
+34/44 Test #43: spin-it-2014-resolution-ladder .....................   Passed    0.01 sec
+      Start 44: spin-it-2014-dual-material
+35/44 Test #44: spin-it-2014-dual-material .........................   Passed    0.00 sec
+      Start 45: spin-it-2014-api
+36/44 Test #45: spin-it-2014-api ...................................   Passed    0.00 sec
+      Start 46: spin-it-2014-surface-differential
+37/44 Test #46: spin-it-2014-surface-differential ..................   Passed    0.00 sec
+      Start 47: spin-it-2014-cage-functional
+38/44 Test #47: spin-it-2014-cage-functional .......................   Passed    0.00 sec
+      Start 48: spin-it-2014-cage-solver
+39/44 Test #48: spin-it-2014-cage-solver ...........................   Passed    0.02 sec
+      Start 49: spin-it-2014-automatic-cage
+40/44 Test #49: spin-it-2014-automatic-cage ........................   Passed    0.02 sec
+      Start 50: spin-it-2014-python
+41/44 Test #50: spin-it-2014-python ................................   Passed    0.11 sec
+      Start 51: spin-it-2014-paper-miniature
+42/44 Test #51: spin-it-2014-paper-miniature .......................   Passed    0.10 sec
+      Start 54: spin-2014-dependency-contract
+43/44 Test #54: spin-2014-dependency-contract ......................   Passed   94.21 sec
+      Start 55: spin-2014-dependency-isolation
+44/44 Test #55: spin-2014-dependency-isolation .....................   Passed    7.35 sec
+
+100% tests passed, 0 tests failed out of 44
+
+Label Time Summary:
+api                     =   0.00 sec*proc (1 test)
+bbw                     =   0.02 sec*proc (1 test)
+build-system            = 101.56 sec*proc (2 tests)
+deformation             =   0.04 sec*proc (4 tests)
+dual-material           =   0.00 sec*proc (1 test)
+exact-geometry          = 267.21 sec*proc (23 tests)
+geometry                =   0.00 sec*proc (1 test)
+native                  = 267.21 sec*proc (23 tests)
+objective               =   0.00 sec*proc (1 test)
+paper                   =   0.10 sec*proc (1 test)
+python                  =  24.35 sec*proc (3 tests)
+regression              =   0.29 sec*proc (16 tests)
+resolution              =   0.01 sec*proc (1 test)
+solver                  =   0.04 sec*proc (5 tests)
+spin-it                 = 101.85 sec*proc (18 tests)
+spin-it-2014            = 369.06 sec*proc (41 tests)
+synthetic-regression    = 145.65 sec*proc (16 tests)
+
+Total Test time (real) = 369.08 sec

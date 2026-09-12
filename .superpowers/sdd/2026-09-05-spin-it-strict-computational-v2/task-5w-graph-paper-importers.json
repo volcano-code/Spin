@@ -1,0 +1,12 @@
+{
+  "status": "ok",
+  "pattern": "importers_of",
+  "target": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/include/spin2014/SourceCagePaperFunctional.h",
+  "description": "Find all files that import a given file or module",
+  "summary": "Found 0 result(s) for importers_of('/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/include/spin2014/SourceCagePaperFunctional.h')",
+  "result_count": 0,
+  "results_omitted": 0,
+  "results": [],
+  "edges": [],
+  "confidence": "graph is stale: built at an older commit than HEAD, so this 0 may be out of date; run `code-review-graph update`"
+}
