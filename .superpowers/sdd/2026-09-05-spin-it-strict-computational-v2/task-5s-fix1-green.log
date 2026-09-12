@@ -1,0 +1,46 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+UpdateCTestConfiguration  from :/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+Parse Config file:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/DartConfiguration.tcl
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 10
+    Start 10: spin-it-2014-source-cage-shape
+
+10: Test command: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-shape-regression
+10: Working Directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+10: Test timeout computed to be: 3600
+10: mathematical nullspaces, independent QR/FD, covariance, caps, invalid inputs PASS
+10: actual fixture=0 mode=STATIC_LOWERING columns=112 three-step QR FD PASS
+10: actual fixture=0 mode=TOP_INERTIA_ONLY columns=113 three-step QR FD PASS
+10: actual fixture=0 mode=TOP_MASS_AND_LOWERING columns=113 three-step QR FD PASS
+10: actual fixture=0 mode=TOP_LOWERING_ONLY columns=113 three-step QR FD PASS
+10: actual fixture=0 mode=YOYO columns=113 three-step QR FD PASS
+10: actual source/BBW identity and exact wrapper caps PASS
+10: actual fixture=1 mode=STATIC_LOWERING columns=112 three-step QR FD PASS
+10: actual fixture=1 mode=TOP_INERTIA_ONLY columns=113 three-step QR FD PASS
+10: actual fixture=1 mode=TOP_MASS_AND_LOWERING columns=113 three-step QR FD PASS
+10: actual fixture=1 mode=TOP_LOWERING_ONLY columns=113 three-step QR FD PASS
+10: actual fixture=1 mode=YOYO columns=113 three-step QR FD PASS
+10: actual source/BBW identity and exact wrapper caps PASS
+10: SYNTHETIC_REGRESSION source cage shape PASS
+1/1 Test #10: spin-it-2014-source-cage-shape ...   Passed    1.09 sec
+
+The following tests passed:
+	spin-it-2014-source-cage-shape
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+exact-geometry          =   1.09 sec*proc (1 test)
+native                  =   1.09 sec*proc (1 test)
+spin-it-2014            =   1.09 sec*proc (1 test)
+synthetic-regression    =   1.09 sec*proc (1 test)
+
+Total Test time (real) =   1.09 sec

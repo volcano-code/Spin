@@ -1,0 +1,101 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+      Start 10: spin-it-2014-source-cage-shape
+ 1/38 Test #10: spin-it-2014-source-cage-shape ..............   Passed    1.07 sec
+      Start 11: spin-it-2014-source-cage-paper
+ 2/38 Test #11: spin-it-2014-source-cage-paper ..............   Passed   22.77 sec
+      Start 12: spin-it-2014-source-cage-paper-allocation
+ 3/38 Test #12: spin-it-2014-source-cage-paper-allocation ...   Passed    0.00 sec
+      Start 13: spin-it-2014-source-cage-moments
+ 4/38 Test #13: spin-it-2014-source-cage-moments ............   Passed    1.51 sec
+      Start 14: spin-it-2014-source-conforming-boundary
+ 5/38 Test #14: spin-it-2014-source-conforming-boundary .....   Passed    0.61 sec
+      Start 15: spin-it-2014-source-cage-binding
+ 6/38 Test #15: spin-it-2014-source-cage-binding ............   Passed    0.93 sec
+      Start 16: spin-it-2014-source-bbw-joint
+ 7/38 Test #16: spin-it-2014-source-bbw-joint ...............   Passed    0.11 sec
+      Start 17: spin-it-2014-source-cage-bbw
+ 8/38 Test #17: spin-it-2014-source-cage-bbw ................   Passed    2.01 sec
+      Start 18: spin-it-2014-source-cage-fem
+ 9/38 Test #18: spin-it-2014-source-cage-fem ................   Passed    1.95 sec
+      Start 19: spin-it-2014-source-cage-grid
+10/38 Test #19: spin-it-2014-source-cage-grid ...............   Passed    1.15 sec
+      Start 20: spin-it-2014-source-surface-cage
+11/38 Test #20: spin-it-2014-source-surface-cage ............   Passed    1.97 sec
+      Start 21: source-spin-material-python
+12/38 Test #21: source-spin-material-python .................   Passed   23.38 sec
+      Start 22: spin-it-2014-source-material
+13/38 Test #22: spin-it-2014-source-material ................   Passed   53.11 sec
+      Start 23: spin-it-2014-source-adaptive
+14/38 Test #23: spin-it-2014-source-adaptive ................   Passed    1.32 sec
+      Start 24: spin-it-2014-source-adaptive-geometry9
+15/38 Test #24: spin-it-2014-source-adaptive-geometry9 ......   Passed   18.97 sec
+      Start 25: spin-it-2014-source-surface-octree
+16/38 Test #25: spin-it-2014-source-surface-octree ..........   Passed    1.47 sec
+      Start 26: spin-it-2014-source-surface-octree-level9
+17/38 Test #26: spin-it-2014-source-surface-octree-level9 ...   Passed   18.77 sec
+      Start 27: spin-it-2014-surface-value
+18/38 Test #27: spin-it-2014-surface-value ..................   Passed    0.00 sec
+      Start 28: spin-it-2014-surface-value-allocation
+19/38 Test #28: spin-it-2014-surface-value-allocation .......   Passed    0.01 sec
+      Start 29: spin-it-2014-adaptive-domain
+20/38 Test #29: spin-it-2014-adaptive-domain ................   Passed    0.00 sec
+      Start 30: spin-it-2014-fill-functional
+21/38 Test #30: spin-it-2014-fill-functional ................   Passed    0.00 sec
+      Start 31: spin-it-2014-audited
+22/38 Test #31: spin-it-2014-audited ........................   Passed    0.01 sec
+      Start 32: spin-it-2014-slqp
+23/38 Test #32: spin-it-2014-slqp ...........................   Passed    0.00 sec
+      Start 33: spin-it-2014-end-to-end
+24/38 Test #33: spin-it-2014-end-to-end .....................   Passed    0.00 sec
+      Start 34: spin-it-2014-modes
+25/38 Test #34: spin-it-2014-modes ..........................   Passed    0.00 sec
+      Start 35: spin-it-2014-givens
+26/38 Test #35: spin-it-2014-givens .........................   Passed    0.01 sec
+      Start 36: spin-it-2014-objectives
+27/38 Test #36: spin-it-2014-objectives .....................   Passed    0.00 sec
+      Start 37: spin-it-2014-resolution-ladder
+28/38 Test #37: spin-it-2014-resolution-ladder ..............   Passed    0.01 sec
+      Start 38: spin-it-2014-dual-material
+29/38 Test #38: spin-it-2014-dual-material ..................   Passed    0.00 sec
+      Start 39: spin-it-2014-api
+30/38 Test #39: spin-it-2014-api ............................   Passed    0.00 sec
+      Start 40: spin-it-2014-surface-differential
+31/38 Test #40: spin-it-2014-surface-differential ...........   Passed    0.00 sec
+      Start 41: spin-it-2014-cage-functional
+32/38 Test #41: spin-it-2014-cage-functional ................   Passed    0.00 sec
+      Start 42: spin-it-2014-cage-solver
+33/38 Test #42: spin-it-2014-cage-solver ....................   Passed    0.02 sec
+      Start 43: spin-it-2014-automatic-cage
+34/38 Test #43: spin-it-2014-automatic-cage .................   Passed    0.02 sec
+      Start 44: spin-it-2014-python
+35/38 Test #44: spin-it-2014-python .........................   Passed    0.11 sec
+      Start 45: spin-it-2014-paper-miniature
+36/38 Test #45: spin-it-2014-paper-miniature ................   Passed    0.12 sec
+      Start 48: spin-2014-dependency-contract
+37/38 Test #48: spin-2014-dependency-contract ...............   Passed   99.31 sec
+      Start 49: spin-2014-dependency-isolation
+38/38 Test #49: spin-2014-dependency-isolation ..............   Passed    6.37 sec
+
+100% tests passed, 0 tests failed out of 38
+
+Label Time Summary:
+api                     =   0.00 sec*proc (1 test)
+bbw                     =   0.02 sec*proc (1 test)
+build-system            = 105.68 sec*proc (2 tests)
+deformation             =   0.04 sec*proc (4 tests)
+dual-material           =   0.00 sec*proc (1 test)
+exact-geometry          = 151.10 sec*proc (17 tests)
+geometry                =   0.00 sec*proc (1 test)
+native                  = 151.10 sec*proc (17 tests)
+objective               =   0.00 sec*proc (1 test)
+paper                   =   0.12 sec*proc (1 test)
+python                  =  23.61 sec*proc (3 tests)
+regression              =   0.31 sec*proc (16 tests)
+resolution              =   0.01 sec*proc (1 test)
+solver                  =   0.04 sec*proc (5 tests)
+spin-it                 = 105.98 sec*proc (18 tests)
+spin-it-2014            = 257.08 sec*proc (35 tests)
+synthetic-regression    =  32.10 sec*proc (10 tests)
+
+Total Test time (real) = 257.11 sec
