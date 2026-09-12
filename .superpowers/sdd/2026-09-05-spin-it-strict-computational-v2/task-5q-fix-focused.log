@@ -1,0 +1,23 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 10: spin-it-2014-source-cage-moments
+1/4 Test #10: spin-it-2014-source-cage-moments ........   Passed    1.55 sec
+    Start 24: spin-it-2014-surface-value
+2/4 Test #24: spin-it-2014-surface-value ..............   Passed    0.00 sec
+    Start 25: spin-it-2014-surface-value-allocation
+3/4 Test #25: spin-it-2014-surface-value-allocation ...   Passed    0.01 sec
+    Start 37: spin-it-2014-surface-differential
+4/4 Test #37: spin-it-2014-surface-differential .......   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+deformation             =   0.00 sec*proc (1 test)
+exact-geometry          =   1.55 sec*proc (1 test)
+native                  =   1.55 sec*proc (1 test)
+regression              =   0.00 sec*proc (1 test)
+spin-it                 =   0.00 sec*proc (1 test)
+spin-it-2014            =   1.55 sec*proc (2 tests)
+synthetic-regression    =   1.55 sec*proc (1 test)
+
+Total Test time (real) =   1.58 sec

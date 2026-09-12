@@ -1,0 +1,13 @@
+FD beta step=0.0003 worst_relative=1.67491e-10 worst_absolute=5.56773e-13
+FD beta step=0.0001 worst_relative=3.66044e-10 worst_absolute=1.56165e-12
+FD beta step=3e-05 worst_relative=1.97233e-09 worst_absolute=5.93115e-12
+FD handles step=0.0003 worst_relative=7.69325e-08 worst_absolute=1.26546e-10
+FD handles step=0.0001 worst_relative=1.25577e-07 worst_absolute=1.45642e-11
+FD handles step=3e-05 worst_relative=4.15404e-07 worst_absolute=1.63991e-11
+FD beta step=0.0003 worst_relative=4.1326e-10 worst_absolute=9.07083e-12
+FD beta step=0.0001 worst_relative=9.45012e-10 worst_absolute=1.75539e-11
+FD beta step=3e-05 worst_relative=4.41479e-09 worst_absolute=7.08652e-11
+FD handles step=0.0003 worst_relative=1.43882e-07 worst_absolute=1.79722e-10
+FD handles step=0.0001 worst_relative=3.5638e-07 worst_absolute=6.88297e-11
+FD handles step=3e-05 worst_relative=5.56981e-07 worst_absolute=2.55935e-10
+source cage moments PASS

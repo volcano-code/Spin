@@ -1,0 +1,125 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+      Start 10: spin-it-2014-source-cage-moments
+ 1/35 Test #10: spin-it-2014-source-cage-moments ............   Passed    1.56 sec
+      Start 11: spin-it-2014-source-conforming-boundary
+ 2/35 Test #11: spin-it-2014-source-conforming-boundary .....   Passed    0.62 sec
+      Start 12: spin-it-2014-source-cage-binding
+ 3/35 Test #12: spin-it-2014-source-cage-binding ............   Passed    0.95 sec
+      Start 13: spin-it-2014-source-bbw-joint
+ 4/35 Test #13: spin-it-2014-source-bbw-joint ...............   Passed    0.13 sec
+      Start 14: spin-it-2014-source-cage-bbw
+ 5/35 Test #14: spin-it-2014-source-cage-bbw ................   Passed    2.17 sec
+      Start 15: spin-it-2014-source-cage-fem
+ 6/35 Test #15: spin-it-2014-source-cage-fem ................   Passed    2.11 sec
+      Start 16: spin-it-2014-source-cage-grid
+ 7/35 Test #16: spin-it-2014-source-cage-grid ...............   Passed    1.23 sec
+      Start 17: spin-it-2014-source-surface-cage
+ 8/35 Test #17: spin-it-2014-source-surface-cage ............   Passed    2.08 sec
+      Start 18: source-spin-material-python
+ 9/35 Test #18: source-spin-material-python .................***Failed    0.53 sec
+test_actual_source_material_entrypoint_exists (test_source_spin_material_bridge.SourceBridgeAvailabilityTests.test_actual_source_material_entrypoint_exists) ... ok
+setUpClass (test_source_spin_material_bridge.SourceMaterialTests) ... ERROR
+test_runner_persists_actual_success_failure_and_freshness (test_source_spin_material_bridge.SourceRunnerTests.test_runner_persists_actual_success_failure_and_freshness) ... ERROR
+
+======================================================================
+ERROR: setUpClass (test_source_spin_material_bridge.SourceMaterialTests)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_source_spin_material_bridge.py", line 55, in setUpClass
+    cls.solved = cls.m.solve_and_seal_source_spin2014(cls.p, **cls.cfg)
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/source_spin_material.py", line 218, in solve_and_seal_source_spin2014
+    before = _observation()
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/source_spin_material.py", line 179, in _observation
+    result = implementation_observation()
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/spin_common.py", line 122, in implementation_observation
+    'files': {name: _record(path, label=name) for name, path in files.items()}}
+                    ~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/run_evidence.py", line 132, in _record
+    path = _path(path)
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/run_evidence.py", line 125, in _path
+    _require(not part.is_symlink(), "symlink is unsupported: " + str(part))
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/run_evidence.py", line 55, in _require
+    raise EvidenceValidationError(message)
+make_it_stand.verification.run_evidence.EvidenceValidationError: symlink is unsupported: /data/xvxinyao/make-it-balance-paper-sim
+
+======================================================================
+ERROR: test_runner_persists_actual_success_failure_and_freshness (test_source_spin_material_bridge.SourceRunnerTests.test_runner_persists_actual_success_failure_and_freshness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/data/xvxinyao/make-it-balance-paper-sim/tests/python/test_source_spin_material_bridge.py", line 230, in test_runner_persists_actual_success_failure_and_freshness
+    summary = runner.run(tmp/'success', **kwargs)
+  File "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/experiments/spin_it_reproduction/strict/run_source_spin2014_material.py", line 82, in run
+    begin=begin_run(repository_root=ROOT,runner_files=[Path(__file__)],
+        checker_files=[Path(bridge.__file__),ROOT/'python/make_it_stand/verification/spin_artifact.py',
+    ...<2 lines>...
+        parameters=inputs,seed_protocol={'seed':0,'protocol':'native audited HiGHS simplex: threads=1, parallel=off, random_seed=0'},
+        dependency_roots=dependency_roots,native_modules=[extension],pure_python=False)
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/run_evidence.py", line 424, in begin_run
+    "checker_files": [item["path"] for item in _records(checker_files)],
+                                               ~~~~~~~~^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/run_evidence.py", line 151, in _records
+    path = _path(raw)
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/run_evidence.py", line 125, in _path
+    _require(not part.is_symlink(), "symlink is unsupported: " + str(part))
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/xvxinyao/make-it-balance-paper-sim/python/make_it_stand/verification/run_evidence.py", line 55, in _require
+    raise EvidenceValidationError(message)
+make_it_stand.verification.run_evidence.EvidenceValidationError: symlink is unsupported: /data/xvxinyao/make-it-balance-paper-sim
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.440s
+
+FAILED (errors=2)
+
+      Start 19: spin-it-2014-source-material
+10/35 Test #19: spin-it-2014-source-material ................   Passed   55.04 sec
+      Start 20: spin-it-2014-source-adaptive
+11/35 Test #20: spin-it-2014-source-adaptive ................   Passed    1.47 sec
+      Start 21: spin-it-2014-source-adaptive-geometry9
+12/35 Test #21: spin-it-2014-source-adaptive-geometry9 ......   Passed   19.08 sec
+      Start 22: spin-it-2014-source-surface-octree
+13/35 Test #22: spin-it-2014-source-surface-octree ..........   Passed    1.58 sec
+      Start 23: spin-it-2014-source-surface-octree-level9
+14/35 Test #23: spin-it-2014-source-surface-octree-level9 ...   Passed   19.20 sec
+      Start 24: spin-it-2014-surface-value
+15/35 Test #24: spin-it-2014-surface-value ..................   Passed    0.02 sec
+      Start 25: spin-it-2014-surface-value-allocation
+16/35 Test #25: spin-it-2014-surface-value-allocation .......   Passed    0.01 sec
+      Start 26: spin-it-2014-adaptive-domain
+17/35 Test #26: spin-it-2014-adaptive-domain ................   Passed    0.02 sec
+      Start 27: spin-it-2014-fill-functional
+18/35 Test #27: spin-it-2014-fill-functional ................   Passed    0.04 sec
+      Start 28: spin-it-2014-audited
+19/35 Test #28: spin-it-2014-audited ........................   Passed    0.12 sec
+      Start 29: spin-it-2014-slqp
+20/35 Test #29: spin-it-2014-slqp ...........................   Passed    0.11 sec
+      Start 30: spin-it-2014-end-to-end
+21/35 Test #30: spin-it-2014-end-to-end .....................   Passed    0.12 sec
+      Start 31: spin-it-2014-modes
+22/35 Test #31: spin-it-2014-modes ..........................   Passed    0.15 sec
+      Start 32: spin-it-2014-givens
+23/35 Test #32: spin-it-2014-givens .........................   Passed    0.19 sec
+      Start 33: spin-it-2014-objectives
+24/35 Test #33: spin-it-2014-objectives .....................   Passed    0.17 sec
+      Start 34: spin-it-2014-resolution-ladder
+25/35 Test #34: spin-it-2014-resolution-ladder ..............   Passed    0.29 sec
+      Start 35: spin-it-2014-dual-material
+26/35 Test #35: spin-it-2014-dual-material ..................   Passed    0.09 sec
+      Start 36: spin-it-2014-api
+27/35 Test #36: spin-it-2014-api ............................   Passed    0.23 sec
+      Start 37: spin-it-2014-surface-differential
+28/35 Test #37: spin-it-2014-surface-differential ...........   Passed    0.09 sec
+      Start 38: spin-it-2014-cage-functional
+29/35 Test #38: spin-it-2014-cage-functional ................   Passed    0.04 sec
+      Start 39: spin-it-2014-cage-solver
+30/35 Test #39: spin-it-2014-cage-solver ....................   Passed    0.05 sec
+      Start 40: spin-it-2014-automatic-cage
+31/35 Test #40: spin-it-2014-automatic-cage .................   Passed    0.04 sec
+      Start 41: spin-it-2014-python
+32/35 Test #41: spin-it-2014-python .........................   Passed    0.20 sec
+      Start 42: spin-it-2014-paper-miniature
+33/35 Test #42: spin-it-2014-paper-miniature ................   Passed    0.12 sec
+      Start 45: spin-2014-dependency-contract

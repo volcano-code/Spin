@@ -1,0 +1,14 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 18: source-spin-material-python
+1/1 Test #18: source-spin-material-python ......   Passed   24.06 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+exact-geometry    =  24.06 sec*proc (1 test)
+native            =  24.06 sec*proc (1 test)
+python            =  24.06 sec*proc (1 test)
+spin-it-2014      =  24.06 sec*proc (1 test)
+
+Total Test time (real) =  24.06 sec

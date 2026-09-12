@@ -1,0 +1,13 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 46: spin-2014-dependency-isolation
+1/1 Test #46: spin-2014-dependency-isolation ...   Passed    7.32 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+build-system    =   7.32 sec*proc (1 test)
+spin-it         =   7.32 sec*proc (1 test)
+spin-it-2014    =   7.32 sec*proc (1 test)
+
+Total Test time (real) =   7.32 sec

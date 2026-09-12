@@ -1,0 +1,5 @@
+value normal overflow category=overflow_error
+differential normal overflow category=overflow_error
+value polynomial overflow category=overflow_error
+differential polynomial overflow category=overflow_error
+both legacy APIs must preserve distinct normal and polynomial overflow categories

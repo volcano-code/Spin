@@ -1,0 +1,5 @@
+value normal overflow category=invalid_argument
+differential normal overflow category=invalid_argument
+value polynomial overflow category=overflow_error
+differential polynomial overflow category=overflow_error
+surface value analytic, signed, covariance, invalid-input checks passed

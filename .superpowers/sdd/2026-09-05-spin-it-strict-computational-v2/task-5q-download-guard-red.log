@@ -1,0 +1,54 @@
+Internal ctest changing into directory: /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+Test project /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909
+    Start 46: spin-2014-dependency-isolation
+1/1 Test #46: spin-2014-dependency-isolation ...***Failed    0.09 sec
+CMake Error at /data/xvxinyao/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency_isolation.cmake:73 (message):
+  fixture dependency contract failed (1)
+
+  stdout:
+
+
+
+  stderr:
+
+
+  SPIN_IT_2014_DEPENDENCY_RETAINED_DIR=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-isolation-fixture-bb42d84747d4/success-invocations/spin-2014-dependency-contract-runs/run-9b5f49558885e69a
+
+
+  CMake Error at
+  /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-isolation-fixture-bb42d84747d4/success-source/tests/cmake/assert_spin_it_2014_dependency.cmake:53
+  (message):
+
+    disabled Spin-It 2014 configuration failed
+
+  
+
+    Retained evidence:
+    /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-isolation-fixture-bb42d84747d4/success-invocations/spin-2014-dependency-contract-runs/run-9b5f49558885e69a
+
+  Call Stack (most recent call first):
+
+    /data/xvxinyao/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-2014-isolation-fixture-bb42d84747d4/success-source/tests/cmake/assert_spin_it_2014_dependency.cmake:70 (fail_retained_contract)
+
+  
+
+
+
+Call Stack (most recent call first):
+  /data/xvxinyao/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency_isolation.cmake:91 (run_success_contract)
+
+
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+build-system    =   0.09 sec*proc (1 test)
+spin-it         =   0.09 sec*proc (1 test)
+spin-it-2014    =   0.09 sec*proc (1 test)
+
+Total Test time (real) =   0.11 sec
+
+The following tests FAILED:
+	 46 - spin-2014-dependency-isolation (Failed)
+Errors while running CTest
