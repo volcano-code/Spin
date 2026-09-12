@@ -1,4 +1,5 @@
 #include "spin2014/SourceCageSlqp.h"
+#include "spin2014/SourceCageGuardedSlqp.h"
 #include "spin2014/SlqpAuditTrace.h"
 #include "verification/Sha256.h"
 #include <algorithm>
@@ -127,6 +128,67 @@ void finishIdentity(SourceCageSlqpResult& out) {
     if(out.finalEvaluationAvailable) {h.string(out.finalEvaluation.outputSha256);h.string(out.finalEvaluation.world.outputSha256);}
     out.scientificSha256=h.finish();
 }
+// File-private gate: no user callback, evaluation, or boolean can supply a pass.
+struct GuardContext {
+    const SourceCageGeometryChecker checker;
+    SourceCageGuardedSlqpFacts& facts;
+    void begin(const SourceCageSlqpEvaluationRecord& event) {
+        if(facts.attempts.size()>=facts.resources.attemptCapacity)resource("guard attempt capacity exceeded");
+        auto& a=facts.attempts.emplace_back();a.callbackRecord=event.sequence;a.firstStage=facts.stages.size();
+    }
+    void bookkeepingResource() noexcept {
+        if(!facts.attempts.empty()&&!facts.attempts.back().checkCompleted)
+            facts.attempts.back().outcome=SourceCageGeometryOutcome::ResourceLimit;
+    }
+    void check(const Eigen::VectorXd& x,SourceCageSlqpResult& out,SourceCageSlqpEvaluationRecord& event) {
+        auto& a=facts.attempts.back();
+        if(out.outcome==SourceCageSlqpOutcome::ResourceLimit||
+           facts.checkerInvocationCount>=facts.settings.budget.maximumGuardCalls) {
+            a.outcome=SourceCageGeometryOutcome::ResourceLimit;
+            out.outcome=SourceCageSlqpOutcome::ResourceLimit;
+            failure(event,SourceCageSlqpEvaluationStatus::ResourceLimit,"RESOURCE_LIMIT: guard call cap or prior resource latch");
+            resource("guard call cap or prior resource latch");
+        }
+        a.checkerInvoked=true;++facts.checkerInvocationCount;
+        if(event.purpose==SourceCageSlqpEvaluationPurpose::FinalAcceptedState)++facts.finalRecheckCount;
+        bool returned=false;
+        try {
+            const auto audit=checker.check(x);returned=true;const auto& g=audit.facts();
+            for(const auto& stage:g.records)if(stage.stage==SourceCageGeometryStage::SourceEvaluation) {
+                a.sourceValuesInvoked=true;++facts.geometryValueEvaluationCount;break;
+            }
+            a.outcome=g.outcome;a.plannedCheckerBytes=g.plannedCheckerBytes;
+            a.pairsVisited=g.pairsVisited;a.exactPairRelations=g.exactPairRelations;
+            text(a.inputSha256,g.inputSha256.c_str());text(a.sourceOutputSha256,g.sourceOutputSha256.c_str());
+            text(a.scientificSha256,g.scientificSha256.c_str());
+            if(g.records.size()>facts.resources.stageCapacity-facts.stages.size())resource("retained geometry stages exceeded");
+            for(const auto& stage:g.records) {
+                if(stage.squaredDistanceExact.size()>facts.settings.geometry.maximumExactStringBytes)resource("retained exact string exceeded");
+                facts.stages.push_back(stage);++a.stageCount;
+            }
+            a.checkCompleted=true;
+            if(g.outcome==SourceCageGeometryOutcome::ResourceLimit) {
+                out.outcome=SourceCageSlqpOutcome::ResourceLimit;
+                failure(event,SourceCageSlqpEvaluationStatus::ResourceLimit,g.records.back().reason.data());
+                resource("actual geometry resource failure");
+            }
+            if(g.outcome!=SourceCageGeometryOutcome::ChecksPassed) {
+                failure(event,SourceCageSlqpEvaluationStatus::InvalidNumericalTrial,g.records.back().reason.data());
+                throw std::runtime_error("actual geometry trial was rejected or incomplete");
+            }
+        }catch(const std::bad_alloc&) {
+            if(!returned)facts.geometryValueEvaluationCountComplete=false;
+            a.checkCompleted=false;a.outcome=SourceCageGeometryOutcome::ResourceLimit;
+            markBookkeepingResource(out);throw;
+        }catch(const std::length_error&) {
+            if(!returned)facts.geometryValueEvaluationCountComplete=false;
+            a.outcome=SourceCageGeometryOutcome::ResourceLimit;out.outcome=SourceCageSlqpOutcome::ResourceLimit;
+            if(event.status!=SourceCageSlqpEvaluationStatus::ResourceLimit) {
+                a.checkCompleted=false;markBookkeepingResource(out);
+            }throw;
+        }
+    }
+};
 }
 
 SourceCageSlqpResources planSourceCageSlqpResources(const SourceCagePaperFunctional& f,const SourceCageSlqpSettings& s) {
@@ -176,8 +238,8 @@ SourceCageSlqpResources planSourceCageSlqpResources(const SourceCagePaperFunctio
     return r;
 }
 
-SourceCageSlqpResult solveSourceCageSlqp(const SourceCagePaperFunctional& f,
-    const Eigen::VectorXd& initial,const SourceCageSlqpSettings& settings) {
+static SourceCageSlqpResult runSourceCageSlqp(const SourceCagePaperFunctional& f,
+    const Eigen::VectorXd& initial,const SourceCageSlqpSettings& settings,GuardContext* guard) {
     const auto resources=planSourceCageSlqpResources(f,settings);
     if(std::size_t(initial.size())!=f.stateCount()||!initial.allFinite()||
        (initial.head(f.betaCount()).array()<0).any()||(initial.head(f.betaCount()).array()>1).any())
@@ -192,8 +254,10 @@ SourceCageSlqpResult solveSourceCageSlqp(const SourceCagePaperFunctional& f,
         const auto evaluate=[&](const Eigen::VectorXd& x,SourceCageSlqpEvaluationPurpose purpose) {
             if(out.recordCount>=resources.callbackRecords)resource("internal callback bound exceeded");
             const auto index=out.recordCount++;auto& event=out.records[index];event.sequence=index;event.purpose=purpose;
+            if(guard)guard->begin(event);
             if(purpose==SourceCageSlqpEvaluationPurpose::SolverCallback)++out.callbackCount;
             out.callbackStates.col(index)=x;Digest state;state.matrix(x);text(event.stateSha256,state.finish().c_str());
+            if(guard)guard->check(x,out,event);
             if(out.outcome==SourceCageSlqpOutcome::ResourceLimit||out.sourceEvaluationCount>=settings.budget.maximumSourceEvaluations) {
                 out.outcome=SourceCageSlqpOutcome::ResourceLimit;
                 failure(event,SourceCageSlqpEvaluationStatus::ResourceLimit,"RESOURCE_LIMIT: source evaluation cap or prior resource latch");
@@ -224,11 +288,12 @@ SourceCageSlqpResult solveSourceCageSlqp(const SourceCagePaperFunctional& f,
           }catch(const std::bad_alloc&) {
             // Also latch allocation failures in state/output hashing and mapping,
             // outside the source invocation itself: generic trial catches all.
-            markBookkeepingResource(out);throw;
+            markBookkeepingResource(out);if(guard)guard->bookkeepingResource();throw;
           }catch(const std::length_error&) {
             out.outcome=SourceCageSlqpOutcome::ResourceLimit;
             if(out.recordCount&&out.records[out.recordCount-1].status==SourceCageSlqpEvaluationStatus::Unused)
                 markBookkeepingResource(out);
+            if(guard)guard->bookkeepingResource();
             throw;
           }
         };
@@ -239,7 +304,7 @@ SourceCageSlqpResult solveSourceCageSlqp(const SourceCagePaperFunctional& f,
             // Generic initial evaluation is outside its trial catch/recovery.
             // Retain the actual attempted source record, without synthesizing
             // any generic trace, final state, KKT witness, or termination.
-            if(out.callbackCount==1&&out.recordCount==1&&out.records[0].sourceInvoked&&
+            if(out.callbackCount==1&&out.recordCount==1&&(out.records[0].sourceInvoked||guard)&&
                (out.records[0].status!=SourceCageSlqpEvaluationStatus::Evaluated||
                 out.outcome==SourceCageSlqpOutcome::ResourceLimit)) {
                 if(out.outcome!=SourceCageSlqpOutcome::ResourceLimit)
@@ -257,8 +322,84 @@ SourceCageSlqpResult solveSourceCageSlqp(const SourceCagePaperFunctional& f,
             out.finalEvaluation=evaluate(out.numerical.finalState,SourceCageSlqpEvaluationPurpose::FinalAcceptedState);
             out.finalEvaluationAvailable=true;
         }catch(const std::length_error&) {out.outcome=SourceCageSlqpOutcome::ResourceLimit;}
-        catch(const std::bad_alloc&) {markBookkeepingResource(out);}
+        catch(const std::bad_alloc&) {markBookkeepingResource(out);if(guard)guard->bookkeepingResource();}
+        catch(...) {if(!guard)throw;}
         finishIdentity(out);return out;
     }catch(const std::bad_alloc&) {resource("allocation failure outside recoverable callback");}
+}
+SourceCageSlqpResult solveSourceCageSlqp(const SourceCagePaperFunctional& f,
+    const Eigen::VectorXd& initial,const SourceCageSlqpSettings& settings) {
+    return runSourceCageSlqp(f,initial,settings,nullptr);
+}
+
+SourceCageGuardedSlqpResources planSourceCageGuardedSlqpResources(const SourceCagePaperFunctional& f,
+    const SourceCageGuardedSlqpSettings& s) {
+    const SourceCageGeometryChecker validate(f,s.geometry);
+    SourceCageGuardedSlqpResources r;r.adapter=planSourceCageSlqpResources(f,s.source);
+    for(auto cap:{s.budget.maximumGuardCalls,s.budget.maximumRetainedStageRecords})
+        if(!cap||cap>std::size_t(INT_MAX))resource("zero or unrepresentable guard count cap");
+    if(!s.budget.maximumGuardedBytes||s.budget.maximumGuardedBytes>std::size_t(PTRDIFF_MAX))resource("zero or unrepresentable guarded byte cap");
+    const auto p=f.source().boundary().primitiveBoundaries().size();
+    r.stagesPerGuard=add(3,add(mul(3,p),p?mul(p/2,p-1+p%2):0));
+    r.stageCapacity=mul(r.stagesPerGuard,s.budget.maximumGuardCalls);
+    if(r.stageCapacity>s.budget.maximumRetainedStageRecords)resource("retained stage count cap");
+    r.attemptCapacity=r.adapter.callbackRecords;
+    // Flat vectors reserve their complete declared capacities before callbacks.
+    // Only clearance stages carry dynamic strings; allow 2x bounded payload
+    // for std::string growth/copy while the current checker audit coexists.
+    // No mesh or Nef object is retained per attempt. Return is move-only.
+    r.retainedEvidenceBytes=sum({mul(r.stageCapacity,sizeof(SourceCageGeometryRecord)),
+        mul(r.attemptCapacity,sizeof(SourceCageSlqpGuardAttempt)),
+        mul(mul(s.budget.maximumGuardCalls,p),mul(2,add(s.geometry.maximumExactStringBytes,1))),16384});
+    // One live checker plus its returned audit/diagnostic snapshot and metadata.
+    // 2x covers checker vector capacity, retained audit return copies and Nef
+    // diagnostic snapshots; opaque native allocation internals remain external.
+    r.checkerScratchBytes=add(mul(2,s.geometry.maximumCheckerBytes),65536);
+    r.requiredBytes=sum({r.adapter.requiredBytes,r.retainedEvidenceBytes,r.checkerScratchBytes,
+        sizeof(SourceCageGuardedSlqpFacts),65536});
+    if(r.requiredBytes>s.budget.maximumGuardedBytes)resource("simultaneous guarded buffer cap");
+    return r;
+}
+
+SourceCageGuardedSlqpAudit solveSourceCageGuardedSlqp(const SourceCagePaperFunctional& f,
+    const Eigen::VectorXd& initial,const SourceCageGuardedSlqpSettings& settings) {
+    const auto resources=planSourceCageGuardedSlqpResources(f,settings);
+    SourceCageGuardedSlqpAudit audit;auto& out=audit.facts_;
+    out.settings=settings;out.resources=resources;
+    out.attempts.reserve(resources.attemptCapacity);out.stages.reserve(resources.stageCapacity);
+    GuardContext guard{SourceCageGeometryChecker(f,settings.geometry),out};
+    out.source=runSourceCageSlqp(f,initial,settings.source,&guard);
+    if(out.source.outcome==SourceCageSlqpOutcome::ResourceLimit)out.finalStatus=SourceCageGuardedFinalStatus::ResourceLimit;
+    else if(out.source.finalEvaluationAvailable)out.finalStatus=SourceCageGuardedFinalStatus::ChecksPassed;
+    else if(out.finalRecheckCount&&!out.attempts.empty())out.finalStatus=
+        out.attempts.back().outcome==SourceCageGeometryOutcome::RejectedGeometry?
+        SourceCageGuardedFinalStatus::RejectedGeometry:SourceCageGuardedFinalStatus::Unknown;
+    Digest config;config.string("source-cage-guarded-slqp-v1 accounting-v1 move-only; feasibility UNKNOWN; no seal physics stable spin or original-paper grant");
+    config.string(out.source.configSha256);config.real(settings.geometry.minimumOuterDomainClearance);
+    const auto& g=settings.geometry;
+    for(auto v:{g.maximumPoints,g.maximumTriangles,g.maximumPrimitives,g.maximumPairs,g.maximumRecords,
+        g.maximumCheckerBytes,g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes,
+        settings.budget.maximumGuardCalls,settings.budget.maximumRetainedStageRecords,settings.budget.maximumGuardedBytes})config.integer(v);
+    out.configSha256=config.finish();
+    Digest h;h.string(out.configSha256);h.string(out.source.scientificSha256);
+    h.integer(unsigned(out.finalStatus));h.integer(unsigned(out.feasibility));
+    h.integer(out.checkerInvocationCount);h.integer(out.geometryValueEvaluationCount);
+    h.integer(out.geometryValueEvaluationCountComplete);h.integer(out.finalRecheckCount);
+    h.integer(out.attempts.size());
+    for(const auto& a:out.attempts) {
+        h.integer(a.callbackRecord);h.integer(a.firstStage);h.integer(a.stageCount);
+        h.integer(a.checkerInvoked);h.integer(a.checkCompleted);h.integer(a.sourceValuesInvoked);h.integer(unsigned(a.outcome));
+        h.string(a.inputSha256.data());h.string(a.sourceOutputSha256.data());h.string(a.scientificSha256.data());
+        h.integer(a.plannedCheckerBytes);h.integer(a.pairsVisited);h.integer(a.exactPairRelations);
+    }
+    h.integer(out.stages.size());
+    for(const auto& stage:out.stages) {
+        h.integer(unsigned(stage.stage));h.integer(unsigned(stage.outcome));
+        h.integer(stage.first);h.integer(stage.second);h.integer(stage.betaOwner);h.integer(stage.secondBetaOwner);
+        h.string(stage.evidenceSha256.data());h.string(stage.reasonSha256.data());h.string(stage.reason.data());
+        h.string(stage.squaredDistanceExact);h.integer(stage.witnessFaces.has_value());
+        if(stage.witnessFaces)for(auto face:*stage.witnessFaces)h.integer(face);
+    }
+    out.scientificSha256=h.finish();return audit;
 }
 }
