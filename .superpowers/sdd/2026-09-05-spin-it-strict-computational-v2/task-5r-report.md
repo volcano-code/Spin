@@ -247,3 +247,176 @@ report is committed separately using authorized volcano
 scope boundaries, not waived reproduction gates. The ordinary double FD
 discrepancies remain explicit; validated derivative accuracy comes from the
 approved independent high-precision and complex-step checks.
+
+## Fix round 1: bound Eigen transform workspace
+
+Repair base: `a603876c86d8c58aed9c79ebc9ab2bb241aaf888`. Fresh review identified
+an Important resource defect in the two map-times-dynamic-Jacobian expressions:
+bundled Eigen dispatches them through GEMM and packs `kc*mc` / `kc*nc` scratch
+buffers. For static B=8, H=26, N=112, the accepted cap is 1464 doubles; raw
+output plus fill scratch is already 1128, and the 104-column RHS packing adds
+1040 before LHS packing. The earlier exact-cap test verified the declared
+formula but did not detect this implicit workspace. Prior GREEN results and
+the pre-repair manifest remain historical evidence; they do not establish
+that the old implementation met this resource contract.
+
+The repair moves the production transform into
+`detail::transformSourceCageMomentColumns`, an inline implementation helper in
+the owned component header. Both actual beta/handle paths call it directly.
+It copies each input column to a fixed ten-vector, multiplies into another
+fixed ten-vector, then writes the preallocated destination column. This
+eliminates N-growing GEMM packing and keeps the unchanged `(11+K)*N+B` joint
+array cap. The extra transform scratch is explicitly documented as two
+constant ten-vectors (20 stack doubles), separate from the cap like the
+existing bounded Givens workspace. Public class API, objectives, constraints,
+weights, fixtures, steps, thresholds, upstream budgets and scientific scope
+are unchanged.
+
+### Resource regression and linkage
+
+The approved resource-regression addendum permits five narrowly scoped CMake
+lines registering a dedicated executable/test from the existing owned test
+file. The normal regression still links and calls the actual core. Only the
+probe branch defines `EIGEN_RUNTIME_NO_MALLOC`, forces dynamic stack packing
+through the checked allocator with `EIGEN_STACK_ALLOCATION_LIMIT=0`, and uses a
+local throwing Eigen assertion so the test can record both failures.
+
+All probe matrices are preallocated before the guard. For both 10×8 and 10×104,
+the probe first confirms that the former actual Eigen GEMM expression is
+rejected, then invokes the **same helper used in production** with allocations
+forbidden and compares its result against independent scalar loops. This is
+not merely an assertion about a capacity formula or a separately implemented
+replacement multiply.
+
+The probe links the core target for its existing include/feature usage
+requirements but references no evaluator implementation. The inline helper,
+Eigen runtime guard and all guarded operations are in a single translation
+unit. `nm -C --defined-only` output is retained in
+`task-5r-fix1-probe-symbols.log`; it contains no paper/source-moment evaluator,
+BBW or raw-moment implementation symbols from the archive. The runtime guard
+never crosses into a differently configured core translation unit. Probe
+macros are conditional/local; no core/global Eigen flags changed.
+
+### Repair TDD evidence
+
+The new probe/test registration preceded the helper. Building it first failed
+with missing `spin2014::detail` (`task-5r-fix1-red-interface.log`, exit 1).
+Next, the existing production matrix expressions were extracted unchanged
+into the production-used helper to reproduce the actual resource defect.
+The probe failed at runtime for both dimensions (`task-5r-fix1-red-both.log`,
+exit 1; the earlier first-dimension failure is also retained):
+
+```
+guard rejected former GEMM 10x8
+production helper 10x8: probe: Eigen allocation forbidden
+guard rejected former GEMM 10x104
+production helper 10x104: probe: Eigen allocation forbidden
+```
+
+After replacing only that helper's GEMM expression with fixed column storage,
+the same probe passed (`task-5r-fix1-green-allocation.log`, exit 0):
+
+```
+guard rejected former GEMM 10x8
+production helper 10x8 allocation-free PASS
+guard rejected former GEMM 10x104
+production helper 10x104 allocation-free PASS
+```
+
+Commands, under `ulimit -v 25165824` in the same assigned build:
+
+```
+cmake --build build/task-5c-no-faster-20260909 \
+  --target spin-it-2014-source-cage-paper-allocation-probe -j3
+build/task-5c-no-faster-20260909/spin-it-2014-source-cage-paper-allocation-probe
+cmake --build build/task-5c-no-faster-20260909 \
+  --target spin-it-2014-source-cage-paper-allocation-probe \
+           spin-it-2014-source-cage-paper-regression -j3
+timeout 3600 build/task-5c-no-faster-20260909/spin-it-2014-source-cage-paper-regression
+```
+
+The focused actual-core regression passed (`task-5r-fix1-focused.log`, exit 0),
+including all old exact-cap, one-below-cap and value-only tests. Its complex-step
+worst relative/absolute errors are 6.02589e-11 / 1.27676e-14; all three independent
+long-double stencils pass, worst 6.85705e-9 relative / 7.79168e-13 absolute.
+The unchanged ordinary double FD diagnostic still reports 41 finest-step
+discrepancies, explicitly not relabelled passing. Actual long-double mantissa
+bits=64 is in the raw focused and CTest logs. Controller-owned independent
+rechecks on the repaired core also passed all 10 cases and all joint columns
+and rejected 20 corruptions; they are separate from these native checks.
+
+### Fresh complete scoped verification
+
+Full assigned build relinked 53 steps, exit 0 (`task-5r-fix1-full-build.log`).
+Fresh serial scoped suite, same 24 GiB / 60-minute limits and downloads disabled:
+
+```
+timeout 3600 ctest --test-dir build/task-5c-no-faster-20260909 \
+  --output-on-failure -j1 \
+  -R '^(spin-it-2014-|spin-2014-|source-spin-material-python$)'
+```
+
+Result: **37/37 passed, 0 failed, 0 skipped, 249.30 seconds**, exit 0.
+`task-5r-fix1-suite.log` and `task-5r-fix1-ctest-raw.log` preserve both the suite
+summary and full successful test output. No quiet retry was required.
+The core stayed Faster OFF, exact ON, 2014 ON, downloads disabled, max -j3.
+
+The actual dependency child
+`build/task-5c-no-faster-20260909/spin-2014-dependency-contract-runs/run-2a93d4cd902916b0/enabled`
+is exact OFF / 2014 ON / `LIBIGL_SKIP_DOWNLOAD=ON`; its graph excludes the
+functional, normal regression and allocation probe. Contract status is
+`PASSED`. The graph observation is `task-5r-fix1-exact-off.log`.
+
+Successful Python evidence is retained at
+`build/task-5f-runner-test-8yxf_px7/success/evidence.json`: source begin=end
+`7630a0025eb24e3904e9399d71473f0ba5cd10ebe115fb13a59502b39a706228`, full source
+observations equal; begin=end integrity
+`ba236d3a45f1d8b103d40bc3e917a765d8f22bac5661534a3788cf8ef4ab770e`.
+The compact extraction is `task-5r-fix1-python-evidence.json`. The test's later
+intentional input tampering is still its separate stale-result negative check.
+
+Tracked full diff snapshots before/after the suite match byte-for-byte. Status
+snapshots differ only because an unrelated untracked
+`tests/canonical_solver_process_replay.cpp` appeared externally after the source
+freshness test; it was neither read for task work nor edited/staged/built by
+this repair. No source-freshness test failed. All task production source was
+held fixed throughout the suite; foreign work remains untouched.
+
+The inherited libigl CMake deprecation warning appears in the RED interface
+configure log. It predates this repair, was retained rather than hidden, and
+required no third-party/dependency change. No download, pin, cache deletion,
+manual cache repair, global unrelated suite or main-checkout edit occurred.
+
+### Repair identities and handoff
+
+```
+header  0b7ceea76b469b9ce77a08735e35b55a80acd01e897f0dd41499bc33619c7395
+source  42a3321a575f3bed98155a0d57dd426470434bf615cebfb15f5660396c8f8773
+core    c5fbb3112335fd83eb7f356461047ca47c51eed4d46c1a33cb3b302ae6fb5b25
+```
+
+These were supplied to the controller before the full suite and remained stable
+through relink, focused checks and suite completion. Repair manifest is
+`task-5r-fix1-final.sha256`; the historical `task-5r-final.sha256` was not edited
+(its own SHA remains `e25491f6e12e6b8fd4e3504e3f9703f8733b3bb60a4d4f2bff80624e54c2f5f7`).
+
+Key repair evidence hashes:
+
+```
+RED both       eee99b99d2ddfcee8ad704a2ac89a47c3bbdb79d50a9bb78adeaf48bf364c661
+GREEN guard    98cf6964df574fc7075860c6e7d22794a91388c02bacab7fd56a8f4d24e5e864
+probe symbols  54a75b342ece5a3a7e8648c8477d94be0f98f516f58c68f57e7c0c7fc5e97b1c
+focused        98a0adb0749d086bedbf3eeac93817829d32f1332e4973f66bd6fda599447474
+full build     f84532af9d6961b29d17e3df03574f41251cadbeb81f6887314ea58874b2c2d9
+37-test suite  d15f91fee4a7bf3ecb1c5283762c012504e5b83d97362e19632c231c99e3ce3f
+raw CTest      0caf161902ddaede8043205bc0a71480e9999dcc812cf8b7255af5ac03864e45
+```
+
+Repair implementation commit: `c79b9ed` (`Bound source paper Jacobian transform
+workspace`), exactly the five assigned implementation paths. This appendix
+is a separate report-only commit, under authorized volcano identity. Self-review
+confirmed actual production helper use, fixed-column storage, probe isolation,
+unchanged numerical checks and the scoped CMake gate; `git diff --check` passes.
+Fix-round status: **DONE**, pending the controller's fresh review. The build
+has no running worker process and is released to the controller. Global
+`PARTIAL_BLOCKED` and all scientific scope exclusions remain unchanged.
