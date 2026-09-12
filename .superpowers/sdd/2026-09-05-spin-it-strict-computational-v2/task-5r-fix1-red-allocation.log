@@ -1,0 +1,2 @@
+guard rejected former GEMM 10x8
+probe: Eigen allocation forbidden

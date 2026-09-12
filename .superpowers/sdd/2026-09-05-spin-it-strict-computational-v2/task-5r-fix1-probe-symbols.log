@@ -1,0 +1,43 @@
+0000000000009018 V DW.ref._ZTISt13runtime_error
+0000000000009020 V DW.ref._ZTISt9exception
+0000000000009028 V DW.ref.__gxx_personality_v0
+0000000000008cd0 d _DYNAMIC
+0000000000008ee0 d _GLOBAL_OFFSET_TABLE_
+0000000000007000 R _IO_stdin_used
+0000000000009038 u guard variable for Eigen::internal::manage_caching_sizes(Eigen::Action, long*, long*, long*)::m_cacheSizes
+0000000000002db0 t Eigen::internal::gebp_kernel<double, double, long, Eigen::internal::blas_data_mapper<double, long, 0, 0>, 4, 4, false, false>::operator()(Eigen::internal::blas_data_mapper<double, long, 0, 0> const&, double const*, double const*, long, long, long, double, long, long, long, long) [clone .constprop.0]
+0000000000002760 t Eigen::internal::gemm_pack_lhs<double, long, Eigen::internal::const_blas_data_mapper<double, long, 0>, 4, 2, 0, false, false>::operator()(double*, Eigen::internal::const_blas_data_mapper<double, long, 0> const&, long, long, long, long) [clone .constprop.0]
+0000000000002920 t Eigen::internal::gemm_pack_rhs<double, long, Eigen::internal::const_blas_data_mapper<double, long, 0>, 4, 0, false, false>::operator()(double*, Eigen::internal::const_blas_data_mapper<double, long, 0> const&, long, long, long, long) [clone .constprop.0]
+0000000000005830 W Eigen::internal::queryCacheSizes(int&, int&, int&)
+0000000000001d62 W Eigen::internal::throw_std_bad_alloc()
+0000000000004670 t Eigen::internal::general_matrix_matrix_product<long, double, 0, false, double, 0, false, 0>::run(long, long, long, double const*, long, double const*, long, double*, long, double, Eigen::internal::level3_blocking<double, double>&, Eigen::internal::GemmParallelInfo<long>*) [clone .isra.0]
+00000000000012f8 t Eigen::internal::general_matrix_matrix_product<long, double, 0, false, double, 0, false, 0>::run(long, long, long, double const*, long, double const*, long, double*, long, double, Eigen::internal::level3_blocking<double, double>&, Eigen::internal::GemmParallelInfo<long>*) [clone .isra.0] [clone .cold]
+0000000000004d10 t Eigen::internal::general_matrix_vector_product<long, double, Eigen::internal::const_blas_data_mapper<double, long, 0>, 0, false, double, Eigen::internal::const_blas_data_mapper<double, long, 1>, false, 0>::run(long, long, Eigen::internal::const_blas_data_mapper<double, long, 0> const&, Eigen::internal::const_blas_data_mapper<double, long, 1> const&, double*, long, double) [clone .isra.0]
+00000000000061e0 W void Eigen::internal::evaluateProductBlockingSizesHeuristic<double, double, 1, long>(long&, long&, long&, long)
+0000000000005e50 W spin2014::detail::transformSourceCageMomentColumns(Eigen::Matrix<double, 10, 10, 0, 10, 10> const&, Eigen::Matrix<double, -1, -1, 0, -1, -1> const&, Eigen::Ref<Eigen::Matrix<double, -1, -1, 0, -1, -1>, 0, Eigen::OuterStride<-1> >)
+0000000000004d00 W std::ctype<char>::do_widen(char) const
+00000000000012c0 t std::basic_ostream<char, std::char_traits<char> >& std::operator<< <std::char_traits<char> >(std::basic_ostream<char, std::char_traits<char> >&, char) [clone .isra.0]
+0000000000009040 u Eigen::internal::manage_caching_sizes(Eigen::Action, long*, long*, long*)::m_cacheSizes
+0000000000009010 u Eigen::internal::is_malloc_allowed_impl(bool, bool)::value
+0000000000007890 r __FRAME_END__
+0000000000007450 r __GNU_EH_FRAME_HDR
+0000000000009030 D __TMC_END__
+000000000000038c r __abi_tag
+0000000000009030 B __bss_start
+0000000000009000 D __data_start
+0000000000002710 t __do_global_dtors_aux
+0000000000008cc8 d __do_global_dtors_aux_fini_array_entry
+0000000000009008 D __dso_handle
+0000000000008cc0 d __frame_dummy_init_array_entry
+0000000000009030 D _edata
+0000000000009058 B _end
+00000000000066f8 T _fini
+0000000000001000 T _init
+0000000000002670 T _start
+0000000000009030 b completed.0
+0000000000009000 W data_start
+00000000000026a0 t deregister_tm_clones
+0000000000002750 t frame_dummy
+0000000000001da0 T main
+000000000000151c t main.cold
+00000000000026d0 t register_tm_clones

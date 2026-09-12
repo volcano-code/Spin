@@ -1,0 +1,11 @@
+PASS fixture=0 mode=0 columns=113 value_scaled=1.723e-12 joint_derivative_scaled=3.432e-12 nonzero_relative=3.346e-11 nearzero_absolute=0.000e+00
+PASS fixture=0 mode=1 columns=113 value_scaled=4.616e-14 joint_derivative_scaled=1.424e-13 nonzero_relative=2.163e-11 nearzero_absolute=0.000e+00
+PASS fixture=0 mode=2 columns=113 value_scaled=4.616e-14 joint_derivative_scaled=1.427e-13 nonzero_relative=7.029e-12 nearzero_absolute=0.000e+00
+PASS fixture=0 mode=3 columns=113 value_scaled=4.616e-14 joint_derivative_scaled=1.423e-13 nonzero_relative=2.192e-11 nearzero_absolute=0.000e+00
+PASS fixture=0 mode=4 columns=112 value_scaled=5.947e-16 joint_derivative_scaled=4.869e-16 nonzero_relative=1.450e-11 nearzero_absolute=0.000e+00
+PASS fixture=1 mode=0 columns=113 value_scaled=7.253e-13 joint_derivative_scaled=8.381e-13 nonzero_relative=3.750e-11 nearzero_absolute=0.000e+00
+PASS fixture=1 mode=1 columns=113 value_scaled=1.412e-13 joint_derivative_scaled=1.253e-13 nonzero_relative=4.810e-11 nearzero_absolute=0.000e+00
+PASS fixture=1 mode=2 columns=113 value_scaled=1.409e-13 joint_derivative_scaled=1.249e-13 nonzero_relative=1.196e-10 nearzero_absolute=0.000e+00
+PASS fixture=1 mode=3 columns=113 value_scaled=1.411e-13 joint_derivative_scaled=1.251e-13 nonzero_relative=4.703e-11 nearzero_absolute=0.000e+00
+PASS fixture=1 mode=4 columns=112 value_scaled=1.331e-15 joint_derivative_scaled=4.063e-16 nonzero_relative=2.774e-11 nearzero_absolute=0.000e+00
+10 actual source cases verified; synthetic integration, not a joint solver or paper reproduction.

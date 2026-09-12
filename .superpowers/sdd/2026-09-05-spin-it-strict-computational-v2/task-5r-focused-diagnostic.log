@@ -1,0 +1,5 @@
+FD failure column=94 h=0.0003 actual=-0.000191306 fd=-0.000191303 relative=1.3276e-05
+diagnostic objective h=0.0001 fd=-0.000191306 rel=1.82015e-06
+diagnostic objective h=3e-05 fd=-0.000191306 rel=1.08118e-06
+diagnostic objective h=1e-05 fd=-0.000191306 rel=4.62155e-07
+all joint columns relative tolerance

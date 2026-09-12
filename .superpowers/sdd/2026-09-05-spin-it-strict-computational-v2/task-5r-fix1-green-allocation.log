@@ -1,0 +1,4 @@
+guard rejected former GEMM 10x8
+production helper 10x8 allocation-free PASS
+guard rejected former GEMM 10x104
+production helper 10x104 allocation-free PASS

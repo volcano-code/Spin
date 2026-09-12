@@ -1,0 +1,4 @@
+guard rejected former GEMM 10x8
+production helper 10x8: probe: Eigen allocation forbidden
+guard rejected former GEMM 10x104
+production helper 10x104: probe: Eigen allocation forbidden

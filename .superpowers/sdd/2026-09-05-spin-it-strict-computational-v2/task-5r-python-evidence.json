@@ -1,0 +1,18 @@
+{
+  "begin_source_sha256": "f27a2a8d7488dfde7ff34b71350961b03f8a9988e8f3de73007aac01189de5f6",
+  "end_source_sha256": "f27a2a8d7488dfde7ff34b71350961b03f8a9988e8f3de73007aac01189de5f6",
+  "source_observation_equal": true,
+  "begin_integrity": "8fbe8b23325932490b18e68cf84b4d981729834e88fc85e5d8c4520891ca6b83",
+  "end_integrity": "8fbe8b23325932490b18e68cf84b4d981729834e88fc85e5d8c4520891ca6b83",
+  "last_event": {
+    "data": {
+      "artifact_scientific_digest": "778f8dfb1dd0dc601152e2ffb78d5756efe8c42b1e61c1b3c9c8c03af9f0a97c",
+      "kind": "ACTUAL_SOLVE_AND_SEAL_OUTCOME",
+      "numerical_status": "BINARY_MOMENT_VALIDATED",
+      "scientific_digest": "780431ce4e1970da972488483a575b2b566a61fa072fdc6d09b65b5399c6e6a7",
+      "seal_error": null
+    },
+    "iteration": 39,
+    "status": "ok"
+  }
+}

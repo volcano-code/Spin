@@ -1,0 +1,6 @@
+[1/6] Building CXX object CMakeFiles/spin-it-2014-source-cage-paper-allocation-probe.dir/tests/spin_it_2014_source_cage_paper_regression.cpp.o
+[2/6] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SourceCagePaperFunctional.cpp.o
+[3/6] Linking CXX static library libmake_it_stand_core.a
+[4/6] Linking CXX executable spin-it-2014-source-cage-paper-allocation-probe
+[5/6] Building CXX object CMakeFiles/spin-it-2014-source-cage-paper-regression.dir/tests/spin_it_2014_source_cage_paper_regression.cpp.o
+[6/6] Linking CXX executable spin-it-2014-source-cage-paper-regression

@@ -1,0 +1,17 @@
+28f85ef9a441230f88a08fe53bb8da308b53bc61f0bd7c0399f8b23aa1614d14  CMakeLists.txt
+4c8d0f87615a72c1635762be9aa08d91329504f192922c99f1ba2e246f97d3de  include/spin2014/SourceCagePaperFunctional.h
+cb1cb31c56d0ddc6f1287f5173c12cbd9bb765c50809e2658d5d3cc25dd1c87f  src/spin2014/SourceCagePaperFunctional.cpp
+0def364a8439e2a0407381837431ec931e2f3b529b9ef9705a413bcf03f7cea7  tests/spin_it_2014_source_cage_paper_regression.cpp
+354995dc14b269b46d49974019a437934abb7f624ecedbecb18ccfecf1b3da9d  docs/spin2014_source_cage_paper_functional.md
+80947d9a9ac16045850f7131b61f034c70fc6b150e86e94bf9dbf7779a33621b  build/task-5c-no-faster-20260909/libmake_it_stand_core.a
+4537e32152f6026a8699ff527432a1c0c7ed018f3ca79a38061f43c557b5ce74  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-red.log
+53491ad9c6e7fb7a73a55a3e282cd06367c18741572bdea628d9e78b3aeb08ab  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-focused-1.log
+5dc3c9562bd8b1a1ed471f617b3dc48cfcde34e6824b0e57c7a8a83770606a06  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-focused-diagnostic.log
+b96d7561a06aeb3e74a76a3ade7d76a7fa4066006f7eb12174ed7c9610af90aa  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-focused-all-fd.log
+8280cc26f71ab60bd5e974dc6f54dc3b1423cb31692a6f229e71baa1706d2d45  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-focused-complex.log
+f297d60267b4bba75dbda6ce93fee73587f71f77aecf8fe6f6a52b7b394d0902  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-focused-longdouble.log
+df7e22c7a0c13b779ba9c090f9fec9e53b00b39a038f6e3780f5edc9f870a25b  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-final-focused.log
+c507ef6e029189b89f60bc8fd9cb7eff3359717ca363baa2e46ef2f95da63caa  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-full-build.log
+4aa76e7041c1c7f0edf04e312febc334d7a8376938dc44bd005bddd4c6b9da19  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-suite.log
+20c7340bd8272fb9454ef06cccc6c697bc75fa1de29d45e9a1b3c80dd16c2b6e  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-exact-off.log
+2a462272c1868acfc1bd4363d136289df7c0763bb9daf12046ccdb2f2fa31303  .superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5r-python-evidence.json

@@ -1,0 +1,104 @@
+FD discrepancy mode=YOYO column=94 h=0.0003 actual=-0.000191306 fd=-0.000191303 relative=1.3276e-05
+FD discrepancy mode=YOYO column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD discrepancy mode=YOYO column=111 h=0.0003 actual=0.0012863 fd=0.00128631 relative=2.90669e-06
+FD YOYO columns=113 h=0.0003 relative=1.3276e-05 absolute=1.06324e-07
+FD discrepancy mode=YOYO column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=YOYO column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=YOYO column=94 h=0.0001 actual=-0.000191306 fd=-0.000191306 relative=1.82015e-06
+FD YOYO columns=113 h=0.0001 relative=1.82015e-06 absolute=1.18066e-08
+FD discrepancy mode=YOYO column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=YOYO column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=YOYO column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=YOYO column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=YOYO column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=YOYO column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=YOYO column=94 h=3e-05 actual=-0.000191306 fd=-0.000191306 relative=1.08118e-06
+FD YOYO columns=113 h=3e-05 relative=5.95447e-06 absolute=1.0804e-09
+FD discrepancy mode=TOP_INERTIA_ONLY column=64 h=0.0003 actual=6.08407e-06 fd=6.08297e-06 relative=0.000180011
+FD discrepancy mode=TOP_INERTIA_ONLY column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD TOP_INERTIA_ONLY columns=113 h=0.0003 relative=0.000180011 absolute=1.06325e-07
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=64 h=0.0001 actual=6.08407e-06 fd=6.08393e-06 relative=2.35039e-05
+FD TOP_INERTIA_ONLY columns=113 h=0.0001 relative=2.35039e-05 absolute=1.18122e-08
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=64 h=3e-05 actual=6.08407e-06 fd=6.08412e-06 relative=8.18688e-06
+FD TOP_INERTIA_ONLY columns=113 h=3e-05 relative=8.18688e-06 absolute=1.06744e-09
+FD discrepancy mode=TOP_LOWERING_ONLY column=26 h=0.0003 actual=0.000277161 fd=0.000277161 relative=1.71801e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD TOP_LOWERING_ONLY columns=113 h=0.0003 relative=3.36451e-06 absolute=1.06325e-07
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD TOP_LOWERING_ONLY columns=113 h=0.0001 relative=1.75354e-06 absolute=1.18122e-08
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_LOWERING_ONLY column=105 h=3e-05 actual=-6.22508e-05 fd=-6.2251e-05 relative=2.18436e-06
+FD TOP_LOWERING_ONLY columns=113 h=3e-05 relative=5.95447e-06 absolute=1.06929e-09
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=26 h=0.0003 actual=-0.000298097 fd=-0.000298097 relative=1.58661e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=51 h=0.0003 actual=-3.63876e-05 fd=-3.63878e-05 relative=4.24741e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=60 h=0.0003 actual=-0.000789769 fd=-0.000789768 relative=1.29944e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=64 h=0.0003 actual=-0.000522385 fd=-0.000522386 relative=2.09413e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=94 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0003 relative=4.24741e-06 absolute=1.06325e-07
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0001 relative=1.75354e-06 absolute=1.18122e-08
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=13 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=37 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=63 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=TOP_MASS_AND_LOWERING column=71 h=3e-05 actual=0.000355919 fd=0.000355919 relative=1.42707e-06
+FD TOP_MASS_AND_LOWERING columns=113 h=3e-05 relative=5.95447e-06 absolute=1.06744e-09
+FD discrepancy mode=STATIC_LOWERING column=72 h=0.0003 actual=2.34809e-06 fd=2.34808e-06 relative=5.58333e-06
+FD discrepancy mode=STATIC_LOWERING column=93 h=0.0003 actual=-1.43544e-05 fd=-1.43545e-05 relative=3.36451e-06
+FD discrepancy mode=STATIC_LOWERING column=96 h=0.0003 actual=-9.61483e-06 fd=-9.61482e-06 relative=1.58215e-06
+FD STATIC_LOWERING columns=112 h=0.0003 relative=5.58333e-06 absolute=1.16429e-09
+FD discrepancy mode=STATIC_LOWERING column=12 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=STATIC_LOWERING column=12 h=0.0001 actual=-5.79572e-07 fd=-5.79573e-07 relative=1.75354e-06
+FD discrepancy mode=STATIC_LOWERING column=72 h=0.0001 actual=2.34809e-06 fd=2.34808e-06 relative=4.8741e-06
+FD STATIC_LOWERING columns=112 h=0.0001 relative=4.8741e-06 absolute=1.2445e-10
+FD discrepancy mode=STATIC_LOWERING column=12 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=STATIC_LOWERING column=12 h=3e-05 actual=-5.79572e-07 fd=-5.79569e-07 relative=4.39232e-06
+FD discrepancy mode=STATIC_LOWERING column=36 h=3e-05 actual=-7.33827e-07 fd=-7.33832e-07 relative=5.95447e-06
+FD discrepancy mode=STATIC_LOWERING column=44 h=3e-05 actual=3.06621e-05 fd=3.0662e-05 relative=1.36918e-06
+FD discrepancy mode=STATIC_LOWERING column=62 h=3e-05 actual=2.331e-06 fd=2.331e-06 relative=1.09908e-06
+FD discrepancy mode=STATIC_LOWERING column=72 h=3e-05 actual=2.34809e-06 fd=2.34805e-06 relative=1.80343e-05
+FD discrepancy mode=STATIC_LOWERING column=96 h=3e-05 actual=-9.61483e-06 fd=-9.61477e-06 relative=6.06623e-06
+FD STATIC_LOWERING columns=112 h=3e-05 relative=1.80343e-05 absolute=1.7949e-10
+FD YOYO columns=113 h=0.0003 relative=2.40001e-07 absolute=5.97536e-08
+FD YOYO columns=113 h=0.0001 relative=2.37127e-07 absolute=6.63569e-09
+FD YOYO columns=113 h=3e-05 relative=4.83929e-07 absolute=5.9349e-10
+FD discrepancy mode=TOP_INERTIA_ONLY column=28 h=0.0003 actual=1.40629e-05 fd=1.40629e-05 relative=1.01357e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=97 h=0.0003 actual=-9.99728e-06 fd=-9.99727e-06 relative=1.03231e-06
+FD TOP_INERTIA_ONLY columns=113 h=0.0003 relative=1.03231e-06 absolute=5.97533e-08
+FD TOP_INERTIA_ONLY columns=113 h=0.0001 relative=5.38037e-07 absolute=6.6368e-09
+FD discrepancy mode=TOP_INERTIA_ONLY column=28 h=3e-05 actual=1.40629e-05 fd=1.4063e-05 relative=8.53328e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=30 h=3e-05 actual=6.25268e-05 fd=6.25269e-05 relative=1.60747e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=50 h=3e-05 actual=-5.4429e-05 fd=-5.44292e-05 relative=3.27556e-06
+FD discrepancy mode=TOP_INERTIA_ONLY column=97 h=3e-05 actual=-9.99728e-06 fd=-9.99722e-06 relative=5.74279e-06
+FD TOP_INERTIA_ONLY columns=113 h=3e-05 relative=8.53328e-06 absolute=5.9534e-10
+FD TOP_LOWERING_ONLY columns=113 h=0.0003 relative=2.40001e-07 absolute=5.97536e-08
+FD TOP_LOWERING_ONLY columns=113 h=0.0001 relative=2.37127e-07 absolute=6.6368e-09
+FD discrepancy mode=TOP_LOWERING_ONLY column=5 h=3e-05 actual=0.0001327 fd=0.0001327 relative=1.1054e-06
+FD TOP_LOWERING_ONLY columns=113 h=3e-05 relative=1.1054e-06 absolute=5.97191e-10
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0003 relative=2.39999e-07 absolute=5.97532e-08
+FD TOP_MASS_AND_LOWERING columns=113 h=0.0001 relative=2.37127e-07 absolute=6.6368e-09
+FD TOP_MASS_AND_LOWERING columns=113 h=3e-05 relative=7.94785e-07 absolute=5.9534e-10
+FD STATIC_LOWERING columns=112 h=0.0003 relative=3.76078e-07 absolute=6.74797e-10
+FD discrepancy mode=STATIC_LOWERING column=36 h=0.0001 actual=0.00011723 fd=0.00011723 relative=1.10215e-06
+FD discrepancy mode=STATIC_LOWERING column=80 h=0.0001 actual=7.83077e-05 fd=7.83075e-05 relative=1.84421e-06
+FD STATIC_LOWERING columns=112 h=0.0001 relative=1.84421e-06 absolute=2.99796e-10
+FD discrepancy mode=STATIC_LOWERING column=80 h=3e-05 actual=7.83077e-05 fd=7.83074e-05 relative=3.25252e-06
+FD STATIC_LOWERING columns=112 h=3e-05 relative=3.25252e-06 absolute=6.48941e-10
+finest-step discrepancies require independent derivative resolution
