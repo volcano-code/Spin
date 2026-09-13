@@ -1,0 +1,23 @@
+	Command being timed: "/usr/bin/c++ -std=c++17 -O2 -g -DNDEBUG -frounding-math -DMAKE_IT_STAND_HAS_SPIN_IT_2014=1 -DMAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS=1 -Iinclude -Itests -isystem libigl/external/eigen /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/.superpowers/sdd/2026-09-05-spin-it-strict-computational-v2/task-5z-controller-export.cpp -o build/task-5z-controller-build-5HBGSQ/export build/task-5c-no-faster-20260909/libmake_it_stand_core.a /home/lin/anaconda3/lib/libboost_system.a /usr/lib/x86_64-linux-gnu/libgmp.so /usr/lib/x86_64-linux-gnu/libmpfr.so /home/lin/anaconda3/lib/libboost_thread.a build/task-5c-no-faster-20260909/lib/libhighs.a /usr/lib/x86_64-linux-gnu/libz.so"
+	User time (seconds): 1.97
+	System time (seconds): 0.19
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.18
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 447664
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 159866
+	Voluntary context switches: 16
+	Involuntary context switches: 29
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 69672
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

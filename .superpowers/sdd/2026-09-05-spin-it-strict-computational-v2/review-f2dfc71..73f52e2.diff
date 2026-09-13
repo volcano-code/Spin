@@ -1,0 +1,644 @@
+# Review package: f2dfc71ec762d263f103db1a08ca53d50f3e6aed..73f52e2150db9d16fe6ac9559b911ec18e403fe8
+
+## Commits
+73f52e2 Add exact regions and outer clearance for actual binary material
+
+## Files changed
+ CMakeLists.txt                                     |   6 +
+ docs/spin2014_source_cage_material_regions.md      |  42 ++++
+ include/spin2014/SourceCageMaterialRegions.h       |  74 ++++++
+ src/spin2014/SourceCageMaterialRegions.cpp         | 265 +++++++++++++++++++++
+ ...014_source_cage_material_regions_regression.cpp | 173 ++++++++++++++
+ 5 files changed, 560 insertions(+)
+
+## Diff
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1fe8d2e..f6ffc21 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -277,20 +277,22 @@ if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageSlqp.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageSlqp.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageGeometry.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageGeometry.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageAdaptiveRebind.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageAdaptiveRebind.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageAdaptiveSolver.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageAdaptiveSolver.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageBinaryMaterial.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageBinaryMaterial.h)
++        list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageMaterialRegions.cpp)
++        list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageMaterialRegions.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/LinearizedRotationLaplacian.cpp src/spin2014/SourceCageShapeFunctional.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/LinearizedRotationLaplacian.h include/spin2014/SourceCageShapeFunctional.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceAdaptiveDomain.cpp src/spin2014/SourceBinaryMoments.cpp src/spin2014/SourceAdaptiveSpinSolver.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceAdaptiveDomain.h include/spin2014/SourceBinaryMoments.h include/spin2014/SourceAdaptiveSpinSolver.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceMaterialBoundary.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceMaterialBoundary.h)
+     endif()
+ endif()
+ 
+ add_library(
+@@ -528,20 +530,24 @@ if(BUILD_TESTING)
+             add_executable(spin-it-2014-source-conforming-boundary-regression tests/spin_it_2014_source_conforming_boundary_regression.cpp)
+             add_executable(spin-it-2014-source-cage-moments-regression tests/spin_it_2014_source_cage_moments_regression.cpp)
+             add_executable(spin-it-2014-source-cage-paper-regression tests/spin_it_2014_source_cage_paper_regression.cpp)
+             add_executable(spin-it-2014-source-cage-shape-regression tests/spin_it_2014_source_cage_shape_regression.cpp)
+             add_executable(spin-it-2014-source-cage-slqp-regression tests/spin_it_2014_source_cage_slqp_regression.cpp)
+             add_executable(spin-it-2014-source-cage-geometry-regression tests/spin_it_2014_source_cage_geometry_regression.cpp)
+             add_executable(spin-it-2014-source-cage-guarded-slqp-regression tests/spin_it_2014_source_cage_guarded_slqp_regression.cpp)
+             add_executable(spin-it-2014-source-cage-adaptive-rebind-regression tests/spin_it_2014_source_cage_adaptive_rebind_regression.cpp)
+             add_executable(spin-it-2014-source-cage-adaptive-solver-regression tests/spin_it_2014_source_cage_adaptive_solver_regression.cpp)
+             add_executable(spin-it-2014-source-cage-binary-material-regression tests/spin_it_2014_source_cage_binary_material_regression.cpp)
++            add_executable(spin-it-2014-source-cage-material-regions-regression tests/spin_it_2014_source_cage_material_regions_regression.cpp)
++            target_link_libraries(spin-it-2014-source-cage-material-regions-regression PRIVATE make_it_stand::core)
++            add_test(NAME spin-it-2014-source-cage-material-regions COMMAND spin-it-2014-source-cage-material-regions-regression)
++            set_tests_properties(spin-it-2014-source-cage-material-regions PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-binary-material-regression PRIVATE make_it_stand::core)
+             add_test(NAME spin-it-2014-source-cage-binary-material COMMAND spin-it-2014-source-cage-binary-material-regression)
+             set_tests_properties(spin-it-2014-source-cage-binary-material PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-adaptive-solver-regression PRIVATE make_it_stand::core)
+             add_test(NAME spin-it-2014-source-cage-adaptive-solver COMMAND spin-it-2014-source-cage-adaptive-solver-regression)
+             set_tests_properties(spin-it-2014-source-cage-adaptive-solver PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-adaptive-rebind-regression PRIVATE make_it_stand::core)
+             add_test(NAME spin-it-2014-source-cage-adaptive-rebind COMMAND spin-it-2014-source-cage-adaptive-rebind-regression)
+             set_tests_properties(spin-it-2014-source-cage-adaptive-rebind PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-guarded-slqp-regression PRIVATE make_it_stand::core)
+diff --git a/docs/spin2014_source_cage_material_regions.md b/docs/spin2014_source_cage_material_regions.md
+new file mode 100644
+index 0000000..3efad09
+--- /dev/null
++++ b/docs/spin2014_source_cage_material_regions.md
+@@ -0,0 +1,42 @@
++# Actual binary material exact regions (Task5z)
++
++`validateSourceCageMaterialRegions(binaryAudit, settings)` accepts only the genuine immutable Task5y audit whose `validatedMaterial()` exists. A candidate, copied facts, state, mesh or JSON has no admission overload. The immutable returned audit publishes `validatedRegions()` only after every gate. That product owns the actual binary material and the original shared immutable binary audit, including its integrated moments. No input arrays, moment values, frame, state, or geometry are changed.
++
++This is bounded finite represented-polyhedral evidence. It is not a SealedSpinArtifact, feasible witness, continuous BBW Jacobian certificate, physics result, full manufacturing thickness check or original-paper completion. The Python deformed sealing gate remains unsupported and open.
++
++## Exact chain and represented design
++
++The outer, signed carved and signed material boundary are converted to exact regular-closed regions. Carved absence uses an explicit-empty operand with no invented empty boundary audit. Native region and boundary facts preserve signed-shell nesting, orientation, connected material components and bounded void components. The backend may reverse a checker-only negative shell when building a solid; the immutable original mesh is untouched.
++
++The first exact partition requires outer = material union carved, inclusive set equality, pairwise interior disjointness, no missing/excess content, and each part a subset of outer. Incomplete facts never pass.
++
++The represented design D is defined as the union of all Full primitives in the immutable terminal SourceCageBinding. For each selected primitive, the implementation extracts its actual deformed conforming surface in original reference order with the stored orientation. The compact vertex order is ascending original point ID. Each witness retains primitive index, binary beta owner, source key, mesh digest, exact region facts and an explicit subset-of-outer relation. The primitive is selected only when its actual immutable binary beta equals one.
++
++A second exact partition establishes the constructive proof:
++
++`C = union(selected immutable Full primitives) subset D`.
++
++D is the represented terminal design, not the continuous author design or rest geometry. There is no invented global design mesh or hash. For selectedCount = 0, the witness list remains empty and the second partition uses one explicit-empty algebra operand.
++
++The full actual binary functional is evaluated in value-only mode to obtain deformed primitive points. Its output digest must equal Task5y's binaryFunctionalOutputSha256. Source, functional, binding, partition, binary state and emitted output identities are retained; functional, partition, binary state and emitted meshes are independently hashed and checked against the immutable upstream audit.
++
++Finally the native exact triangle-boundary distance checks outer versus carved. minimumOuterWall is a finite nonnegative binary64 in model units, converted exactly to a rational. A nonempty cavity must have applicable = true, contact = false and atLeastMinimum = true, including threshold zero. An empty cavity must produce actual NOT_APPLICABLE with absent contact, distance, witness and threshold-result facts. Exact squared rational distance and witness face IDs are preserved.
++
++This only measures outer-to-carved separation. Inner webs, features on the same component and complete manufacturing thickness remain NOT_ESTABLISHED.
++
++## Bounds and failure evidence
++
++All exact algebra uses one invocation-local mutable ExactNefBudget. Region operands and live budget contexts never escape. Only a copied final budget snapshot escapes, after local regions release their leases. This bounds explicit application Nef complexity, not opaque CGAL allocations or process RSS.
++
++Settings cap the selected primitive witness count, aggregate planned points and triangles, known owned buffers, estimated exact diagnostics and maximum Nef complexity. The primitive cap applies to selected witnesses, not every unselected binding primitive. Count multiplication/addition and native index limits are checked before size-dependent evaluation, mesh, evidence-list or exact-region allocation. Conservative point counts use three vertices per selected face before deduplication. Diagnostic planning includes worst-case retained face pairs, shell diagnostics, nesting and partition witnesses with a capacity allowance. Native rational/CGAL allocator internals remain under the external 24 GiB virtual-memory / 60-minute guard. Existing upstream value-only BBW and shape budgets remain in force.
++
++Outcomes distinguish NOT_ADMITTED, established REJECTED, RESOURCE_LIMIT and UNKNOWN. These do not assert infeasibility. Successful narrow evidence is named EXACT_MATERIAL_REGIONS_VALIDATED_PRE_SEAL. Partial region, partition, relation and clearance facts are retained on failure. A deterministic scientific hash covers outcome, settings identity, all input identities, selected witnesses, raw exact facts, reason and the final Nef budget snapshot; it excludes time and pointer addresses.
++
++## Native verification
++
++Target: `spin-it-2014-source-cage-material-regions-regression`.
++CTest: `spin-it-2014-source-cage-material-regions`.
++
++The regression uses actual source surfaces, full BBW, adaptive convergence and immutable binary validation. Its zero-objective stationary cases are explicitly KNOWN_SOLUTION_VALIDATION, never paper success. Coverage includes nonidentity deformation with nonzero phi, a selected union, explicit empty cavity, positive/oversized/zero clearance thresholds, actual disconnected cavities, failed binary rounding admission, copied-facts rejection, caps/overflow, repeat determinism and lifetime preservation after both originating audits are destroyed. Generic overlap, missing-content and wrong-nesting negatives exercise only the existing exact backend.
++
++The actual identity-handle output yields squared clearance 79228162514263774643590529025/5070602400912917605986812821504, exactly ((2^48-1)/2^51)^2. The regression uses the literal representable threshold (2^48-1)/2^51, checks inclusive equality, and checks rejection at nextafter above it. No tolerance or rounded square root is used. The distinct nonidentity rational distance is also retained in raw logs.
+diff --git a/include/spin2014/SourceCageMaterialRegions.h b/include/spin2014/SourceCageMaterialRegions.h
+new file mode 100644
+index 0000000..a99449c
+--- /dev/null
++++ b/include/spin2014/SourceCageMaterialRegions.h
+@@ -0,0 +1,74 @@
++#pragma once
++#include "spin2014/SourceCageBinaryMaterial.h"
++#include "verification/ExactMaterialRegion.h"
++
++#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
++namespace spin2014 {
++struct SourceCageMaterialRegionsSettings {
++    double minimumOuterWall=0.; // Finite nonnegative model units; contact always rejects.
++    std::size_t maximumPrimitives=1000,maximumPoints=100000,maximumTriangles=400000;
++    std::size_t maximumOwnedBytes=256*1024*1024,maximumExactDiagnosticBytes=512*1024*1024;
++    std::size_t maximumNefComplexity=1000000;
++};
++enum class SourceCageMaterialRegionsOutcome {Validated,NotAdmitted,Rejected,ResourceLimit,Unknown};
++struct SourceCageRegionEvidence {
++    verification::ExactMaterialRegionFacts region;
++    // Absent for explicit empty, never a fabricated empty mesh audit.
++    std::optional<verification::ExactBoundaryFacts> boundary;
++};
++struct SourceCageSelectedRegionEvidence {
++    std::size_t primitiveId=0,betaOwner=0;
++    SourcePartitionKey sourceKey;
++    double binaryBeta=0.;
++    std::string meshSha256;
++    SourceCageRegionEvidence region;
++    verification::ExactMaterialRelationFacts subsetOuter;
++};
++struct SourceCageMaterialRegionsFacts {
++    SourceCageMaterialRegionsOutcome outcome=SourceCageMaterialRegionsOutcome::Unknown;
++    SourceCageMaterialRegionsSettings settings;
++    std::string semantics="finite represented-polyhedral exact regions/partitions/design-membership/outer-clearance only; no seal, continuous BBW Jacobian, full wall/web thickness, physics, feasibility or paper grant";
++    std::string designMembershipProof="C = union(selected immutable Full primitives) subset D; D = union(all Full primitives in terminal SourceCageBinding); continuous author design NOT_ESTABLISHED";
++    std::string fullManufacturingThickness="NOT_ESTABLISHED";
++    bool admitted=false,identitiesChecked=false,representedDesignMembershipEstablished=false;
++    std::size_t selectedCount=0,plannedPoints=0,plannedTriangles=0,plannedOwnedBytes=0,plannedExactDiagnosticBytes=0;
++    SourceCageRegionEvidence outer,carved,material;
++    verification::ExactMaterialPartitionFacts materialPartition,selectedPartition;
++    std::vector<SourceCageSelectedRegionEvidence> selected;
++    verification::ExactBoundaryClearanceFacts outerClearance;
++    verification::ExactNefBudgetFacts nefBudget; // Immutable COPY, not a live context.
++    std::string inputSha256,sourceSha256,functionalSha256,partitionSha256,bindingSha256;
++    std::string binaryStateSha256,binaryOutputSha256,evaluationSha256,configSha256,scientificSha256;
++    std::array<char,256> reason{};
++};
++class SourceCageMaterialRegionsAudit;
++class SourceCageMaterialRegions {
++public:
++    std::shared_ptr<const SourceCageBinaryMaterial> binaryMaterial() const;
++    const SourceCageBinaryMaterialAudit& binaryAudit() const;
++private:
++    SourceCageMaterialRegions(const SourceCageBinaryMaterialAudit& audit,std::shared_ptr<const SourceCageBinaryMaterial> material):audit_(audit),material_(std::move(material)) {}
++    SourceCageBinaryMaterialAudit audit_; // Shared original immutable moments/evidence.
++    std::shared_ptr<const SourceCageBinaryMaterial> material_;
++    friend SourceCageMaterialRegionsAudit validateSourceCageMaterialRegions(
++        const SourceCageBinaryMaterialAudit&,const SourceCageMaterialRegionsSettings&);
++};
++class SourceCageMaterialRegionsAudit {
++public:
++    const SourceCageMaterialRegionsFacts& facts() const;
++    std::shared_ptr<const SourceCageMaterialRegions> validatedRegions() const;
++private:
++    struct Data;
++    explicit SourceCageMaterialRegionsAudit(std::shared_ptr<const Data> data):data_(std::move(data)) {}
++    std::shared_ptr<const Data> data_;
++    friend SourceCageMaterialRegionsAudit validateSourceCageMaterialRegions(
++        const SourceCageBinaryMaterialAudit&,const SourceCageMaterialRegionsSettings&);
++};
++// Only immutable upstream validation admits. Invalid threshold throws;
++// resource and unknown never publish. Native allocator internals remain under
++// the caller's external 24 GiB / 60 minute guard, not an RSS guarantee.
++SourceCageMaterialRegionsAudit validateSourceCageMaterialRegions(
++    const SourceCageBinaryMaterialAudit&,const SourceCageMaterialRegionsSettings& = {});
++const char* sourceCageMaterialRegionsOutcomeToken(SourceCageMaterialRegionsOutcome);
++}
++#endif
+diff --git a/src/spin2014/SourceCageMaterialRegions.cpp b/src/spin2014/SourceCageMaterialRegions.cpp
+new file mode 100644
+index 0000000..40bcc7c
+--- /dev/null
++++ b/src/spin2014/SourceCageMaterialRegions.cpp
+@@ -0,0 +1,265 @@
++#include "spin2014/SourceCageMaterialRegions.h"
++#include "verification/Sha256.h"
++#include <algorithm>
++#include <climits>
++#include <cmath>
++#include <cstring>
++
++namespace spin2014 {
++namespace {
++using Outcome=SourceCageMaterialRegionsOutcome;
++using namespace verification;
++[[noreturn]] void resource(const char* s){throw std::length_error(s);}
++std::size_t add(std::size_t a,std::size_t b){if(a>SIZE_MAX-b)resource("region count addition overflow");return a+b;}
++std::size_t mul(std::size_t a,std::size_t b){if(b&&a>SIZE_MAX/b)resource("region count multiplication overflow");return a*b;}
++class Hash {
++    Sha256 h_;
++public:
++    void put(std::uint64_t n){unsigned char b[8];for(int i=0;i<8;++i)b[7-i]=n>>(8*i);h_.update(b,8);}
++    void put(int n){put(std::uint64_t(n));}
++    void put(bool n){put(std::uint64_t(n));}
++    void put(double d){std::uint64_t n;std::memcpy(&n,&d,8);put(n);}
++    void put(const std::string& s){put(std::uint64_t(s.size()));h_.update(reinterpret_cast<const unsigned char*>(s.data()),s.size());}
++    template<class T> void put(const std::vector<T>& v){put(std::uint64_t(v.size()));for(const auto& x:v)put(T(x));}
++    template<class T,std::size_t N> void put(const std::array<T,N>& v){put(std::uint64_t(N));for(const auto& x:v)put(x);}
++    template<class T> void put(const std::optional<T>& v){put(bool(v));if(v)put(*v);}
++    template<class T> void matrix(const Eigen::MatrixBase<T>& m){put(std::uint64_t(m.rows()));put(std::uint64_t(m.cols()));for(Eigen::Index i=0;i<m.rows();++i)for(Eigen::Index j=0;j<m.cols();++j)put(double(m(i,j)));}
++    void values(const Eigen::VectorXd& x){put(std::uint64_t(x.size()));for(Eigen::Index i=0;i<x.size();++i)put(x[i]);}
++    template<class... T> void fields(const T&... x){(put(x),...);}
++    std::string finish(){return h_.finish();}
++};
++void hash(Hash& h,const ExactBoundaryFacts& f){
++    h.fields(f.algorithm,f.backend,f.inputDigest,f.orientation,f.intersectionError,f.boundaryValid,f.closed,f.edgeManifold,f.vertexManifold,
++        f.consistentlyOriented,f.componentOrientationsValid,f.intersectionCompleted,f.intersectionFree,f.exactPairTests,
++        f.unreferencedVertices,f.degenerateFaces,f.nonManifoldVertices,f.boundaryEdges,f.nonManifoldEdges,f.inconsistentEdges,
++        f.intersectingPairs,f.faceComponents,f.componentVolumeSigns,f.componentSignedVolumesExact);
++}
++void hash(Hash& h,const SourceCageRegionEvidence& e){
++    const auto& f=e.region;
++    h.fields(f.algorithm,f.backend,f.semantics,f.inputDigest,f.regionDigest,f.error,f.completed,f.valid,f.explicitEmpty,
++        f.parents,f.depths,f.originalSigns,f.checkerReversedComponents,f.materialComponents,f.boundedVoidComponents,bool(e.boundary));
++    if(e.boundary)hash(h,*e.boundary);
++}
++void hash(Hash& h,const ExactMaterialPartitionFacts& f){
++    h.fields(f.algorithm,f.backend,f.semantics,f.emptyProtocol,f.wholeDigest,f.partitionDigest,f.error,f.partDigests,
++        f.completed,f.wholeExplicitEmpty,f.partExplicitEmpty,f.unionEqualsWhole,f.noPositiveVolumeOverlap,
++        f.missingWholeContent,f.excessUnionContent,f.completePartition,f.partSubsetWhole,f.positiveVolumeOverlapPairs);
++}
++void hash(Hash& h,const ExactMaterialRelationFacts& f){
++    h.fields(f.algorithm,f.semantics,f.aDigest,f.bDigest,f.relationDigest,f.error,f.completed,f.aExplicitEmpty,f.bExplicitEmpty,
++        f.intersectionNonempty,f.positiveVolumeOverlap,f.aSubsetB,f.bSubsetA,f.equal);
++}
++void hash(Hash& h,const ExactBoundaryClearanceFacts& f){
++    h.fields(f.algorithm,f.backend,f.semantics,f.aDigest,f.bDigest,f.aInputDigest,f.bInputDigest,f.minimumClearanceExact,
++        f.clearanceDigest,f.error,f.state,f.completed,f.aExplicitEmpty,f.bExplicitEmpty,f.applicable,f.atLeastMinimum,
++        f.contact,f.squaredDistanceExact,f.witnessFaces);
++}
++std::string configHash(const SourceCageMaterialRegionsSettings& s){
++    Hash h;h.fields(std::string("source-cage-material-regions-config-v1"),s.minimumOuterWall,s.maximumPrimitives,s.maximumPoints,
++        s.maximumTriangles,s.maximumOwnedBytes,s.maximumExactDiagnosticBytes,s.maximumNefComplexity);return h.finish();
++}
++std::string stateHash(const Eigen::VectorXd& x){Hash h;h.put(std::string("source-adaptive-full-state-v1"));h.values(x);return h.finish();}
++std::string functionalHash(const SourceCagePaperFunctional& f){
++    Hash h;h.put(std::string("source-adaptive-functional-v1"));
++    h.fields(f.configSha256(),f.upstreamSha256(),f.source().configSha256(),f.source().upstreamSha256(),
++        f.source().boundary().configSha256(),f.source().boundary().outputSha256(),f.source().boundary().binding().configSha256(),
++        f.source().boundary().binding().outputSha256(),f.source().boundary().binding().domain().partitionHash());return h.finish();
++}
++void meshHash(Hash& h,const SourceCageBinaryMesh& m){h.matrix(m.vertices);h.matrix(m.triangles);}
++std::string binaryOutputHash(const SourceCageBinaryMaterial& m){
++    Hash h;h.put(std::string("actual-deformed-binary-emitted-triangles-v1"));
++    meshHash(h,m.outerBoundary());meshHash(h,m.carvedBoundary());meshHash(h,m.materialBoundary());return h.finish();
++}
++void finish(SourceCageMaterialRegionsFacts& f,bool product){
++    Hash h;h.fields(f.semantics,f.designMembershipProof,f.fullManufacturingThickness,int(f.outcome),std::string(f.reason.data()),
++        f.configSha256,f.inputSha256,f.sourceSha256,f.functionalSha256,f.partitionSha256,f.bindingSha256,f.binaryStateSha256,
++        f.binaryOutputSha256,f.evaluationSha256,f.admitted,f.identitiesChecked,f.representedDesignMembershipEstablished,
++        f.selectedCount,f.plannedPoints,f.plannedTriangles,f.plannedOwnedBytes,f.plannedExactDiagnosticBytes,product);
++    hash(h,f.outer);hash(h,f.carved);hash(h,f.material);hash(h,f.materialPartition);hash(h,f.selectedPartition);
++    h.put(std::uint64_t(f.selected.size()));
++    for(const auto& p:f.selected){
++        h.fields(p.primitiveId,p.betaOwner,p.sourceKey.level,p.binaryBeta,p.meshSha256);
++        for(auto n:p.sourceKey.coordinates)h.put(std::uint64_t(n));
++        hash(h,p.region);hash(h,p.subsetOuter);
++    }
++    hash(h,f.outerClearance);h.put(hashExactNefBudgetFacts(f.nefBudget));f.scientificSha256=h.finish();
++}
++void terminal(SourceCageMaterialRegionsFacts& f,Outcome o,const char* s){
++    f.outcome=o;const auto n=std::min(f.reason.size()-1,std::strlen(s));std::memcpy(f.reason.data(),s,n);f.reason[n]=0;
++}
++SourceCageRegionEvidence evidence(const ExactMaterialRegion& r){
++    SourceCageRegionEvidence e;e.region=r.facts();if(!e.region.explicitEmpty)e.boundary=r.boundaryFacts();return e;
++}
++void plan(const SourceCageBinaryMaterial& m,SourceCageMaterialRegionsFacts& out){
++    const auto& s=out.settings;
++    for(auto n:{s.maximumPrimitives,s.maximumPoints,s.maximumTriangles,s.maximumNefComplexity})
++        if(!n||n>std::size_t(INT_MAX/3))resource("invalid region native count cap");
++    for(auto n:{s.maximumOwnedBytes,s.maximumExactDiagnosticBytes})
++        if(!n||n>std::size_t(PTRDIFF_MAX))resource("invalid region byte cap");
++    mul(s.maximumTriangles,s.maximumTriangles);
++    const auto& f=m.functional();const auto& b=f.source().boundary();
++    const auto& primitives=b.binding().primitives();
++    if(primitives.size()!=b.primitiveBoundaries().size())throw std::logic_error("immutable primitive boundary identity mismatch");
++    std::size_t p=0,t=0,selected=0;
++    for(const auto* mesh:{&m.outerBoundary(),&m.carvedBoundary(),&m.materialBoundary()}){
++        p=add(p,std::size_t(mesh->vertices.rows()));t=add(t,std::size_t(mesh->triangles.rows()));
++    }
++    for(std::size_t i=0;i<primitives.size();++i){
++        const auto owner=primitives[i].betaIndex;
++        if(owner>=f.betaCount())throw std::logic_error("immutable primitive has invalid beta owner");
++        const auto beta=m.binaryState()[owner];
++        if(beta!=0.&&beta!=1.)throw std::logic_error("immutable upstream state is not binary");
++        if(beta==1.){
++            selected=add(selected,1);
++            const auto faces=b.primitiveBoundaries()[i].size();
++            t=add(t,faces);p=add(p,mul(faces,3)); // Conservative unique point upper bound.
++        }
++    }
++    out.selectedCount=selected;out.plannedPoints=p;out.plannedTriangles=t;
++    if(selected>s.maximumPrimitives||p>s.maximumPoints||t>s.maximumTriangles||
++        std::size_t(b.points().rows())>s.maximumPoints)resource("selected witness/aggregate region mesh cap");
++    // Retained evidence, native-region mesh copies, extraction and map scratch,
++    // full value-only evaluation and state/BBW/shape scratch. Native exact
++    // rational allocator internals are explicitly outside this accounting.
++    auto bytes=add(32768,mul(p,6*sizeof(double)+4*sizeof(std::size_t)));
++    bytes=add(bytes,mul(t,6*sizeof(int)+4*sizeof(std::size_t)));
++    bytes=add(bytes,mul(add(selected,4),4096));
++    bytes=add(bytes,mul(std::size_t(b.points().rows()),3*sizeof(double)+sizeof(std::size_t)));
++    bytes=add(bytes,mul(add(mul(f.stateCount(),6),add(mul(f.handleCount(),2),mul(f.constraintCount(),4))),sizeof(double)));
++    if(f.shapeFunctional())bytes=add(bytes,mul(b.outerPointCount(),3*sizeof(double)));
++    out.plannedOwnedBytes=bytes;
++    const auto pairs=t?mul(t/2,t-1+t%2):0;
++    // Conservative retained pair/edge/component diagnostics (four capacities),
++    // nesting matrices and partition witness arrays, before any exact call.
++    out.plannedExactDiagnosticBytes=mul(4,add(add(mul(p,16),mul(t,128+8192+sizeof(std::string))),
++        add(mul(pairs,sizeof(std::array<int,2>)+2),mul(mul(add(selected,4),add(selected,4)),128))));
++    if(bytes>s.maximumOwnedBytes||out.plannedExactDiagnosticBytes>s.maximumExactDiagnosticBytes)
++        resource("region owned buffer/exact diagnostic cap before allocation");
++}
++bool regionGate(const SourceCageRegionEvidence& e,SourceCageMaterialRegionsFacts& out){
++    if(e.region.completed&&e.region.valid)return true;
++    terminal(out,e.region.completed?Outcome::Rejected:Outcome::Unknown,e.region.error.c_str());return false;
++}
++bool partitionGate(const ExactMaterialPartitionFacts& p,SourceCageMaterialRegionsFacts& out){
++    if(!p.completed){terminal(out,Outcome::Unknown,p.error.c_str());return false;}
++    const bool subsets=p.partSubsetWhole&&std::all_of(p.partSubsetWhole->begin(),p.partSubsetWhole->end(),[](bool b){return b;});
++    if(p.completePartition==true&&p.unionEqualsWhole==true&&p.noPositiveVolumeOverlap==true&&
++        p.missingWholeContent==false&&p.excessUnionContent==false&&subsets)return true;
++    terminal(out,Outcome::Rejected,"exact partition rejected: union, overlap, missing/excess or subset gate");return false;
++}
++SourceCageBinaryMesh primitiveMesh(const SourceConformingBoundary& b,const Eigen::MatrixXd& points,std::size_t id){
++    const auto& refs=b.primitiveBoundaries().at(id);
++    std::vector<std::size_t> map(std::size_t(points.rows()),SIZE_MAX);
++    for(const auto& ref:refs)for(auto index:b.triangles().at(ref.triangle))map.at(index)=0;
++    std::size_t count=0;for(auto& index:map)if(index!=SIZE_MAX)index=count++;
++    SourceCageBinaryMesh m;m.vertices.resize(count,3);m.triangles.resize(refs.size(),3);
++    for(std::size_t i=0;i<map.size();++i)if(map[i]!=SIZE_MAX)m.vertices.row(map[i])=points.row(i);
++    for(std::size_t i=0;i<refs.size();++i){
++        auto face=b.triangles().at(refs[i].triangle);
++        if(refs[i].orientation==-1)std::swap(face[1],face[2]);
++        else if(refs[i].orientation!=1)throw std::logic_error("immutable primitive orientation invalid");
++        for(int j=0;j<3;++j)m.triangles(i,j)=int(map.at(face[j]));
++    }
++    return m;
++}
++}
++struct SourceCageMaterialRegionsAudit::Data{
++    SourceCageMaterialRegionsFacts facts;
++    std::shared_ptr<const SourceCageMaterialRegions> validated;
++};
++const SourceCageMaterialRegionsFacts& SourceCageMaterialRegionsAudit::facts()const{
++    if(!data_)throw std::logic_error("moved-from region audit has no evidence");return data_->facts;
++}
++std::shared_ptr<const SourceCageMaterialRegions> SourceCageMaterialRegionsAudit::validatedRegions()const{(void)facts();return data_->validated;}
++std::shared_ptr<const SourceCageBinaryMaterial> SourceCageMaterialRegions::binaryMaterial()const{
++    if(!material_)throw std::logic_error("moved-from region product has no material");return material_;
++}
++const SourceCageBinaryMaterialAudit& SourceCageMaterialRegions::binaryAudit()const{
++    (void)binaryMaterial();return audit_;
++}
++const char* sourceCageMaterialRegionsOutcomeToken(Outcome o){
++    switch(o){case Outcome::Validated:return "EXACT_MATERIAL_REGIONS_VALIDATED_PRE_SEAL";case Outcome::NotAdmitted:return "NOT_ADMITTED";
++    case Outcome::Rejected:return "EXACT_MATERIAL_REGIONS_REJECTED";case Outcome::ResourceLimit:return "RESOURCE_LIMIT";default:return "UNKNOWN";}
++}
++SourceCageMaterialRegionsAudit validateSourceCageMaterialRegions(const SourceCageBinaryMaterialAudit& audit,
++    const SourceCageMaterialRegionsSettings& settings){
++    if(!std::isfinite(settings.minimumOuterWall)||settings.minimumOuterWall<0.)
++        throw std::invalid_argument("minimum outer wall must be finite nonnegative");
++    auto data=std::make_shared<SourceCageMaterialRegionsAudit::Data>();auto& out=data->facts;
++    out.settings=settings;out.configSha256=configHash(settings);out.inputSha256=audit.facts().scientificSha256;
++    ExactNefBudgetPtr budget;
++    auto run=[&]{
++        const auto m=audit.validatedMaterial();
++        if(audit.facts().outcome!=SourceCageBinaryMaterialOutcome::Validated||!m){
++            terminal(out,Outcome::NotAdmitted,"requires genuine immutable validated binary material");return;
++        }
++        const auto& f=m->functional();const auto& b=f.source().boundary();const auto& upstream=audit.facts();
++        out.sourceSha256=b.binding().source().sourceSha256();out.functionalSha256=functionalHash(f);
++        out.partitionSha256=b.binding().domain().partitionHash();out.bindingSha256=b.binding().outputSha256();
++        out.binaryStateSha256=stateHash(m->binaryState());out.binaryOutputSha256=binaryOutputHash(*m);
++        if(out.functionalSha256!=upstream.functionalSha256||out.partitionSha256!=upstream.partitionSha256||
++            out.binaryStateSha256!=upstream.binaryStateSha256||out.binaryOutputSha256!=upstream.outputSha256){
++            terminal(out,Outcome::NotAdmitted,"immutable binary source/functional/partition/state/output identity mismatch");return;
++        }
++        out.admitted=true;plan(*m,out);
++        const auto values=f.evaluateValues(m->binaryState());out.evaluationSha256=values.outputSha256;
++        if(values.hasJacobians||values.world.hasJacobians||out.evaluationSha256!=upstream.binaryFunctionalOutputSha256||
++            out.selectedCount!=upstream.selectedPrimitives){
++            terminal(out,Outcome::NotAdmitted,"binary value-only evaluation or selected-count identity mismatch");return;
++        }
++        out.identitiesChecked=true;
++        budget=std::make_shared<ExactNefBudget>(settings.maximumNefComplexity);
++        auto outer=makeExactMaterialRegionWithBudget(m->outerBoundary().vertices,m->outerBoundary().triangles,budget);
++        out.outer=evidence(outer);if(!regionGate(out.outer,out))return;
++        auto carved=upstream.emptyCavity?emptyExactMaterialRegionWithBudget(budget):
++            makeExactMaterialRegionWithBudget(m->carvedBoundary().vertices,m->carvedBoundary().triangles,budget);
++        out.carved=evidence(carved);if(!regionGate(out.carved,out))return;
++        auto material=makeExactMaterialRegionWithBudget(m->materialBoundary().vertices,m->materialBoundary().triangles,budget);
++        out.material=evidence(material);if(!regionGate(out.material,out))return;
++        if(outer.facts().explicitEmpty||material.facts().explicitEmpty||outer.facts().materialComponents.value_or(0)<=0||
++            material.facts().materialComponents.value_or(0)<=0){
++            terminal(out,Outcome::Rejected,"outer and material must be positive nonempty regions");return;
++        }
++        out.materialPartition=checkExactMaterialPartitionWithBudget(outer,{material,carved},budget);
++        if(!partitionGate(out.materialPartition,out))return;
++        std::vector<ExactMaterialRegion> selected;selected.reserve(std::max(std::size_t(1),out.selectedCount));
++        out.selected.reserve(out.selectedCount);
++        const auto& primitives=b.binding().primitives();
++        for(std::size_t id=0;id<primitives.size();++id){
++            const auto& p=primitives[id];if(m->binaryState()[p.betaIndex]!=1.)continue;
++            SourceCageSelectedRegionEvidence e;e.primitiveId=id;e.betaOwner=p.betaIndex;e.sourceKey=p.sourceKey;e.binaryBeta=1.;
++            auto mesh=primitiveMesh(b,values.world.deformedPoints,id);
++            Hash h;h.put(std::string("actual-selected-oriented-primitive-mesh-v1"));meshHash(h,mesh);e.meshSha256=h.finish();
++            selected.push_back(makeExactMaterialRegionWithBudget(mesh.vertices,mesh.triangles,budget));
++            e.region=evidence(selected.back());out.selected.push_back(std::move(e));auto& saved=out.selected.back();
++            if(!regionGate(saved.region,out))return;
++            saved.subsetOuter=relateExactMaterialRegionsWithBudget(selected.back(),outer,budget);
++            if(!saved.subsetOuter.completed){terminal(out,Outcome::Unknown,saved.subsetOuter.error.c_str());return;}
++            if(saved.subsetOuter.aSubsetB!=true){terminal(out,Outcome::Rejected,"selected represented design primitive is not subset outer");return;}
++        }
++        if(selected.empty())selected.push_back(emptyExactMaterialRegionWithBudget(budget));
++        if(!selected.back().facts().valid){terminal(out,Outcome::Unknown,"explicit empty witness construction incomplete");return;}
++        out.selectedPartition=checkExactMaterialPartitionWithBudget(carved,selected,budget);
++        if(!partitionGate(out.selectedPartition,out))return;
++        out.representedDesignMembershipEstablished=true;
++        out.outerClearance=checkExactBoundaryClearance(outer,carved,settings.minimumOuterWall);
++        const auto& c=out.outerClearance;
++        if(!c.completed){terminal(out,Outcome::Unknown,c.error.c_str());return;}
++        const bool clear=upstream.emptyCavity?
++            (c.state=="NOT_APPLICABLE"&&c.applicable==false&&!c.contact&&!c.squaredDistanceExact&&!c.witnessFaces&&!c.atLeastMinimum):
++            (c.applicable==true&&c.contact==false&&c.atLeastMinimum==true&&c.squaredDistanceExact&&c.witnessFaces);
++        if(!clear){terminal(out,Outcome::Rejected,"actual exact outer-to-carved clearance gate rejected");return;}
++        terminal(out,Outcome::Validated,"exact represented regions, partitions, constructive design membership and outer clearance passed; no full thickness or seal");
++        data->validated=std::shared_ptr<const SourceCageMaterialRegions>(new SourceCageMaterialRegions(audit,m));
++    };
++    try{run();}
++    catch(const std::length_error& e){terminal(out,Outcome::ResourceLimit,e.what());}
++    catch(const std::bad_alloc&){terminal(out,Outcome::ResourceLimit,"region allocation failure");}
++    catch(const std::exception& e){terminal(out,Outcome::Unknown,e.what());}
++    catch(...){terminal(out,Outcome::Unknown,"unknown exact region validation failure");}
++    if(budget){out.nefBudget=budget->facts();if(out.nefBudget.exceeded){
++        data->validated.reset();terminal(out,Outcome::ResourceLimit,"shared exact Nef complexity budget exceeded; partial evidence retained");
++    }}
++    finish(out,bool(data->validated));return SourceCageMaterialRegionsAudit(data);
++}
++}
+diff --git a/tests/spin_it_2014_source_cage_material_regions_regression.cpp b/tests/spin_it_2014_source_cage_material_regions_regression.cpp
+new file mode 100644
+index 0000000..37f13c7
+--- /dev/null
++++ b/tests/spin_it_2014_source_cage_material_regions_regression.cpp
+@@ -0,0 +1,173 @@
++#include <iostream>
++// Admission and geometry assertions below exercise the now-present layer.
++#if !__has_include("spin2014/SourceCageMaterialRegions.h")
++int main(){std::cerr<<"FAIL: actual binary exact region/partition/design membership/outer clearance layer absent\n";return 1;}
++#else
++#include "spin2014/SourceCageMaterialRegions.h"
++#include "source_surface_test_utils.h"
++#include <Eigen/Eigenvalues>
++#include <cstring>
++#include <limits>
++#include <type_traits>
++using namespace spin2014;
++using namespace surface_test;
++namespace {
++bool identical(const Eigen::VectorXd& a,const Eigen::VectorXd& b) {
++    return a.size()==b.size()&&std::memcmp(a.data(),b.data(),a.size()*sizeof(double))==0;
++}
++SourceCagePaperFunctional fixture(int level=4,bool wider=false) {
++    const auto outer=cube(.3125,.6875),design=wider?box({.3625,.425,.425},{.6375,.575,.575}):cube(.425,.575);
++    SourceSurfaceOctreeConfig sc;sc.maximumDepth=4;
++    auto source=std::make_shared<const SourceSurfaceOctree>(outer.v,outer.f,design.v,design.f,sc);
++    SourceAdaptiveDomain domain(source,level,4,1000);
++    SourceSurfaceCageConfig cc;cc.cageLevel=2;SourceCageGridConfig gc;gc.fineLevel=3;
++    SourceCageBbw bbw(SourceCageFem(SourceCageGrid(SourceSurfaceCage(outer.v,outer.f,cc),gc),{}),{});
++    require(bbw.success(),"actual full BBW succeeds");
++    SourceConformingBoundaryConfig bc;bc.maximumPatches=9000;
++    SourceCageMomentFunctionalConfig mc;mc.maximumWeightValues=9000;
++    SourceCagePaperFunctionalConfig pc;pc.objective=Spin2014Objective::TopMassAndLowering;
++    pc.inertiaWeight=0.;pc.centerWeight=0.;
++    return SourceCagePaperFunctional(SourceCageMomentFunctional(
++        SourceConformingBoundary(SourceCageBinding(domain,bbw,{}),bc),1.17,mc),pc);
++}
++Eigen::VectorXd state(const SourceCagePaperFunctional& f,double beta) {
++    auto x=f.initialState(Eigen::VectorXd::Constant(f.betaCount(),beta),.23);
++    for(std::size_t h=0;h<f.handleCount();++h) {
++        x[f.handleOffset()+4*h]=1.02;
++        x.segment<3>(f.handleOffset()+4*h+1)<<.011,-.007,.019;
++    }
++    return x;
++}
++// KNOWN_SOLUTION_VALIDATION: fixed principal frame and zero objective weights.
++// A nonzero Givens angle is retained, with the transverse basis counter-rotated.
++SourceCagePaperFunctional stationary(const SourceCagePaperFunctional& f,const Eigen::VectorXd& x) {
++    const auto m=f.evaluateValues(x).world.finalMoments.values();
++    SourceCagePaperFrame frame;frame.origin=m.segment<3>(1)/m[0];
++    Eigen::Matrix3d q;q<<m[4],m[9],m[8],m[9],m[5],m[7],m[8],m[7],m[6];
++    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(q-m[0]*frame.origin*frame.origin.transpose());
++    Eigen::Matrix3d base=eig.eigenvectors().transpose();if(base.determinant()<0)base.row(0)*=-1;
++    const double c=std::cos(x[f.angleOffset()]),s=std::sin(x[f.angleOffset()]);
++    Eigen::Matrix3d g;g<<c,s,0,-s,c,0,0,0,1;frame.rotation=g*base;
++    return SourceCagePaperFunctional(f.source(),f.config(),frame);
++}
++SourceCageAdaptiveSolverSettings solverSettings() {
++    SourceCageAdaptiveSolverSettings s;s.maximumPasses=3;
++    s.solve.source.solver.maximumIterations=1;s.solve.source.solver.maximumLineSearchSteps=2;
++    s.solve.budget.maximumGuardCalls=8;return s;
++}
++SourceCageAdaptiveSolverAudit endpoint(const SourceCagePaperFunctional& f,const Eigen::VectorXd& x) {
++    auto audit=solveSourceCageAdaptive(stationary(f,x),x,solverSettings());
++    require(audit.facts().outcome==SourceCageAdaptiveSolverOutcome::RelaxedAdaptiveComplete,"fixture must actually converge and complete");
++    return audit;
++}
++
++}
++int main(){try {
++    static_assert(!std::is_default_constructible_v<SourceCageMaterialRegionsAudit>);
++    static_assert(!std::is_default_constructible_v<SourceCageMaterialRegions>);
++    static_assert(!std::is_constructible_v<SourceCageMaterialRegionsAudit,SourceCageMaterialRegionsFacts>);
++    const auto f=fixture();
++    const auto ep=endpoint(f,state(f,1.));
++    const auto binary=validateSourceCageBinaryMaterial(ep);
++    require(bool(binary.validatedMaterial()),"real upstream validated material");
++    auto settings=SourceCageMaterialRegionsSettings{};
++    settings.minimumOuterWall=.1;
++    auto audit=validateSourceCageMaterialRegions(binary,settings);
++    const auto& a=audit.facts();
++    require(a.outcome==SourceCageMaterialRegionsOutcome::Validated&&audit.validatedRegions(),"exact region chain passes");
++    require(a.selectedCount==8&&a.selected.size()==8,"all eight immutable actual selected witnesses");
++    require(a.materialPartition.completePartition==true&&a.selectedPartition.completePartition==true,"both exact partitions completed");
++    require(a.outerClearance.applicable==true&&a.outerClearance.contact==false&&a.outerClearance.atLeastMinimum==true,"positive outer clearance");
++    require(a.material.region.materialComponents==1&&a.material.region.boundedVoidComponents==1&&a.carved.region.materialComponents==1,"native material and void components");
++    require(a.representedDesignMembershipEstablished&&a.evaluationSha256==binary.facts().binaryFunctionalOutputSha256,"constructive represented design membership and actual evaluation binding");
++    require(audit.validatedRegions()->binaryMaterial().get()==binary.validatedMaterial().get(),"owned link preserves actual arrays and moments");
++    require(&audit.validatedRegions()->binaryAudit().facts()==&binary.facts(),"product preserves immutable upstream integrated moments and all original evidence");
++    std::cout<<"actual_nonidentity_squared_clearance="<<*a.outerClearance.squaredDistanceExact<<std::endl;
++    for(const auto& p:a.selected)require(p.subsetOuter.aSubsetB==true&&p.meshSha256.size()==64&&p.region.region.valid,"selected actual primitives each subset outer");
++    const auto repeat=validateSourceCageMaterialRegions(binary,settings);
++    require(a.scientificSha256==repeat.facts().scientificSha256,"deterministic complete hash");
++    settings.minimumOuterWall=.2;
++    const auto rejected=validateSourceCageMaterialRegions(binary,settings);
++    require(rejected.facts().outcome==SourceCageMaterialRegionsOutcome::Rejected&&!rejected.validatedRegions()&&rejected.facts().outerClearance.atLeastMinimum==false,"too-large outer wall retains measured rejection");
++    settings.minimumOuterWall=0.;
++    require(validateSourceCageMaterialRegions(binary,settings).facts().outerClearance.contact==false,"zero threshold still requires no contact");
++    const auto emptyBinary=validateSourceCageBinaryMaterial(endpoint(f,state(f,0.)));
++    const auto empty=validateSourceCageMaterialRegions(emptyBinary,settings);
++    require(empty.validatedRegions()&&empty.facts().selectedCount==0&&empty.facts().selected.empty(),"real empty selected cavity admitted");
++    require(empty.facts().selectedPartition.partExplicitEmpty==std::vector<bool>{true},"one explicit empty algebra witness");
++    const auto& clearance=empty.facts().outerClearance;
++    require(clearance.completed&&clearance.state=="NOT_APPLICABLE"&&clearance.applicable==false&&!clearance.contact&&!clearance.squaredDistanceExact&&!clearance.atLeastMinimum,"empty clearance retains actual absent measurements");
++    require(empty.facts().carved.region.materialComponents==0&&empty.facts().material.region.boundedVoidComponents==0,"empty native components");
++    const auto lifetime=[&]{
++        const auto localBinary=validateSourceCageBinaryMaterial(endpoint(f,state(f,0.)));
++        const auto localRegions=validateSourceCageMaterialRegions(localBinary);
++        return localRegions.validatedRegions();
++    }(); // Both originating audits are destroyed here.
++    require(lifetime&&identical(lifetime->binaryAudit().facts().worldIntegratedMoments,emptyBinary.facts().worldIntegratedMoments)&&
++        identical(lifetime->binaryAudit().facts().spinIntegratedMoments,emptyBinary.facts().spinIntegratedMoments),
++        "original world and spin moments survive both originating audits");
++    const auto wide=fixture(4,true);auto splitState=state(wide,0.);
++    const auto& wideLeaves=wide.source().boundary().binding().domain().leaves();
++    for(std::size_t i=0;i<wideLeaves.size();++i)if(wideLeaves[i].coordinates[0]==6||wideLeaves[i].coordinates[0]==9)splitState[i]=1.;
++    const auto splitBinary=validateSourceCageBinaryMaterial(endpoint(wide,splitState));
++    require(bool(splitBinary.validatedMaterial()),"two separated actual binary cavities validate upstream");
++    const auto split=validateSourceCageMaterialRegions(splitBinary);
++    require(split.validatedRegions()&&split.facts().carved.region.materialComponents==2&&split.facts().material.region.boundedVoidComponents==2&&split.facts().material.region.materialComponents==1,"two actual disconnected cavities have native component counts");
++    // Bounded probe: retain exact rational distance from actual identity-handle
++    // BBW evaluation; mathematical affine intent alone does not guarantee that
++    // its binary64 output has exactly planar faces or representable distance.
++    auto identityState=f.initialState(Eigen::VectorXd::Ones(f.betaCount()),.23);
++    const auto identityBinary=validateSourceCageBinaryMaterial(endpoint(f,identityState));
++    const auto identityRegions=validateSourceCageMaterialRegions(identityBinary);
++    require(bool(identityRegions.validatedRegions()),"actual identity-handle source also passes exact chain");
++    std::cout<<"actual_identity_squared_clearance="<<*identityRegions.facts().outerClearance.squaredDistanceExact<<std::endl;
++    // Exact actual output distance: (2^48-1)/2^51, independently factored
++    // numerator (2^48-1)^2 and denominator 2^102; no tolerance or sqrt rounding.
++    require(identityRegions.facts().outerClearance.squaredDistanceExact==std::string("79228162514263774643590529025/5070602400912917605986812821504"),"literal exact actual identity-handle squared distance");
++    settings=SourceCageMaterialRegionsSettings{};settings.minimumOuterWall=std::ldexp(281474976710655.,-51);
++    const auto equality=validateSourceCageMaterialRegions(identityBinary,settings);
++    require(equality.validatedRegions()&&equality.facts().outerClearance.atLeastMinimum==true,"exactly measured representable wall threshold equality passes");
++    settings.minimumOuterWall=std::nextafter(settings.minimumOuterWall,std::numeric_limits<double>::infinity());
++    const auto above=validateSourceCageMaterialRegions(identityBinary,settings);
++    require(!above.validatedRegions()&&above.facts().outcome==SourceCageMaterialRegionsOutcome::Rejected&&above.facts().outerClearance.atLeastMinimum==false,"nextafter above actual exact distance rejects");
++    auto mixed=state(f,.4);
++    const auto& leaves=f.source().boundary().binding().domain().leaves();
++    for(std::size_t i=0;i<leaves.size();++i)if(leaves[i].coordinates[0]==8)mixed[i]=.6;
++    mixed[0]=.5;
++    const auto failed=validateSourceCageBinaryMaterial(endpoint(f,mixed));
++    require(failed.candidate()&&!failed.validatedMaterial(),"actual binary rounding failure has candidate");
++    const auto denied=validateSourceCageMaterialRegions(failed);
++    require(denied.facts().outcome==SourceCageMaterialRegionsOutcome::NotAdmitted&&!denied.validatedRegions(),"candidate cannot admit");
++    auto copied=denied.facts();copied.outcome=SourceCageMaterialRegionsOutcome::Validated;
++    require(!denied.validatedRegions(),"copied facts cannot grant");
++    for(double t:{-1.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}) {
++        settings.minimumOuterWall=t;
++        rejects([&]{(void)validateSourceCageMaterialRegions(binary,settings);},"invalid thresholds reject");
++    }
++    for(int field=0;field<6;++field)for(std::size_t cap:{std::size_t(0),std::size_t(1),SIZE_MAX}) {
++        settings=SourceCageMaterialRegionsSettings{};
++        std::size_t* caps[]={&settings.maximumPrimitives,&settings.maximumPoints,&settings.maximumTriangles,&settings.maximumOwnedBytes,&settings.maximumExactDiagnosticBytes,&settings.maximumNefComplexity};
++        *caps[field]=cap;
++        const auto limited=validateSourceCageMaterialRegions(binary,settings);
++        require(limited.facts().outcome==SourceCageMaterialRegionsOutcome::ResourceLimit&&!limited.validatedRegions(),"caps and overflow never publish");
++    }
++    const auto retained=audit.validatedRegions();const auto hash=a.scientificSha256;
++    const auto moved=std::move(audit);
++    require(moved.facts().scientificSha256==hash&&retained->binaryMaterial()->binaryState()[0]==1.,"immutable product lifetime across move");
++    rejects([&]{(void)audit.facts();},"moved-from evidence rejects");
++    // Generic backend negatives: these are NOT corruptible immutable upstream
++    // admission fixtures and confer no source-binary-product authority.
++    const auto unit=cube(0.,1.),left=cube(0.,.75),right=cube(.25,1.);
++    const auto whole=verification::makeExactMaterialRegion(unit.v,unit.f);
++    const auto l=verification::makeExactMaterialRegion(left.v,left.f);
++    const auto r=verification::makeExactMaterialRegion(right.v,right.f);
++    const auto overlap=verification::checkExactMaterialPartition(whole,{l,r});
++    require(overlap.completed&&overlap.noPositiveVolumeOverlap==false&&overlap.completePartition==false,"raw overlapping generic parts reject");
++    const auto missing=verification::checkExactMaterialPartition(whole,{l});
++    require(missing.completed&&missing.missingWholeContent==true&&missing.completePartition==false,"raw missing generic content rejects");
++    const auto badNesting=join(unit,cube(.25,.75));
++    const auto nested=verification::makeExactMaterialRegion(badNesting.v,badNesting.f);
++    require(nested.facts().completed&&!nested.facts().valid,"same-positive nested generic shells reject without reorientation");
++    std::cout<<"KNOWN_SOLUTION_VALIDATION exact regions PASS; represented design and outer wall only; no seal, full thickness, feasibility, physics or paper grant\n";return 0;
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
++#endif
