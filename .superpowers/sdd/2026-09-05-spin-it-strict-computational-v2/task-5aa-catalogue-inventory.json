@@ -1,0 +1,753 @@
+{
+  "scope": "CATALOGUE_INVENTORY_NOT_IMPLEMENTATION_OR_COMPLETION_PERCENTAGE",
+  "catalogue_sha256": "c1375aec422817ea84200b3a2f18fbb3c1687b5f9db6884cdf70cfe6f82beeb5",
+  "total_requirements": 88,
+  "computational_requirements": 86,
+  "physical_out_of_scope": 2,
+  "by_namespace": {
+    "faster": 35,
+    "physical": 2,
+    "shared": 7,
+    "spin2014": 44
+  },
+  "by_kind": {
+    "ALGORITHM": 6,
+    "EVIDENCE_CHAIN": 7,
+    "FORMULA": 10,
+    "INDEPENDENT_CHECK": 1,
+    "METHOD": 18,
+    "ORIGINAL_EXPERIMENT": 40,
+    "PHYSICAL_MEASUREMENT": 2,
+    "THEOREM": 4
+  },
+  "requirements": [
+    {
+      "requirement_id": "spin2014.eq.1",
+      "paper_locator": "Spin-It (2014), Equation 1",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 1 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.eq.2",
+      "paper_locator": "Spin-It (2014), Equation 2",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 2 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.eq.3",
+      "paper_locator": "Spin-It (2014), Equation 3",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 3 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.eq.4",
+      "paper_locator": "Spin-It (2014), Equation 4",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 4 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.eq.5",
+      "paper_locator": "Spin-It (2014), Equation 5",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 5 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.eq.6",
+      "paper_locator": "Spin-It (2014), Equation 6",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 6 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.eq.7",
+      "paper_locator": "Spin-It (2014), Equation 7",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 7 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.eq.8",
+      "paper_locator": "Spin-It (2014), Equation 8",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_EQUATION",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical checks of Equation 8 with published conventions and tolerances."
+    },
+    {
+      "requirement_id": "spin2014.objective.static",
+      "paper_locator": "Spin-It (2014), static balancing objective",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_PUBLISHED_OBJECTIVE",
+      "dependencies": [],
+      "required_evidence": "Independent value, gradient, and Hessian checks for the static objective."
+    },
+    {
+      "requirement_id": "spin2014.fill.continuous",
+      "paper_locator": "Spin-It (2014), Sections 5.2-5.3",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_CONTINUOUS_FILL_SEMANTICS",
+      "dependencies": [],
+      "required_evidence": "Trace demonstrating continuous fill variables and published bounds."
+    },
+    {
+      "requirement_id": "spin2014.fill.binary",
+      "paper_locator": "Spin-It (2014), Section 5.3",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_BINARY_SEMANTICS",
+      "dependencies": [
+        "spin2014.fill.continuous"
+      ],
+      "required_evidence": "Independent binary-tolerance and rounding audit at the published threshold."
+    },
+    {
+      "requirement_id": "spin2014.octree.boundary_subtrees",
+      "paper_locator": "Spin-It (2014), Section 5.4",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_BOUNDARY_SUBTREE_CONSTRUCTION",
+      "dependencies": [],
+      "required_evidence": "Source-to-tree audit proving boundary subtrees are constructed from the original surface."
+    },
+    {
+      "requirement_id": "spin2014.octree.split_merge",
+      "paper_locator": "Spin-It (2014), Section 5.3",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_SPLIT_MERGE_REFINEMENT",
+      "dependencies": [
+        "spin2014.octree.boundary_subtrees"
+      ],
+      "required_evidence": "Deterministic refinement trace covering both split and merge operations."
+    },
+    {
+      "requirement_id": "spin2014.regularizer.laplacian",
+      "paper_locator": "Spin-It (2014), Section 5.3",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_PUBLISHED_LAPLACIAN",
+      "dependencies": [],
+      "required_evidence": "Independent matrix/value audit using the published weight and neighborhood semantics."
+    },
+    {
+      "requirement_id": "spin2014.solver.slqp",
+      "paper_locator": "Spin-It (2014), Section 5.4",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_SLQP",
+      "dependencies": [],
+      "required_evidence": "Iteration trace and independent KKT audit for the published SLQP scheme."
+    },
+    {
+      "requirement_id": "spin2014.solver.active_set",
+      "paper_locator": "Spin-It (2014), Section 5.4",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_ACTIVE_SET",
+      "dependencies": [
+        "spin2014.solver.slqp"
+      ],
+      "required_evidence": "Trace demonstrating published active-set transitions and constraint handling."
+    },
+    {
+      "requirement_id": "spin2014.solver.lbfgs",
+      "paper_locator": "Spin-It (2014), Section 5.4",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_LBFGS",
+      "dependencies": [
+        "spin2014.solver.slqp"
+      ],
+      "required_evidence": "Trace and independent step audit of the published L-BFGS subproblem behavior."
+    },
+    {
+      "requirement_id": "spin2014.cage.complete_octree",
+      "paper_locator": "Spin-It (2014), Section 6 and Figure 4",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_COMPLETE_OCTREE_CAGE",
+      "dependencies": [],
+      "required_evidence": "Geometry audit proving every required intersecting cell contributes to the cage."
+    },
+    {
+      "requirement_id": "spin2014.cage.bbw_interpolation",
+      "paper_locator": "Spin-It (2014), Section 6 and Figure 4",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_BBW_INTERPOLATION",
+      "dependencies": [
+        "spin2014.cage.complete_octree"
+      ],
+      "required_evidence": "Independent BBW solve and interpolation comparison on the complete cage."
+    },
+    {
+      "requirement_id": "spin2014.deformation.joint",
+      "paper_locator": "Spin-It (2014), Section 6.1",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_JOINT_DEFORMATION",
+      "dependencies": [
+        "spin2014.cage.bbw_interpolation"
+      ],
+      "required_evidence": "Joint beta/shape optimization trace with independent geometry checks."
+    },
+    {
+      "requirement_id": "spin2014.material.dual_density",
+      "paper_locator": "Spin-It (2014), Section 7",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_DUAL_DENSITY",
+      "dependencies": [],
+      "required_evidence": "Independent material-label and density-weighted moment audit."
+    },
+    {
+      "requirement_id": "spin2014.supplement.algorithm.1",
+      "paper_locator": "Spin-It (2014), Supplement Algorithm 1",
+      "requirement_kind": "ALGORITHM",
+      "expected_outcome": "MATCH_PUBLISHED_ALGORITHM",
+      "dependencies": [],
+      "required_evidence": "Stepwise trace checked independently against Supplement Algorithm 1."
+    },
+    {
+      "requirement_id": "spin2014.supplement.algorithm.2",
+      "paper_locator": "Spin-It (2014), Supplement Algorithm 2",
+      "requirement_kind": "ALGORITHM",
+      "expected_outcome": "MATCH_PUBLISHED_ALGORITHM",
+      "dependencies": [],
+      "required_evidence": "Stepwise trace checked independently against Supplement Algorithm 2."
+    },
+    {
+      "requirement_id": "spin2014.case.ellipsoid",
+      "paper_locator": "Spin-It (2014), Figure 6",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_ELLIPSOID_TOP",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; independent sealed-geometry, moment, solve, and outcome checks."
+    },
+    {
+      "requirement_id": "spin2014.case.heart",
+      "paper_locator": "Spin-It (2014), Figure 7",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_HEART_TOP",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; independent sealed-geometry, moment, solve, and outcome checks."
+    },
+    {
+      "requirement_id": "spin2014.case.armadillo.hand",
+      "paper_locator": "Spin-It (2014), Figure 8 hand",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_ARMADILLO_HAND",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; hand pose, cavity, cuts, and outcome checked separately."
+    },
+    {
+      "requirement_id": "spin2014.case.armadillo.shell",
+      "paper_locator": "Spin-It (2014), Figure 8 shell",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_ARMADILLO_SHELL",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; shell pose, cavity, cuts, and outcome checked separately."
+    },
+    {
+      "requirement_id": "spin2014.case.teapot.inertia_only",
+      "paper_locator": "Spin-It (2014), Section 8 rotational-stability comparison: inertia-only strategy",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TEAPOT_INERTIA_ONLY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; the inertia-only objective and resulting geometry are independently checked."
+    },
+    {
+      "requirement_id": "spin2014.case.teapot.lowering_only",
+      "paper_locator": "Spin-It (2014), Section 8 rotational-stability comparison: lowering-only strategy",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TEAPOT_LOWERING_ONLY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; the lowering-only objective and resulting geometry are independently checked."
+    },
+    {
+      "requirement_id": "spin2014.case.teapot.mass_and_lowering",
+      "paper_locator": "Spin-It (2014), Section 8 rotational-stability comparison: mass-and-lowering strategy",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TEAPOT_MASS_AND_LOWERING",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; the mass-and-lowering objective and resulting geometry are independently checked."
+    },
+    {
+      "requirement_id": "spin2014.case.cuboid",
+      "paper_locator": "Spin-It (2014), Figure 10 top",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CUBOID_YOYO",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; yo-yo geometry, cavity/cuts, and outcome are independently checked."
+    },
+    {
+      "requirement_id": "spin2014.case.woven_ring",
+      "paper_locator": "Spin-It (2014), Figure 10 bottom",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_WOVEN_RING_YOYO",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; woven-ring geometry, cavity/cuts, and outcome are independently checked."
+    },
+    {
+      "requirement_id": "spin2014.case.dancing_couple.hollowing",
+      "paper_locator": "Spin-It (2014), Figure 11 hollowing",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_HOLLOWING_INSUFFICIENCY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; hollowing is evaluated without deformation and must faithfully retain the observed insufficient dominant-axis alignment; ordinary converged/stable success is not the acceptance criterion."
+    },
+    {
+      "requirement_id": "spin2014.case.dancing_couple.joint_deformation",
+      "paper_locator": "Spin-It (2014), Figure 11 joint deformation",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_JOINT_DEFORMATION_IMPROVEMENT",
+      "dependencies": [
+        "spin2014.deformation.joint"
+      ],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; joint deformation is evaluated separately and must demonstrate the published alignment improvement relative to the insufficient hollow-only result."
+    },
+    {
+      "requirement_id": "spin2014.case.sumone.dual_density",
+      "paper_locator": "Spin-It (2014), Figure 5",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_SUMONE_DUAL_DENSITY",
+      "dependencies": [
+        "spin2014.material.dual_density"
+      ],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; both material regions and density-weighted moments are independently checked."
+    },
+    {
+      "requirement_id": "spin2014.case.trex.matched_make_it_stand",
+      "paper_locator": "Spin-It (2014), Figure 12",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TREX_COMPARISON",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Spin-It and Make-It-Stand use identical source inputs and discretization."
+    },
+    {
+      "requirement_id": "spin2014.case.elephant",
+      "paper_locator": "Spin-It (2014), Table 1 elephant",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_ELEPHANT",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; all reported cavities, cuts, and accessibility outcomes are checked."
+    },
+    {
+      "requirement_id": "spin2014.table1.family.c1_cut1",
+      "paper_locator": "Spin-It (2014), Table 1: Cuboid, Ellipsoid, Heart, and T-Rex (1 void, 1 cut)",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAVITY_CUT_FAMILY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Cuboid, Ellipsoid, Heart, and T-Rex each have one void and one cut; each named model is independently checked."
+    },
+    {
+      "requirement_id": "spin2014.table1.family.c1_cut3",
+      "paper_locator": "Spin-It (2014), Table 1: Armadillo (hand) (1 void, 3 cuts)",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAVITY_CUT_FAMILY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Armadillo (hand) has one void and three cuts and is independently checked."
+    },
+    {
+      "requirement_id": "spin2014.table1.family.c5_cut2",
+      "paper_locator": "Spin-It (2014), Table 1: Armadillo (shell) (5 voids, 2 cuts)",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAVITY_CUT_FAMILY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Armadillo (shell) has five voids and two cuts and is independently checked."
+    },
+    {
+      "requirement_id": "spin2014.table1.family.c2_cut1",
+      "paper_locator": "Spin-It (2014), Table 1: Teapot (2 voids, 1 cut)",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAVITY_CUT_FAMILY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Teapot has two voids and one cut and is independently checked."
+    },
+    {
+      "requirement_id": "spin2014.table1.family.c1_cut4",
+      "paper_locator": "Spin-It (2014), Table 1: Woven Ring (1 void, 4 cuts)",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAVITY_CUT_FAMILY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Woven Ring has one void and four cuts and is independently checked."
+    },
+    {
+      "requirement_id": "spin2014.table1.family.c1_cut5",
+      "paper_locator": "Spin-It (2014), Table 1: Dancing Couple (1 void, 5 cuts)",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAVITY_CUT_FAMILY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Dancing Couple has one void and five cuts and is independently checked."
+    },
+    {
+      "requirement_id": "spin2014.table1.family.c3_cut2",
+      "paper_locator": "Spin-It (2014), Table 1: Elephant (3 voids, 2 cuts)",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAVITY_CUT_FAMILY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; Elephant has three voids and two cuts and is independently checked."
+    },
+    {
+      "requirement_id": "faster.moments.raw",
+      "paper_locator": "Spin-It Faster, Sections 3-4",
+      "requirement_kind": "FORMULA",
+      "expected_outcome": "MATCH_RAW_MOMENTS",
+      "dependencies": [],
+      "required_evidence": "Independent raw-moment values and convention audit."
+    },
+    {
+      "requirement_id": "faster.moments.coefficient_duality",
+      "paper_locator": "Spin-It Faster, Sections 3-4",
+      "requirement_kind": "THEOREM",
+      "expected_outcome": "MATCH_COEFFICIENT_MOMENT_DUALITY",
+      "dependencies": [],
+      "required_evidence": "Independent symbolic and numerical duality check."
+    },
+    {
+      "requirement_id": "faster.theorem.quadric_reduction",
+      "paper_locator": "Spin-It Faster, Theorem 1, Section 3.3",
+      "requirement_kind": "THEOREM",
+      "expected_outcome": "MATCH_THEOREM_CONDITIONS",
+      "dependencies": [],
+      "required_evidence": "Independent evaluation of hypotheses, conclusion, and numerical instances."
+    },
+    {
+      "requirement_id": "faster.theorem.optimality",
+      "paper_locator": "Spin-It Faster, Theorem 2, Section 3.4",
+      "requirement_kind": "THEOREM",
+      "expected_outcome": "MATCH_THEOREM_CONDITIONS",
+      "dependencies": [],
+      "required_evidence": "Independent optimality and boundary-condition checks."
+    },
+    {
+      "requirement_id": "faster.theorem.degenerate_conditions",
+      "paper_locator": "Spin-It Faster, Theorem 2, Section 3.4 (p = 0 branch)",
+      "requirement_kind": "THEOREM",
+      "expected_outcome": "MATCH_DEGENERATE_CONDITIONS",
+      "dependencies": [],
+      "required_evidence": "Explicit audit of every stated degenerate precondition and outcome."
+    },
+    {
+      "requirement_id": "faster.eq14.newton",
+      "paper_locator": "Spin-It Faster, Equation 14",
+      "requirement_kind": "ALGORITHM",
+      "expected_outcome": "MATCH_NEWTON_UPDATE",
+      "dependencies": [],
+      "required_evidence": "Independent residual and Newton-step trace."
+    },
+    {
+      "requirement_id": "faster.eq14.geodesic",
+      "paper_locator": "Spin-It Faster, Equation 14",
+      "requirement_kind": "ALGORITHM",
+      "expected_outcome": "MATCH_GEODESIC_UPDATE",
+      "dependencies": [
+        "faster.eq14.newton"
+      ],
+      "required_evidence": "Independent sphere-geodesic and step-cap audit."
+    },
+    {
+      "requirement_id": "faster.eq14.multiplier",
+      "paper_locator": "Spin-It Faster, Equation 14",
+      "requirement_kind": "ALGORITHM",
+      "expected_outcome": "MATCH_MULTIPLIER_UPDATE",
+      "dependencies": [
+        "faster.eq14.newton"
+      ],
+      "required_evidence": "Independent per-step multiplier computation audit."
+    },
+    {
+      "requirement_id": "faster.eq14.restart",
+      "paper_locator": "Spin-It Faster, Equation 14 and implementation notes",
+      "requirement_kind": "ALGORITHM",
+      "expected_outcome": "MATCH_RESTART_PROTOCOL",
+      "dependencies": [
+        "faster.eq14.newton"
+      ],
+      "required_evidence": "All initializations, failed attempts, evaluation limits, and restarts retained."
+    },
+    {
+      "requirement_id": "faster.discrete_moment_map.differentiable",
+      "paper_locator": "Spin-It Faster, Section 5",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_DIFFERENTIABLE_DISCRETE_MAP",
+      "dependencies": [],
+      "required_evidence": "Independent finite-difference audit including intersection-vertex motion."
+    },
+    {
+      "requirement_id": "faster.geometry.inverse_gauss_map",
+      "paper_locator": "Spin-It Faster, Section 5",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_INVERSE_GAUSS_MAP",
+      "dependencies": [],
+      "required_evidence": "Independent construction and topology audit from fixed sphere normals."
+    },
+    {
+      "requirement_id": "faster.geometry.ideal_points",
+      "paper_locator": "Spin-It Faster, Section 5",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_IDEAL_POINTS",
+      "dependencies": [],
+      "required_evidence": "Independent audit of ideal-point construction and domain handling."
+    },
+    {
+      "requirement_id": "faster.geometry.caps",
+      "paper_locator": "Spin-It Faster, Section 5",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_CAPS",
+      "dependencies": [],
+      "required_evidence": "Independent cap construction, closure, and orientation audit."
+    },
+    {
+      "requirement_id": "faster.geometry.degenerate_types",
+      "paper_locator": "Spin-It Faster, Section 5",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_DEGENERATE_TYPES",
+      "dependencies": [],
+      "required_evidence": "Each published degenerate geometry type classified and checked independently."
+    },
+    {
+      "requirement_id": "faster.geometry.boolean_independent",
+      "paper_locator": "Spin-It Faster, Section 5",
+      "requirement_kind": "INDEPENDENT_CHECK",
+      "expected_outcome": "MATCH_BOOLEAN_RESULT",
+      "dependencies": [],
+      "required_evidence": "Boolean result checked by an implementation independent of the primary construction."
+    },
+    {
+      "requirement_id": "faster.2d.dogleg",
+      "paper_locator": "Spin-It Faster, 2D dogleg example",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_2D_DOGLEG",
+      "dependencies": [],
+      "required_evidence": "Actual 2D moments, topology, and result checked independently."
+    },
+    {
+      "requirement_id": "faster.2d.polygon_circle",
+      "paper_locator": "Spin-It Faster, polygon/circle example",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_POLYGON_CIRCLE",
+      "dependencies": [],
+      "required_evidence": "Polygon/disk Boolean and moment results checked independently."
+    },
+    {
+      "requirement_id": "faster.2d.extrusion",
+      "paper_locator": "Spin-It Faster, 2D-to-3D extrusion comparison",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_EXTRUSION_EQUIVALENCE",
+      "dependencies": [],
+      "required_evidence": "Independent 2D/3D moment and objective equivalence audit."
+    },
+    {
+      "requirement_id": "faster.hydrostatics.actual",
+      "paper_locator": "Spin-It Faster, buoyancy examples",
+      "requirement_kind": "METHOD",
+      "expected_outcome": "MATCH_ACTUAL_HYDROSTATICS",
+      "dependencies": [],
+      "required_evidence": "Geometry-derived displaced volume, buoyancy center, and stability checked independently."
+    },
+    {
+      "requirement_id": "faster.floating_island.chained_assets",
+      "paper_locator": "Spin-It Faster, floating-island examples",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CHAINED_FLOATING_ISLAND",
+      "dependencies": [
+        "faster.hydrostatics.actual"
+      ],
+      "required_evidence": "Author-original chained A-then-B assets and both optimization stages checked."
+    },
+    {
+      "requirement_id": "faster.cad.roundtrip",
+      "paper_locator": "Spin-It Faster, CAD example",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_CAD_ROUNDTRIP",
+      "dependencies": [],
+      "required_evidence": "Original CAD input, pinned kernel, B-rep/STEP roundtrip, and independent mass audit."
+    },
+    {
+      "requirement_id": "faster.table1.static_tilted_vase",
+      "paper_locator": "Spin-It Faster, Table 1: static tilted vase",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.table1.floating_tea_infuser",
+      "paper_locator": "Spin-It Faster, Table 1: floating tea infuser",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.table1.floating_island_cat",
+      "paper_locator": "Spin-It Faster, Table 1: floating island cat",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.table1.floating_island_dog_human",
+      "paper_locator": "Spin-It Faster, Table 1: floating island dog/human",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.table1.heart_spinning_top",
+      "paper_locator": "Spin-It Faster, Table 1: heart spinning top",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.table1.noodles_spinning_top",
+      "paper_locator": "Spin-It Faster, Table 1: noodles spinning top",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.table1.jellyfish_yoyo",
+      "paper_locator": "Spin-It Faster, Table 1: jellyfish yo-yo",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.table1.flower_fidget_spinner",
+      "paper_locator": "Spin-It Faster, Table 1: flower fidget spinner",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_TABLE1_CASE",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; 50 starts, failures, first-success definition, timings, geometry, residuals, and two full repeats are checked."
+    },
+    {
+      "requirement_id": "faster.figure.10",
+      "paper_locator": "Spin-It Faster, Figure 10",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_FIGURE_10",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; quadratic convergence is estimated independently above numerical noise."
+    },
+    {
+      "requirement_id": "faster.figure.11",
+      "paper_locator": "Spin-It Faster, Figure 11",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_FIGURE_11",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; all initial weights, refinements, endpoints, and dominated rows are retained."
+    },
+    {
+      "requirement_id": "faster.figure.12",
+      "paper_locator": "Spin-It Faster, Figure 12",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_FIGURE_12",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; all initial weights, refinements, endpoints, and dominated rows are retained."
+    },
+    {
+      "requirement_id": "faster.figure.13",
+      "paper_locator": "Spin-It Faster, Figure 13",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "MATCH_FIGURE_13",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; near-feasibility bracket and nine common-initialization offsets are independently checked."
+    },
+    {
+      "requirement_id": "faster.section6_6.example.1",
+      "paper_locator": "Spin-It Faster, Section 6.6 first example",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "NONUNIQUE_ZERO_SENSITIVITY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; on Omega=(0,1), independently verify objective nonnegativity, volume 1/2 witnesses with objective 0 and p=0, and uncountably many binary and nonbinary optima; ordinary nondegenerate Newton convergence is not the acceptance criterion."
+    },
+    {
+      "requirement_id": "faster.section6_6.example.2",
+      "paper_locator": "Spin-It Faster, Section 6.6 second example",
+      "requirement_kind": "ORIGINAL_EXPERIMENT",
+      "expected_outcome": "FULL_DOMAIN_ZERO_SENSITIVITY",
+      "dependencies": [],
+      "required_evidence": "Checked AUTHOR_ORIGINAL or PUBLISHED_EXACT_SPECIFICATION asset plus explicit critical-parameter evidence; on Omega=(0,1/2), independently verify the unique optimum chi=1 almost everywhere, volume 1/2, objective 0 and p=0; this is a full-domain boundary solution, not infeasibility or an ordinary nondegenerate quadric interface."
+    },
+    {
+      "requirement_id": "shared.sealed_geometry",
+      "paper_locator": "Both papers, all experiments",
+      "requirement_kind": "EVIDENCE_CHAIN",
+      "expected_outcome": "SEALED_GEOMETRY_MATCHES",
+      "dependencies": [],
+      "required_evidence": "Independent topology, containment, wall-thickness, and final geometry audits."
+    },
+    {
+      "requirement_id": "shared.independent_moments",
+      "paper_locator": "Both papers, all experiments",
+      "requirement_kind": "EVIDENCE_CHAIN",
+      "expected_outcome": "INDEPENDENT_MOMENTS_MATCH",
+      "dependencies": [],
+      "required_evidence": "Independent mass, first moment, second moment, inertia, and density audit."
+    },
+    {
+      "requirement_id": "shared.provenance",
+      "paper_locator": "Both papers, all experiments",
+      "requirement_kind": "EVIDENCE_CHAIN",
+      "expected_outcome": "PROVENANCE_COMPLETE",
+      "dependencies": [],
+      "required_evidence": "Frozen source, build, runner, checker, asset, and parameter provenance."
+    },
+    {
+      "requirement_id": "shared.determinism",
+      "paper_locator": "Both papers, all experiments",
+      "requirement_kind": "EVIDENCE_CHAIN",
+      "expected_outcome": "TWO_RUN_HASH_MATCH",
+      "dependencies": [],
+      "required_evidence": "Two same-environment scientific runs with matching hashes and complete retained failures."
+    },
+    {
+      "requirement_id": "shared.registered_tests",
+      "paper_locator": "Both papers, verification suite",
+      "requirement_kind": "EVIDENCE_CHAIN",
+      "expected_outcome": "REGISTERED_TESTS_RUN",
+      "dependencies": [],
+      "required_evidence": "CTest inventory and execution record with no unexpected skip or Not Run."
+    },
+    {
+      "requirement_id": "shared.independent_simulations",
+      "paper_locator": "Both papers, validation",
+      "requirement_kind": "EVIDENCE_CHAIN",
+      "expected_outcome": "INDEPENDENT_SIMULATIONS_MATCH",
+      "dependencies": [],
+      "required_evidence": "Independent dynamics, fixed-pivot, tilt, and hydrostatic perturbation results."
+    },
+    {
+      "requirement_id": "shared.real_desktop_visualization",
+      "paper_locator": "Both papers, visualization",
+      "requirement_kind": "EVIDENCE_CHAIN",
+      "expected_outcome": "REAL_DESKTOP_VIEWER_AUDITED",
+      "dependencies": [],
+      "required_evidence": "Real desktop viewer trace bound to the same sealed artifact as computation."
+    },
+    {
+      "requirement_id": "physical.2014.measurements",
+      "paper_locator": "Spin-It (2014), fabricated-object measurements",
+      "requirement_kind": "PHYSICAL_MEASUREMENT",
+      "expected_outcome": "NOT_IN_SCOPE",
+      "dependencies": [],
+      "required_evidence": "Explicit declaration that fabricated-object measurements are not part of computational reproduction."
+    },
+    {
+      "requirement_id": "physical.faster.measurements",
+      "paper_locator": "Spin-It Faster, fabricated-object measurements",
+      "requirement_kind": "PHYSICAL_MEASUREMENT",
+      "expected_outcome": "NOT_IN_SCOPE",
+      "dependencies": [],
+      "required_evidence": "Explicit declaration that fabricated-object measurements are not part of computational reproduction."
+    }
+  ]
+}

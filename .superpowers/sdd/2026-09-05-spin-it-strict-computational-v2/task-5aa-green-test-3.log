@@ -1,0 +1,5 @@
+actual one-cavity extraction measured
+actual empty-cavity N/A checked
+actual thin inter-cavity rejection checked; squared_gap=1766931148444957847642343671619032851921226232254555755575/1823098854952252209581826036592472706166126733423078751076352
+literal exact equality/nextafter checked
+KNOWN_SOLUTION_VALIDATION actual component clearance PASS; no full thickness or seal

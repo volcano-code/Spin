@@ -1,0 +1,562 @@
+# Review package: 69717a182d32b85812b0d2363d762c3bd26293d3..98e48bd
+
+## Commits
+98e48bd Add exact actual boundary component separation audit
+
+## Files changed
+ CMakeLists.txt                                     |   6 +
+ docs/spin2014_source_cage_component_clearance.md   |  84 +++++++++
+ include/spin2014/SourceCageComponentClearance.h    |  70 ++++++++
+ src/spin2014/SourceCageComponentClearance.cpp      | 195 +++++++++++++++++++++
+ ..._source_cage_component_clearance_regression.cpp | 123 +++++++++++++
+ 5 files changed, 478 insertions(+)
+
+## Diff
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f6ffc21..52bb6f0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -279,20 +279,22 @@ if(MAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageGeometry.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageGeometry.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageAdaptiveRebind.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageAdaptiveRebind.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageAdaptiveSolver.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageAdaptiveSolver.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageBinaryMaterial.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageBinaryMaterial.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageMaterialRegions.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageMaterialRegions.h)
++        list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceCageComponentClearance.cpp)
++        list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceCageComponentClearance.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/LinearizedRotationLaplacian.cpp src/spin2014/SourceCageShapeFunctional.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/LinearizedRotationLaplacian.h include/spin2014/SourceCageShapeFunctional.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceAdaptiveDomain.cpp src/spin2014/SourceBinaryMoments.cpp src/spin2014/SourceAdaptiveSpinSolver.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceAdaptiveDomain.h include/spin2014/SourceBinaryMoments.h include/spin2014/SourceAdaptiveSpinSolver.h)
+         list(APPEND MAKE_IT_STAND_CORE_SOURCES src/spin2014/SourceMaterialBoundary.cpp)
+         list(APPEND MAKE_IT_STAND_CORE_HEADERS include/spin2014/SourceMaterialBoundary.h)
+     endif()
+ endif()
+ 
+ add_library(
+@@ -531,20 +533,24 @@ if(BUILD_TESTING)
+             add_executable(spin-it-2014-source-cage-moments-regression tests/spin_it_2014_source_cage_moments_regression.cpp)
+             add_executable(spin-it-2014-source-cage-paper-regression tests/spin_it_2014_source_cage_paper_regression.cpp)
+             add_executable(spin-it-2014-source-cage-shape-regression tests/spin_it_2014_source_cage_shape_regression.cpp)
+             add_executable(spin-it-2014-source-cage-slqp-regression tests/spin_it_2014_source_cage_slqp_regression.cpp)
+             add_executable(spin-it-2014-source-cage-geometry-regression tests/spin_it_2014_source_cage_geometry_regression.cpp)
+             add_executable(spin-it-2014-source-cage-guarded-slqp-regression tests/spin_it_2014_source_cage_guarded_slqp_regression.cpp)
+             add_executable(spin-it-2014-source-cage-adaptive-rebind-regression tests/spin_it_2014_source_cage_adaptive_rebind_regression.cpp)
+             add_executable(spin-it-2014-source-cage-adaptive-solver-regression tests/spin_it_2014_source_cage_adaptive_solver_regression.cpp)
+             add_executable(spin-it-2014-source-cage-binary-material-regression tests/spin_it_2014_source_cage_binary_material_regression.cpp)
+             add_executable(spin-it-2014-source-cage-material-regions-regression tests/spin_it_2014_source_cage_material_regions_regression.cpp)
++            add_executable(spin-it-2014-source-cage-component-clearance-regression tests/spin_it_2014_source_cage_component_clearance_regression.cpp)
++            target_link_libraries(spin-it-2014-source-cage-component-clearance-regression PRIVATE make_it_stand::core)
++            add_test(NAME spin-it-2014-source-cage-component-clearance COMMAND spin-it-2014-source-cage-component-clearance-regression)
++            set_tests_properties(spin-it-2014-source-cage-component-clearance PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-material-regions-regression PRIVATE make_it_stand::core)
+             add_test(NAME spin-it-2014-source-cage-material-regions COMMAND spin-it-2014-source-cage-material-regions-regression)
+             set_tests_properties(spin-it-2014-source-cage-material-regions PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-binary-material-regression PRIVATE make_it_stand::core)
+             add_test(NAME spin-it-2014-source-cage-binary-material COMMAND spin-it-2014-source-cage-binary-material-regression)
+             set_tests_properties(spin-it-2014-source-cage-binary-material PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-adaptive-solver-regression PRIVATE make_it_stand::core)
+             add_test(NAME spin-it-2014-source-cage-adaptive-solver COMMAND spin-it-2014-source-cage-adaptive-solver-regression)
+             set_tests_properties(spin-it-2014-source-cage-adaptive-solver PROPERTIES LABELS "spin-it-2014;exact-geometry;native;synthetic-regression" TIMEOUT 3600 RUN_SERIAL TRUE)
+             target_link_libraries(spin-it-2014-source-cage-adaptive-rebind-regression PRIVATE make_it_stand::core)
+diff --git a/docs/spin2014_source_cage_component_clearance.md b/docs/spin2014_source_cage_component_clearance.md
+new file mode 100644
+index 0000000..199a2f6
+--- /dev/null
++++ b/docs/spin2014_source_cage_component_clearance.md
+@@ -0,0 +1,84 @@
++# Actual final boundary-component separation
++
++`validateSourceCageComponentClearance(regionsAudit, settings)` accepts only the
++immutable validated Task5z region product. The new immutable audit exposes
++`facts()` and optional `validatedClearance()`; the latter retains the entire
++original `regionsAudit()` and `regions()`. That chain preserves the original
++binary material arrays, states, functional and world/spin moment evidence after
++all originating audit variables have been destroyed. Copied facts and mutable
++meshes cannot construct an audit or product.
++
++This gate establishes **BOUNDARY_COMPONENT_SEPARATION** only. Its finite
++nonnegative `minimumComponentSeparation` is in model units and is converted by
++the existing exact backend from binary64 to rational without a tolerance. It
++measures gaps between every two distinct connected components of the actual
++final material boundary, including disconnected outer-root gaps through air.
++Contact always rejects, even at threshold zero. Threshold equality passes.
++`fullManufacturingThickness` always remains `NOT_ESTABLISHED`.
++
++## Geometry and evidence
++
++The input boundary hash is recomputed from the actual final mesh using the
++backend's `exact-boundary-input-v1` / `AnyNonzero` protocol and matched against
++both Task5z exact material and boundary input digests. Exact upstream
++`faceComponents` supplies canonical component IDs. Faces retain their original
++global order; each component's vertices are compacted in ascending global ID.
++Coverage is independently checked: every original face and referenced vertex
++belongs to exactly one extracted component, no component is empty, and no
++vertex is shared across different components.
++
++Each component retains source vertex/face IDs, original sign and parent/depth,
++and original/checker input digests. Negative inward components are reversed
++only in a local checker mesh by swapping triangle indices 1 and 2. The original
++material stays byte-for-byte unchanged. Each whole extracted component—not
++one selected voxel primitive—is validated as a standalone bounded positive
++exact region. Its complete region and boundary facts are retained.
++
++Every unordered pair `i < j` is measured in lexicographic order. Each record
++retains complete exact clearance facts, the rational squared distance and exact
++threshold, local witness face IDs and their mapped original material face IDs.
++A measured rejection does not stop subsequent pair measurements. A multi-
++component completed result requires exactly `n*(n-1)/2` complete measurements;
++unknown or partial evidence cannot publish. The global minimum is compared
++using exact rationals, with the earliest component pair winning ties. The
++backend independently chooses its canonical local-face witness.
++
++A single boundary component has explicit `NOT_APPLICABLE`, zero pairs and
++absent distance, witness, contact and threshold-result optionals. This is
++distinct from `INCOMPLETE` caused by unavailable measurements or resource
++failure. Multiple components use aggregate state `MEASURED`; individual native
++clearance records keep the backend state `COMPLETE`.
++
++## Budgets and identities
++
++Settings bound components, source points, source triangles, unordered pairs,
++known owned bytes, retained exact diagnostics and shared native Nef complexity.
++Zero, oversized or overflowing caps reject before variable allocation. Count
++caps fit signed native indices; byte caps fit `ptrdiff_t`. Pair counts use
++checked multiplication. Preflight covers the input face-component array,
++component maps, source coverage and local-index scratch, mesh/native-wrapper
++copies, retained pair containers and conservative edge/triangle-pair diagnostic
++storage. Actual variable diagnostic strings and arrays, including rational
++distance strings, are cumulatively checked before retained evidence copies.
++
++All standalone component regions share one local `ExactNefBudget`. Live exact
++regions and the mutable budget never escape; the audit receives a copied final
++snapshot after the local operands release their charges. CGAL/GMP allocator
++internals and rational intermediate allocations remain subject to the caller's
++external 24 GiB / 60-minute guard. These counters are not an RSS guarantee.
++
++Scientific SHA-256 binds every setting, upstream audit identity, actual material
++identity, maps, reversal, full native region/boundary and pair facts, aggregate
++diagnostics, outcome/reason, publication presence and copied budget statistics.
++The hash contains no timestamp. `NotAdmitted`, measured `Rejected`,
++`ResourceLimit` and `Unknown` are distinct and never publish a validated product.
++
++## Limits
++
++No separation between features of the same connected boundary, medial-axis
++thickness, full wall/web manufacturing thickness, continuous BBW Jacobian,
++author continuous design, sealing, feasibility authority, physics or paper
++convergence is established. No deformed `SealedSpinArtifact` or Python override
++is provided. The native real-pipeline regression uses fixed synthetic
++`KNOWN_SOLUTION_VALIDATION` fixtures with zero objective weights, full handles
++and nonzero phi; it is not an original-paper experiment.
+diff --git a/include/spin2014/SourceCageComponentClearance.h b/include/spin2014/SourceCageComponentClearance.h
+new file mode 100644
+index 0000000..1a20e5a
+--- /dev/null
++++ b/include/spin2014/SourceCageComponentClearance.h
+@@ -0,0 +1,70 @@
++#pragma once
++#include "spin2014/SourceCageMaterialRegions.h"
++
++#if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
++namespace spin2014 {
++struct SourceCageComponentClearanceSettings {
++    double minimumComponentSeparation=0.; // finite nonnegative model units
++    std::size_t maximumComponents=1000,maximumPoints=100000,maximumTriangles=400000,maximumPairs=100000;
++    std::size_t maximumOwnedBytes=256*1024*1024,maximumExactDiagnosticBytes=512*1024*1024,maximumNefComplexity=1000000;
++};
++enum class SourceCageComponentClearanceOutcome {Validated,NotAdmitted,Rejected,ResourceLimit,Unknown};
++struct SourceCageBoundaryComponentEvidence {
++    std::size_t componentId=0;
++    std::vector<std::size_t> sourceVertexIds,sourceFaceIds;
++    int originalSign=0,parent=-1,depth=-1;
++    bool checkerReversed=false;
++    std::string originalInputSha256,checkerInputSha256;
++    SourceCageRegionEvidence region;
++};
++struct SourceCageComponentPairEvidence {
++    std::array<std::size_t,2> componentIds{};
++    verification::ExactBoundaryClearanceFacts clearance; // local witness faces
++    std::optional<std::array<std::size_t,2>> parentWitnessFaces;
++};
++struct SourceCageComponentClearanceFacts {
++    SourceCageComponentClearanceOutcome outcome=SourceCageComponentClearanceOutcome::Unknown;
++    SourceCageComponentClearanceSettings settings;
++    std::string scope="BOUNDARY_COMPONENT_SEPARATION";
++    std::string semantics="all distinct actual final material boundary components, including root-root air gaps; model units; no same-component feature thickness, continuous BBW Jacobian, continuous author design, seal, feasibility, physics or paper grant";
++    std::string fullManufacturingThickness="NOT_ESTABLISHED",state="INCOMPLETE";
++    bool admitted=false,identitiesChecked=false,coverageChecked=false;
++    std::size_t componentCount=0,plannedPoints=0,plannedTriangles=0,plannedPairCount=0,plannedOwnedBytes=0,plannedExactDiagnosticBytes=0;
++    std::vector<int> sourceFaceComponents;
++    std::vector<SourceCageBoundaryComponentEvidence> components;
++    std::vector<SourceCageComponentPairEvidence> pairs;
++    std::optional<bool> applicable,atLeastMinimum,contact;
++    std::optional<std::string> minimumSquaredDistanceExact;
++    std::optional<std::size_t> minimumPairIndex;
++    std::optional<std::array<std::size_t,2>> minimumComponentIds,minimumLocalWitnessFaces,minimumParentWitnessFaces;
++    verification::ExactNefBudgetFacts nefBudget; // copy after local exact operands release
++    std::string inputSha256,materialInputSha256,configSha256,scientificSha256;
++    std::array<char,256> reason{};
++};
++class SourceCageComponentClearanceAudit;
++class SourceCageComponentClearance {
++public:
++    const SourceCageMaterialRegionsAudit& regionsAudit() const;
++    std::shared_ptr<const SourceCageMaterialRegions> regions() const;
++private:
++    explicit SourceCageComponentClearance(const SourceCageMaterialRegionsAudit& audit):audit_(audit){}
++    SourceCageMaterialRegionsAudit audit_;
++    friend SourceCageComponentClearanceAudit validateSourceCageComponentClearance(const SourceCageMaterialRegionsAudit&,const SourceCageComponentClearanceSettings&);
++};
++class SourceCageComponentClearanceAudit {
++public:
++    const SourceCageComponentClearanceFacts& facts() const;
++    std::shared_ptr<const SourceCageComponentClearance> validatedClearance() const;
++private:
++    struct Data;
++    explicit SourceCageComponentClearanceAudit(std::shared_ptr<const Data> data):data_(std::move(data)){}
++    std::shared_ptr<const Data> data_;
++    friend SourceCageComponentClearanceAudit validateSourceCageComponentClearance(const SourceCageMaterialRegionsAudit&,const SourceCageComponentClearanceSettings&);
++};
++// Genuine immutable validatedRegions only. Invalid threshold throws; all resource,
++// unknown and admission failures withhold publication. Native allocator internals
++// remain subject to caller's external memory/time guard; no full thickness grant.
++SourceCageComponentClearanceAudit validateSourceCageComponentClearance(const SourceCageMaterialRegionsAudit&,const SourceCageComponentClearanceSettings& = {});
++const char* sourceCageComponentClearanceOutcomeToken(SourceCageComponentClearanceOutcome);
++}
++#endif
+diff --git a/src/spin2014/SourceCageComponentClearance.cpp b/src/spin2014/SourceCageComponentClearance.cpp
+new file mode 100644
+index 0000000..1bfb247
+--- /dev/null
++++ b/src/spin2014/SourceCageComponentClearance.cpp
+@@ -0,0 +1,195 @@
++#include "spin2014/SourceCageComponentClearance.h"
++#include "verification/Sha256.h"
++#include <CGAL/Gmpq.h>
++#include <algorithm>
++#include <climits>
++#include <cmath>
++#include <cstring>
++
++namespace spin2014 {
++namespace {
++using namespace verification;
++using Outcome=SourceCageComponentClearanceOutcome;
++[[noreturn]] void resource(const char* s){throw std::length_error(s);}
++std::size_t add(std::size_t a,std::size_t b){if(a>SIZE_MAX-b)resource("component count addition overflow");return a+b;}
++std::size_t mul(std::size_t a,std::size_t b){if(b&&a>SIZE_MAX/b)resource("component count multiplication overflow");return a*b;}
++std::size_t pairCount(std::size_t n){return n?mul(n/2,n-1+n%2):0;}
++class Hash {
++    Sha256 h_;
++public:
++    void raw(const void* p,std::size_t n){h_.update(static_cast<const unsigned char*>(p),n);}
++    void put(std::uint64_t n){unsigned char b[8];for(int i=0;i<8;++i)b[7-i]=n>>(8*i);raw(b,8);}
++    void put(int n){put(std::uint64_t(n));}
++    void put(bool n){put(std::uint64_t(n));}
++    void put(double d){std::uint64_t n;std::memcpy(&n,&d,8);put(n);}
++    void put(const std::string& s){put(std::uint64_t(s.size()));raw(s.data(),s.size());}
++    template<class T> void put(const std::vector<T>& v){put(std::uint64_t(v.size()));for(const auto& x:v)put(T(x));}
++    template<class T,std::size_t N> void put(const std::array<T,N>& v){put(std::uint64_t(N));for(const auto& x:v)put(x);}
++    template<class T> void put(const std::optional<T>& v){put(bool(v));if(v)put(*v);}
++    template<class... T> void fields(const T&... x){(put(x),...);}
++    std::string finish(){return h_.finish();}
++};
++// The exact backend's public input identity protocol, recomputed from actual
++// arrays. No copied digest is accepted as proof of the material bytes.
++std::string meshHash(const SourceCageBinaryMesh& m){
++    Hash h;constexpr char prefix[]="exact-boundary-input-v1";h.raw(prefix,sizeof(prefix));
++    const unsigned char mode=static_cast<unsigned char>(ExactBoundaryOrientation::AnyNonzero);h.raw(&mode,1);
++    h.fields(std::uint64_t(m.vertices.rows()),std::uint64_t(m.triangles.rows()));
++    for(Eigen::Index i=0;i<m.vertices.rows();++i)for(int j=0;j<3;++j)h.put(m.vertices(i,j));
++    for(Eigen::Index i=0;i<m.triangles.rows();++i)for(int j=0;j<3;++j)h.put(std::uint64_t(m.triangles(i,j)));
++    return h.finish();
++}
++void hash(Hash& h,const ExactBoundaryFacts& f){
++    h.fields(f.algorithm,f.backend,f.inputDigest,f.orientation,f.intersectionError,f.boundaryValid,f.closed,f.edgeManifold,f.vertexManifold,
++        f.consistentlyOriented,f.componentOrientationsValid,f.intersectionCompleted,f.intersectionFree,f.exactPairTests,
++        f.unreferencedVertices,f.degenerateFaces,f.nonManifoldVertices,f.boundaryEdges,f.nonManifoldEdges,f.inconsistentEdges,
++        f.intersectingPairs,f.faceComponents,f.componentVolumeSigns,f.componentSignedVolumesExact);
++}
++void hash(Hash& h,const SourceCageRegionEvidence& e){const auto& f=e.region;
++    h.fields(f.algorithm,f.backend,f.semantics,f.inputDigest,f.regionDigest,f.error,f.completed,f.valid,f.explicitEmpty,
++        f.parents,f.depths,f.originalSigns,f.checkerReversedComponents,f.materialComponents,f.boundedVoidComponents,bool(e.boundary));
++    if(e.boundary)hash(h,*e.boundary);
++}
++void hash(Hash& h,const ExactBoundaryClearanceFacts& f){
++    h.fields(f.algorithm,f.backend,f.semantics,f.aDigest,f.bDigest,f.aInputDigest,f.bInputDigest,f.minimumClearanceExact,
++        f.clearanceDigest,f.error,f.state,f.completed,f.aExplicitEmpty,f.bExplicitEmpty,f.applicable,f.atLeastMinimum,
++        f.contact,f.squaredDistanceExact,f.witnessFaces);
++}
++std::string configHash(const SourceCageComponentClearanceSettings& s){Hash h;
++    h.fields(std::string("source-cage-component-clearance-config-v1"),s.minimumComponentSeparation,s.maximumComponents,s.maximumPoints,
++        s.maximumTriangles,s.maximumPairs,s.maximumOwnedBytes,s.maximumExactDiagnosticBytes,s.maximumNefComplexity);return h.finish();
++}
++void finish(SourceCageComponentClearanceFacts& f,bool product){Hash h;
++    h.fields(std::string("source-cage-component-clearance-v1"),int(f.outcome),std::string(f.reason.data()),f.scope,f.semantics,
++        f.fullManufacturingThickness,f.state,f.admitted,f.identitiesChecked,f.coverageChecked,f.componentCount,f.plannedPoints,
++        f.plannedTriangles,f.plannedPairCount,f.plannedOwnedBytes,f.plannedExactDiagnosticBytes,f.sourceFaceComponents,
++        f.applicable,f.atLeastMinimum,f.contact,f.minimumSquaredDistanceExact,f.minimumPairIndex,f.minimumComponentIds,
++        f.minimumLocalWitnessFaces,f.minimumParentWitnessFaces,f.inputSha256,f.materialInputSha256,f.configSha256,product);
++    h.put(std::uint64_t(f.components.size()));for(const auto& c:f.components){
++        h.fields(c.componentId,c.sourceVertexIds,c.sourceFaceIds,c.originalSign,c.parent,c.depth,c.checkerReversed,c.originalInputSha256,c.checkerInputSha256);hash(h,c.region);
++    }
++    h.put(std::uint64_t(f.pairs.size()));for(const auto& p:f.pairs){h.fields(p.componentIds,p.parentWitnessFaces);hash(h,p.clearance);}
++    h.put(hashExactNefBudgetFacts(f.nefBudget));f.scientificSha256=h.finish();
++}
++void terminal(SourceCageComponentClearanceFacts& f,Outcome o,const char* s){f.outcome=o;
++    const auto n=std::min(f.reason.size()-1,std::strlen(s));std::memcpy(f.reason.data(),s,n);f.reason[n]=0;
++}
++void plan(const SourceCageBinaryMesh& m,const SourceCageMaterialRegionsFacts& upstream,SourceCageComponentClearanceFacts& out){
++    const auto& s=out.settings;
++    for(auto n:{s.maximumComponents,s.maximumPoints,s.maximumTriangles,s.maximumPairs,s.maximumNefComplexity})
++        if(!n||n>std::size_t(INT_MAX/3))resource("invalid component native count cap");
++    for(auto n:{s.maximumOwnedBytes,s.maximumExactDiagnosticBytes})if(!n||n>std::size_t(PTRDIFF_MAX))resource("invalid component byte cap");
++    if(!upstream.material.boundary||m.vertices.rows()<=0||m.triangles.rows()<=0||m.vertices.cols()!=3||m.triangles.cols()!=3)
++        throw std::logic_error("immutable material boundary evidence missing");
++    const auto& b=*upstream.material.boundary;const auto& r=upstream.material.region;
++    const auto p=std::size_t(m.vertices.rows()),t=std::size_t(m.triangles.rows()),n=b.componentVolumeSigns.size();
++    out.plannedPoints=p;out.plannedTriangles=t;out.componentCount=n;
++    if(!n||n>s.maximumComponents||p>s.maximumPoints||t>s.maximumTriangles)resource("component/point/triangle cap");
++    if(b.faceComponents.size()!=t||b.componentSignedVolumesExact.size()!=n||r.parents.size()!=n||r.depths.size()!=n||r.originalSigns.size()!=n)
++        throw std::logic_error("immutable component diagnostics size mismatch");
++    out.plannedPairCount=pairCount(n);if(out.plannedPairCount>s.maximumPairs)resource("component pair cap");
++    // Mesh copies, global-to-local/coverage scratch, component maps, input
++    // faceComponents, native wrapper storage, and bounded pair containers.
++    out.plannedOwnedBytes=add(32768,add(mul(p,12*sizeof(double)+8*sizeof(std::size_t)),
++        add(mul(t,12*sizeof(int)+8*sizeof(std::size_t)),add(mul(n,8192),mul(out.plannedPairCount,8192)))));
++    // Conservatively budget edge/pair diagnostics and rational serialization;
++    // exact allocator internals and GMP intermediates use the external guard.
++    out.plannedExactDiagnosticBytes=mul(4,add(mul(p,128),add(mul(t,8192+256),
++        add(mul(pairCount(t),sizeof(std::array<int,2>)+2),mul(out.plannedPairCount,32768)))));
++    if(out.plannedOwnedBytes>s.maximumOwnedBytes||out.plannedExactDiagnosticBytes>s.maximumExactDiagnosticBytes)
++        resource("component owned/exact diagnostic budget before allocation");
++}
++// Bound all retained variable diagnostic strings, including actual rational
++// outputs, before copying them out of the backend's externally guarded result.
++struct DiagnosticBytes {
++    std::size_t used=0,cap;
++    void put(const std::string& s){used=add(used,add(s.size(),1));if(used>cap)resource("actual exact diagnostic byte cap");}
++    template<class T> void put(const std::vector<T>& v){used=add(used,mul(v.size(),sizeof(T)));if(used>cap)resource("actual exact diagnostic array cap");}
++    template<class... T> void fields(const T&... x){(put(x),...);}
++    void region(const ExactMaterialRegion& value){const auto& r=value.facts();const auto& b=value.boundaryFacts();
++        fields(r.algorithm,r.backend,r.semantics,r.inputDigest,r.regionDigest,r.error,r.parents,r.depths,r.originalSigns,r.checkerReversedComponents);
++        fields(b.algorithm,b.backend,b.inputDigest,b.orientation,b.intersectionError,b.unreferencedVertices,b.degenerateFaces,b.nonManifoldVertices,
++            b.boundaryEdges,b.nonManifoldEdges,b.inconsistentEdges,b.intersectingPairs,b.faceComponents,b.componentVolumeSigns,b.componentSignedVolumesExact);
++        for(const auto& s:b.componentSignedVolumesExact)put(s);
++    }
++    void pair(const ExactBoundaryClearanceFacts& c){fields(c.algorithm,c.backend,c.semantics,c.aDigest,c.bDigest,c.aInputDigest,c.bInputDigest,c.minimumClearanceExact,c.clearanceDigest,c.error,c.state);if(c.squaredDistanceExact)put(*c.squaredDistanceExact);}
++};
++}
++struct SourceCageComponentClearanceAudit::Data {SourceCageComponentClearanceFacts facts;std::shared_ptr<const SourceCageComponentClearance> validated;};
++const SourceCageComponentClearanceFacts& SourceCageComponentClearanceAudit::facts()const{if(!data_)throw std::logic_error("moved-from component audit has no evidence");return data_->facts;}
++std::shared_ptr<const SourceCageComponentClearance> SourceCageComponentClearanceAudit::validatedClearance()const{(void)facts();return data_->validated;}
++const SourceCageMaterialRegionsAudit& SourceCageComponentClearance::regionsAudit()const{(void)audit_.facts();return audit_;}
++std::shared_ptr<const SourceCageMaterialRegions> SourceCageComponentClearance::regions()const{return regionsAudit().validatedRegions();}
++const char* sourceCageComponentClearanceOutcomeToken(Outcome o){switch(o){case Outcome::Validated:return "BOUNDARY_COMPONENT_SEPARATION_VALIDATED_PRE_SEAL";case Outcome::NotAdmitted:return "NOT_ADMITTED";case Outcome::Rejected:return "BOUNDARY_COMPONENT_SEPARATION_REJECTED";case Outcome::ResourceLimit:return "RESOURCE_LIMIT";default:return "UNKNOWN";}}
++SourceCageComponentClearanceAudit validateSourceCageComponentClearance(const SourceCageMaterialRegionsAudit& audit,const SourceCageComponentClearanceSettings& settings){
++    if(!std::isfinite(settings.minimumComponentSeparation)||settings.minimumComponentSeparation<0.)throw std::invalid_argument("minimum component separation must be finite nonnegative");
++    auto data=std::make_shared<SourceCageComponentClearanceAudit::Data>();auto& out=data->facts;out.settings=settings;
++    out.configSha256=configHash(settings);out.inputSha256=audit.facts().scientificSha256;ExactNefBudgetPtr budget;
++    auto run=[&]{
++        const auto regions=audit.validatedRegions();if(audit.facts().outcome!=SourceCageMaterialRegionsOutcome::Validated||!regions){terminal(out,Outcome::NotAdmitted,"requires genuine immutable validated regions");return;}
++        out.admitted=true;const auto material=regions->binaryMaterial();const auto& mesh=material->materialBoundary();const auto& upstream=audit.facts();
++        plan(mesh,upstream,out);const auto& boundary=*upstream.material.boundary;const auto& original=upstream.material.region;
++        out.materialInputSha256=meshHash(mesh);
++        if(out.materialInputSha256!=original.inputDigest||out.materialInputSha256!=boundary.inputDigest||!boundary.boundaryValid||!original.valid){terminal(out,Outcome::NotAdmitted,"actual material hash or immutable boundary identity mismatch");return;}
++        out.identitiesChecked=true;out.sourceFaceComponents=boundary.faceComponents;
++        const auto n=out.componentCount,p=out.plannedPoints,t=out.plannedTriangles;
++        std::vector<std::size_t> owner(p,SIZE_MAX),local(p,SIZE_MAX),faceCounts(n,0),vertexCounts(n,0);
++        for(std::size_t f=0;f<t;++f){const int id=boundary.faceComponents[f];if(id<0||std::size_t(id)>=n)throw std::logic_error("invalid exact face component ID");++faceCounts[id];
++            for(int j=0;j<3;++j){const int v=mesh.triangles(f,j);if(v<0||std::size_t(v)>=p)throw std::logic_error("invalid actual face vertex index");
++                if(owner[v]==SIZE_MAX){owner[v]=std::size_t(id);++vertexCounts[id];}else if(owner[v]!=std::size_t(id))throw std::logic_error("vertex shared across closed boundary components");}
++        }
++        if(std::find(owner.begin(),owner.end(),SIZE_MAX)!=owner.end())throw std::logic_error("actual material vertex coverage incomplete");
++        out.components.reserve(n);
++        for(std::size_t i=0;i<n;++i){if(!faceCounts[i]||!vertexCounts[i])throw std::logic_error("empty indexed boundary component");
++            SourceCageBoundaryComponentEvidence c;c.componentId=i;c.originalSign=boundary.componentVolumeSigns[i];c.parent=original.parents[i];c.depth=original.depths[i];
++            if((c.originalSign!=1&&c.originalSign!=-1)||c.originalSign!=original.originalSigns[i]||c.depth<0||c.parent< -1||c.parent>=int(n)||c.parent==int(i))throw std::logic_error("invalid original component sign/nesting");
++            c.checkerReversed=c.originalSign==-1;c.sourceVertexIds.reserve(vertexCounts[i]);c.sourceFaceIds.reserve(faceCounts[i]);out.components.push_back(std::move(c));
++        }
++        for(std::size_t v=0;v<p;++v){auto& c=out.components[owner[v]];local[v]=c.sourceVertexIds.size();c.sourceVertexIds.push_back(v);}
++        for(std::size_t f=0;f<t;++f)out.components[boundary.faceComponents[f]].sourceFaceIds.push_back(f);
++        std::size_t coveredP=0,coveredT=0;for(const auto& c:out.components){coveredP=add(coveredP,c.sourceVertexIds.size());coveredT=add(coveredT,c.sourceFaceIds.size());}
++        if(coveredP!=p||coveredT!=t)throw std::logic_error("component source coverage totals mismatch");out.coverageChecked=true;
++        budget=std::make_shared<ExactNefBudget>(settings.maximumNefComplexity);std::vector<ExactMaterialRegion> standalone;standalone.reserve(n);
++        // Four-capacity allowance covers backend evidence, retained copies and
++        // serialization scratch as in preflight; never spend the whole cap on
++        // a single logical copy of diagnostics.
++        DiagnosticBytes diagnostics{0,settings.maximumExactDiagnosticBytes/4};
++        for(auto& c:out.components){SourceCageBinaryMesh checker;checker.vertices.resize(c.sourceVertexIds.size(),3);checker.triangles.resize(c.sourceFaceIds.size(),3);
++            for(std::size_t v=0;v<c.sourceVertexIds.size();++v)checker.vertices.row(v)=mesh.vertices.row(c.sourceVertexIds[v]);
++            for(std::size_t f=0;f<c.sourceFaceIds.size();++f)for(int j=0;j<3;++j)checker.triangles(f,j)=int(local[mesh.triangles(c.sourceFaceIds[f],j)]);
++            c.originalInputSha256=meshHash(checker);if(c.checkerReversed)checker.triangles.col(1).swap(checker.triangles.col(2));c.checkerInputSha256=meshHash(checker);
++            standalone.push_back(makeExactMaterialRegionWithBudget(checker.vertices,checker.triangles,budget));const auto& value=standalone.back();diagnostics.region(value);
++            c.region.region=value.facts();c.region.boundary=value.boundaryFacts();
++            if(!value.facts().completed){terminal(out,Outcome::Unknown,value.facts().error.c_str());return;}
++            if(!value.facts().valid||value.facts().inputDigest!=c.checkerInputSha256||value.facts().materialComponents!=1||value.facts().boundedVoidComponents!=0||value.facts().originalSigns!=std::vector<int>{1}||!value.boundaryFacts().closed){terminal(out,Outcome::Rejected,"standalone exact component is not one bounded positive region");return;}
++        }
++        out.pairs.reserve(out.plannedPairCount);bool incomplete=false,allClear=true,contact=false;std::optional<CGAL::Gmpq> minimum;std::optional<std::size_t> minimumIndex;
++        for(std::size_t i=0;i<n;++i)for(std::size_t j=i+1;j<n;++j){SourceCageComponentPairEvidence pair;pair.componentIds={i,j};
++            pair.clearance=checkExactBoundaryClearance(standalone[i],standalone[j],settings.minimumComponentSeparation);diagnostics.pair(pair.clearance);const auto& c=pair.clearance;
++            const bool measured=c.completed&&c.state=="COMPLETE"&&c.applicable==true&&c.squaredDistanceExact&&c.witnessFaces&&c.contact&&c.atLeastMinimum;
++            if(!measured){incomplete=true;}else{
++                pair.parentWitnessFaces=std::array<std::size_t,2>{out.components[i].sourceFaceIds.at((*c.witnessFaces)[0]),out.components[j].sourceFaceIds.at((*c.witnessFaces)[1])};
++                const CGAL::Gmpq distance(c.squaredDistanceExact->c_str());if(distance<CGAL::Gmpq(0))throw std::logic_error("negative exact squared distance");
++                if(!minimum||distance<*minimum){minimum=distance;minimumIndex=out.pairs.size();}
++                contact=contact||*c.contact;allClear=allClear&&!*c.contact&&*c.atLeastMinimum;
++            }
++            out.pairs.push_back(std::move(pair));
++        }
++        if(out.pairs.size()!=out.plannedPairCount||incomplete){terminal(out,Outcome::Unknown,"not every component pair has complete exact measurement");return;}
++        if(n==1){out.state="NOT_APPLICABLE";out.applicable=false;}
++        else{
++            if(!minimumIndex)throw std::logic_error("missing complete global minimum");const auto& pair=out.pairs[*minimumIndex];
++            diagnostics.put(*pair.clearance.squaredDistanceExact);out.state="MEASURED";out.applicable=true;out.contact=contact;out.atLeastMinimum=allClear;
++            out.minimumPairIndex=minimumIndex;out.minimumSquaredDistanceExact=pair.clearance.squaredDistanceExact;out.minimumComponentIds=pair.componentIds;
++            out.minimumLocalWitnessFaces=pair.clearance.witnessFaces;out.minimumParentWitnessFaces=pair.parentWitnessFaces;
++        }
++        if(!allClear){terminal(out,Outcome::Rejected,"complete distinct boundary component separation rejected");return;}
++        terminal(out,Outcome::Validated,"complete distinct boundary component separation passed; full manufacturing thickness NOT_ESTABLISHED");
++        data->validated=std::shared_ptr<const SourceCageComponentClearance>(new SourceCageComponentClearance(audit));
++    };
++    try{run();}catch(const std::length_error& e){terminal(out,Outcome::ResourceLimit,e.what());}catch(const std::bad_alloc&){terminal(out,Outcome::ResourceLimit,"component allocation failure");}
++    catch(const std::exception& e){terminal(out,Outcome::Unknown,e.what());}catch(...){terminal(out,Outcome::Unknown,"unknown component clearance failure");}
++    if(budget){out.nefBudget=budget->facts();if(out.nefBudget.exceeded){data->validated.reset();terminal(out,Outcome::ResourceLimit,"shared component Nef budget exceeded");}}
++    finish(out,bool(data->validated));return SourceCageComponentClearanceAudit(data);
++}
++}
+diff --git a/tests/spin_it_2014_source_cage_component_clearance_regression.cpp b/tests/spin_it_2014_source_cage_component_clearance_regression.cpp
+new file mode 100644
+index 0000000..72e356e
+--- /dev/null
++++ b/tests/spin_it_2014_source_cage_component_clearance_regression.cpp
+@@ -0,0 +1,123 @@
++#include <iostream>
++// Full actual geometry tests become active once the missing-layer RED is resolved.
++#if !__has_include("spin2014/SourceCageComponentClearance.h")
++int main(){std::cerr<<"FAIL: actual final boundary-component separation layer absent\n";return 1;}
++#else
++#include "spin2014/SourceCageComponentClearance.h"
++#include "source_surface_test_utils.h"
++#include <Eigen/Eigenvalues>
++#include <cstring>
++#include <limits>
++#include <type_traits>
++using namespace spin2014;
++using namespace surface_test;
++namespace {
++SourceCagePaperFunctional fixture(bool wide=false) {
++    const auto outer=cube(.3125,.6875);
++    const auto design=wide?box({.4,.45625,.45625},{.56,.54375,.54375}):cube(.425,.575);
++    const int level=wide?5:4;
++    SourceSurfaceOctreeConfig sc;sc.maximumDepth=level;
++    auto source=std::make_shared<const SourceSurfaceOctree>(outer.v,outer.f,design.v,design.f,sc);
++    SourceAdaptiveDomain domain(source,level,level,1000);
++    SourceSurfaceCageConfig cc;cc.cageLevel=2;SourceCageGridConfig gc;gc.fineLevel=3;
++    SourceCageBbw bbw(SourceCageFem(SourceCageGrid(SourceSurfaceCage(outer.v,outer.f,cc),gc),{}),{});
++    require(bbw.success(),("actual full BBW succeeds: "+bbw.terminalReason()).c_str());
++    SourceConformingBoundaryConfig bc;bc.maximumPatches=9000;
++    SourceCageMomentFunctionalConfig mc;mc.maximumWeightValues=9000;
++    SourceCagePaperFunctionalConfig pc;pc.objective=Spin2014Objective::TopMassAndLowering;pc.inertiaWeight=0.;pc.centerWeight=0.;
++    return SourceCagePaperFunctional(SourceCageMomentFunctional(SourceConformingBoundary(SourceCageBinding(domain,bbw,{}),bc),1.17,mc),pc);
++}
++Eigen::VectorXd state(const SourceCagePaperFunctional& f,double beta) {
++    auto x=f.initialState(Eigen::VectorXd::Constant(f.betaCount(),beta),.23);
++    for(std::size_t h=0;h<f.handleCount();++h){x[f.handleOffset()+4*h]=1.02;x.segment<3>(f.handleOffset()+4*h+1)<<.011,-.007,.019;}
++    return x;
++}
++// KNOWN_SOLUTION_VALIDATION: actual full handles, nonzero phi, stationary zero objective.
++SourceCageBinaryMaterialAudit binary(const SourceCagePaperFunctional& f,const Eigen::VectorXd& x) {
++    const auto m=f.evaluateValues(x).world.finalMoments.values();SourceCagePaperFrame frame;frame.origin=m.segment<3>(1)/m[0];
++    Eigen::Matrix3d q;q<<m[4],m[9],m[8],m[9],m[5],m[7],m[8],m[7],m[6];
++    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(q-m[0]*frame.origin*frame.origin.transpose());
++    Eigen::Matrix3d base=eig.eigenvectors().transpose();if(base.determinant()<0)base.row(0)*=-1;
++    const double c=std::cos(x[f.angleOffset()]),s=std::sin(x[f.angleOffset()]);Eigen::Matrix3d g;g<<c,s,0,-s,c,0,0,0,1;frame.rotation=g*base;
++    SourceCageAdaptiveSolverSettings settings;settings.maximumPasses=3;settings.solve.source.solver.maximumIterations=1;
++    settings.solve.source.solver.maximumLineSearchSteps=2;settings.solve.budget.maximumGuardCalls=8;
++    const auto ep=solveSourceCageAdaptive(SourceCagePaperFunctional(f.source(),f.config(),frame),x,settings);
++    require(ep.facts().outcome==SourceCageAdaptiveSolverOutcome::RelaxedAdaptiveComplete,"real adaptive fixture completed");
++    return validateSourceCageBinaryMaterial(ep);
++}
++void provenance(const SourceCageComponentClearanceAudit& a,const SourceCageMaterialRegionsAudit& upstream,std::size_t n) {
++    const auto& f=a.facts();const auto& original=upstream.validatedRegions()->binaryMaterial()->materialBoundary();
++    require(f.components.size()==n&&f.componentCount==n&&f.identitiesChecked&&f.coverageChecked,"complete actual extraction");
++    require(f.materialInputSha256==upstream.facts().material.region.inputDigest,"actual mesh hash matches upstream");
++    std::vector<int> vertices(original.vertices.rows(),0),faces(original.triangles.rows(),0);
++    for(std::size_t i=0;i<n;++i){const auto& c=f.components[i];
++        require(c.componentId==i&&c.originalSign==(i? -1:1)&&c.checkerReversed==(i!=0),"canonical component sign and reversal");
++        require(c.parent==upstream.facts().material.region.parents[i]&&c.depth==upstream.facts().material.region.depths[i],"original nesting retained");
++        require(std::is_sorted(c.sourceVertexIds.begin(),c.sourceVertexIds.end())&&std::is_sorted(c.sourceFaceIds.begin(),c.sourceFaceIds.end()),"canonical maps");
++        for(auto v:c.sourceVertexIds)++vertices.at(v);
++        for(auto face:c.sourceFaceIds){++faces.at(face);require(upstream.facts().material.boundary->faceComponents[face]==int(i),"map follows exact upstream component");}
++        require(c.region.region.valid&&c.region.region.materialComponents==1&&c.region.region.boundedVoidComponents==0&&c.region.boundary->closed,"standalone positive whole component");
++        require(c.region.region.inputDigest==c.checkerInputSha256&&c.region.boundary->inputDigest==c.checkerInputSha256,"checker exact identity");
++    }
++    for(auto k:vertices)require(k==1,"every original vertex exactly once");for(auto k:faces)require(k==1,"every original face exactly once");
++    require(f.plannedPairCount==n*(n-1)/2&&f.pairs.size()==f.plannedPairCount,"all unordered pairs retained");
++    std::size_t k=0;for(std::size_t i=0;i<n;++i)for(std::size_t j=i+1;j<n;++j){const auto& p=f.pairs[k++];
++        require(p.componentIds==std::array<std::size_t,2>{i,j}&&p.clearance.completed&&p.clearance.squaredDistanceExact&&p.clearance.witnessFaces&&p.parentWitnessFaces,"complete pair measurement");
++        require((*p.parentWitnessFaces)[0]==f.components[i].sourceFaceIds.at((*p.clearance.witnessFaces)[0])&&(*p.parentWitnessFaces)[1]==f.components[j].sourceFaceIds.at((*p.clearance.witnessFaces)[1]),"local to parent witness");
++    }
++    require(f.fullManufacturingThickness=="NOT_ESTABLISHED"&&f.scope=="BOUNDARY_COMPONENT_SEPARATION","bounded scope only");
++    require(f.nefBudget.currentComplexity==0&&f.nefBudget.peakComplexity>0,"only released local Nef snapshot escapes");
++}
++}
++int main(){try{
++    static_assert(!std::is_default_constructible_v<SourceCageComponentClearanceAudit>);
++    static_assert(!std::is_default_constructible_v<SourceCageComponentClearance>);
++    static_assert(!std::is_constructible_v<SourceCageComponentClearanceAudit,SourceCageComponentClearanceFacts>);
++    const auto f=fixture();const auto b=binary(f,state(f,1.));const auto r=validateSourceCageMaterialRegions(b);
++    require(bool(r.validatedRegions()),"one-cavity upstream validated");
++    SourceCageComponentClearanceSettings settings;settings.minimumComponentSeparation=.1;
++    const auto a=validateSourceCageComponentClearance(r,settings);provenance(a,r,2);
++    std::cout<<"actual one-cavity extraction measured"<<std::endl;
++    require(a.validatedClearance()&&a.facts().outcome==SourceCageComponentClearanceOutcome::Validated&&a.facts().state=="MEASURED"&&a.facts().atLeastMinimum==true,"actual one cavity passes");
++    require(a.facts().minimumSquaredDistanceExact==r.facts().outerClearance.squaredDistanceExact,"actual component gap agrees with outer-carved for one cavity");
++    require(a.validatedClearance()->regions().get()==r.validatedRegions().get()&&&a.validatedClearance()->regionsAudit().facts()==&r.facts(),"entire original audit retained");
++    require(a.facts().scientificSha256==validateSourceCageComponentClearance(r,settings).facts().scientificSha256,"deterministic repeat");
++    settings.minimumComponentSeparation=.2;const auto rejected=validateSourceCageComponentClearance(r,settings);
++    require(!rejected.validatedClearance()&&rejected.facts().outcome==SourceCageComponentClearanceOutcome::Rejected&&rejected.facts().minimumSquaredDistanceExact&&rejected.facts().atLeastMinimum==false,"measured rejection retained");
++    const auto empty=validateSourceCageMaterialRegions(binary(f,state(f,0.)));const auto emptyA=validateSourceCageComponentClearance(empty);provenance(emptyA,empty,1);
++    require(emptyA.validatedClearance()&&emptyA.facts().state=="NOT_APPLICABLE"&&emptyA.facts().applicable==false&&!emptyA.facts().minimumSquaredDistanceExact&&!emptyA.facts().minimumPairIndex&&!emptyA.facts().minimumParentWitnessFaces&&!emptyA.facts().atLeastMinimum&&!emptyA.facts().contact,"one component is explicit N/A with no invented measurement");
++    std::cout<<"actual empty-cavity N/A checked"<<std::endl;
++    const auto wide=fixture(true);auto x=state(wide,0.);const auto& leaves=wide.source().boundary().binding().domain().leaves();
++    for(std::size_t i=0;i<leaves.size();++i)if(leaves[i].coordinates[0]==14||leaves[i].coordinates[0]==16)x[i]=1.;
++    const auto wr=validateSourceCageMaterialRegions(binary(wide,x));require(bool(wr.validatedRegions()),"two-cavity wider actual fixture validated");
++    settings.minimumComponentSeparation=.04;const auto split=validateSourceCageComponentClearance(wr,settings);provenance(split,wr,3);
++    require(split.facts().pairs[0].clearance.atLeastMinimum==true&&split.facts().pairs[1].clearance.atLeastMinimum==true&&split.facts().pairs[2].clearance.atLeastMinimum==false,"outer gaps pass, thin actual inter-cavity gap rejects");
++    require(split.facts().outcome==SourceCageComponentClearanceOutcome::Rejected&&!split.validatedClearance()&&split.facts().minimumPairIndex==2,"all-pair global minimum catches thin web");
++    std::cout<<"actual thin inter-cavity rejection checked; squared_gap="<<*split.facts().minimumSquaredDistanceExact<<std::endl;
++    settings.minimumComponentSeparation=.3;const auto early=validateSourceCageComponentClearance(wr,settings);
++    require(early.facts().pairs.size()==3&&early.facts().pairs[0].clearance.atLeastMinimum==false&&early.facts().pairs[2].clearance.completed&&early.facts().minimumPairIndex==2,"first-pair rejection still measures every later pair");
++    settings.minimumComponentSeparation=0.;const auto zero=validateSourceCageComponentClearance(wr,settings);require(zero.validatedClearance()&&zero.facts().contact==false,"zero threshold still measures all distinct gaps");
++    const auto ir=validateSourceCageMaterialRegions(binary(f,f.initialState(Eigen::VectorXd::Ones(f.betaCount()),.23)));
++    settings.minimumComponentSeparation=std::ldexp(281474976710655.,-51);const auto eq=validateSourceCageComponentClearance(ir,settings);
++    require(eq.validatedClearance()&&eq.facts().minimumSquaredDistanceExact==std::string("79228162514263774643590529025/5070602400912917605986812821504"),"literal exact identity threshold equality passes");
++    settings.minimumComponentSeparation=std::nextafter(settings.minimumComponentSeparation,std::numeric_limits<double>::infinity());
++    require(validateSourceCageComponentClearance(ir,settings).facts().outcome==SourceCageComponentClearanceOutcome::Rejected,"one ULP above literal exact gap rejects");
++    std::cout<<"literal exact equality/nextafter checked"<<std::endl;
++    SourceCageMaterialRegionsSettings rs;rs.minimumOuterWall=.2;const auto denied=validateSourceCageComponentClearance(validateSourceCageMaterialRegions(b,rs));
++    require(denied.facts().outcome==SourceCageComponentClearanceOutcome::NotAdmitted&&!denied.validatedClearance(),"rejected upstream cannot admit");auto copied=denied.facts();copied.outcome=SourceCageComponentClearanceOutcome::Validated;require(!denied.validatedClearance(),"copied facts cannot grant");
++    for(double t:{-1.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()}){settings.minimumComponentSeparation=t;rejects([&]{(void)validateSourceCageComponentClearance(r,settings);},"invalid threshold rejects");}
++    for(int field=0;field<7;++field)for(std::size_t cap:{std::size_t(0),std::size_t(1),SIZE_MAX}){settings={};std::size_t* caps[]={&settings.maximumComponents,&settings.maximumPoints,&settings.maximumTriangles,&settings.maximumPairs,&settings.maximumOwnedBytes,&settings.maximumExactDiagnosticBytes,&settings.maximumNefComplexity};*caps[field]=cap;
++        const auto limit=validateSourceCageComponentClearance(wr,settings);require(limit.facts().outcome==SourceCageComponentClearanceOutcome::ResourceLimit&&!limit.validatedClearance()&&limit.facts().state!="NOT_APPLICABLE","budgets/overflow cannot masquerade as N/A or success");}
++    const auto lifetime=[&]{const auto local=validateSourceCageMaterialRegions(binary(f,state(f,1.)));return validateSourceCageComponentClearance(local).validatedClearance();}();
++    const auto& actual=lifetime->regions()->binaryAudit().facts().worldIntegratedMoments;const auto& expected=b.facts().worldIntegratedMoments;
++    require(actual.size()==expected.size()&&std::memcmp(actual.data(),expected.data(),actual.size()*sizeof(double))==0,"original moment bytes survive originating audits");
++    const auto& spinActual=lifetime->regions()->binaryAudit().facts().spinIntegratedMoments;const auto& spinExpected=b.facts().spinIntegratedMoments;
++    require(spinActual.size()==spinExpected.size()&&std::memcmp(spinActual.data(),spinExpected.data(),spinActual.size()*sizeof(double))==0,"original spin moment bytes survive originating audits");
++    const auto& retainedMesh=lifetime->regions()->binaryMaterial()->materialBoundary();const auto& originalMesh=b.validatedMaterial()->materialBoundary();
++    require(retainedMesh.vertices.rows()==originalMesh.vertices.rows()&&retainedMesh.triangles.rows()==originalMesh.triangles.rows()&&
++        std::memcmp(retainedMesh.vertices.data(),originalMesh.vertices.data(),originalMesh.vertices.size()*sizeof(double))==0&&
++        std::memcmp(retainedMesh.triangles.data(),originalMesh.triangles.data(),originalMesh.triangles.size()*sizeof(int))==0,"original actual material mesh bytes retained unchanged");
++    auto movable=validateSourceCageComponentClearance(r);const auto kept=movable.validatedClearance();const auto moved=std::move(movable);require(kept&&moved.validatedClearance(),"immutable product move lifetime");rejects([&]{(void)movable.facts();},"moved-from missing authority rejects");
++    std::cout<<"KNOWN_SOLUTION_VALIDATION actual component clearance PASS; no full thickness or seal\n";return 0;
++}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
++#endif

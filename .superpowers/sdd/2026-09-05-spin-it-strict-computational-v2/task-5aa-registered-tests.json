@@ -1,0 +1,1846 @@
+{
+  "backtraceGraph" : 
+  {
+    "commands" : 
+    [
+      "add_test"
+    ],
+    "files" : 
+    [
+      "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/CMakeLists.txt"
+    ],
+    "nodes" : 
+    [
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 545,
+        "parent" : 0
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 548,
+        "parent" : 2
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 551,
+        "parent" : 4
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 554,
+        "parent" : 6
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 557,
+        "parent" : 8
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 560,
+        "parent" : 10
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 562,
+        "parent" : 12
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 564,
+        "parent" : 14
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 567,
+        "parent" : 16
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 570,
+        "parent" : 18
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 573,
+        "parent" : 20
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 576,
+        "parent" : 22
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 581,
+        "parent" : 24
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 584,
+        "parent" : 26
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 587,
+        "parent" : 28
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 591,
+        "parent" : 30
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 594,
+        "parent" : 32
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 599,
+        "parent" : 34
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 602,
+        "parent" : 36
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 606,
+        "parent" : 38
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 610,
+        "parent" : 40
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 613,
+        "parent" : 42
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 621,
+        "parent" : 44
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 625,
+        "parent" : 46
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 626,
+        "parent" : 48
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 630,
+        "parent" : 50
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 631,
+        "parent" : 52
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 636,
+        "parent" : 54
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 637,
+        "parent" : 56
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 654,
+        "parent" : 58
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 679,
+        "parent" : 60
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 694,
+        "parent" : 62
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 707,
+        "parent" : 64
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 729,
+        "parent" : 66
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 751,
+        "parent" : 68
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 763,
+        "parent" : 70
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 779,
+        "parent" : 72
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 801,
+        "parent" : 74
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 828,
+        "parent" : 76
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 850,
+        "parent" : 78
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 875,
+        "parent" : 80
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 900,
+        "parent" : 82
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 922,
+        "parent" : 84
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 945,
+        "parent" : 86
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 955,
+        "parent" : 88
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 967,
+        "parent" : 90
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1252,
+        "parent" : 92
+      },
+      {
+        "file" : 0
+      },
+      {
+        "command" : 0,
+        "file" : 0,
+        "line" : 1258,
+        "parent" : 94
+      }
+    ]
+  },
+  "kind" : "ctestInfo",
+  "tests" : 
+  [
+    {
+      "backtrace" : 1,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-component-clearance-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-component-clearance",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 3,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-material-regions-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-material-regions",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 5,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-binary-material-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-binary-material",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 7,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-adaptive-solver-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-adaptive-solver",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 9,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-adaptive-rebind-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-adaptive-rebind",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 11,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-guarded-slqp-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-guarded-slqp",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 13,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-guarded-slqp-regression",
+        "--allocation"
+      ],
+      "name" : "spin-it-2014-source-cage-guarded-slqp-allocation",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 15,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-guarded-slqp-regression",
+        "--move"
+      ],
+      "name" : "spin-it-2014-source-cage-guarded-slqp-move",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 17,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-geometry-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-geometry",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 19,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-slqp-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-slqp",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 21,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-shape-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-shape",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 23,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-paper-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-paper",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "RUN_SERIAL",
+          "value" : true
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 25,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-paper-allocation-probe"
+      ],
+      "name" : "spin-it-2014-source-cage-paper-allocation",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 27,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-moments-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-moments",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 29,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-conforming-boundary-regression"
+      ],
+      "name" : "spin-it-2014-source-conforming-boundary",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 31,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-binding-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-binding",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 33,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-bbw-joint-regression"
+      ],
+      "name" : "spin-it-2014-source-bbw-joint",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 35,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-bbw-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-bbw",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 37,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-fem-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-fem",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 39,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-cage-grid-regression"
+      ],
+      "name" : "spin-it-2014-source-cage-grid",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014",
+            "synthetic-regression"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 41,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-cage-regression"
+      ],
+      "name" : "spin-it-2014-source-surface-cage",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 43,
+      "command" : 
+      [
+        "/home/lin/anaconda3/bin/python3",
+        "-m",
+        "unittest",
+        "test_source_spin_material_bridge",
+        "-v"
+      ],
+      "name" : "source-spin-material-python",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "PYTHONPATH=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/python:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/python",
+            "LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/libstdc++.so.6"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "python",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 900.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 45,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-material-regression"
+      ],
+      "name" : "spin-it-2014-source-material",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 47,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-adaptive-regression"
+      ],
+      "name" : "spin-it-2014-source-adaptive",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 49,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-adaptive-regression",
+        "--geometry9"
+      ],
+      "name" : "spin-it-2014-source-adaptive-geometry9",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 51,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-octree-regression"
+      ],
+      "name" : "spin-it-2014-source-surface-octree",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 53,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-source-surface-octree-regression",
+        "--level9"
+      ],
+      "name" : "spin-it-2014-source-surface-octree-level9",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "exact-geometry",
+            "native",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 3600.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 55,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-value-regression"
+      ],
+      "name" : "spin-it-2014-surface-value",
+      "properties" : 
+      [
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 57,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-value-regression",
+        "--allocation"
+      ],
+      "name" : "spin-it-2014-surface-value-allocation",
+      "properties" : 
+      [
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 59,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-adaptive-domain-regression"
+      ],
+      "name" : "spin-it-2014-adaptive-domain",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 61,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-fill-functional-regression"
+      ],
+      "name" : "spin-it-2014-fill-functional",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 63,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-audited"
+      ],
+      "name" : "spin-it-2014-audited",
+      "properties" : 
+      [
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 65,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-slqp-regression"
+      ],
+      "name" : "spin-it-2014-slqp",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "regression",
+            "solver",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 67,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-end-to-end"
+      ],
+      "name" : "spin-it-2014-end-to-end",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "geometry",
+            "regression",
+            "solver",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 69,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-modes-regression"
+      ],
+      "name" : "spin-it-2014-modes",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "regression",
+            "solver",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 71,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-givens-regression"
+      ],
+      "name" : "spin-it-2014-givens",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 73,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-objectives-regression"
+      ],
+      "name" : "spin-it-2014-objectives",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "objective",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 75,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-resolution-ladder"
+      ],
+      "name" : "spin-it-2014-resolution-ladder",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "regression",
+            "resolution",
+            "solver",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 77,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-dual-material-regression"
+      ],
+      "name" : "spin-it-2014-dual-material",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "dual-material",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 79,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-api-regression"
+      ],
+      "name" : "spin-it-2014-api",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "api",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 81,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-surface-differential-regression"
+      ],
+      "name" : "spin-it-2014-surface-differential",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "deformation",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 83,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-cage-functional-regression"
+      ],
+      "name" : "spin-it-2014-cage-functional",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "deformation",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 85,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-cage-solver-regression"
+      ],
+      "name" : "spin-it-2014-cage-solver",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "deformation",
+            "regression",
+            "solver",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 87,
+      "command" : 
+      [
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/spin-it-2014-automatic-cage-regression"
+      ],
+      "name" : "spin-it-2014-automatic-cage",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "bbw",
+            "deformation",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 89,
+      "command" : 
+      [
+        "/home/lin/anaconda3/bin/python3",
+        "-m",
+        "unittest",
+        "test_spin_it_2014.SpinIt2014PythonTests",
+        "-v"
+      ],
+      "name" : "spin-it-2014-python",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "PYTHONPATH=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/python:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/python",
+            "LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/libstdc++.so.6"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "python",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 60.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 91,
+      "command" : 
+      [
+        "/home/lin/anaconda3/bin/python3",
+        "-m",
+        "unittest",
+        "test_spin_it_2014_paper_runner.SpinIt2014PaperRunnerNativeTests",
+        "-v"
+      ],
+      "name" : "spin-it-2014-paper-miniature",
+      "properties" : 
+      [
+        {
+          "name" : "ENVIRONMENT",
+          "value" : 
+          [
+            "PYTHONPATH=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909/python:/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/python",
+            "LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/13/../../../x86_64-linux-gnu/libstdc++.so.6"
+          ]
+        },
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "paper",
+            "python",
+            "regression",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 180.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 93,
+      "command" : 
+      [
+        "/usr/bin/cmake",
+        "-DMAKE_IT_STAND_DEPENDENCY_TEST_BINARY_ROOT=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909",
+        "-P",
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency.cmake"
+      ],
+      "name" : "spin-2014-dependency-contract",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "build-system",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    },
+    {
+      "backtrace" : 95,
+      "command" : 
+      [
+        "/usr/bin/cmake",
+        "-DTEST_BINARY_ROOT=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909",
+        "-DDEPENDENCY_SCRIPT=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency.cmake",
+        "-DALLOCATOR_HELPER=/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/allocate_retained_test_directory.cmake",
+        "-P",
+        "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/tests/cmake/assert_spin_it_2014_dependency_isolation.cmake"
+      ],
+      "name" : "spin-2014-dependency-isolation",
+      "properties" : 
+      [
+        {
+          "name" : "LABELS",
+          "value" : 
+          [
+            "build-system",
+            "spin-it",
+            "spin-it-2014"
+          ]
+        },
+        {
+          "name" : "TIMEOUT",
+          "value" : 240.0
+        },
+        {
+          "name" : "WORKING_DIRECTORY",
+          "value" : "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/build/task-5c-no-faster-20260909"
+        }
+      ]
+    }
+  ],
+  "version" : 
+  {
+    "major" : 1,
+    "minor" : 0
+  }
+}
