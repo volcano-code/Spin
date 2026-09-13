@@ -1,0 +1,8 @@
+[1/2] Building CXX object CMakeFiles/spin-it-2014-source-cage-binary-material-regression.dir/tests/spin_it_2014_source_cage_binary_material_regression.cpp.o
+[2/2] Linking CXX executable spin-it-2014-source-cage-binary-material-regression
+FAILED: [code=1] spin-it-2014-source-cage-binary-material-regression 
+: && /usr/bin/c++ -fPIC -O3 -DNDEBUG  CMakeFiles/spin-it-2014-source-cage-binary-material-regression.dir/tests/spin_it_2014_source_cage_binary_material_regression.cpp.o -o spin-it-2014-source-cage-binary-material-regression  libmake_it_stand_core.a  /home/lin/anaconda3/lib/libboost_system.a  /usr/lib/x86_64-linux-gnu/libgmp.so  /usr/lib/x86_64-linux-gnu/libmpfr.so  /home/lin/anaconda3/lib/libboost_thread.a  lib/libhighs.a  /usr/lib/x86_64-linux-gnu/libz.so && :
+/usr/bin/ld: libmake_it_stand_core.a(SourceCageBinaryMaterial.cpp.o): in function `spin2014::(anonymous namespace)::numerical(spin2014::SourceCagePaperFunctional const&, Eigen::Matrix<double, -1, 1, 0, -1, 1> const&, spin2014::SourceCageBinaryMesh const&, spin2014::SourceCagePaperEvaluation const&, spin2014::SourceCageBinaryMaterialFacts&)':
+SourceCageBinaryMaterial.cpp:(.text+0x6a99): undefined reference to `Eigen::MatrixBase<Eigen::Matrix<long double, 3, 1, 0, 3, 1> >::cross_product_return_type<Eigen::Matrix<long double, 3, 1, 0, 3, 1> >::type Eigen::MatrixBase<Eigen::Matrix<long double, 3, 1, 0, 3, 1> >::cross<Eigen::Matrix<long double, 3, 1, 0, 3, 1> >(Eigen::MatrixBase<Eigen::Matrix<long double, 3, 1, 0, 3, 1> > const&) const'
+collect2: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.

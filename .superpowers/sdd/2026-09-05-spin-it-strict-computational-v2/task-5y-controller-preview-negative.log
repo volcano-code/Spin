@@ -1,0 +1,17 @@
+REJECTED: changed_final_point
+REJECTED: reversed_final_triangle
+REJECTED: changed_handle
+REJECTED: changed_givens_angle
+REJECTED: wrong_cross_moment
+REJECTED: deleted_cavity_triangle
+REJECTED: wrong_half_tie
+REJECTED: fabricated_delta
+REJECTED: wrong_nondiagonal_inertia
+REJECTED: hidden_rounding_constraint
+REJECTED: changed_axis_origin
+REJECTED: handwritten_validated
+REJECTED: false_empty_cavity
+REJECTED: nonfinite_world
+REJECTED: relaxed_tolerance
+REJECTED: false_seal
+PASS: 16 actual-export corruptions rejected; not a general release gate

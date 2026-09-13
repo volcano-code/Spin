@@ -1,0 +1,4 @@
+[1/4] Building CXX object CMakeFiles/spin-it-2014-source-cage-binary-material-regression.dir/tests/spin_it_2014_source_cage_binary_material_regression.cpp.o
+[2/4] Building CXX object CMakeFiles/make_it_stand_core.dir/src/spin2014/SourceCageBinaryMaterial.cpp.o
+[3/4] Linking CXX static library libmake_it_stand_core.a
+[4/4] Linking CXX executable spin-it-2014-source-cage-binary-material-regression

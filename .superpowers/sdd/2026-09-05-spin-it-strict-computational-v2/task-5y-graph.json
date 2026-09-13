@@ -1,0 +1,42 @@
+{
+  "status": "ok",
+  "files_updated": 3,
+  "errors": [],
+  "stats": {
+    "status": "ok",
+    "summary": "Graph statistics for make-it-balance-paper-sim:\n  Files: 432\n  Total nodes: 5784\n  Total edges: 61860\n  Languages: bash, c, cpp, python\n  Last updated: 2026-09-13T14:28:11\n\nNodes by kind:\n  Class: 572\n  File: 432\n  Function: 4348\n  Test: 432\n\nEdges by kind:\n  CALLS: 48002\n  CONTAINS: 5375\n  IMPORTS_FROM: 3037\n  INHERITS: 86\n  REFERENCES: 171\n  TESTED_BY: 5189\n\nEmbeddings: 0 nodes embedded\n  (install sentence-transformers for semantic search)",
+    "total_nodes": 5784,
+    "total_edges": 61860,
+    "nodes_by_kind": {
+      "Class": 572,
+      "File": 432,
+      "Function": 4348,
+      "Test": 432
+    },
+    "edges_by_kind": {
+      "CALLS": 48002,
+      "CONTAINS": 5375,
+      "IMPORTS_FROM": 3037,
+      "INHERITS": 86,
+      "REFERENCES": 171,
+      "TESTED_BY": 5189
+    },
+    "languages": [
+      "bash",
+      "c",
+      "cpp",
+      "python"
+    ],
+    "files_count": 432,
+    "last_updated": "2026-09-13T14:28:11",
+    "embeddings_count": 0,
+    "_graph": {
+      "updated_at": "2026-09-13T14:28:11",
+      "age_seconds": 4,
+      "built_at_sha": "5acbfa8c02f452c11a568f52c4e6de7575d09008",
+      "built_on_branch": "spin-it-strict-computational-v2",
+      "head_sha": "5acbfa8c02f452c11a568f52c4e6de7575d09008",
+      "head_matches_build": true
+    }
+  }
+}
