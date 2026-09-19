@@ -103,7 +103,26 @@ def lineage_and_costs(job):
             record = dict(before=prior["final_partition"], after=cells, before_hash=prior["final_partition_hash"], after_hash=solve["final_partition_hash"],
                           hash_scheme="RECORDED_NATIVE_HASH", complete=True, stage=index + 1)
             row = analyze_transition(record, epsilon=epsilon, before_beta=prior["relaxed_fill"], after_beta=beta); row["stage"] = index + 1
-        row["cost_accounting"] = cost; row["repeated_lineage"] = "UNAVAILABLE_NO_AUTHENTICATED_OPERATION_LOG"; rows.append(row)
+        row["cost_accounting"] = cost
+        # Filled after all adjacent snapshot relations have been computed. It
+        # is deliberately not an execution ancestry: only coordinate-key
+        # overlap between two inferred net relations can be observed.
+        row["repeated_lineage"] = "UNAVAILABLE_NO_AUTHENTICATED_OPERATION_LOG"
+        rows.append(row)
+    for index, row in enumerate(rows):
+        if index < 2:
+            row["repeated_lineage"] = "UNAVAILABLE_NO_PRECEDING_AUTHENTICATED_TRANSITION"
+            continue
+        prior, current = rows[index - 1], row
+        def touched(value):
+            groups = (value["split"]["parent_to_children"], value["merge"]["parent_to_children"])
+            return {key for group in groups for parent, children in group.items() for key in (parent, *children)}
+        prior_keys, current_keys = touched(prior), touched(current)
+        if prior.get("transition_evidence") == "INFERRED_NET_PARTITION_CHANGE" and current.get("transition_evidence") == "INFERRED_NET_PARTITION_CHANGE":
+            row["repeated_lineage"] = dict(evidence="INFERRED_NET_RELATION_ONLY",
+                                           shared_coordinate_keys_with_prior_transition=sorted(prior_keys & current_keys),
+                                           operation_order="UNAVAILABLE",
+                                           interpretation="SAVED_SNAPSHOT_KEY_OVERLAP_NOT_EXECUTION_ANCESTRY")
     slowest = sorted(rows, key=lambda row: (-row["cost_accounting"]["native_call_seconds"], row["stage"]))[:2]
     return rows, [row["stage"] for row in slowest]
 
@@ -117,4 +136,11 @@ def diagnose(run, *, verify_traces=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__); parser.add_argument("run", nargs="?", type=Path, default=FROZEN); parser.add_argument("--skip-trace-verification", action="store_true")
-    args = parser.parse_args(); print(json.dumps(diagnose(args.run, verify_traces=not args.skip_trace_verification), indent=2, allow_nan=False))
+    parser.add_argument("--lineage-output", type=Path, help="write only the audit JSON; must remain in this diagnostic batch")
+    args = parser.parse_args(); value = diagnose(args.run, verify_traces=not args.skip_trace_verification)
+    if args.lineage_output:
+        output = args.lineage_output.resolve()
+        if output.parent != HERE:
+            raise ValueError("LINEAGE_OUTPUT_MUST_STAY_IN_DIAGNOSTIC_BATCH")
+        output.write_text(json.dumps(value, indent=2, allow_nan=False) + "\n")
+    print(json.dumps(value, indent=2, allow_nan=False))

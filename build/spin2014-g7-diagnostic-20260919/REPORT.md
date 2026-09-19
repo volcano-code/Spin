@@ -97,6 +97,31 @@ hashes, and the exact CMake recipe, is
 `SHA256SUMS`. It is a replay receipt only: neither it nor its stored command
 invokes a nonlinear optimizer.
 
+`lineage.json` is the corresponding machine-readable stage-1--19 audit. It
+contains every stage-12--19 inferred parent-to-children and children-to-parent
+coordinate relation, level/fractional counts, saved partition-cell geometry
+moment deltas, and recorded native duration. Cross-transition coordinate-key
+overlap is explicitly `INFERRED_NET_RELATION_ONLY` and is never interpreted as
+an operation history; absent initial/predecessor evidence is `UNAVAILABLE`.
+
+## Evidence-bounded conclusion
+
+1. The frozen evidence verifies source/checkpoint/trace integrity, 19 complete
+   boundaries, and small partition-cell-geometry deltas. It does **not** show
+   an authenticated implementation defect in those records, nor does it
+   provide material-moment, constraint-residual, or historical inner-timing
+   evidence needed to assess one.
+2. A split/merge-looking net relation or reappearance of a fractional cell is
+   insufficient to diagnose an algorithm defect: without an authenticated
+   transaction trace, it remains evidence-insufficient rather than an exact
+   split/merge or repeat-refinement history.
+3. In the fixed-QP replay only, candidate/certificate time is the largest
+   measured timing category and Schur/factor time is next. This is not a
+   whole-stage profile and cannot be extrapolated to the nonlinear solver.
+4. Any stage-2 work should begin with TDD and a controlled profile or
+   optimization of this evidence-supported fixed-QP hotspot only. It must not
+   alter thresholds or infer missing transition history.
+
 Independent fixed-QP KKT checks passed in every call. Stage 18: stationarity `9.75781955236954e-18`, equality `3.3589012114030475e-17`, and zero box/face/dual/complementarity errors. Stage 19: stationarity `1.9434323941802667e-17`, equality `1.070038358856759e-16`, and zero box/face/dual/complementarity errors. These do not establish nonlinear convergence, binary validity, geometry, physics, or paper reproduction.
 
 Timing-build sub-timers (repeat 0 / repeat 1, seconds) were:

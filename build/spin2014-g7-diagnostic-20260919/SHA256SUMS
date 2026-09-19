@@ -1,6 +1,7 @@
-a6b6f0ebb90d622e06d7fdca36c4e1c39031845dec7437f22f0ffb7b5b05bc13  diagnose.py
-31639df400aa7f01343aa5e83c20926d15d687a6f1ed8d7749e1556f02e73e12  REPORT.md
+22ead19a1aa1dd16e84ddf265817bb1681e02a4534e9fcd1f8afb74d4b3d5b2e  diagnose.py
+35b84ca437480a040e67787e5ac8fdae3c85e903a6a08221b05a241cb0737c04  REPORT.md
 07a0c6278cd7771608b61be96ba4532c5d369f083d54674d73ad5858b024da04  fixed-qp-replay-receipt.json
+cd23b844fc2e992494e080e413892576bd0dfd328105901d4b3e2a59677d9aa1  lineage.json
 5b244f359d2ef490ece74b14f28e0bb70d351238d71e75b23afb5056e4dc9e93  ../../experiments/teapot_spin2014/g7_transition_lineage.py
 f9ca1381155e3939707e1fcd58d271ae9965668aebf57c0403005cf86afc129f  ../../experiments/teapot_spin2014/test_g7_transition_lineage.py
-793f5a5129503eaac1e7fd7459e7d543696e0c79162d248e356028b9651e8349  ../../.superpowers/sdd/2026-09-19-spin2014-g7-diagnostic/task-1-report.md
+796a1c98d0152e6be7959299f711e22f90c9ce88b762935c3c747fc108b5578d  ../../.superpowers/sdd/2026-09-19-spin2014-g7-diagnostic/task-1-report.md
