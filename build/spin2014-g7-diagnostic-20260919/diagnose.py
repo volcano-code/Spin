@@ -95,7 +95,9 @@ def lineage_and_costs(job):
                        transition_evidence="UNAVAILABLE_INITIAL_BOUNDARY_NOT_SNAPSHOTTED", split=dict(parent_to_children={}, operation_order="UNAVAILABLE"),
                        merge=dict(parent_to_children={}, operation_order="UNAVAILABLE"),
                        fractional_counts_by_level=dict(input="UNAVAILABLE", output=fractional_counts_by_level(cells, beta, epsilon)),
-                       moment_conservation_delta="UNAVAILABLE_INITIAL_PARTITION_SNAPSHOT", historical_subtimers="UNAVAILABLE")
+                       moment_conservation_delta="UNAVAILABLE_INITIAL_PARTITION_SNAPSHOT",
+                       moment_conservation_quantity="PARTITION_CELL_GEOMETRY_ONLY_NOT_MATERIAL_OR_CONSTRAINT",
+                       historical_subtimers="UNAVAILABLE")
         else:
             prior = headers[index - 1]["solve"]
             record = dict(before=prior["final_partition"], after=cells, before_hash=prior["final_partition_hash"], after_hash=solve["final_partition_hash"],

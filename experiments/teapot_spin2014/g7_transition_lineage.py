@@ -187,7 +187,12 @@ def _inferred_operations(before: dict[str, dict[str, Any]], after: dict[str, dic
 
 
 def analyze_transition(record: dict[str, Any], *, epsilon: float, before_beta: list[float], after_beta: list[float]) -> dict[str, Any]:
-    """Audit one complete boundary without inventing unrecorded operation order."""
+    """Audit one complete boundary without inventing unrecorded operation order.
+
+    ``moment_conservation_delta`` is strictly the sum of the saved partition
+    cells' geometry moments.  It is not an assertion about material/carve
+    moments, optimizer terminal state, or constraint residuals.
+    """
     if not isinstance(record, dict):
         _fail("INVALID_STAGE_RECORD")
     if record.get("stage") == 20 or record.get("complete") is False:
@@ -216,6 +221,7 @@ def analyze_transition(record: dict[str, Any], *, epsilon: float, before_beta: l
         "fractional_counts_by_level": {"input": fractional_counts_by_level(before_cells, before_values, epsilon),
                                         "output": fractional_counts_by_level(after_cells, after_values, epsilon)},
         "moment_conservation_delta": delta,
+        "moment_conservation_quantity": "PARTITION_CELL_GEOMETRY_ONLY_NOT_MATERIAL_OR_CONSTRAINT",
         "historical_subtimers": "UNAVAILABLE",
     }
 

@@ -1,0 +1,77 @@
+{
+  "schema": "spin2014-g7-fixed-qp-replay-receipt-v1",
+  "scope": "FIXED_QP_ONLY_NO_NONLINEAR_OPTIMIZER",
+  "frozen_run": "build/spin2014-v2-g7-20260919",
+  "selection_policy": {
+    "completed_stages": "two largest recorded native_call_seconds; tie retains earlier stage",
+    "trace_qp": "stream every sealed record; choose attempted && checked maximum peak working faces; strict greater retains earliest tie"
+  },
+  "execution_limits": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "address_space_bytes": 25769803776,
+    "per_call_timeout_seconds": 180,
+    "nonlinear_optimizer": "NOT_INVOKED"
+  },
+  "build_provenance": {
+    "source_identity_verified_against_frozen_spec": true,
+    "source_files_sha256": {
+      "build/spin2014-wall-profile-20260918/replay.cpp": "adcb5e89612bfcde1a859263dbe98a1a59960b860b19a1664b71875414ff40fd",
+      "src/spin2014/SlqpTangentQp.cpp": "3f9412551e4c311d93fa86d8a16eb8b9f025f7cd3935885a6a133e03018c0d56",
+      "src/spin2014/SlqpIterationStore.cpp": "31c3ad4fc8a67919ae2b1ce81285365ce8b12e7a9dc13f1a72252569b9b2a90d",
+      "src/spin2014/SlqpLbfgsSolver.cpp": "74144a5851fb587e82287229cf08ff0c45db0108722d1e70f9495a9c45b445c5",
+      "src/spin2014/SlqpAuditJson.cpp": "6da7b8904bd53bf4a191026973af1eeb4c69cbe0fab99681497c9e8ace1e3b07",
+      "build/spin2014-schur-g7-20260918/native/libmake_it_stand_core.a": "e7a99034026c14f7c24d7580b2dc96584d7fbadad081f543b8d75e2a6e050d3a",
+      "build/spin2014-schur-g7-20260918/native/lib/libhighs.a": "323bb3bdd8d2dee87feb814abd07f99b4570c5b4d330f4bbb041dd662f736117"
+    },
+    "temporary_build": {
+      "location": "/tmp/g7_replay_build (not a frozen experiment artifact)",
+      "baseline_binary_sha256": "b20b29ce956ea86950921333ee4092c36354f5e924694e20888acd27d479e328",
+      "timing_binary_sha256": "4777b149cb09059bd694b6471f0b9b03dfefd70bc3728d8920e686cd5f569aba",
+      "timing_copy_of_SlqpTangentQp_cpp_sha256": "f67bcaf33395a71448975bfdfd49567fc498358c18a92151bba4f89851f02dcf",
+      "cmake_lists_sha256": "6177b7a24ff33dd9b67d3bab016e4e306be171128072f764f1cc930134735c7f",
+      "cmake_command": "cmake -S /tmp/g7_replay_cmake -B /tmp/g7_replay_build -DCMAKE_BUILD_TYPE=Release && cmake --build /tmp/g7_replay_build -j1",
+      "cmake_lists": "cmake_minimum_required(VERSION 3.21)\\nproject(g7_frozen_fixed_qp LANGUAGES CXX)\\nset(ROOT \\\"/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim\\\")\\nset(CMAKE_CXX_STANDARD 17)\\nset(CMAKE_CXX_FLAGS \\\"-O3 -DNDEBUG -fPIC -frounding-math\\\")\\ninclude_directories(\\\"${ROOT}/include\\\" \\\"${ROOT}/src/spin2014\\\" \\\"${ROOT}/libigl/external/eigen\\\")\\nadd_library(common OBJECT \\\"${ROOT}/src/spin2014/SlqpLbfgsSolver.cpp\\\" \\\"${ROOT}/src/spin2014/SlqpAuditJson.cpp\\\")\\nadd_executable(g7_fixed_qp_replay \\\"${ROOT}/build/spin2014-wall-profile-20260918/replay.cpp\\\" \\\"${ROOT}/src/spin2014/SlqpTangentQp.cpp\\\" $<TARGET_OBJECTS:common>)\\ntarget_link_libraries(g7_fixed_qp_replay PRIVATE \\\"${ROOT}/build/spin2014-schur-g7-20260918/native/libmake_it_stand_core.a\\\" \\\"${ROOT}/build/spin2014-schur-g7-20260918/native/lib/libhighs.a\\\" gmp mpfr z)\\nadd_executable(g7_timing_qp_replay \\\"${ROOT}/build/spin2014-wall-profile-20260918/replay.cpp\\\" \\\"${CMAKE_CURRENT_SOURCE_DIR}/g7_timing_qp.cpp\\\" $<TARGET_OBJECTS:common>)\\ntarget_link_libraries(g7_timing_qp_replay PRIVATE \\\"${ROOT}/build/spin2014-schur-g7-20260918/native/libmake_it_stand_core.a\\\" \\\"${ROOT}/build/spin2014-schur-g7-20260918/native/lib/libhighs.a\\\" gmp mpfr z)\\n"
+    },
+    "timing_instrumentation": "A temporary copy of the hash-bound Tangent QP source added only monotonic timing probes. Its science JSON is required equal to baseline before accepting a timing result."
+  },
+  "calls": [
+    {
+      "stage": 18, "attempt": 17, "trace_sha256": "547e63bf783864cb6390311a6cc19a3fa49dc7a394410bba6affa2ad17a2061f", "selected_iteration": 279, "records": 392, "peak_working_faces": 412, "bounded_variables": 20728, "mode": "baseline", "repeat": 0,
+      "command": ["/tmp/g7_replay_build/g7_fixed_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000017/payload/trace/pass-000017.slqptrace", "20728", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.424543661, "qp_seconds": 0.714621019, "timing_subseconds": "UNINSTRUMENTED_BASELINE", "science_sha256": "8dce31e9b0b640784352ad8856cdb23015adf35d64bed452b98572eb01a8a5f1", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 9.75781955236954e-18, "equality_error": 3.3589012114030475e-17, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    },
+    {
+      "stage": 18, "attempt": 17, "trace_sha256": "547e63bf783864cb6390311a6cc19a3fa49dc7a394410bba6affa2ad17a2061f", "selected_iteration": 279, "records": 392, "peak_working_faces": 412, "bounded_variables": 20728, "mode": "baseline", "repeat": 1,
+      "command": ["/tmp/g7_replay_build/g7_fixed_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000017/payload/trace/pass-000017.slqptrace", "20728", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.43852529, "qp_seconds": 0.706871713, "timing_subseconds": "UNINSTRUMENTED_BASELINE", "science_sha256": "8dce31e9b0b640784352ad8856cdb23015adf35d64bed452b98572eb01a8a5f1", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 9.75781955236954e-18, "equality_error": 3.3589012114030475e-17, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    },
+    {
+      "stage": 18, "attempt": 17, "trace_sha256": "547e63bf783864cb6390311a6cc19a3fa49dc7a394410bba6affa2ad17a2061f", "selected_iteration": 279, "records": 392, "peak_working_faces": 412, "bounded_variables": 20728, "mode": "timing", "repeat": 0,
+      "command": ["/tmp/g7_replay_build/g7_timing_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000017/payload/trace/pass-000017.slqptrace", "20728", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.448617734, "qp_seconds": 0.702761764, "timing_subseconds": {"setup_phase": 0.0, "rhs": 0.000211289, "metric_columns": 0.024693549, "schur_factor": 0.19029248, "candidate_certificate": 0.429328378, "other": 0.058187556}, "science_sha256": "8dce31e9b0b640784352ad8856cdb23015adf35d64bed452b98572eb01a8a5f1", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 9.75781955236954e-18, "equality_error": 3.3589012114030475e-17, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    },
+    {
+      "stage": 18, "attempt": 17, "trace_sha256": "547e63bf783864cb6390311a6cc19a3fa49dc7a394410bba6affa2ad17a2061f", "selected_iteration": 279, "records": 392, "peak_working_faces": 412, "bounded_variables": 20728, "mode": "timing", "repeat": 1,
+      "command": ["/tmp/g7_replay_build/g7_timing_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000017/payload/trace/pass-000017.slqptrace", "20728", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.462142171, "qp_seconds": 0.705225489, "timing_subseconds": {"setup_phase": 0.0, "rhs": 0.000207821, "metric_columns": 0.024651344, "schur_factor": 0.194062388, "candidate_certificate": 0.428294209, "other": 0.057961475}, "science_sha256": "8dce31e9b0b640784352ad8856cdb23015adf35d64bed452b98572eb01a8a5f1", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 9.75781955236954e-18, "equality_error": 3.3589012114030475e-17, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    },
+    {
+      "stage": 19, "attempt": 18, "trace_sha256": "e47575bf00590e9c0968d08d0cf0a8b702ee7d984dd593b950191a52db5bbe65", "selected_iteration": 351, "records": 381, "peak_working_faces": 414, "bounded_variables": 21226, "mode": "baseline", "repeat": 0,
+      "command": ["/tmp/g7_replay_build/g7_fixed_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000018/payload/trace/pass-000018.slqptrace", "21226", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.36449404, "qp_seconds": 0.797605244, "timing_subseconds": "UNINSTRUMENTED_BASELINE", "science_sha256": "6cd012c13272ad665856a3e3400bc1dcc320a82b4c993806c58f9cf246a8f49b", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 1.9434323941802667e-17, "equality_error": 1.070038358856759e-16, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    },
+    {
+      "stage": 19, "attempt": 18, "trace_sha256": "e47575bf00590e9c0968d08d0cf0a8b702ee7d984dd593b950191a52db5bbe65", "selected_iteration": 351, "records": 381, "peak_working_faces": 414, "bounded_variables": 21226, "mode": "baseline", "repeat": 1,
+      "command": ["/tmp/g7_replay_build/g7_fixed_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000018/payload/trace/pass-000018.slqptrace", "21226", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.374668747, "qp_seconds": 0.796057477, "timing_subseconds": "UNINSTRUMENTED_BASELINE", "science_sha256": "6cd012c13272ad665856a3e3400bc1dcc320a82b4c993806c58f9cf246a8f49b", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 1.9434323941802667e-17, "equality_error": 1.070038358856759e-16, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    },
+    {
+      "stage": 19, "attempt": 18, "trace_sha256": "e47575bf00590e9c0968d08d0cf0a8b702ee7d984dd593b950191a52db5bbe65", "selected_iteration": 351, "records": 381, "peak_working_faces": 414, "bounded_variables": 21226, "mode": "timing", "repeat": 0,
+      "command": ["/tmp/g7_replay_build/g7_timing_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000018/payload/trace/pass-000018.slqptrace", "21226", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.408914177, "qp_seconds": 0.795720046, "timing_subseconds": {"setup_phase": 0.0, "rhs": 0.000228784, "metric_columns": 0.05858084, "schur_factor": 0.194925961, "candidate_certificate": 0.483256906, "other": 0.058674303}, "science_sha256": "6cd012c13272ad665856a3e3400bc1dcc320a82b4c993806c58f9cf246a8f49b", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 1.9434323941802667e-17, "equality_error": 1.070038358856759e-16, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    },
+    {
+      "stage": 19, "attempt": 18, "trace_sha256": "e47575bf00590e9c0968d08d0cf0a8b702ee7d984dd593b950191a52db5bbe65", "selected_iteration": 351, "records": 381, "peak_working_faces": 414, "bounded_variables": 21226, "mode": "timing", "repeat": 1,
+      "command": ["/tmp/g7_replay_build/g7_timing_qp_replay", "build/spin2014-v2-g7-20260919/repeat-0/payload/attempts/attempt-00000018/payload/trace/pass-000018.slqptrace", "21226", "8", "-1", "1028"], "returncode": 0, "read_seconds": 2.386919622, "qp_seconds": 0.800555565, "timing_subseconds": {"setup_phase": 0.0, "rhs": 0.000215786, "metric_columns": 0.058749946, "schur_factor": 0.195517898, "candidate_certificate": 0.487500188, "other": 0.058523344}, "science_sha256": "6cd012c13272ad665856a3e3400bc1dcc320a82b4c993806c58f9cf246a8f49b", "independent_kkt": {"status": "FIXED_QP_FIRST_ORDER_VERIFIED", "stationarity": 1.9434323941802667e-17, "equality_error": 1.070038358856759e-16, "box_error": 0.0, "face_error": 0.0, "dual_error": 0.0, "complementarity": 0.0, "nonlinear_convergence": "NOT_CHECKED"}
+    }
+  ],
+  "science_equality": {
+    "stage_18": "all baseline/timing and both repeats equal after removing read_seconds and qp_seconds",
+    "stage_19": "all baseline/timing and both repeats equal after removing read_seconds and qp_seconds"
+  }
+}

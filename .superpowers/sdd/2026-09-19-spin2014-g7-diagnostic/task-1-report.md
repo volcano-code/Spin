@@ -26,3 +26,16 @@ The two slowest completed stages (19 then 18) were selected mechanically from re
 After verifying the G7 frozen source hashes against the current compile sources, the original fixed-QP implementation and an instrumentation-only timing build each ran twice per selected stage: eight calls total, single-threaded, 24 GiB address-space cap, and 180-second per-call cap. Each output was science-equal within its stage across both modes and repeats; independent first-order QP KKT checks passed. The full evidence and sub-timers are in `build/spin2014-g7-diagnostic-20260919/REPORT.md`.
 
 No fixed-QP timing was represented as whole-stage timing or a nonlinear speedup.
+
+## Postflight evidence packaging
+
+The diagnostic batch also contains `fixed-qp-replay-receipt.json`: the
+machine-readable eight-call receipt has complete trace hashes, selections,
+commands, measured times/subtimers, science hashes, independent KKT values,
+and the temporary build recipe and hashes. The readable report now includes
+all 19 authenticated native timing values and a stage 12--19 saved-final-
+snapshot lineage table. The latter explicitly labels every split/merge count
+as inferred net state only and leaves residual changes and transaction order
+unavailable where the frozen evidence did not persist them. Its ten-moment
+delta is explicitly partition-cell geometry only, not a material/carve moment
+or constraint-conservation assertion.
