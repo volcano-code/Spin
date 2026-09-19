@@ -25,8 +25,10 @@ def children(parent, *, mass=0.125):
             for dx in range(2) for dy in range(2) for dz in range(2)]
 
 
-def exact(before, after, split=None, merge=None):
+def exact(before, after, split=None, merge=None, *, stage=1, complete=True):
     return {
+        "stage": stage,
+        "complete": complete,
         "before": before,
         "after": after,
         "before_hash": partition_hash(before),
@@ -61,9 +63,12 @@ def test_equal_binary_siblings_merge_and_repeated_ancestry_are_recorded():
                                              "children": [f"2:{c['coordinates'][0]},{c['coordinates'][1]},{c['coordinates'][2]}"
                                                           for c in leaves]}])
     merge = exact(leaves, [parent], merge=[{"children": [f"2:{c['coordinates'][0]},{c['coordinates'][1]},{c['coordinates'][2]}"
-                                                           for c in leaves], "parent": "1:0,0,0"}])
+                                                           for c in leaves], "parent": "1:0,0,0"}], stage=2)
     result = analyze_sequence([(split, [1.0], [1.0] * 8), (merge, [1.0] * 8, [1.0])], epsilon=0.05)
-    assert result[1]["repeated_lineage"] == [{"cell": "1:0,0,0", "events": ["SPLIT", "MERGE"]}]
+    assert result[1]["repeated_lineage"] == [{"cell": "1:0,0,0", "events": [
+        {"event": "SPLIT", "evidence": "EXACT_TRANSACTION_EVIDENCE"},
+        {"event": "MERGE", "evidence": "EXACT_TRANSACTION_EVIDENCE"},
+    ]}]
 
 
 @pytest.mark.parametrize("mutator", [
@@ -90,9 +95,30 @@ def test_unrecorded_partition_difference_is_inferred_not_exact_and_history_is_un
     assert result["historical_subtimers"] == "UNAVAILABLE"
 
 
-def test_rejects_stage_twenty_or_partial_evidence():
+@pytest.mark.parametrize("stage, complete, remove", [
+    (None, True, "stage"),
+    (True, True, None),
+    (0, True, None),
+    (20, True, None),
+    (21, True, None),
+    (1, False, None),
+    (1, None, "complete"),
+])
+def test_rejects_missing_or_out_of_scope_stage_metadata(stage, complete, remove):
     record = exact([cell(0, (0, 0, 0))], [cell(0, (0, 0, 0))])
-    record["stage"] = 20
-    record["complete"] = False
+    if remove:
+        record.pop(remove)
+    else:
+        record["stage"] = stage
+        record["complete"] = complete
     with pytest.raises(LineageError, match="STAGE_OUT_OF_SCOPE_OR_PARTIAL"):
+        analyze_transition(record, epsilon=0.05, before_beta=[0.5], after_beta=[0.5])
+
+
+def test_rejects_syntactically_valid_unverified_native_hash_scheme():
+    record = exact([cell(0, (0, 0, 0))], [cell(0, (0, 0, 0))])
+    record["hash_scheme"] = "RECORDED_NATIVE_HASH"
+    record["before_hash"] = "a" * 64
+    record["after_hash"] = "b" * 64
+    with pytest.raises(LineageError, match="UNVERIFIED_NATIVE_HASH_SCHEME"):
         analyze_transition(record, epsilon=0.05, before_beta=[0.5], after_beta=[0.5])

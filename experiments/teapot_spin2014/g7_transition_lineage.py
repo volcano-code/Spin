@@ -94,7 +94,10 @@ def _validate_identity(record: dict[str, Any], field: str, cells: list[dict[str,
             _fail("MISMATCHED_PARTITION_HASH")
         verification = "RECOMPUTED_CANONICAL_SHA256"
     elif scheme == "RECORDED_NATIVE_HASH":
-        verification = "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        # A caller-provided native-looking digest has no binding to the
+        # supplied snapshot in this pure-Python auditor.  Native receipt
+        # values belong in controller provenance, never as an identity proof.
+        _fail("UNVERIFIED_NATIVE_HASH_SCHEME")
     else:
         _fail("UNKNOWN_PARTITION_HASH_SCHEME")
     return {"recorded_hash": digest, "canonical_audit_hash": canonical,
@@ -195,7 +198,9 @@ def analyze_transition(record: dict[str, Any], *, epsilon: float, before_beta: l
     """
     if not isinstance(record, dict):
         _fail("INVALID_STAGE_RECORD")
-    if record.get("stage") == 20 or record.get("complete") is False:
+    stage_number = record.get("stage")
+    if (type(stage_number) is not int or not 1 <= stage_number <= 19 or
+            record.get("complete") is not True):
         _fail("STAGE_OUT_OF_SCOPE_OR_PARTIAL")
     before_cells = record.get("before")
     after_cells = record.get("after")
@@ -229,17 +234,20 @@ def analyze_transition(record: dict[str, Any], *, epsilon: float, before_beta: l
 def analyze_sequence(rows: list[tuple[dict[str, Any], list[float], list[float]]], *, epsilon: float) -> list[dict[str, Any]]:
     """Audit ordered transitions and surface cells refined then coarsened again."""
     result = []
-    events: dict[str, list[str]] = defaultdict(list)
+    events: dict[str, list[dict[str, str]]] = defaultdict(list)
     for record, before_beta, after_beta in rows:
         stage = analyze_transition(record, epsilon=epsilon, before_beta=before_beta, after_beta=after_beta)
+        event_evidence = ("EXACT_TRANSACTION_EVIDENCE" if
+                          stage["transition_evidence"] == "EXACT_RECORDED" else
+                          "INFERRED_NET_RELATION_ONLY")
         for key in stage["split"]["parent_to_children"]:
-            events[key].append("SPLIT")
+            events[key].append({"event": "SPLIT", "evidence": event_evidence})
         for key in stage["merge"]["parent_to_children"]:
-            events[key].append("MERGE")
+            events[key].append({"event": "MERGE", "evidence": event_evidence})
         stage["repeated_lineage"] = []
         result.append(stage)
     repeated = [{"cell": key, "events": value} for key, value in sorted(events.items())
-                if "SPLIT" in value and "MERGE" in value]
+                if {event["event"] for event in value} >= {"SPLIT", "MERGE"}]
     if result:
         result[-1]["repeated_lineage"] = repeated
     return result

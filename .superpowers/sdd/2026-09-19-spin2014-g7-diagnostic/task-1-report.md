@@ -4,7 +4,12 @@
 
 Created `experiments/teapot_spin2014/test_g7_transition_lineage.py` before the implementation. Its first focused run failed during collection with `ModuleNotFoundError: No module named 'g7_transition_lineage'`, which is the expected missing-feature failure.
 
-The tests cover inclusive fractional classification at both source boundaries, exact eight-child split and equal-binary sibling merge, ten-moment conservation, repeated split/merge ancestry, malformed keys, duplicate cells, hash mismatch, non-finite moments, conservation failure, stage-20 partial evidence, and the required exact/inferred/unavailable distinction.
+The tests cover inclusive fractional classification at both source boundaries, exact eight-child split and equal-binary sibling merge, ten-moment conservation, repeated split/merge ancestry, malformed keys, duplicate cells, hash mismatch, non-finite moments, conservation failure, strict stage/complete metadata (including missing, boolean, 0, 20, and 21), rejection of an unverified native-looking hash, and the required exact/inferred/unavailable distinction.
+
+The reviewer-fix RED run had the intended seven failures: permissive missing/
+out-of-range stage metadata, unverified native-looking hashes, and repeated
+events without evidence metadata. After the narrow fail-closed implementation,
+the focused suite passed `17 passed in 0.01s`.
 
 ## GREEN
 
@@ -17,7 +22,7 @@ python -m pytest -q -p no:cacheprovider experiments/teapot_spin2014/test_g7_tran
 10 passed in 0.02s
 ```
 
-The controller also rehashed the frozen source identity, validated all 19 checkpoint boundaries through the read-only v2 path, and streamed all 19 sealed native traces. It excluded the stage-20 partial attempt. `python -m py_compile` succeeded for both new Python modules.
+The controller also rehashed the frozen source identity, validated all 19 checkpoint boundaries through the read-only v2 path, and streamed all 19 sealed native traces. It excluded the stage-20 partial attempt. Snapshot identity is now the recomputed canonical audit SHA-256; the frozen native digest is output only as a checkpoint provenance reference. `python -m py_compile` succeeded for both new Python modules using a temporary bytecode cache.
 
 ## Fixed-QP replay
 

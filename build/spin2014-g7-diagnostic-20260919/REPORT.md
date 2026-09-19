@@ -10,9 +10,15 @@ This is a read-only diagnostic of `build/spin2014-v2-g7-20260919`. It did not ru
 - Complete traces: all 19 sealed SLQP files were streamed through the frozen native reader and reported `ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED`; their record counts run from 10 (stage 1) to 381 (stage 19).
 - Stage 20 has no completed-attempt receipt and is not a stage result.
 
+The later narrow guard-fix regeneration of `lineage.json` deliberately used
+`--skip-trace-verification`: it only recomputed source/checkpoint/snapshot
+identity and labels that JSON field `NOT_VERIFIED_BY_REQUEST`. It did not
+invalidate or replace the earlier sealed-trace verification above, and did not
+reopen a trace, replay, or optimizer.
+
 The analyzer records the stage-1 input only as an authenticated source hash because no initial partition snapshot was persisted. For stages 2--19 it validates the saved input/output snapshots, inclusive `epsilon <= beta <= 1-epsilon` fractional counts, and ten-moment **partition-cell geometry** deltas. The largest absolute stage-19 cell-geometry moment delta is `6.437450399132683e-20`. These are sums of the `moments` carried by the partition cells, not carve/material moments, relaxed-solution moments, or constraint residuals.
 
-The carrier has no authenticated split/merge transaction log. Parent/child relationships derived from adjacent snapshots are therefore `INFERRED_NET_PARTITION_CHANGE`; every operation order and repeated refinement/coarsening history is `UNAVAILABLE`. Nothing in this report treats the inferred relation as an exact execution sequence.
+The carrier has no authenticated split/merge transaction log. Parent/child relationships derived from adjacent snapshots are therefore `INFERRED_NET_PARTITION_CHANGE`; every operation order and repeated refinement/coarsening history is `UNAVAILABLE`. Nothing in this report treats the inferred relation as an exact execution sequence. For stages 2--19, the analyzer independently recomputes a canonical audit SHA-256 from each supplied snapshot. Native checkpoint hash strings are retained only as provenance references, never accepted as a caller-supplied snapshot identity proof.
 
 ## Historical timing classification
 

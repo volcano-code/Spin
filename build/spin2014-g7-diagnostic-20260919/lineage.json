@@ -5,141 +5,7 @@
   "outer_job_receipts": "VERIFIED",
   "source_identity": "VERIFIED",
   "checkpoint_boundaries": "VERIFIED_19",
-  "complete_slqp_traces": [
-    {
-      "stage": 1,
-      "trace_sha256": "fffa7d2eb6cca1417800501a858cff2dd9f0a15b94af114704d7bf3d9c14f696",
-      "records": 10,
-      "final_iteration": 9,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 2,
-      "trace_sha256": "cda5f892b556ddd7c36f7a86550f5ef3a41897c1f9d047f03e0dcd65d0555695",
-      "records": 9,
-      "final_iteration": 8,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 3,
-      "trace_sha256": "0facc45b9fe0ce93b01e2ee2114ff6a8255725b3df1f3821d7001231c4d57bfa",
-      "records": 11,
-      "final_iteration": 10,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 4,
-      "trace_sha256": "71f6520531237dbdc41886238bafbbc1fbe5b2c6a1e829f7d1dc0adc95bc7d81",
-      "records": 22,
-      "final_iteration": 21,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 5,
-      "trace_sha256": "a53c28d3b024ec316a48cef5ca97c12264906447c3dc4e5abd643511aef9a080",
-      "records": 98,
-      "final_iteration": 97,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 6,
-      "trace_sha256": "9d95ce842f09ce9e3caad38ae292f9ca2d2cb819167475acdf3cd88bf30b5498",
-      "records": 105,
-      "final_iteration": 104,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 7,
-      "trace_sha256": "7fe143a17811fce10ea78b562a71eb18e8b1d55a7958e16a3b157556f826fb89",
-      "records": 165,
-      "final_iteration": 164,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 8,
-      "trace_sha256": "5a980bed6dff4e22c4951fc408fd5804b6019150e93064e233afcdde0217d851",
-      "records": 94,
-      "final_iteration": 93,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 9,
-      "trace_sha256": "1cf2508b2c969b87e7e4706fd29c664bca69c310dc142e3ffc175aca6b901460",
-      "records": 80,
-      "final_iteration": 79,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 10,
-      "trace_sha256": "c119de4605a792c0ca46b277a18e651e02e324536c505136f53aaee2c6d63d87",
-      "records": 170,
-      "final_iteration": 169,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 11,
-      "trace_sha256": "3778336b6c23dde2c7c21d18c2542f215eb93fedac13aefbc942e41cd7257448",
-      "records": 175,
-      "final_iteration": 174,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 12,
-      "trace_sha256": "e79cc77ce444bdc7dfc845fb5e2a03d84189aae10274b309dabc5f61f1300cba",
-      "records": 308,
-      "final_iteration": 307,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 13,
-      "trace_sha256": "a856d39e6196f7a60de394afb6410ee63bbacf83ebecc425dbb0adb2ed445a26",
-      "records": 208,
-      "final_iteration": 207,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 14,
-      "trace_sha256": "e0074deb1241edbc37893bbe2f7a8388369c07157792afd211fa75a96c9d3c50",
-      "records": 327,
-      "final_iteration": 326,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 15,
-      "trace_sha256": "5476b79935bd6e16ae8e0a17358326851d3459916f90d0a1e24d26aa7a0607a2",
-      "records": 305,
-      "final_iteration": 304,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 16,
-      "trace_sha256": "f8bf63dd00dc1c0382b18edbd14305081756a675088a4006256b233b32ba8ca9",
-      "records": 338,
-      "final_iteration": 337,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 17,
-      "trace_sha256": "e603a8383a5b055979b0640cc3122b8598e1a0407be9453d074caf435aac3245",
-      "records": 286,
-      "final_iteration": 285,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 18,
-      "trace_sha256": "547e63bf783864cb6390311a6cc19a3fa49dc7a394410bba6affa2ad17a2061f",
-      "records": 392,
-      "final_iteration": 391,
-      "terminal_qp": "NOT_ATTEMPTED"
-    },
-    {
-      "stage": 19,
-      "trace_sha256": "e47575bf00590e9c0968d08d0cf0a8b702ee7d984dd593b950191a52db5bbe65",
-      "records": 381,
-      "final_iteration": 380,
-      "terminal_qp": "NOT_ATTEMPTED"
-    }
-  ],
+  "complete_slqp_traces": "NOT_VERIFIED_BY_REQUEST",
   "excluded_partial_stage": 20,
   "whole_job_seconds": 3600.33445775,
   "mechanically_selected_slowest_stages": [
@@ -154,12 +20,12 @@
     {
       "stage": 1,
       "input_partition": {
-        "recorded_hash": "e5803e7873b5aaa6f520a9b37f7b340abcc56b006907fffddf7b7b3b516ea357",
+        "native_record_hash_reference": "e5803e7873b5aaa6f520a9b37f7b340abcc56b006907fffddf7b7b3b516ea357",
         "verification": "AUTHENTICATED_SOURCE_IDENTITY_INITIAL_PARTITION_SNAPSHOT_UNAVAILABLE"
       },
       "output_partition": {
-        "recorded_hash": "4174a72ae242044468d55680c97fc659ca6c4378530e74344a42f4b8bfb79a68",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "native_record_hash_reference": "4174a72ae242044468d55680c97fc659ca6c4378530e74344a42f4b8bfb79a68",
+        "verification": "NATIVE_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "UNAVAILABLE_INITIAL_BOUNDARY_NOT_SNAPSHOTTED",
       "split": {
@@ -202,14 +68,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "4174a72ae242044468d55680c97fc659ca6c4378530e74344a42f4b8bfb79a68",
+        "recorded_hash": "2116164f6feec29047c205616eb950777c653c6fcd644dc478dc53d9eab23f4b",
         "canonical_audit_hash": "2116164f6feec29047c205616eb950777c653c6fcd644dc478dc53d9eab23f4b",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "4174a72ae242044468d55680c97fc659ca6c4378530e74344a42f4b8bfb79a68",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "7a636cb255addc01889de32703a40958cf5ec7f115d952c9a037bd8f5fb547f0",
+        "recorded_hash": "a74e74ac7307a97cf8e4df947e3b23fb145226c2beeb2f054a54888735c37466",
         "canonical_audit_hash": "a74e74ac7307a97cf8e4df947e3b23fb145226c2beeb2f054a54888735c37466",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "7a636cb255addc01889de32703a40958cf5ec7f115d952c9a037bd8f5fb547f0",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -318,14 +188,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "7a636cb255addc01889de32703a40958cf5ec7f115d952c9a037bd8f5fb547f0",
+        "recorded_hash": "a74e74ac7307a97cf8e4df947e3b23fb145226c2beeb2f054a54888735c37466",
         "canonical_audit_hash": "a74e74ac7307a97cf8e4df947e3b23fb145226c2beeb2f054a54888735c37466",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "7a636cb255addc01889de32703a40958cf5ec7f115d952c9a037bd8f5fb547f0",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "220d0db7befdcbb5432f1d86b61a418e4faa84830645049cf43cecc4c164b1f3",
+        "recorded_hash": "c4700c402fc5fd1540fcaf12586eddca6412690c51561c759d32213b4ef10a19",
         "canonical_audit_hash": "c4700c402fc5fd1540fcaf12586eddca6412690c51561c759d32213b4ef10a19",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "220d0db7befdcbb5432f1d86b61a418e4faa84830645049cf43cecc4c164b1f3",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -646,14 +520,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "220d0db7befdcbb5432f1d86b61a418e4faa84830645049cf43cecc4c164b1f3",
+        "recorded_hash": "c4700c402fc5fd1540fcaf12586eddca6412690c51561c759d32213b4ef10a19",
         "canonical_audit_hash": "c4700c402fc5fd1540fcaf12586eddca6412690c51561c759d32213b4ef10a19",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "220d0db7befdcbb5432f1d86b61a418e4faa84830645049cf43cecc4c164b1f3",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "05092bac6425debf662d793e0a185f127d939579e38a49e55dc5a6f74ec83b78",
+        "recorded_hash": "c8888adff3fb3a986c484f8e167047eec17dd4e32499c71910f3a67f97c63b1a",
         "canonical_audit_hash": "c8888adff3fb3a986c484f8e167047eec17dd4e32499c71910f3a67f97c63b1a",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "05092bac6425debf662d793e0a185f127d939579e38a49e55dc5a6f74ec83b78",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -2682,14 +2560,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "05092bac6425debf662d793e0a185f127d939579e38a49e55dc5a6f74ec83b78",
+        "recorded_hash": "c8888adff3fb3a986c484f8e167047eec17dd4e32499c71910f3a67f97c63b1a",
         "canonical_audit_hash": "c8888adff3fb3a986c484f8e167047eec17dd4e32499c71910f3a67f97c63b1a",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "05092bac6425debf662d793e0a185f127d939579e38a49e55dc5a6f74ec83b78",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "5cab8b6128b627d0cdd7aa90fe7b5d10a0a057987ad7fc51deb7d0663f425c12",
+        "recorded_hash": "ad2967cda46cdf2d4ab40df47b879f089f3485c4a7eea8e380c6cd629e842f77",
         "canonical_audit_hash": "ad2967cda46cdf2d4ab40df47b879f089f3485c4a7eea8e380c6cd629e842f77",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "5cab8b6128b627d0cdd7aa90fe7b5d10a0a057987ad7fc51deb7d0663f425c12",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -5068,14 +4950,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "5cab8b6128b627d0cdd7aa90fe7b5d10a0a057987ad7fc51deb7d0663f425c12",
+        "recorded_hash": "ad2967cda46cdf2d4ab40df47b879f089f3485c4a7eea8e380c6cd629e842f77",
         "canonical_audit_hash": "ad2967cda46cdf2d4ab40df47b879f089f3485c4a7eea8e380c6cd629e842f77",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "5cab8b6128b627d0cdd7aa90fe7b5d10a0a057987ad7fc51deb7d0663f425c12",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "676fdc98a037ceacfc058f1734da68e105a820dd4de370ba1f5c69132cb2960b",
+        "recorded_hash": "e3f699c8bda1d85da036b7d9bad277636d6fb456108aca88e1498f3cca6ba1e4",
         "canonical_audit_hash": "e3f699c8bda1d85da036b7d9bad277636d6fb456108aca88e1498f3cca6ba1e4",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "676fdc98a037ceacfc058f1734da68e105a820dd4de370ba1f5c69132cb2960b",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -8620,14 +8506,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "676fdc98a037ceacfc058f1734da68e105a820dd4de370ba1f5c69132cb2960b",
+        "recorded_hash": "e3f699c8bda1d85da036b7d9bad277636d6fb456108aca88e1498f3cca6ba1e4",
         "canonical_audit_hash": "e3f699c8bda1d85da036b7d9bad277636d6fb456108aca88e1498f3cca6ba1e4",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "676fdc98a037ceacfc058f1734da68e105a820dd4de370ba1f5c69132cb2960b",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "41460eeadf6c6c055fd4fce9b1a7e1efdd5567c324e3773f964341f86357169f",
+        "recorded_hash": "4dc1ca51c3017218e97197f29f29e57cbe618b3931ab81366957f4122cf98122",
         "canonical_audit_hash": "4dc1ca51c3017218e97197f29f29e57cbe618b3931ab81366957f4122cf98122",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "41460eeadf6c6c055fd4fce9b1a7e1efdd5567c324e3773f964341f86357169f",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -9744,14 +9634,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "41460eeadf6c6c055fd4fce9b1a7e1efdd5567c324e3773f964341f86357169f",
+        "recorded_hash": "4dc1ca51c3017218e97197f29f29e57cbe618b3931ab81366957f4122cf98122",
         "canonical_audit_hash": "4dc1ca51c3017218e97197f29f29e57cbe618b3931ab81366957f4122cf98122",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "41460eeadf6c6c055fd4fce9b1a7e1efdd5567c324e3773f964341f86357169f",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "99057eb66bf6e5e3b41fcc4c36191297566319d778f6a4409592a029903ab782",
+        "recorded_hash": "f6fddfb6a3e6f69a5f9fd6c7ea3f1e0cb2c58e7082c81520d5481c2aa1a8d815",
         "canonical_audit_hash": "f6fddfb6a3e6f69a5f9fd6c7ea3f1e0cb2c58e7082c81520d5481c2aa1a8d815",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "99057eb66bf6e5e3b41fcc4c36191297566319d778f6a4409592a029903ab782",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -11492,14 +11386,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "99057eb66bf6e5e3b41fcc4c36191297566319d778f6a4409592a029903ab782",
+        "recorded_hash": "f6fddfb6a3e6f69a5f9fd6c7ea3f1e0cb2c58e7082c81520d5481c2aa1a8d815",
         "canonical_audit_hash": "f6fddfb6a3e6f69a5f9fd6c7ea3f1e0cb2c58e7082c81520d5481c2aa1a8d815",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "99057eb66bf6e5e3b41fcc4c36191297566319d778f6a4409592a029903ab782",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "74d35e2e83054c9755a4920fcec9c0a3d194675d79d3ecd8a378872ef899ba5d",
+        "recorded_hash": "d721a83d7dc2d589232467431b6c579399bc3fda41831d03f1101dd6073180ee",
         "canonical_audit_hash": "d721a83d7dc2d589232467431b6c579399bc3fda41831d03f1101dd6073180ee",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "74d35e2e83054c9755a4920fcec9c0a3d194675d79d3ecd8a378872ef899ba5d",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -13208,14 +13106,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "74d35e2e83054c9755a4920fcec9c0a3d194675d79d3ecd8a378872ef899ba5d",
+        "recorded_hash": "d721a83d7dc2d589232467431b6c579399bc3fda41831d03f1101dd6073180ee",
         "canonical_audit_hash": "d721a83d7dc2d589232467431b6c579399bc3fda41831d03f1101dd6073180ee",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "74d35e2e83054c9755a4920fcec9c0a3d194675d79d3ecd8a378872ef899ba5d",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "df968c9e47b3454c8a56667fb954b388d85168a9c0754d84604da0fff2b65565",
+        "recorded_hash": "09616e810ce41b1c6747dae3439d22fc5664c4229522695fda57788f55345bc4",
         "canonical_audit_hash": "09616e810ce41b1c6747dae3439d22fc5664c4229522695fda57788f55345bc4",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "df968c9e47b3454c8a56667fb954b388d85168a9c0754d84604da0fff2b65565",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -13848,14 +13750,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "df968c9e47b3454c8a56667fb954b388d85168a9c0754d84604da0fff2b65565",
+        "recorded_hash": "09616e810ce41b1c6747dae3439d22fc5664c4229522695fda57788f55345bc4",
         "canonical_audit_hash": "09616e810ce41b1c6747dae3439d22fc5664c4229522695fda57788f55345bc4",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "df968c9e47b3454c8a56667fb954b388d85168a9c0754d84604da0fff2b65565",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "6122058c5b23e5115763358487c009ebc5c2cd62841fbaf83656cf062f3db80c",
+        "recorded_hash": "cd0532f0519bad4f4566d93a2c5cf69107b6a497f5d98cfb1039a1c62752dcf3",
         "canonical_audit_hash": "cd0532f0519bad4f4566d93a2c5cf69107b6a497f5d98cfb1039a1c62752dcf3",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "6122058c5b23e5115763358487c009ebc5c2cd62841fbaf83656cf062f3db80c",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -14706,14 +14612,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "6122058c5b23e5115763358487c009ebc5c2cd62841fbaf83656cf062f3db80c",
+        "recorded_hash": "cd0532f0519bad4f4566d93a2c5cf69107b6a497f5d98cfb1039a1c62752dcf3",
         "canonical_audit_hash": "cd0532f0519bad4f4566d93a2c5cf69107b6a497f5d98cfb1039a1c62752dcf3",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "6122058c5b23e5115763358487c009ebc5c2cd62841fbaf83656cf062f3db80c",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "483ed8d7d0d1edf26e0794f2c599097b9bf9697a3701ff5491d31ae7555dc5c5",
+        "recorded_hash": "9bcca973b89bf375618c968426e8d5e85498942179d255298e0fd2e1df79ccb7",
         "canonical_audit_hash": "9bcca973b89bf375618c968426e8d5e85498942179d255298e0fd2e1df79ccb7",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "483ed8d7d0d1edf26e0794f2c599097b9bf9697a3701ff5491d31ae7555dc5c5",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -15731,14 +15641,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "483ed8d7d0d1edf26e0794f2c599097b9bf9697a3701ff5491d31ae7555dc5c5",
+        "recorded_hash": "9bcca973b89bf375618c968426e8d5e85498942179d255298e0fd2e1df79ccb7",
         "canonical_audit_hash": "9bcca973b89bf375618c968426e8d5e85498942179d255298e0fd2e1df79ccb7",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "483ed8d7d0d1edf26e0794f2c599097b9bf9697a3701ff5491d31ae7555dc5c5",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "932c743ca1c8a04e2a0537cc2bdd8c31bae3f693f8f077e16d6be21c1281ee4f",
+        "recorded_hash": "0eb70cdcd7cf173c21bf6db7e8bc6c21b4c55b8c864c258443c82a458faab05c",
         "canonical_audit_hash": "0eb70cdcd7cf173c21bf6db7e8bc6c21b4c55b8c864c258443c82a458faab05c",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "932c743ca1c8a04e2a0537cc2bdd8c31bae3f693f8f077e16d6be21c1281ee4f",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -19724,14 +19638,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "932c743ca1c8a04e2a0537cc2bdd8c31bae3f693f8f077e16d6be21c1281ee4f",
+        "recorded_hash": "0eb70cdcd7cf173c21bf6db7e8bc6c21b4c55b8c864c258443c82a458faab05c",
         "canonical_audit_hash": "0eb70cdcd7cf173c21bf6db7e8bc6c21b4c55b8c864c258443c82a458faab05c",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "932c743ca1c8a04e2a0537cc2bdd8c31bae3f693f8f077e16d6be21c1281ee4f",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "a5d528e75e4fdace09818039e0116cc5025bd52d47411c1aec4ef1f394a01282",
+        "recorded_hash": "9f3e8de8639afcd34b7de45f1b786c65be4967498f9c3888e3b5d905873fabee",
         "canonical_audit_hash": "9f3e8de8639afcd34b7de45f1b786c65be4967498f9c3888e3b5d905873fabee",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "a5d528e75e4fdace09818039e0116cc5025bd52d47411c1aec4ef1f394a01282",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -25455,14 +25373,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "a5d528e75e4fdace09818039e0116cc5025bd52d47411c1aec4ef1f394a01282",
+        "recorded_hash": "9f3e8de8639afcd34b7de45f1b786c65be4967498f9c3888e3b5d905873fabee",
         "canonical_audit_hash": "9f3e8de8639afcd34b7de45f1b786c65be4967498f9c3888e3b5d905873fabee",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "a5d528e75e4fdace09818039e0116cc5025bd52d47411c1aec4ef1f394a01282",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "6379a2886223a66aa5b53b155cb733b18d705c06cf92731e236edfdb9f534ad6",
+        "recorded_hash": "d02470c11176d36963c1df6f1734b7f34d814fc58737cf2548268c76a44ca37c",
         "canonical_audit_hash": "d02470c11176d36963c1df6f1734b7f34d814fc58737cf2548268c76a44ca37c",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "6379a2886223a66aa5b53b155cb733b18d705c06cf92731e236edfdb9f534ad6",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -27545,14 +27467,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "6379a2886223a66aa5b53b155cb733b18d705c06cf92731e236edfdb9f534ad6",
+        "recorded_hash": "d02470c11176d36963c1df6f1734b7f34d814fc58737cf2548268c76a44ca37c",
         "canonical_audit_hash": "d02470c11176d36963c1df6f1734b7f34d814fc58737cf2548268c76a44ca37c",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "6379a2886223a66aa5b53b155cb733b18d705c06cf92731e236edfdb9f534ad6",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "884ddc02a031f5996863bb764daa3c040661c825cd705cedcd2fb6fc856de66f",
+        "recorded_hash": "a07a3f95589366c20663233d1e083501119a48b370725cf018ffb1f21be68f40",
         "canonical_audit_hash": "a07a3f95589366c20663233d1e083501119a48b370725cf018ffb1f21be68f40",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "884ddc02a031f5996863bb764daa3c040661c825cd705cedcd2fb6fc856de66f",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -31453,14 +31379,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "884ddc02a031f5996863bb764daa3c040661c825cd705cedcd2fb6fc856de66f",
+        "recorded_hash": "a07a3f95589366c20663233d1e083501119a48b370725cf018ffb1f21be68f40",
         "canonical_audit_hash": "a07a3f95589366c20663233d1e083501119a48b370725cf018ffb1f21be68f40",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "884ddc02a031f5996863bb764daa3c040661c825cd705cedcd2fb6fc856de66f",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "89ddaacb59367f4d3fdcd427ac726454346bf9c3f7f3f4d0930bcb5b62d7b96a",
+        "recorded_hash": "fb943e02e07fc83f71815ebab1db1cfcf829469e026d12fe98ae718592586bc9",
         "canonical_audit_hash": "fb943e02e07fc83f71815ebab1db1cfcf829469e026d12fe98ae718592586bc9",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "89ddaacb59367f4d3fdcd427ac726454346bf9c3f7f3f4d0930bcb5b62d7b96a",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -33423,14 +33353,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "89ddaacb59367f4d3fdcd427ac726454346bf9c3f7f3f4d0930bcb5b62d7b96a",
+        "recorded_hash": "fb943e02e07fc83f71815ebab1db1cfcf829469e026d12fe98ae718592586bc9",
         "canonical_audit_hash": "fb943e02e07fc83f71815ebab1db1cfcf829469e026d12fe98ae718592586bc9",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "89ddaacb59367f4d3fdcd427ac726454346bf9c3f7f3f4d0930bcb5b62d7b96a",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "40bc01cd101fed0ec6e3c40c593bf0fc0ee7badba8a25a712b0fc5e97d6aa528",
+        "recorded_hash": "02d13800d6f52342ce02d8e899fe3c3a03360ab635af3fe5f5b0311cdbf9a449",
         "canonical_audit_hash": "02d13800d6f52342ce02d8e899fe3c3a03360ab635af3fe5f5b0311cdbf9a449",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "40bc01cd101fed0ec6e3c40c593bf0fc0ee7badba8a25a712b0fc5e97d6aa528",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {
@@ -34235,14 +34169,18 @@
     },
     {
       "input_partition": {
-        "recorded_hash": "40bc01cd101fed0ec6e3c40c593bf0fc0ee7badba8a25a712b0fc5e97d6aa528",
+        "recorded_hash": "02d13800d6f52342ce02d8e899fe3c3a03360ab635af3fe5f5b0311cdbf9a449",
         "canonical_audit_hash": "02d13800d6f52342ce02d8e899fe3c3a03360ab635af3fe5f5b0311cdbf9a449",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "40bc01cd101fed0ec6e3c40c593bf0fc0ee7badba8a25a712b0fc5e97d6aa528",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "output_partition": {
-        "recorded_hash": "a00ed1a5e492c8a7ff6d5923a91aed18cdc89dfdcbb4ec712770539d5443da2f",
+        "recorded_hash": "a76cd8e0fc70a4fa3c9f512646bc1e72ac56ec96dc8b619cb72a35fd6c2e45fe",
         "canonical_audit_hash": "a76cd8e0fc70a4fa3c9f512646bc1e72ac56ec96dc8b619cb72a35fd6c2e45fe",
-        "verification": "AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"
+        "verification": "RECOMPUTED_CANONICAL_SHA256",
+        "native_record_hash_reference": "a00ed1a5e492c8a7ff6d5923a91aed18cdc89dfdcbb4ec712770539d5443da2f",
+        "native_record_hash_provenance": "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
       },
       "transition_evidence": "INFERRED_NET_PARTITION_CHANGE",
       "split": {

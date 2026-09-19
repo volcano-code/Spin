@@ -11,7 +11,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path[:0] = [str(ROOT / "python"), str(ROOT / "experiments" / "teapot_spin2014")]
 
-from g7_transition_lineage import analyze_transition, fractional_counts_by_level
+from g7_transition_lineage import analyze_transition, fractional_counts_by_level, partition_hash
 from make_it_stand.verification.source_checkpoint_store import _canonical, _fingerprints
 from make_it_stand.verification.source_checkpoint_store_v2 import StageCheckpointStore
 
@@ -90,8 +90,8 @@ def lineage_and_costs(job):
                     split_merge_seconds="UNAVAILABLE", restore_seconds="UNAVAILABLE", trace_io_seconds="UNAVAILABLE",
                     replay_only_qp_seconds="NOT_RUN_NO_AUTHENTICATED_PER_ITERATION_QP_SELECTOR")
         if index == 0:
-            row = dict(stage=1, input_partition=dict(recorded_hash=solve["input_hash"], verification="AUTHENTICATED_SOURCE_IDENTITY_INITIAL_PARTITION_SNAPSHOT_UNAVAILABLE"),
-                       output_partition=dict(recorded_hash=solve["final_partition_hash"], verification="AUTHENTICATED_RECORD_ONLY_NATIVE_HASH"),
+            row = dict(stage=1, input_partition=dict(native_record_hash_reference=solve["input_hash"], verification="AUTHENTICATED_SOURCE_IDENTITY_INITIAL_PARTITION_SNAPSHOT_UNAVAILABLE"),
+                       output_partition=dict(native_record_hash_reference=solve["final_partition_hash"], verification="NATIVE_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"),
                        transition_evidence="UNAVAILABLE_INITIAL_BOUNDARY_NOT_SNAPSHOTTED", split=dict(parent_to_children={}, operation_order="UNAVAILABLE"),
                        merge=dict(parent_to_children={}, operation_order="UNAVAILABLE"),
                        fractional_counts_by_level=dict(input="UNAVAILABLE", output=fractional_counts_by_level(cells, beta, epsilon)),
@@ -100,9 +100,14 @@ def lineage_and_costs(job):
                        historical_subtimers="UNAVAILABLE")
         else:
             prior = headers[index - 1]["solve"]
-            record = dict(before=prior["final_partition"], after=cells, before_hash=prior["final_partition_hash"], after_hash=solve["final_partition_hash"],
-                          hash_scheme="RECORDED_NATIVE_HASH", complete=True, stage=index + 1)
+            record = dict(before=prior["final_partition"], after=cells,
+                          before_hash=partition_hash(prior["final_partition"]), after_hash=partition_hash(cells),
+                          hash_scheme="CANONICAL_AUDIT_SHA256", complete=True, stage=index + 1)
             row = analyze_transition(record, epsilon=epsilon, before_beta=prior["relaxed_fill"], after_beta=beta); row["stage"] = index + 1
+            row["input_partition"]["native_record_hash_reference"] = prior["final_partition_hash"]
+            row["input_partition"]["native_record_hash_provenance"] = "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
+            row["output_partition"]["native_record_hash_reference"] = solve["final_partition_hash"]
+            row["output_partition"]["native_record_hash_provenance"] = "CHECKPOINT_RECORD_REFERENCE_NOT_USED_AS_SNAPSHOT_IDENTITY"
         row["cost_accounting"] = cost
         # Filled after all adjacent snapshot relations have been computed. It
         # is deliberately not an execution ancestry: only coordinate-key
