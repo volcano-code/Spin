@@ -1,0 +1,5 @@
+eebc37e1458e182eca843c9d45031e6ac3e3956a2dcd24b35d7b61821a825c8a  diagnose.py
+80b6516361b34cf5abdc662d526e9407c3219ffcec23370619b2b3a4943b0f9d  REPORT.md
+9996d02c9112c713f5aa7c5687819c5eceb1eba8a5c0c70ccd05ec4cec518a37  ../../experiments/teapot_spin2014/g7_transition_lineage.py
+f9ca1381155e3939707e1fcd58d271ae9965668aebf57c0403005cf86afc129f  ../../experiments/teapot_spin2014/test_g7_transition_lineage.py
+fd626d048192efe99eb2f71627afe2c6510c3879c79e1d1ce8e413d8bda782a1  ../../.superpowers/sdd/2026-09-19-spin2014-g7-diagnostic/task-1-report.md
