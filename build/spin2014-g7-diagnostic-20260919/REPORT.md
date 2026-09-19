@@ -10,11 +10,11 @@ This is a read-only diagnostic of `build/spin2014-v2-g7-20260919`. It did not ru
 - Complete traces: all 19 sealed SLQP files were streamed through the frozen native reader and reported `ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED`; their record counts run from 10 (stage 1) to 381 (stage 19).
 - Stage 20 has no completed-attempt receipt and is not a stage result.
 
-The later narrow guard-fix regeneration of `lineage.json` deliberately used
-`--skip-trace-verification`: it only recomputed source/checkpoint/snapshot
-identity and labels that JSON field `NOT_VERIFIED_BY_REQUEST`. It did not
-invalidate or replace the earlier sealed-trace verification above, and did not
-reopen a trace, replay, or optimizer.
+The final regeneration of `lineage.json` streamed all 19 sealed traces again:
+its `complete_slqp_trace_count` is `19` and every row carries
+`ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED`. It also reverified source identity and
+all 19 checkpoint boundaries; stage 20 remains excluded. This read-only audit
+did not replay a QP or invoke an optimizer.
 
 The analyzer records the stage-1 input only as an authenticated source hash because no initial partition snapshot was persisted. For stages 2--19 it validates the saved input/output snapshots, inclusive `epsilon <= beta <= 1-epsilon` fractional counts, and ten-moment **partition-cell geometry** deltas. The largest absolute stage-19 cell-geometry moment delta is `6.437450399132683e-20`. These are sums of the `moments` carried by the partition cells, not carve/material moments, relaxed-solution moments, or constraint residuals.
 

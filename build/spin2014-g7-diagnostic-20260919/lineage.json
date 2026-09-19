@@ -5,7 +5,161 @@
   "outer_job_receipts": "VERIFIED",
   "source_identity": "VERIFIED",
   "checkpoint_boundaries": "VERIFIED_19",
-  "complete_slqp_traces": "NOT_VERIFIED_BY_REQUEST",
+  "complete_slqp_trace_count": 19,
+  "complete_slqp_traces": [
+    {
+      "stage": 1,
+      "trace_sha256": "fffa7d2eb6cca1417800501a858cff2dd9f0a15b94af114704d7bf3d9c14f696",
+      "records": 10,
+      "final_iteration": 9,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 2,
+      "trace_sha256": "cda5f892b556ddd7c36f7a86550f5ef3a41897c1f9d047f03e0dcd65d0555695",
+      "records": 9,
+      "final_iteration": 8,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 3,
+      "trace_sha256": "0facc45b9fe0ce93b01e2ee2114ff6a8255725b3df1f3821d7001231c4d57bfa",
+      "records": 11,
+      "final_iteration": 10,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 4,
+      "trace_sha256": "71f6520531237dbdc41886238bafbbc1fbe5b2c6a1e829f7d1dc0adc95bc7d81",
+      "records": 22,
+      "final_iteration": 21,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 5,
+      "trace_sha256": "a53c28d3b024ec316a48cef5ca97c12264906447c3dc4e5abd643511aef9a080",
+      "records": 98,
+      "final_iteration": 97,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 6,
+      "trace_sha256": "9d95ce842f09ce9e3caad38ae292f9ca2d2cb819167475acdf3cd88bf30b5498",
+      "records": 105,
+      "final_iteration": 104,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 7,
+      "trace_sha256": "7fe143a17811fce10ea78b562a71eb18e8b1d55a7958e16a3b157556f826fb89",
+      "records": 165,
+      "final_iteration": 164,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 8,
+      "trace_sha256": "5a980bed6dff4e22c4951fc408fd5804b6019150e93064e233afcdde0217d851",
+      "records": 94,
+      "final_iteration": 93,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 9,
+      "trace_sha256": "1cf2508b2c969b87e7e4706fd29c664bca69c310dc142e3ffc175aca6b901460",
+      "records": 80,
+      "final_iteration": 79,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 10,
+      "trace_sha256": "c119de4605a792c0ca46b277a18e651e02e324536c505136f53aaee2c6d63d87",
+      "records": 170,
+      "final_iteration": 169,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 11,
+      "trace_sha256": "3778336b6c23dde2c7c21d18c2542f215eb93fedac13aefbc942e41cd7257448",
+      "records": 175,
+      "final_iteration": 174,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 12,
+      "trace_sha256": "e79cc77ce444bdc7dfc845fb5e2a03d84189aae10274b309dabc5f61f1300cba",
+      "records": 308,
+      "final_iteration": 307,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 13,
+      "trace_sha256": "a856d39e6196f7a60de394afb6410ee63bbacf83ebecc425dbb0adb2ed445a26",
+      "records": 208,
+      "final_iteration": 207,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 14,
+      "trace_sha256": "e0074deb1241edbc37893bbe2f7a8388369c07157792afd211fa75a96c9d3c50",
+      "records": 327,
+      "final_iteration": 326,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 15,
+      "trace_sha256": "5476b79935bd6e16ae8e0a17358326851d3459916f90d0a1e24d26aa7a0607a2",
+      "records": 305,
+      "final_iteration": 304,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 16,
+      "trace_sha256": "f8bf63dd00dc1c0382b18edbd14305081756a675088a4006256b233b32ba8ca9",
+      "records": 338,
+      "final_iteration": 337,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 17,
+      "trace_sha256": "e603a8383a5b055979b0640cc3122b8598e1a0407be9453d074caf435aac3245",
+      "records": 286,
+      "final_iteration": 285,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 18,
+      "trace_sha256": "547e63bf783864cb6390311a6cc19a3fa49dc7a394410bba6affa2ad17a2061f",
+      "records": 392,
+      "final_iteration": 391,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    },
+    {
+      "stage": 19,
+      "trace_sha256": "e47575bf00590e9c0968d08d0cf0a8b702ee7d984dd593b950191a52db5bbe65",
+      "records": 381,
+      "final_iteration": 380,
+      "terminal_qp": "NOT_ATTEMPTED",
+      "integrity": "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED"
+    }
+  ],
   "excluded_partial_stage": 20,
   "whole_job_seconds": 3600.33445775,
   "mechanically_selected_slowest_stages": [

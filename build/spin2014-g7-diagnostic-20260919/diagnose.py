@@ -70,7 +70,7 @@ def verify_complete_traces(paths):
     for index, path in enumerate(paths, start=1):
         value = json.loads(subprocess.check_output([str(TRACE_READER), str(path)], text=True, timeout=180))
         if value.get("integrity") != "ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED" or value.get("final_state") is not True: raise ValueError("INCOMPLETE_OR_UNVERIFIED_TRACE")
-        rows.append(dict(stage=index, trace_sha256=sha(path), records=value["records"], final_iteration=value["iteration"], terminal_qp=value["qp_status"]))
+        rows.append(dict(stage=index, trace_sha256=sha(path), records=value["records"], final_iteration=value["iteration"], terminal_qp=value["qp_status"], integrity=value["integrity"]))
     return rows
 
 def _header(job, index):
@@ -135,7 +135,7 @@ def diagnose(run, *, verify_traces=True):
     run = Path(run).resolve(); job, outer = verify_outer_receipts(run); verify_source_and_checkpoints(run, job); paths = trace_paths(job)
     traces = verify_complete_traces(paths) if verify_traces else "NOT_VERIFIED_BY_REQUEST"; stages, slowest = lineage_and_costs(job)
     return dict(schema="spin2014-g7-postrun-diagnostic-v1", scope="READ_ONLY_FROZEN_PREFIX_NO_NONLINEAR_SOLVE", source_run=str(run),
-                outer_job_receipts="VERIFIED", source_identity="VERIFIED", checkpoint_boundaries="VERIFIED_19", complete_slqp_traces=traces,
+                outer_job_receipts="VERIFIED", source_identity="VERIFIED", checkpoint_boundaries="VERIFIED_19", complete_slqp_trace_count=len(traces) if isinstance(traces, list) else "NOT_VERIFIED_BY_REQUEST", complete_slqp_traces=traces,
                 excluded_partial_stage=20, whole_job_seconds=outer["elapsed_ns"] / 1e9, mechanically_selected_slowest_stages=slowest,
                 fixed_qp_replay=dict(status="REPORTED_SEPARATELY", detail="The controller verifies immutable source evidence only. The eight capped fixed-QP calls, hash-bound temporary build provenance, science equality, and KKT results are recorded in REPORT.md; no replay output is written into the frozen source run."), stages=stages)
 

@@ -49,4 +49,7 @@ or constraint-conservation assertion.
 coordinate-level inferred parent/child relations for all saved transitions,
 including stages 12--19. Its cross-transition coordinate-key overlaps are
 marked `INFERRED_NET_RELATION_ONLY`; the file does not claim execution
-ancestry, repeated operation order, or a material-moment lineage.
+ancestry, repeated operation order, or a material-moment lineage. The final
+generation streams all 19 sealed traces (`ALL_NATIVE_RECORD_CHECKSUMS_VERIFIED`
+per row), verifies all 19 checkpoint boundaries/source identity, and excludes
+partial stage 20.
