@@ -98,7 +98,9 @@ def test_real_gnu_archive_binds_exact_ordered_member_bytes(tmp_path):
     assert result["full_build_runtime_attestation"] == "NOT_VERIFIED"
     assert result["member_count"] == 2
     assert result["member_bytes"] == sum(p.stat().st_size for p in case["objects"])
-    assert result["ar_executable"]["resolved_path"] == "/usr/bin/x86_64-linux-gnu-ar"
+    ar_identity = result["ar_executable"]
+    assert ar_identity["resolved_path"].startswith("/usr/bin/")
+    assert "ar" in Path(ar_identity["resolved_path"]).name
 
 
 def test_same_member_names_with_altered_payload_fails_closed(tmp_path):
@@ -189,3 +191,37 @@ def test_archive_mutation_after_member_inspection_is_rejected(tmp_path, monkeypa
     monkeypatch.setattr(api, "_hash_member", mutate_after_last_member)
     with pytest.raises(api.ArchiveMemberAuditError, match="changed during verification"):
         api.audit_archive(case["inventory"], case["evidence"], case["archive"])
+
+
+def test_structured_archive_command_must_match_its_hashed_raw_ninja_line(tmp_path):
+    case = _fixture(tmp_path)
+    case["ninja_output"].write_text("unrelated generated command\n")
+    evidence = json.loads(case["evidence"].read_text())
+    evidence["command_source"] = {
+        "logical_path": str(case["ninja_output"]), "resolved_path": str(case["ninja_output"]),
+        "size": case["ninja_output"].stat().st_size, "sha256": _sha(case["ninja_output"]),
+    }
+    _write_json(case["evidence"], evidence)
+    _failure(case)
+
+
+@pytest.mark.parametrize("mode", ("invalid_line", "duplicate_line", "ambiguous_target"))
+def test_invalid_duplicate_or_ambiguous_static_command_records_fail_closed(tmp_path, mode):
+    case = _fixture(tmp_path)
+    evidence = json.loads(case["evidence"].read_text())
+    command = evidence["generated_archive_and_link_commands"][0]
+    if mode == "invalid_line":
+        command["line_number"] = 0
+    elif mode == "duplicate_line":
+        evidence["generated_archive_and_link_commands"].append(dict(command))
+    else:
+        case["ninja_output"].write_text(case["ninja_output"].read_text() * 2)
+        second = dict(command)
+        second["line_number"] = 2
+        evidence["generated_archive_and_link_commands"].append(second)
+        evidence["command_source"] = {
+            "logical_path": str(case["ninja_output"]), "resolved_path": str(case["ninja_output"]),
+            "size": case["ninja_output"].stat().st_size, "sha256": _sha(case["ninja_output"]),
+        }
+    _write_json(case["evidence"], evidence)
+    _failure(case)

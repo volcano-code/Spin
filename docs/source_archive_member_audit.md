@@ -37,7 +37,7 @@ Both target archive results are `OBSERVED_ARCHIVE_MEMBER_BYTES_MATCH`:
 | `build/libmake_it_stand_core.a` | `4091671a2057b985bbba72ea357e67960c3c1ede7c3a5cd0bd4abc2bfe4c6e13` | 561,039,820 | 57 | 560,056,944 | `94e7be99811333749c88d640b8ed5d2fedfd9327ead1dcccd0944e5f415eea40` |
 
 Machine-readable outputs are intentionally ignored under
-`build/strict-v2-archive-member-audit-20260921-final/`; the historical build and
+`build/strict-v2-archive-member-audit-20260921-line-bound/`; the historical build and
 all of its prior evidence were only read.
 
 ## Rerun
@@ -58,8 +58,10 @@ The verifier admits only the captured GNU/CMake `ar qc … && ranlib` grammar,
 ordinary `!<arch>\n` archives, unique safe member basenames, and one matching
 `target_compilation`/`OBSERVED_SUCCESS` compiler receipt per object argument.
 It hashes raw receipts, current objects, member payloads, and the archive both
-before and after inspection. Thin, malformed, ambiguous, duplicate, stale, and
-mutating inputs fail closed.
+before and after inspection. Each static-archive structured record must also
+match its declared 1-based, freshly rehashed raw `ninja-commands.stdout` line;
+invalid, duplicate, or detached line records fail closed. Thin, malformed,
+ambiguous, duplicate, stale, and mutating inputs fail closed.
 
 ## Explicit limitations
 

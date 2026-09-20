@@ -255,6 +255,25 @@ def _output_argument(argv):
     return _string(argv[places[0] + 1], "compiler receipt output")
 
 
+def _raw_ninja_command_lines(source_record):
+    """Return the exact, freshly rehashed 1-based source lines for command binding."""
+    source_record = _mapping(source_record, "Ninja command source")
+    record = {"path": source_record.get("resolved_path"), "size": source_record.get("size"),
+              "sha256": source_record.get("sha256")}
+    before = _check_file_record(record, "Ninja command source")
+    path = Path(_string(source_record.get("resolved_path"), "Ninja command source.resolved_path"))
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        _fail("cannot read Ninja command source as UTF-8: " + str(error))
+    after = _stable_hash(path, "Ninja command source after line read")
+    if not _same_file_bytes(before, after):
+        _fail("Ninja command source changed while reading command lines")
+    if "\r" in text:
+        _fail("Ninja command source has unsupported carriage returns")
+    return text.splitlines()
+
+
 def _bind_compiler_receipt(inventory_receipt, expected_logical):
     inventory_receipt = _mapping(inventory_receipt, "compiler receipt inventory entry")
     if inventory_receipt.get("classification") != "target_compilation" or inventory_receipt.get("status") != "OBSERVED_SUCCESS":
@@ -309,15 +328,24 @@ def audit_archive(inventory_path, ninja_evidence_path, archive_path):
     if recorded_archive["resolved_path"] != observed_archive["resolved_path"]:
         _fail("inventory archive path differs from requested archive")
     source_record = _mapping(evidence.get("command_source"), "Ninja command source")
-    _check_file_record({"path": source_record.get("resolved_path"), "size": source_record.get("size"),
-                        "sha256": source_record.get("sha256")}, "Ninja command source")
+    raw_command_lines = _raw_ninja_command_lines(source_record)
     commands = _list(evidence.get("generated_archive_and_link_commands"), "generated archive/link commands")
     selected = []
+    static_line_numbers = set()
     for entry in commands:
         entry = _mapping(entry, "generated archive/link command")
         if entry.get("kind") != "static_archive":
             continue
-        archive_argument, objects = _parse_static_archive_command(entry.get("command"))
+        line_number = entry.get("line_number")
+        if type(line_number) is not int or line_number < 1 or line_number > len(raw_command_lines):
+            _fail("static archive command has an invalid 1-based Ninja line number")
+        if line_number in static_line_numbers:
+            _fail("duplicate static archive command line number")
+        static_line_numbers.add(line_number)
+        command = _string(entry.get("command"), "generated archive command")
+        if raw_command_lines[line_number - 1] != command:
+            _fail("static archive command does not match its raw Ninja command-source line")
+        archive_argument, objects = _parse_static_archive_command(command)
         if observed_archive["resolved_path"].endswith("/" + archive_argument):
             selected.append((archive_argument, objects))
     if len(selected) != 1:
