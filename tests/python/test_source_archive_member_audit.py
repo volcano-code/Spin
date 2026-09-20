@@ -99,8 +99,7 @@ def test_real_gnu_archive_binds_exact_ordered_member_bytes(tmp_path):
     assert result["member_count"] == 2
     assert result["member_bytes"] == sum(p.stat().st_size for p in case["objects"])
     ar_identity = result["ar_executable"]
-    assert ar_identity["resolved_path"].startswith("/usr/bin/")
-    assert "ar" in Path(ar_identity["resolved_path"]).name
+    assert ar_identity["resolved_path"] == str(Path("/usr/bin/ar").resolve())
 
 
 def test_same_member_names_with_altered_payload_fails_closed(tmp_path):
