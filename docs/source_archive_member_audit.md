@@ -37,7 +37,7 @@ Both target archive results are `OBSERVED_ARCHIVE_MEMBER_BYTES_MATCH`:
 | `build/libmake_it_stand_core.a` | `4091671a2057b985bbba72ea357e67960c3c1ede7c3a5cd0bd4abc2bfe4c6e13` | 561,039,820 | 57 | 560,056,944 | `94e7be99811333749c88d640b8ed5d2fedfd9327ead1dcccd0944e5f415eea40` |
 
 Machine-readable outputs are intentionally ignored under
-`build/strict-v2-archive-member-audit-20260921-line-bound/`; the historical build and
+`build/strict-v2-archive-member-audit-20260921-final-bound/`; the historical build and
 all of its prior evidence were only read.
 
 ## Rerun
