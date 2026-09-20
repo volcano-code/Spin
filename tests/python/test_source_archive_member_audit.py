@@ -205,6 +205,20 @@ def test_structured_archive_command_must_match_its_hashed_raw_ninja_line(tmp_pat
     _failure(case)
 
 
+def test_carriage_return_cannot_invent_a_raw_ninja_command_line(tmp_path):
+    case = _fixture(tmp_path)
+    evidence = json.loads(case["evidence"].read_text())
+    command = evidence["generated_archive_and_link_commands"][0]
+    case["ninja_output"].write_bytes(b"unrelated\r" + command["command"].encode() + b"\n")
+    command["line_number"] = 2
+    evidence["command_source"] = {
+        "logical_path": str(case["ninja_output"]), "resolved_path": str(case["ninja_output"]),
+        "size": case["ninja_output"].stat().st_size, "sha256": _sha(case["ninja_output"]),
+    }
+    _write_json(case["evidence"], evidence)
+    _failure(case)
+
+
 @pytest.mark.parametrize("mode", ("invalid_line", "duplicate_line", "ambiguous_target"))
 def test_invalid_duplicate_or_ambiguous_static_command_records_fail_closed(tmp_path, mode):
     case = _fixture(tmp_path)

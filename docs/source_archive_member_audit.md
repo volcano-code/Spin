@@ -59,9 +59,11 @@ ordinary `!<arch>\n` archives, unique safe member basenames, and one matching
 `target_compilation`/`OBSERVED_SUCCESS` compiler receipt per object argument.
 It hashes raw receipts, current objects, member payloads, and the archive both
 before and after inspection. Each static-archive structured record must also
-match its declared 1-based, freshly rehashed raw `ninja-commands.stdout` line;
-invalid, duplicate, or detached line records fail closed. Thin, malformed,
-ambiguous, duplicate, stale, and mutating inputs fail closed.
+match its declared 1-based, freshly rehashed raw `ninja-commands.stdout` line.
+The source is read as exact bytes, rejects any carriage return, and is split
+only on LF (without a synthetic final line); invalid, duplicate, or detached
+line records fail closed. Thin, malformed, ambiguous, duplicate, stale, and
+mutating inputs fail closed.
 
 ## Explicit limitations
 

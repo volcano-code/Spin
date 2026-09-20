@@ -256,22 +256,28 @@ def _output_argument(argv):
 
 
 def _raw_ninja_command_lines(source_record):
-    """Return the exact, freshly rehashed 1-based source lines for command binding."""
+    """Return byte-exact, freshly rehashed LF-delimited source lines."""
     source_record = _mapping(source_record, "Ninja command source")
     record = {"path": source_record.get("resolved_path"), "size": source_record.get("size"),
               "sha256": source_record.get("sha256")}
     before = _check_file_record(record, "Ninja command source")
     path = Path(_string(source_record.get("resolved_path"), "Ninja command source.resolved_path"))
     try:
-        text = path.read_text(encoding="utf-8")
+        raw = path.read_bytes()
     except (OSError, UnicodeDecodeError) as error:
-        _fail("cannot read Ninja command source as UTF-8: " + str(error))
+        _fail("cannot read Ninja command source bytes: " + str(error))
     after = _stable_hash(path, "Ninja command source after line read")
     if not _same_file_bytes(before, after):
         _fail("Ninja command source changed while reading command lines")
-    if "\r" in text:
+    if b"\r" in raw:
         _fail("Ninja command source has unsupported carriage returns")
-    return text.splitlines()
+    try:
+        raw_lines = raw.split(b"\n")
+        if raw.endswith(b"\n"):
+            raw_lines.pop()
+        return [line.decode("utf-8", "strict") for line in raw_lines] if raw else []
+    except UnicodeDecodeError as error:
+        _fail("cannot decode Ninja command source as UTF-8: " + str(error))
 
 
 def _bind_compiler_receipt(inventory_receipt, expected_logical):
