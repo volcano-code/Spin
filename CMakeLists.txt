@@ -1570,6 +1570,20 @@ if(BUILD_TESTING)
                     "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python"
         )
 
+        add_test(
+            NAME source-archive-member-audit-contract
+            COMMAND "${Python3_EXECUTABLE}" -m pytest -q
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/python/test_source_archive_member_audit.py"
+        )
+        set_tests_properties(
+            source-archive-member-audit-contract
+            PROPERTIES
+                LABELS "paper;python;spin-it;verification;archive-member-provenance"
+                TIMEOUT 60
+                ENVIRONMENT
+                    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python:${CMAKE_CURRENT_SOURCE_DIR}/tests/python;PYTEST_DISABLE_PLUGIN_AUTOLOAD=1"
+        )
+
         if(MAKE_IT_STAND_BUILD_PYTHON)
             if(MAKE_IT_STAND_BUILD_SPIN_IT_2014)
                 add_test(
