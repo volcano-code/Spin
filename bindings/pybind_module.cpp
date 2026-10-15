@@ -2561,7 +2561,8 @@ PYBIND11_MODULE(_make_it_stand, module)
             const py::function& pythonEvaluator,
             const Eigen::MatrixXd& initialQuadrics,
             const py::object& pythonEventSink,
-            const py::object& pythonSupportBasis
+            const py::object& pythonSupportBasis,
+            const py::object& pythonObjectiveSettings
         )
         {
             if (request.settings.equationProfile !=
@@ -2573,6 +2574,21 @@ PYBIND11_MODULE(_make_it_stand, module)
             }
             // External maps bypass the normal request-owning solver wrapper.
             spin::validateSpinningTopObjective(request);
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014
+            std::optional<spin2014::QuadricObjectiveSettings> originalObjective;
+            if (!pythonObjectiveSettings.is_none())
+            {
+                originalObjective = pythonObjectiveSettings.cast<spin2014::QuadricObjectiveSettings>();
+                spin2014::validateSpin2014QuadricObjectiveSettings(*originalObjective);
+                if (spin2014::spin2014ObjectiveMode(originalObjective->objective) != request.mode)
+                    throw py::value_error("original objective and request mode disagree");
+                if (request.mode == spin::SpinMode::StaticBalance || !pythonSupportBasis.is_none())
+                    throw py::value_error("original objective requires rotational full-space entry; static uses its plane solver");
+            }
+#else
+            if (!pythonObjectiveSettings.is_none())
+                throw py::value_error("native build lacks Spin-It 2014 objective support");
+#endif
             // Never interpret arbitrary fixed mass as homogeneous volume.
             if(request.staticObjectiveMeasure!=spin::StaticObjectiveMeasure::DensityWeightedMass)
                 spin::validateSpinDesignRequest(request);
@@ -2791,11 +2807,26 @@ PYBIND11_MODULE(_make_it_stand, module)
             }
             else
             {
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014
+                if (originalObjective)
+                    solved = spin::solveMassMomentSystem(
+                        spin2014::makeSpin2014QuadricMomentProblem(*originalObjective),request.settings,
+                        [&](const spin::QuadricCoefficients10& q){return mapEvaluator(q).material;},
+                        guesses,eventSink);
+                else
+#endif
                 solved = spin::solveSpinMomentSystem(problem,request.settings,
                     [&](const spin::QuadricCoefficients10& q){return mapEvaluator(q).material;},
                     guesses,eventSink);
             }
             py::dict result;
+#if MAKE_IT_STAND_HAS_SPIN_IT_2014
+            if (originalObjective)
+            {
+                result["objective_profile"] = spin2014::spin2014QuadricObjectiveProfile();
+                result["objective_identity"] = spin2014::spin2014QuadricObjectiveHash(*originalObjective);
+            }
+#endif
             if (supported)
             {
                 py::dict attachment;
@@ -2984,6 +3015,7 @@ PYBIND11_MODULE(_make_it_stand, module)
         py::arg("initial_quadrics") = Eigen::MatrixXd(0, 10),
         py::arg("event_sink") = py::none(),
         py::arg("support_basis") = py::none(),
+        py::arg("objective_settings") = py::none(),
         "Run strict Eq.14 Newton with an external per-evaluation geometry/moment map. "
         "The callback must return moments and a Jacobian from the same geometry call. "
         "This numerical result does not certify or seal final geometry."

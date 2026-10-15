@@ -117,6 +117,22 @@ class MeshSnapshot:
         return cls((display_vertices, face_array), rational_vertices=exact_rows)
 
     @classmethod
+    def interior_difference(cls, outer, design):
+        """Reuse actual certified operands to construct fixed shell material.
+
+        The native constructor checks strict containment and the combined
+        exact boundary. The returned snapshot owns that result; it does not
+        reconstruct a second region from exported triangles. Full problem
+        partition verification remains the caller's responsibility.
+        """
+        if type(outer) is not cls or type(design) is not cls:
+            raise TypeError('interior difference requires owned MeshSnapshot operands')
+        operation = getattr(native(), 'make_exact_interior_difference_region', None)
+        if not callable(operation):
+            raise RuntimeError('native build lacks exact interior difference support')
+        return cls.from_exact_region(operation(outer.exact_region(), design.exact_region()))
+
+    @classmethod
     def from_exact_region(cls, region):
         """Export the actual immutable owned exact region without a second Nef.
 

@@ -827,6 +827,8 @@ std::string triangulationHash(const spin::QuadricTriangulation& result,
     if(result.paperProjectiveHyperboloid)stream<<"paper-projective-triangles-v1;";
     if(std::any_of(result.sourceProjectiveRayByVertex.begin(),result.sourceProjectiveRayByVertex.end(),
         [](const auto& ray){return ray[0]==-2;}))stream<<"remote-planar-cap-extrusion-v1;";
+    if(std::any_of(result.sourceProjectiveRayByVertex.begin(),result.sourceProjectiveRayByVertex.end(),
+        [](const auto& ray){return ray[0]==-4;}))stream<<"remote-radial-cap-v1;";
     if(algebraicFiniteMap)stream<<"finite-map=algebraic-v1;";
     if(result.fixedNormalParaboloid)stream<<"finite-normal-paraboloid-v1;cosine-cutoff=0.01;";
     if (!result.exactVertices.empty())
@@ -1326,6 +1328,12 @@ spin::QuadricTriangulation triangulateProjectiveHyperboloid(
             // certify the complete represented source. No interface point,
             // fixed normal or design-domain operand changes here.
             const int interfaceVertices=int(vertices.size()),interfaceFaces=int(faces.size());
+            Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> capEigen(q.quadraticMatrix());
+            if(capEigen.info()!=Eigen::Success)
+                throw std::runtime_error("paper radial cap eigensystem failed");
+            const int capAxisIndex=capEigen.eigenvalues()(1)<0?2:0;
+            const Eigen::Vector3d capCenter=q.quadraticMatrix().fullPivLu().solve(-0.5*q.linearVector());
+            if(!capCenter.allFinite())throw std::runtime_error("paper radial cap center is nonfinite");
             bool exterior=true;
             for(int l=0;l<int(loops.size());++l) {
                 const auto& loop=loops[l];
@@ -1335,8 +1343,8 @@ spin::QuadricTriangulation triangulateProjectiveHyperboloid(
                     mean+=vertices[loop[k]];
                 }
                 if(!area.allFinite() || area.norm()==0)throw std::runtime_error("paper cap axis is singular");
-                Eigen::Vector3d axis=area.normalized();
-                if(axis.dot(mean)<0)axis=-axis;
+                Eigen::Vector3d axis=capEigen.eigenvectors().col(capAxisIndex);
+                if(axis.dot(mean-double(loop.size())*capCenter)<0)axis=-axis;
                 using Q=CGAL::Gmpq;
                 Q support(0);
                 for(int a=0;a<3;++a)support+=Q(axis(a))*Q(axis(a)>=0?hi(a):lo(a));
@@ -1347,10 +1355,14 @@ spin::QuadricTriangulation triangulateProjectiveHyperboloid(
                 std::vector<int> upper;
                 for(int k=0;k<int(loop.size());++k) {
                     const int original=loop[k];
-                    const auto point=vertices[original]+axis*(2*radius-axis.dot(vertices[original]));
+                    const Eigen::Vector3d delta=vertices[original]-capCenter;
+                    const double denominator=axis.dot(delta);
+                    if(!(denominator>0) || !std::isfinite(denominator))
+                        throw std::runtime_error("paper radial cap projection is not separated");
+                    const Eigen::Vector3d point=capCenter+delta*(2*radius/denominator);
                     exterior&=beyond(vertices[original]) && beyond(point);
                     upper.push_back(int(vertices.size()));vertices.push_back(point);
-                    normalIds.push_back(-1);rays.push_back({-2,original,l,k});
+                    normalIds.push_back(-1);rays.push_back({-4,original,l,k});
                 }
                 for(std::size_t k=0;k<loop.size();++k) {
                     const int next=(k+1)%loop.size();
@@ -1368,7 +1380,72 @@ spin::QuadricTriangulation triangulateProjectiveHyperboloid(
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
             const auto audit=verification::auditExactTriangleBoundary(result.closedBoundary.vertices,
                 result.closedBoundary.faces,verification::ExactBoundaryOrientation::OutwardPositive);
-            if(!audit.facts().boundaryValid){reason="paper extruded source failed exact boundary audit";continue;}
+            if(!audit.facts().boundaryValid){
+                const auto& facts=audit.facts();
+                std::ostringstream diagnostic;
+                diagnostic << "paper extruded source failed exact boundary audit"
+                    << ";closed=" << facts.closed
+                    << ";edge_manifold=" << facts.edgeManifold
+                    << ";vertex_manifold=" << facts.vertexManifold
+                    << ";oriented=" << facts.consistentlyOriented
+                    << ";component_orientations=" << facts.componentOrientationsValid
+                    << ";degenerate_faces=" << facts.degenerateFaces.size()
+                    << ";unreferenced_vertices=" << facts.unreferencedVertices.size()
+                    << ";intersection_completed=" << facts.intersectionCompleted
+                    << ";intersecting_pairs=" << facts.intersectingPairs.size()
+                    << ";intersection_error=" << facts.intersectionError;
+                if(!facts.intersectingPairs.empty())
+                {
+                    diagnostic << ";first_intersecting_pair="
+                        << facts.intersectingPairs.front()[0] << ','
+                        << facts.intersectingPairs.front()[1];
+                    diagnostic << ";interface_face_count=" << interfaceFaces
+                               << ";truncation_radius=" << radius;
+                    int interfacePairs=0, mixedPairs=0, capPairs=0;
+                    for(const auto& pair:facts.intersectingPairs) {
+                        const int count=int(pair[0]<interfaceFaces)+int(pair[1]<interfaceFaces);
+                        if(count==2)++interfacePairs;
+                        else if(count==1)++mixedPairs;
+                        else ++capPairs;
+                    }
+                    diagnostic << ";interface_pairs=" << interfacePairs
+                               << ";mixed_pairs=" << mixedPairs << ";cap_pairs=" << capPairs;
+                    diagnostic.precision(17);
+                    for(const int face:facts.intersectingPairs.front()) {
+                        diagnostic << ";face_" << face << '=';
+                        for(int corner=0;corner<3;++corner) {
+                            const int vertex=result.closedBoundary.faces(face,corner);
+                            diagnostic << vertex << ':';
+                            for(int axis=0;axis<3;++axis)
+                                diagnostic << result.closedBoundary.vertices(vertex,axis) << ',';
+                        }
+                    }
+                }
+                if(!facts.degenerateFaces.empty())
+                    diagnostic << ";first_degenerate_face=" << facts.degenerateFaces.front();
+                // Preserve the actual rejected construction for deterministic
+                // source-only diagnosis.  These fields never authorize a mesh.
+                diagnostic.precision(17);
+                diagnostic << ";witness_vertices=";
+                for(int i=0;i<result.closedBoundary.vertices.rows();++i) {
+                    for(int a=0;a<3;++a)diagnostic << result.closedBoundary.vertices(i,a) << ',';
+                    diagnostic << '|';
+                }
+                diagnostic << ";witness_faces=";
+                for(int i=0;i<result.closedBoundary.faces.rows();++i) {
+                    for(int a=0;a<3;++a)diagnostic << result.closedBoundary.faces(i,a) << ',';
+                    diagnostic << '|';
+                }
+                diagnostic << ";witness_loops=";
+                for(const auto& loop:loops) {
+                    for(int vertex:loop)diagnostic << vertex << ',';
+                    diagnostic << '|';
+                }
+                diagnostic << ";witness_pairs=";
+                for(const auto& pair:facts.intersectingPairs)
+                    diagnostic << pair[0] << ',' << pair[1] << '|';
+                reason=diagnostic.str();continue;
+            }
 #else
             throw std::runtime_error("paper extruded cap certification requires exact geometry checks");
 #endif

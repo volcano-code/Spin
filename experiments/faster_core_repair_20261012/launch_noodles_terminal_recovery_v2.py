@@ -1,4 +1,4 @@
-"""Recover the saved noodles terminal with the explicit classified/owned path."""
+"""Recover saved noodles with independent boundary audit and owned sealing."""
 from pathlib import Path
 import json
 import sys
@@ -29,10 +29,10 @@ def main():
         files['input_'+str(index)] = Path(path)
     for path in (ROOT/'python/make_it_stand/verification').glob('*.py'):
         files['module_'+path.name] = path
-    result = run_serial_source_job(ROOT, HERE/'noodles-terminal-recovery-job-02',
-        ['/usr/bin/env', 'LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6',
+    result = run_serial_source_job(ROOT, HERE/'noodles-terminal-recovery-job-03',
+        ['/usr/bin/env', 'LD_PRELOAD='+str(native.parent.parent/'compiler-runtime/libstdc++.so.6'),
          '/home/lin/anaconda3/bin/python3', '-B', str(files['worker']), '{job}/output', str(source),
-         '--classified-boundary', '--reuse-input-proof', '--owned-terminal'], files,
+         '--reuse-input-proof', '--owned-terminal'], files,
         environment={'PYTHONPATH':':'.join(map(str, [ROOT/'python', native.parent, bridge.parent,
                                                      arithmetic.parent, HERE]))})
     print(result.status, result.returncode, flush=True)

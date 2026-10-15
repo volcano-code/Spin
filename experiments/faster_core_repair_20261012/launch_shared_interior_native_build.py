@@ -10,14 +10,14 @@ from make_it_stand.verification.serial_source_job import run_serial_source_job
 
 def main():
     generation = sys.argv[1] if len(sys.argv) > 1 else '09'
-    if generation not in ('09', '10', '11', '12'):
+    if generation not in ('09', '10', '11', '12', '13', '14', '15', '16', '17'):
         raise ValueError('UNREGISTERED_SHARED_INTERIOR_BUILD')
     files = dict(launcher=Path(__file__), worker=HERE/'build_formal_native_core.py',
         cmake=ROOT/'CMakeLists.txt', boost_version=Path(sys.base_prefix)/'include/boost/version.hpp',
         regression=ROOT/'tests/python/test_exact_shared_interior_difference.py')
-    if generation in ('11', '12'):
+    if generation in ('11', '12', '13', '14', '15', '16', '17'):
         files['classification_regression'] = ROOT/'tests/python/test_exact_material_boundary_classification.py'
-    if generation == '12':
+    if generation in ('12', '13', '14', '15', '16', '17'):
         files['replay_metadata_regression'] = ROOT/'tests/python/test_owned_region_replay_metadata.py'
     for folder in ('src', 'include', 'bindings', 'cmake'):
         for path in (ROOT/folder).rglob('*'):
@@ -25,8 +25,11 @@ def main():
                 files['source_'+str(path.relative_to(ROOT))] = path
     for name in ('libigl/CMakeLists.txt', 'libigl/cmake/LibiglDownloadExternal.cmake'):
         files[name] = ROOT/name
+    if generation == '13':
+        files['objective_regression'] = ROOT/'tests/python/test_spin2014_external_native_objective.py'
+    profile = 'sharedvertex-slabs-spin2014' if generation == '13' else 'sharedvertex-slabs'
     result = run_serial_source_job(ROOT, HERE/('formal-native-core-build-job-'+generation),
-        ['/home/lin/anaconda3/bin/python3', '-B', str(files['worker']), '{job}/output', 'sharedvertex-slabs'], files)
+        ['/home/lin/anaconda3/bin/python3', '-B', str(files['worker']), '{job}/output', profile], files)
     print(result.status, result.returncode, flush=True)
     if result.status != 'PROCESS_EXITED' or result.returncode != 0:
         raise SystemExit(1)

@@ -64,7 +64,7 @@ def assess_finite_evidence(*, preparation, cap_numeric, cap_classification,
         scope='Finite evidence for guarded solve attempts; no neighborhood smoothness or case completion')
 
 
-def main(output):
+def main(output, *, certified=False):
     from make_it_stand import spin
     load = lambda path: json.loads(path.read_text())
     sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
@@ -107,7 +107,8 @@ def main(output):
         bindings['input_'+str(index)] = Path(path)
     test = ROOT/'tests/python/test_cherchi_branch_relinearization.py'
     native = Path(spin._native_module().__file__).resolve()
-    expected_native = HERE/'formal-native-core-build-job-08/output/build/python/_make_it_stand.cpython-313-x86_64-linux-gnu.so'
+    expected_native = HERE/('formal-native-core-build-job-12/output/build/python/_make_it_stand.cpython-313-x86_64-linux-gnu.so' if certified else
+                           'formal-native-core-build-job-08/output/build/python/_make_it_stand.cpython-313-x86_64-linux-gnu.so')
     if sha(native) != sha(expected_native):
         raise ValueError('UNREGISTERED_RUNTIME_NATIVE')
     runtime = subprocess.run([sys.executable, '-m', 'pytest', '-q', str(test)], cwd=ROOT,
@@ -119,6 +120,33 @@ def main(output):
         adapter=ROOT/'python/make_it_stand/verification/cherchi_inprocess.py',
         material=ROOT/'python/make_it_stand/verification/faster_material.py',
         coordinate_contract=HERE/'case_coordinate_contract.py')
+    if certified:
+        arithmetic=HERE/'formal-rational-arithmetic-build-job-05/output/build/python/_cherchi_rational_moments.cpython-313-x86_64-linux-gnu.so'
+        bindings['certified_arithmetic']=arithmetic
+        for state in (2,38,45,46):
+            job=HERE/f'heart-arithmetic-05-certified-integral-state-{state}-job-01'
+            sample=load(job/'output/report.json');result=load(job/'result.json')
+            if (result['status']!='PROCESS_EXITED' or result['returncode']!=0 or
+                sample['full_saved_mapping_equal'] is not True or len(sample['samples'])!=4 or
+                sample['arithmetic_identity']['module_sha256']!=sha(arithmetic)):
+                raise ValueError('CERTIFIED_MAPPING_NOT_VERIFIED')
+            for name in ('config.json','result.json','output/report.json'):
+                bindings[f'certified_state_{state}_{name}']=job/name
+        first=HERE/'certified-integral-small-closure-job-02'
+        repeat=HERE/'certified-integral-small-closure-repeat-01'
+        a,b=[load(p/'output/report.json') for p in (first,repeat)]
+        if not all(a[k]==b[k] for k in ('material_digest','scientific_event_digest','raw_equation_residual','accepted_updates')):
+            raise ValueError('CERTIFIED_CLOSURE_REPEAT_CHANGED')
+        for label,p in (('first',first),('repeat',repeat)):
+            r=load(p/'result.json');v=load(p/'output/report.json')
+            if r['status']!='PROCESS_EXITED' or r['returncode']!=0 or not v['material_closed_loop_passed']:
+                raise ValueError('CERTIFIED_CLOSURE_NOT_COMPLETE')
+            for name in ('config.json','result.json','output/report.json'):
+                bindings[f'certified_closure_{label}_{name}']=p/name
+        facets=HERE/'heart-exact-facet-deltas-03.json'
+        if load(facets)['finite_support_classification_complete'] is not True:
+            raise ValueError('STALLED_FINITE_CLASSIFICATION_INCOMPLETE')
+        bindings['stalled_finite_classification']=facets
     output.mkdir(parents=True, exist_ok=False)
     (output/'runtime-test-result.json').write_text(json.dumps(dict(returncode=runtime.returncode,
         stdout=runtime.stdout, stderr=runtime.stderr, native_sha256=sha(native))))
@@ -127,9 +155,12 @@ def main(output):
         request_sha256=sha(frozen), source_calls=0, boolean_calls=0, optimization_invocations=0,
         runtime_policy='FRESH_CANDIDATE_JACOBIAN_RESIDUAL_DECREASE_RELINEARIZE_ELSE_BACKTRACK',
         bindings={key: dict(path=str(path.resolve()), sha256=sha(path)) for key, path in bindings.items()})
+    if certified:
+        report.update(integral_profile='CERTIFIED_MPFR256_GMP_FALLBACK_V1',
+                      production_precision_scope='CORRECTLY_ROUNDED_INTEGRAL_EXACT_GEOMETRY_GMP_DERIVATIVE')
     (output/'report.json').write_text(json.dumps(report, sort_keys=True, allow_nan=False))
     print(json.dumps({key: value for key, value in report.items() if key != 'bindings'}), flush=True)
 
 
 if __name__ == '__main__':
-    main(Path(sys.argv[1]))
+    main(Path(sys.argv[1]),certified='--certified-integral' in sys.argv)

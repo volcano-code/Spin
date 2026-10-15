@@ -83,7 +83,13 @@ def feature_branch_identity(operation,faces,source_faces,surface_type,cap_count,
 class InProcessCherchiEvaluator:
     def __init__(self,request,settings,*,branch_identity_policy='SOURCE_FEATURE_BRANCH_V2',stage_observer=None,
                  normalization=None,design_vertices_physical=None,
-                 rational_arithmetic_backend='PYTHON_FRACTION_V1',fixed_boundary_reuse=False):
+                 rational_arithmetic_backend='PYTHON_FRACTION_V1',fixed_boundary_reuse=False,
+                 integral_profile='EXACT_GMP_V1'):
+        if integral_profile not in ('EXACT_GMP_V1','CERTIFIED_MPFR256_GMP_FALLBACK_V1'):
+            raise ValueError('UNSUPPORTED_INTEGRAL_PROFILE')
+        if integral_profile!='EXACT_GMP_V1' and rational_arithmetic_backend!='NATIVE_GMP_SURFACE_V1':
+            raise ValueError('CERTIFIED_INTEGRAL_REQUIRES_NATIVE_ARITHMETIC')
+        self.integral_profile=integral_profile
         import _cherchi_core_boolean as bridge
         if branch_identity_policy not in ('legacy','SOURCE_FEATURE_BRANCH_V2'):
             raise ValueError('UNSUPPORTED_BRANCH_IDENTITY_POLICY')
@@ -123,6 +129,10 @@ class InProcessCherchiEvaluator:
             self.context_identity=digest(dict(legacy_context=self.context_identity,branch_identity_policy=branch_identity_policy))
         if self.arithmetic_identity is not None:
             self.context_identity=digest(dict(base=self.context_identity,rational_arithmetic_identity=self.arithmetic_identity))
+        if integral_profile!='EXACT_GMP_V1':
+            if not hasattr(self.arithmetic,'PreparedBoundary'):
+                raise ValueError('CERTIFIED_INTEGRAL_BOUNDARY_UNAVAILABLE')
+            self.context_identity=digest(dict(base=self.context_identity,integral_profile=integral_profile))
         self.backend_identity='cherchi-reference-7bd6c2697695f555f9a15d7e154e084d841316f0:'+hashlib.sha256(Path(bridge.__file__).read_bytes()).hexdigest()
         self.target_design=(np.asarray(request.design_vertices)-origin)@rotation.T
         self.normalization=json.loads(json.dumps(normalization or dict(origin=(0.,0.,0.),L=1.)))
@@ -253,6 +263,17 @@ class InProcessCherchiEvaluator:
         return mapped
 
     def _integrate(self,vertices,faces,rational,*,prepared_boundary=None):
+        if getattr(self,'integral_profile','EXACT_GMP_V1')=='CERTIFIED_MPFR256_GMP_FALLBACK_V1':
+            if prepared_boundary is None and self.arithmetic is not None and hasattr(self.arithmetic,'PreparedBoundary'):
+                tokens=[[str(x.numerator)+'/'+str(x.denominator) for x in row] for row in rational]
+                prepared_boundary=self.arithmetic.PreparedBoundary(tokens,np.asarray(faces,dtype=np.int64))
+            if prepared_boundary is None or not hasattr(prepared_boundary,'integrate_moments_certified'):
+                raise ValueError('CERTIFIED_INTEGRAL_ENTRY_UNAVAILABLE')
+            values,evidence=prepared_boundary.integrate_moments_certified(self.request.material_density)
+            if evidence.get('enclosure_certified') is not True:
+                raise ValueError('UNCERTIFIED_INTEGRAL_RESULT')
+            self.last_integral_evidence=dict(evidence)
+            return values
         if self.arithmetic is None:
             return integrate_rational_polyhedral_raw_moments(vertices,faces,density=self.request.material_density,
                 rational_vertices=rational)
@@ -402,11 +423,11 @@ def _json_value(value):
 
 def solve_cherchi_inprocess_and_seal_faster(problem, *, evaluator_settings,
         solver_settings, output_directory, center_of_mass_weight=0.0,
-        spinning_top_objective='INERTIA_AND_LOWERING', event_sink=None,
+        spinning_top_objective='INERTIA_AND_LOWERING', objective_settings=None, event_sink=None,
         rational_arithmetic_backend='PYTHON_FRACTION_V1',solver_boundary_profile='EXACT_NEF_REGION_V1',
         durability_profile='PER_EVENT_FSYNC_V1',
         validation_profile='INDEPENDENT_EACH_EVALUATION_V1', input_validation_profile='RECHECK_INPUT_V1',
-        terminal_region_profile='INDEXED_BOUNDARY_REBUILD_V1'):
+        terminal_region_profile='INDEXED_BOUNDARY_REBUILD_V1', integral_profile='EXACT_GMP_V1'):
     """Seeded native Newton with production Cherchi, durable records and sealing.
 
     Uses the existing locked-problem and exact material bridge. No explicit
@@ -416,6 +437,8 @@ def solve_cherchi_inprocess_and_seal_faster(problem, *, evaluator_settings,
     from .faster_material import (_prepare_faster_problem, solve_cherchi_geometry_and_seal_faster,
                                  _validate_terminal_region_profile)
     from .cherchi_run_journal import RunJournal
+    if integral_profile not in ('EXACT_GMP_V1','CERTIFIED_MPFR256_GMP_FALLBACK_V1'):
+        raise ValueError('unknown integral profile')
     if durability_profile not in ('PER_EVENT_FSYNC_V1','EVALUATION_CHECKPOINT_V1'):
         raise ValueError('unknown run durability profile')
     if solver_boundary_profile not in ('EXACT_NEF_REGION_V1','EXACT_RATIONAL_BOUNDARY_V1','EXACT_RATIONAL_FIXED_SUBSET_V1','EXACT_RATIONAL_FIXED_SEPARATED_ROOTS_V1','EXACT_RATIONAL_FIXED_CLASSIFIED_V1'):
@@ -448,6 +471,7 @@ def solve_cherchi_inprocess_and_seal_faster(problem, *, evaluator_settings,
         evaluator=InProcessCherchiEvaluator(request,evaluator_settings,stage_observer=stage,
             normalization=problem.normalization,design_vertices_physical=problem.design_regions[0].mesh.arrays()[0],
             rational_arithmetic_backend=rational_arithmetic_backend,
+            integral_profile=integral_profile,
             fixed_boundary_reuse=solver_boundary_profile in ('EXACT_RATIONAL_FIXED_SUBSET_V1','EXACT_RATIONAL_FIXED_SEPARATED_ROOTS_V1','EXACT_RATIONAL_FIXED_CLASSIFIED_V1'))
         if solver_boundary_profile!='EXACT_NEF_REGION_V1':
             evaluator.context_identity=digest(dict(base=evaluator.context_identity,
@@ -461,6 +485,14 @@ def solve_cherchi_inprocess_and_seal_faster(problem, *, evaluator_settings,
         configuration=dict(schema='cherchi-inprocess-formal-run-v1',request=asdict(request),
             evaluator=asdict(evaluator_settings),evaluation_map_identity=evaluator.context_identity,
             boolean_backend_identity=evaluator.backend_identity,initialization='REQUEST_SEED_ONLY',complete=False)
+        if integral_profile!='EXACT_GMP_V1':
+            configuration['integral_profile']=integral_profile
+        if objective_settings is not None:
+            from .spin2014_objective_contract import Spin2014ObjectiveContract
+            contract = Spin2014ObjectiveContract(objective_settings)
+            contract.require_mode(request.mode)
+            configuration['objective_definition'] = contract.definition
+            configuration['objective_contract_identity'] = contract.identity
         if evaluator.arithmetic_identity is not None:
             configuration.update(rational_arithmetic_backend=rational_arithmetic_backend,
                 rational_arithmetic_identity=dict(evaluator.arithmetic_identity))
@@ -534,6 +566,7 @@ def solve_cherchi_inprocess_and_seal_faster(problem, *, evaluator_settings,
             complement_evaluator=complement,initial_quadrics=(),
             evaluator_settings=evaluator_settings,solver_settings=solver_settings,
             center_of_mass_weight=center_of_mass_weight,spinning_top_objective=spinning_top_objective,
+            objective_settings=objective_settings,
             event_sink=sink,stage_observer=stage,require_same_call_terminal=True,
             solver_boundary_profile=solver_boundary_profile,
             validation_profile=validation_profile,

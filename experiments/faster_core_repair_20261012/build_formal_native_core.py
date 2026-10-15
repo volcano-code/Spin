@@ -28,6 +28,10 @@ def main(output,profile='base'):
         '-DMAKE_IT_STAND_BUILD_EXACT_GEOMETRY_CHECKS=ON','-DMAKE_IT_STAND_BUILD_PYTHON=ON',
         '-DMAKE_IT_STAND_FILTERED_BOUNDARY_KERNEL=ON','-DBUILD_TESTING=OFF']
     compile_command=['/usr/bin/cmake','--build',str(build),'--target','_make_it_stand','--parallel','2']
+    if profile == 'sharedvertex-slabs-spin2014':
+        configure.remove('-DMAKE_IT_STAND_BUILD_SPIN_IT_2014=OFF')
+        configure.append('-DMAKE_IT_STAND_BUILD_SPIN_IT_2014=ON')
+        profile = 'sharedvertex-slabs'
     if profile in ('sharedvertex','sharedvertex-slabs'):configure.append('-DMAKE_IT_STAND_SHARED_VERTEX_CONE_PREDICATE=ON')
     elif profile!='base':raise ValueError('UNREGISTERED_FORMAL_NATIVE_PROFILE')
     if profile=='sharedvertex-slabs':configure.append('-DMAKE_IT_STAND_DIAGONAL_BOUNDARY_SLABS=ON')

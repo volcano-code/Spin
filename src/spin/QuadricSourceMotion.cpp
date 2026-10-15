@@ -5,6 +5,7 @@
 #include "manufacturing/SlicerValidation.h"
 #include <Eigen/Geometry>
 #include <Eigen/Eigenvalues>
+#include <Eigen/LU>
 #include <Eigen/SVD>
 #include <algorithm>
 #include <array>
@@ -149,8 +150,54 @@ QuadricSourceMotion paperProjectiveMotion(const QuadricCoefficients10& q,
             return fail("paper source motion does not match actual native construction");
     }
     std::map<int,std::map<int,int>> extrusionLoops;
+    const bool hasRadialCap=std::any_of(t.sourceProjectiveRayByVertex.begin(),
+        t.sourceProjectiveRayByVertex.end(),[](const auto& id){return id[0]==-4;});
+    if(hasRadialCap) {
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> radialEigen(q.quadraticMatrix());
+    if(radialEigen.info()!=Eigen::Success)return fail("radial cap eigensystem failed");
+    const Eigen::Matrix3d radialA=q.quadraticMatrix();
+    const Eigen::Vector3d radialCenter=radialA.fullPivLu().solve(-0.5*q.linearVector());
+    const int radialIndex=radialEigen.eigenvalues()(1)<0?2:0;
+    const Eigen::Matrix<double,10,10> radialTangent=Eigen::Matrix<double,10,10>::Identity()-q.values()*q.values().transpose();
     for(int i=t.interfaceVertexCount;i<v.rows();++i) {
         const auto id=t.sourceProjectiveRayByVertex[i];
+        if(id[0]!=-4)continue;
+        if(radialEigen.info()!=Eigen::Success || !radialCenter.allFinite() ||
+           id[1]<0 || id[1]>=t.interfaceVertexCount)
+            return fail("invalid radial cap construction");
+        const Eigen::Vector3d point=v.row(id[1]);
+        const Eigen::Vector3d delta=point-radialCenter;
+        Eigen::Vector3d axis=radialEigen.eigenvectors().col(radialIndex);
+        const double sign=axis.dot(delta)>0?1:-1;axis*=sign;
+        const double denominator=axis.dot(delta);
+        if(!(denominator>0))return fail("radial cap denominator is nonpositive");
+        const Eigen::Vector3d expected=radialCenter+delta*(2*t.truncationRadius/denominator);
+        for(int j=0;j<10;++j) {
+            const QuadricCoefficients10::Vector dq=radialTangent.col(j);
+            const Eigen::Matrix3d dA=quadraticDirection(dq);
+            const Eigen::Vector3d dc=radialA.fullPivLu().solve(-dA*radialCenter-0.5*dq.segment<3>(1));
+            Eigen::Vector3d daxis=Eigen::Vector3d::Zero();
+            for(int k=0;k<3;++k)if(k!=radialIndex) {
+                const double gap=radialEigen.eigenvalues()(radialIndex)-radialEigen.eigenvalues()(k);
+                if(std::abs(gap)<=1e-10*std::max(1.,radialA.norm()))
+                    return fail("radial cap eigenaxis is not separated");
+                const Eigen::Vector3d other=radialEigen.eigenvectors().col(k);
+                daxis+=other*(other.dot(dA*axis)/gap);
+            }
+            const Eigen::Vector3d dx=out.velocity[id[1]].col(j)-dc;
+            const double dd=daxis.dot(delta)+axis.dot(dx);
+            out.velocity[i].col(j)=dc+dx*(2*t.truncationRadius/denominator)
+                -delta*(2*t.truncationRadius*dd/(denominator*denominator));
+        }
+        if(!out.velocity[i].allFinite() ||
+           (expected-v.row(i).transpose()).norm()>1e-12*std::max(1.,expected.norm()))
+            return fail("radial cap motion does not match actual construction");
+        out.provenance[i]="paper-radial-cap-v1:"+std::to_string(id[1]);
+    }
+    }
+    for(int i=t.interfaceVertexCount;i<v.rows();++i) {
+        const auto id=t.sourceProjectiveRayByVertex[i];
+        if(id[0]==-4)continue;
         if(id[0]==-2) {
             if(id[1]<0 || id[1]>=t.interfaceVertexCount || id[2]<0 || id[3]<0 ||
                !extrusionLoops[id[2]].emplace(id[3],id[1]).second)
@@ -184,6 +231,7 @@ QuadricSourceMotion paperProjectiveMotion(const QuadricCoefficients10& q,
     }
     for(int i=t.interfaceVertexCount;i<v.rows();++i) {
         const auto id=t.sourceProjectiveRayByVertex[i];
+        if(id[0]==-4)continue;
         if(id[0]==-2) {
             if(t.sourceNormalVertexByVertex[i]!=-1)return fail("paper extrusion point has finite normal identity");
             const auto& construction=extrusionAxes.at(id[2]);

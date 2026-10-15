@@ -13,6 +13,19 @@ def factory():
     return native, operation
 
 
+def test_snapshot_shared_difference_retains_operands_and_exact_partition():
+    from make_it_stand.verification.spin_problem import MeshSnapshot, partition
+    outer = MeshSnapshot(cube(-4., 4.))
+    design = MeshSnapshot(cube(-1., 1.))
+    fixed = MeshSnapshot.interior_difference(outer, design)
+    assert fixed.exact_region().facts['bounded_void_components'] == 1
+    assert partition(outer.exact_region(), [fixed.exact_region(), design.exact_region()])['complete_partition']
+    # Actual new representation identity must not masquerade as the old input.
+    assert fixed.identity != outer.identity
+    with pytest.raises(TypeError):
+        MeshSnapshot.interior_difference(outer, dict(valid=True))
+
+
 @pytest.mark.parametrize('two_cavities', [False, True])
 def test_shared_difference_equals_independently_reconstructed_boundary(two_cavities):
     native, operation = factory()

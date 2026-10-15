@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "CertifiedInterval.h"
 
 namespace py = pybind11;
 using Point = std::array<mpq_class, 3>;
@@ -257,10 +258,94 @@ public:
     py::array_t<double> integrate(double density) const {
         return integrateBoundary(mesh_, densityValue(density));
     }
+    py::tuple integrateCertified(double density) const {
+        using I = CertifiedInterval;
+        const auto rho = densityValue(density);
+        std::vector<std::array<I,3>> points;
+        points.reserve(mesh_.points.size());
+        for(const auto &v:mesh_.points)points.push_back({I(v[0]),I(v[1]),I(v[2])});
+        std::array<I,10> sums;
+        for(std::size_t index=0;index<mesh_.faces.size();++index) {
+            const auto &face=mesh_.faces[index];
+            std::array<I,3> first;std::array<I,6> second;
+            for(auto vertex:face) {
+                const auto &v=points[vertex];
+                for(int k=0;k<3;++k)first[k]=first[k]+v[k];
+                for(int k=0;k<6;++k)second[k]=second[k]+v[pairs[k][0]]*v[pairs[k][1]];
+            }
+            I constant;
+            for(int k=0;k<3;++k)constant=constant+I(mesh_.areas[index][k])*points[face[0]][k];
+            sums[0]=sums[0]+constant/6;
+            for(int k=0;k<3;++k)sums[k+1]=sums[k+1]+(constant*first[k])/24;
+            for(int k=0;k<6;++k)sums[k+4]=sums[k+4]+
+                (constant*(first[pairs[k][0]]*first[pairs[k][1]]+second[k]))/120;
+        }
+        py::array_t<double> result(10);auto out=result.mutable_unchecked<1>();
+        std::array<bool,10> fallback{};int count=0;
+        for(int k=0;k<10;++k) {
+            const I value=sums[k]*I(rho);
+            const double lower=mpfr_get_d(value.lo,MPFR_RNDN),upper=mpfr_get_d(value.hi,MPFR_RNDN);
+            if(std::isfinite(lower)&&lower==upper)out(k)=lower==0.?0.:lower;
+            else {fallback[k]=true;++count;}
+        }
+        if(count) {
+            const auto exact=integrateBoundary(mesh_,rho);const auto values=exact.unchecked<1>();
+            for(int k=0;k<10;++k)if(fallback[k])out(k)=values(k);
+        }
+        if(out(0)<=0)throw std::invalid_argument("NONPOSITIVE_MASS");
+        py::dict evidence;evidence["enclosure_certified"]=true;
+        evidence["precision_bits"]=256;evidence["fallback_components"]=count;
+        return py::make_tuple(result,evidence);
+    }
     py::array_t<double> transport(double density,
                                  const std::vector<long long> &indices) const {
         const auto rho = densityValue(density);
         return selectedTransport(mesh_, rho, selectedIndices(mesh_, indices));
+    }
+    py::tuple transportCertified(double density,const std::vector<long long> &indices) const {
+        using I=CertifiedInterval;
+        const auto rho=densityValue(density);
+        const auto selection=selectedIndices(mesh_,indices);
+        py::array_t<double> output(std::vector<py::ssize_t>{static_cast<py::ssize_t>(selection.size()),3,10,3});
+        auto out=output.mutable_unchecked<4>();
+        struct Pending {std::size_t i;int j,m,c;};std::vector<Pending> pending;
+        for(std::size_t i=0;i<selection.size();++i) {
+            const auto &face=mesh_.faces[selection[i]];
+            std::array<std::array<I,3>,3> vertices;
+            std::array<I,3> sums,area;
+            std::array<I,6> second;
+            for(int k=0;k<3;++k)area[k]=I(mesh_.areas[selection[i]][k]);
+            for(int j=0;j<3;++j) {
+                for(int k=0;k<3;++k) {
+                    vertices[j][k]=I(mesh_.points[face[j]][k]);
+                    sums[k]=sums[k]+vertices[j][k];
+                }
+                for(int k=0;k<6;++k)second[k]=second[k]+vertices[j][pairs[k][0]]*vertices[j][pairs[k][1]];
+            }
+            for(int j=0;j<3;++j) {
+                const auto &v=vertices[j];std::array<I,10> expected;
+                expected[0]=I(1)/3;
+                for(int k=0;k<3;++k)expected[k+1]=(sums[k]+v[k])/12;
+                for(int k=0;k<6;++k) {
+                    const int p=pairs[k][0],q=pairs[k][1];
+                    expected[k+4]=(sums[p]*sums[q]+second[k]+v[p]*sums[q]+v[q]*sums[p]+I(2)*v[p]*v[q])/60;
+                }
+                for(int m=0;m<10;++m)for(int c=0;c<3;++c) {
+                    const I value=(I(rho)*area[c]*expected[m])/2;
+                    const double lo=mpfr_get_d(value.lo,MPFR_RNDN),hi=mpfr_get_d(value.hi,MPFR_RNDN);
+                    const bool exactZero=mpfr_zero_p(value.lo)&&mpfr_zero_p(value.hi);
+                    if(std::isfinite(lo)&&lo==hi&&(lo!=0.||exactZero))out(i,j,m,c)=lo==0.?0.:lo;
+                    else pending.push_back({i,j,m,c});
+                }
+            }
+        }
+        if(!pending.empty()) {
+            const auto exact=selectedTransport(mesh_,rho,selection);const auto values=exact.unchecked<4>();
+            for(const auto &p:pending)out(p.i,p.j,p.m,p.c)=values(p.i,p.j,p.m,p.c);
+        }
+        py::dict evidence;evidence["enclosure_certified"]=true;
+        evidence["precision_bits"]=256;evidence["fallback_components"]=pending.size();
+        return py::make_tuple(output,evidence);
     }
 };
 
@@ -272,7 +357,9 @@ PYBIND11_MODULE(_cherchi_rational_moments, module) {
     py::class_<PreparedBoundary>(module, "PreparedBoundary")
         .def(py::init<const std::vector<std::vector<std::string>> &, const py::array &>())
         .def("integrate_moments", &PreparedBoundary::integrate)
-        .def("transport_coefficients_selected", &PreparedBoundary::transport);
+        .def("integrate_moments_certified", &PreparedBoundary::integrateCertified)
+        .def("transport_coefficients_selected", &PreparedBoundary::transport)
+        .def("transport_coefficients_selected_certified", &PreparedBoundary::transportCertified);
     module.def("round_to_binary64", [](const std::string &token) { return RoundToDouble()(parseRational(token)); });
     module.attr("arithmetic_identity") = "DIV_SURFACE_V1_REYNOLDS_V1_GMP_BINARY64_NEAREST_EVEN_V1";
     module.attr("arithmetic_implementation") = "LOCAL_PLANAR_DIV_REDUCTION_V2";

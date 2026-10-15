@@ -45,6 +45,23 @@ def load_problem(frozen, expected_digest):
     return problem
 
 
+def preflight_saved_backend(config, frozen):
+    """Reject changed operands/backends before constructing expensive regions."""
+    import _cherchi_core_boolean as bridge
+    backend = 'cherchi-reference-7bd6c2697695f555f9a15d7e154e084d841316f0:' + hashlib.sha256(Path(bridge.__file__).read_bytes()).hexdigest()
+    if backend != config['boolean_backend_identity']:
+        raise ValueError('RECOVERY_NATIVE_BACKEND_CHANGED')
+    if config.get('rational_arithmetic_backend') == 'NATIVE_GMP_SURFACE_V1':
+        import _cherchi_rational_moments as arithmetic
+        identity = dict(backend='NATIVE_GMP_SURFACE_V1', algorithm=arithmetic.arithmetic_identity,
+                        module_sha256=hashlib.sha256(Path(arithmetic.__file__).read_bytes()).hexdigest())
+        if identity != config.get('rational_arithmetic_identity'):
+            raise ValueError('RECOVERY_NATIVE_BACKEND_CHANGED')
+    for name, sha in frozen['input_sources'].items():
+        if hashlib.sha256(Path(name).read_bytes()).hexdigest() != sha:
+            raise ValueError('FROZEN_INPUT_CHANGED')
+
+
 def independent_terminal_numerics(material, terminal):
     from independent_eq14 import formulas, dual
     f, df, _, g, dg, _ = formulas()
@@ -95,6 +112,7 @@ def main(output, source, *, classified_boundary=False, reuse_input=False, owned_
             raise ValueError('FROZEN_REQUEST_IDENTITY_MISMATCH')
         if old_request['center_of_mass_weight'] != 1. or old_request['spinning_top_objective'] != 'INERTIA_AND_LOWERING':
             raise ValueError('INDEPENDENT_FORMULA_SCOPE_MISMATCH')
+        stage('preflight_saved_backend_and_inputs', lambda: preflight_saved_backend(config, frozen))
         journal.publish('registration.json', dict(schema='cherchi-independent-terminal-recovery-v1',
             source_job=str(source), source_job_config_sha256=hashlib.sha256((source/'config.json').read_bytes()).hexdigest(),
             accepted_material=prefix['terminal_reference'], input_digest=registration['input_digest'],

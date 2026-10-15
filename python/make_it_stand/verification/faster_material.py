@@ -2323,7 +2323,7 @@ def _validate_terminal_region_profile(profile):
 def solve_cherchi_geometry_and_seal_faster(
         problem, *, geometry_evaluator, complement_evaluator, initial_quadrics,
         evaluator_settings, solver_settings, center_of_mass_weight=0.0,
-        spinning_top_objective='INERTIA_AND_LOWERING',
+        spinning_top_objective='INERTIA_AND_LOWERING', objective_settings=None,
         event_sink=None, stage_observer=None, support_basis=None,
         require_same_call_terminal=False,solver_boundary_profile='EXACT_NEF_REGION_V1',
         validation_profile='INDEPENDENT_EACH_EVALUATION_V1', material_validator=None,
@@ -2402,7 +2402,15 @@ def solve_cherchi_geometry_and_seal_faster(
     require(weight >= 0.0, 'center_of_mass_weight must be nonnegative')
     request = replace(request, center_of_mass_weight=weight,
                       spinning_top_objective=spinning_top_objective)
-    if request.mode in ('SPINNING_TOP', 'YO_YO'):
+    if objective_settings is not None:
+        from .spin2014_objective_contract import Spin2014ObjectiveContract
+        contract = Spin2014ObjectiveContract(objective_settings)
+        contract.require_mode(request.mode)
+        require(request.mode in ('SPINNING_TOP', 'YO_YO') and support is None,
+                'original rotational objective requires full-space geometry')
+        identity['objective_definition'] = contract.definition
+        identity['objective_contract_identity'] = contract.identity
+    elif request.mode in ('SPINNING_TOP', 'YO_YO'):
         identity['objective_definition'] = rotational_objective_definition(
             request.mode, weight, spinning_top_objective)
     if support is not None:
@@ -2472,6 +2480,7 @@ def solve_cherchi_geometry_and_seal_faster(
         'native_newton_solver',
         lambda: solve_spin_it_faster_with_external_moment_evaluator(
             request, evaluate, initial_quadrics=initial, event_sink=event_sink,
+            **({} if objective_settings is None else {'objective_settings': objective_settings}),
             **({} if support is None else {'support_basis': support})),
     )
     identity.update(
@@ -2576,6 +2585,29 @@ def solve_cherchi_geometry_and_seal_faster(
     retained = target_to_model(retained_raw)
     carved = target_to_model(carved_raw)
     total_target = np.asarray(retained_map['raw_moments'], dtype=np.float64)
+    if objective_settings is not None:
+        # Independent original equations, with units applied by the same
+        # declared configuration; neither native AD nor old Faster formulas.
+        f, constraints = _independent_spin2014_rotational_physics(total_target, objective_settings)
+        gradient = np.zeros(10)
+        jacobian = np.zeros((len(constraints), 10))
+        for i in range(10):
+            perturbed = total_target.astype(complex)
+            perturbed[i] += 1e-24j
+            fi, ci = _independent_spin2014_rotational_physics(perturbed, objective_settings)
+            gradient[i] = np.imag(fi)/1e-24
+            jacobian[:, i] = np.imag(ci)/1e-24
+        dual = np.asarray(coefficients).copy()
+        dual[7:] *= 2
+        dual /= np.linalg.norm(dual)
+        mu = scalar(run['multiplier_mu'], 'original terminal mu', positive=True)
+        residual = float(np.linalg.norm(np.r_[gradient-jacobian.T@np.asarray(run['multipliers'])+mu*dual, constraints]))
+        require(np.isfinite(residual) and residual <= request.settings.equation_tolerance,
+                'independent original objective terminal residual failed')
+        require(run.get('objective_profile') == 'SPIN2014_OBJECTIVES_QUADRIC_V1',
+                'native original objective profile mismatch')
+        identity['original_objective_terminal_check'] = dict(objective=float(f),
+            raw_equation_residual=residual, objective_contract_identity=contract.identity)
     try:
         artifact = run_stage('terminal_material_seal', lambda:
             _seal(problem, request, retained, carved,

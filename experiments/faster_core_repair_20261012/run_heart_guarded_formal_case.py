@@ -10,7 +10,7 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 
 
-def main(output, seed):
+def main(output, seed, *, certified=False):
     from make_it_stand import spin
     from make_it_stand.verification.spin_problem import SpinArtifactProblem
     from make_it_stand.verification.spin_bundle import save_spin_artifact
@@ -19,7 +19,8 @@ def main(output, seed):
     from run_noodles_formal_case import registered_solver
     load = lambda path: json.loads(path.read_text())
     sha = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
-    admission_path = HERE/'heart-guarded-solve-admission-01/report.json'
+    admission_path = HERE/('heart-certified-solve-admission-01/report.json' if certified else
+                          'heart-guarded-solve-admission-01/report.json')
     admission = load(admission_path)
     if (not admission['guarded_solve_admission'] or not admission['runtime_branch_regression_passed'] or
             admission['old_five_point_gate_passed'] or admission['neighborhood_certification']):
@@ -62,8 +63,11 @@ def main(output, seed):
     result = solve_cherchi_inprocess_and_seal_faster(problem, evaluator_settings=evaluator, solver_settings=solver,
         output_directory=output/'run', center_of_mass_weight=weight,
         spinning_top_objective=old['spinning_top_objective'], rational_arithmetic_backend='NATIVE_GMP_SURFACE_V1',
-        solver_boundary_profile='EXACT_RATIONAL_FIXED_SUBSET_V1', durability_profile='EVALUATION_CHECKPOINT_V1',
-        validation_profile='LAYERED_SAME_CALL_V1')
+        solver_boundary_profile=('EXACT_RATIONAL_FIXED_CLASSIFIED_V1' if certified else 'EXACT_RATIONAL_FIXED_SUBSET_V1'),
+        durability_profile='EVALUATION_CHECKPOINT_V1', validation_profile='LAYERED_SAME_CALL_V1',
+        input_validation_profile=('CONSTRUCTOR_PROOF_REUSE_V1' if certified else 'RECHECK_INPUT_V1'),
+        terminal_region_profile=('OWNED_INTERIOR_DIFFERENCE_V1' if certified else 'INDEXED_BOUNDARY_REBUILD_V1'),
+        integral_profile=('CERTIFIED_MPFR256_GMP_FALLBACK_V1' if certified else 'EXACT_GMP_V1'))
     returned = time.monotonic_ns()
     events = [json.loads(line) for line in (output/'run/events.jsonl').read_text().splitlines()]
     start = next(row for row in events if row.get('kind') == 'STAGE_STARTED' and row.get('stage') == 'native_newton_solver')
@@ -93,4 +97,4 @@ def main(output, seed):
 
 
 if __name__ == '__main__':
-    main(Path(sys.argv[1]), int(sys.argv[2]))
+    main(Path(sys.argv[1]), int(sys.argv[2]),certified='--certified-integral' in sys.argv)

@@ -2443,6 +2443,7 @@ def solve_spin_it_faster_with_external_moment_evaluator(
     initial_quadrics: Sequence[Sequence[float]] = (),
     event_sink: Any = None,
     support_basis: Any = None,
+    objective_settings: Spin2014QuadricObjectiveConfig | None = None,
 ) -> dict[str, Any]:
     """Run strict Newton against a caller-owned actual geometry/moment map.
 
@@ -2457,6 +2458,15 @@ def solve_spin_it_faster_with_external_moment_evaluator(
     this entry never projects full-space guesses or invents ambient derivatives.
     A versioned ``supported_space`` attachment retains all directional calls.
     """
+    if objective_settings is not None:
+        if type(objective_settings) is not Spin2014QuadricObjectiveConfig:
+            raise TypeError('expected Spin2014QuadricObjectiveConfig')
+        mode = {'YOYO': 'YO_YO', 'STATIC_LOWERING': 'STATIC_BALANCE'}.get(
+            objective_settings.objective, 'SPINNING_TOP')
+        if request.mode != mode:
+            raise ValueError('original objective and request mode disagree')
+        if mode == 'STATIC_BALANCE' or support_basis is not None:
+            raise ValueError('original objective requires rotational full-space entry; static uses its plane solver')
     if not callable(evaluator):
         raise TypeError("evaluator must be callable")
     if event_sink is not None and not callable(event_sink):
@@ -2472,6 +2482,15 @@ def solve_spin_it_faster_with_external_moment_evaluator(
         dtype=np.float64,
     ).reshape((-1, 10))
     args = (native_request, evaluator, initial, event_sink)
+    if objective_settings is not None:
+        if not hasattr(native, 'Spin2014QuadricObjectiveSettings'):
+            raise RuntimeError('native build lacks Spin-It 2014 objective support')
+        settings = native.Spin2014QuadricObjectiveSettings()
+        for name, value in asdict(objective_settings).items():
+            setattr(settings, name, getattr(native.Spin2014Objective, value)
+                    if name == 'objective' else value)
+        return dict(native.solve_spin_it_faster_external_moment_evaluator(
+            *args, objective_settings=settings))
     if support_basis is None:
         return dict(native.solve_spin_it_faster_external_moment_evaluator(*args))
     return dict(native.solve_spin_it_faster_external_moment_evaluator(
