@@ -154,9 +154,10 @@ std::string diagnostics(
            << ",\n  \"center_of_mass_model\": ";
     if (massPropertiesAvailable) vectorJson(output, center);
     else output << "null";
-    output << ",\n  \"target_origin_model\": [0,0,0],\n"
-           << "  \"target_axes_model\": ";
-    matrixJson(output, Eigen::Matrix3d::Identity());
+    output << ",\n  \"target_origin_model\": ";
+    vectorJson(output, request.targetFrame.origin);
+    output << ",\n  \"target_axes_model\": ";
+    matrixJson(output, request.targetFrame.axes);
     output << ",\n  \"principal_axes_model\": ";
     if (massPropertiesAvailable) matrixJson(output, principalAxes);
     else output << "null";

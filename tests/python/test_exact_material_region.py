@@ -71,6 +71,132 @@ class ExactMaterialTests(unittest.TestCase):
         json.dumps(r, allow_nan=False)
         return r
 
+    def subset(self, a, b, expected):
+        r = self.n.check_exact_material_subset(a, b)
+        self.assertTrue(r["completed"], r)
+        self.assertEqual(r["error"], "")
+        self.assertEqual(r["a_subset_b"], expected)
+        self.assertEqual(r["a_digest"], a.facts["region_digest"])
+        self.assertEqual(r["b_digest"], b.facts["region_digest"])
+        self.assertEqual(r["scope"], "exact-represented-polyhedral-set-only")
+        json.dumps(r, allow_nan=False)
+        return r
+
+    def test_exact_input_boolean_oracle_distinguishes_operation_and_output(self):
+        # An exact reference operation must be computed from the *input*
+        # solids, not inferred from either backend's material mesh. A 3^3
+        # outer box minus a 1^3 cavity has exact volume 26.
+        design = self.region(box((0, 0, 0), (3, 3, 3)))
+        cutter = self.region(box((1, 1, 1), (2, 2, 2)))
+        hollow = self.region(combine(box((0, 0, 0), (3, 3, 3)),
+                                     box((1, 1, 1), (2, 2, 2), True)))
+        full = self.region(box((0, 0, 0), (3, 3, 3)))
+        carve = self.n.relate_exact_boolean_operation_to_material(
+            design, cutter, hollow, 'difference')
+        self.assertTrue(carve['completed'], carve)
+        self.assertTrue(carve['equal'])
+        self.assertEqual(carve['symmetric_difference_volume_exact'], '0/1')
+        missing_cavity = self.n.relate_exact_boolean_operation_to_material(
+            design, cutter, full, 'difference')
+        self.assertTrue(missing_cavity['completed'], missing_cavity)
+        self.assertFalse(missing_cavity['equal'])
+        self.assertEqual(missing_cavity['symmetric_difference_volume_exact'], '1/1')
+        keep_cutter = self.n.relate_exact_boolean_operation_to_material(
+            design, cutter, cutter, 'intersection')
+        self.assertTrue(keep_cutter['equal'], keep_cutter)
+        wrong_operation = self.n.relate_exact_boolean_operation_to_material(
+            design, cutter, hollow, 'intersection')
+        self.assertFalse(wrong_operation['equal'])
+        with self.assertRaises(ValueError):
+            self.n.relate_exact_boolean_operation_to_material(
+                design, cutter, hollow, 'union')
+
+    def test_libigl_exact_output_preserves_rational_cut_vertex(self):
+        # The tetrahedral cutter's plane is x/3 + y + z = 1. Intersecting
+        # the unit box at x=1, z=0 must create (1, 2/3, 0); conversion to
+        # binary64 would change the represented solid even if it looks close.
+        design_vertices, design_faces = box()
+        cutter_vertices = np.array([[0, 0, 0], [3, 0, 0],
+                                    [0, 1, 0], [0, 0, 1]], dtype=float)
+        cutter_faces = np.array([[0, 2, 1], [0, 1, 3],
+                                 [0, 3, 2], [1, 2, 3]], dtype=int)
+        output = self.n.libigl_exact_boolean_construction(
+            design_vertices, design_faces, cutter_vertices, cutter_faces,
+            'intersection')
+        self.assertTrue(output['succeeded'], output)
+        self.assertIn(['1/1', '2/3', '0/1'], output['vertices'])
+        exact_material = self.n.make_exact_material_region_from_rationals(
+            output['vertices'], np.array(output['faces'], dtype=int))
+        relation = self.n.relate_exact_boolean_operation_to_material(
+            self.region((design_vertices, design_faces)),
+            self.region((cutter_vertices, cutter_faces)),
+            exact_material, 'intersection')
+        self.assertTrue(relation['completed'], relation)
+        self.assertTrue(relation['equal'], relation)
+
+    def test_rational_construction_keeps_non_binary64_vertex_exact(self):
+        # A wrong implementation that rounds "1/3" to binary64 before Nef
+        # construction will incorrectly report the two tetrahedra equal.
+        coordinates = [["0/1", "0/1", "0/1"], ["1/3", "0/1", "0/1"],
+                       ["0/1", "1/1", "0/1"], ["0/1", "0/1", "1/1"]]
+        faces = np.array([[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]], dtype=int)
+        exact = self.n.make_exact_material_region_from_rationals(coordinates, faces)
+        equivalent = self.n.make_exact_material_region_from_rationals(
+            [coordinates[0], ["2/6", "0/1", "0/1"], *coordinates[2:]], faces)
+        rounded = self.n.make_exact_material_region(
+            np.array([[0., 0., 0.], [float(1/3), 0., 0.],
+                      [0., 1., 0.], [0., 0., 1.]]), faces)
+        self.assertTrue(exact.facts["valid"], exact.facts)
+        self.assertTrue(equivalent.facts["valid"], equivalent.facts)
+        self.assertTrue(rounded.facts["valid"], rounded.facts)
+        self.assertTrue(self.n.relate_exact_material_regions(exact, equivalent)["equal"])
+        self.assertFalse(self.n.relate_exact_material_regions(exact, rounded)["equal"])
+
+    def test_rational_boolean_complement_does_not_round_shared_interface(self):
+        # Break caught: feeding a rational cut back through binary64 loses
+        # the common interface and creates gaps/slivers in DESIGN - retained.
+        from fractions import Fraction
+        from make_it_stand.verification.spin_problem import MeshSnapshot
+        from make_it_stand.verification.faster_material import _raw_moments
+        v, f = box()
+        cv = np.array([[0,0,0],[3,0,0],[0,1,0],[0,0,1]], dtype=float)
+        cf = np.array([[0,2,1],[0,1,3],[0,3,2],[1,2,3]], dtype=int)
+        retained = self.n.libigl_exact_boolean_construction(v, f, cv, cf, 'intersection')
+        self.assertTrue(retained['succeeded'])
+        design = [[f'{int(x)}/1' for x in row] for row in v]
+        complement = self.n.libigl_exact_boolean_construction_from_rationals(
+            design, f, retained['vertices'], retained['faces'], 'difference')
+        self.assertTrue(complement['succeeded'])
+        authority = MeshSnapshot.from_rationals(complement['vertices'], complement['faces'])
+        partition = self.n.check_exact_material_partition(self.region((v,f)), [
+            self.n.make_exact_material_region_from_rationals(retained['vertices'], retained['faces']),
+            authority.exact_region()])
+        self.assertTrue(partition['complete_partition'], partition)
+        self.assertTrue(partition['no_positive_volume_overlap'], partition)
+        # Integrate the actual returned faces with independent tetrahedra.
+        moments = _raw_moments(authority, 1.)
+        self.assertAlmostEqual(moments[0], float(Fraction(35,54)), places=14)
+        self.assertAlmostEqual(moments[1], float(Fraction(25,72)), places=14)
+
+    def test_rational_boolean_rejects_bad_coordinate_and_index(self):
+        # Break caught: invalid coordinates or indices reaching native mesh
+        # construction, rather than a checked explicit exception.
+        v, f = box()
+        vertices = [[f'{int(x)}/1' for x in row] for row in v]
+        bad = [list(row) for row in vertices]; bad[0][0] = '1/0'
+        with self.assertRaises(ValueError):
+            self.n.libigl_exact_boolean_construction_from_rationals(bad, f, vertices, f, 'difference')
+        bad_faces = f.copy(); bad_faces[0,0] = len(v)
+        with self.assertRaises(ValueError):
+            self.n.libigl_exact_boolean_construction_from_rationals(vertices, bad_faces, vertices, f, 'difference')
+
+    def test_rational_construction_rejects_malformed_denominator(self):
+        coordinates = [["0/1", "0/1", "0/1"], ["1/0", "0/1", "0/1"],
+                       ["0/1", "1/1", "0/1"], ["0/1", "0/1", "1/1"]]
+        faces = np.array([[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]], dtype=int)
+        with self.assertRaises(ValueError):
+            self.n.make_exact_material_region_from_rationals(coordinates, faces)
+
     def test_positive_tetra_and_reversed_root(self):
         self.valid((V,F), [-1], [0], [1], 1, 0)
         bad = self.region((V,F[:,::-1]))
@@ -113,6 +239,14 @@ class ExactMaterialTests(unittest.TestCase):
 
     def test_relation_contact_volume_containment_and_equality(self):
         a = self.region(box())
+        identical = self.n.relate_exact_material_regions(a, a)
+        self.assertEqual(identical["symmetric_difference_volume_exact"], "0/1")
+        shifted = self.n.relate_exact_material_regions(a, self.region(box((.5,0,0),(1.5,1,1))))
+        self.assertEqual(shifted["symmetric_difference_volume_exact"], "1/1")
+        self.assertEqual(shifted["symmetric_difference_measure_scope"],
+                         "exact-regularized-volume-not-Hausdorff-bound")
+        contained = self.n.relate_exact_material_regions(a, self.region(box((.25,.25,.25),(.75,.75,.75))))
+        self.assertEqual(contained["symmetric_difference_volume_exact"], "7/8")
         cases = [((2,0,0),(3,1,1),(False,False,False,False,False)),
                  ((0,0,0),(1,1,1),(True,True,True,True,True)),
                  ((.25,.25,.25),(.75,.75,.75),(True,True,False,True,False)),
@@ -124,6 +258,17 @@ class ExactMaterialTests(unittest.TestCase):
                  ((1-2**-40,0,0),(2,1,1),(True,True,False,False,False))]
         for lo, hi, expected in cases:
             self.relation(a,self.region(box(lo,hi)),expected)
+
+    def test_exact_subset_is_narrow_and_inclusive(self):
+        outer = self.region(box())
+        contained = self.region(box((0, 0, 0), (0.5, 0.75, 1)))
+        outside = self.region(box((1 - 2**-40, 0, 0), (2, 1, 1)))
+        self.subset(contained, outer, True)
+        self.subset(outside, outer, False)
+
+        empty = self.n.empty_exact_material_region()
+        self.subset(empty, outer, True)
+        self.subset(outer, empty, False)
 
     def test_disjoint_multicomponent_bbox_and_cavity_interface(self):
         a = self.region(combine(box(),box((4,0,0),(5,1,1))))

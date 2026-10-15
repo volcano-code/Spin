@@ -16,6 +16,10 @@ public:
     using Vector = Eigen::Matrix<double, 10, 1>;
 
     static QuadricCoefficients10 fromUnnormalized(const Vector& coefficients);
+    /** Validate and preserve a saved unit vector without renormalizing its bits. */
+    static QuadricCoefficients10 fromNormalized(const Vector& coefficients);
+    /** Hash an already-normalized coefficient vector without renormalizing it. */
+    static std::string hashNormalized(const Vector& coefficients);
 
     const Vector& values() const noexcept;
     double evaluate(const Eigen::Vector3d& point) const;

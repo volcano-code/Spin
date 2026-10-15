@@ -1,5 +1,6 @@
 #include "spin/QuadricDiscreteMomentDifferential.h"
 #include "spin/QuadricInverseGaussMap.h"
+#include "spin/QuadricSourceMotion.h"
 #include <Eigen/Geometry>
 #include <Eigen/SVD>
 #include <algorithm>
@@ -14,6 +15,18 @@ using Row = Eigen::Matrix<double,1,10>;
 constexpr double membershipTolerance = 2e-9;
 constexpr double minimumSingularRatio = 1e-10;
 constexpr double consistencyTolerance = 2e-9;
+
+std::string classifiedFailure(const std::string& why) {
+    const auto has=[&](const char* token){return why.find(token)!=std::string::npos;};
+    if (has("rank deficient") || has("rank-deficient") || has("ill-conditioned"))
+        return "RANK_DEFICIENT: "+why;
+    if (has("unsupported") || has("ambiguous") || has("membership") ||
+        has("contact") || has("source feature") || has("lacks both source"))
+        return "TOPOLOGY_TRANSITION: "+why;
+    if (has("invalid") || has("missing") || has("nonfinite"))
+        return "INVALID_INPUT_OR_NONFINITE: "+why;
+    return "NUMERICAL_FAILURE: "+why;
+}
 
 struct Feature {
     int dimension = 3;
@@ -104,29 +117,72 @@ QuadricDiscreteMomentDifferential differentiateDiscreteEllipsoidMoments(
     const TriangleMesh& design, const QuadricTriangulation& triangulation,
     const QuadricCoefficients10& quadric, const TriangleMesh& material,
     const Eigen::VectorXi& birthFaces, double density) {
+    return differentiateDiscreteQuadricMoments(design, triangulation, quadric,
+        material, birthFaces, density, QuadricTriangulationSettings{});
+}
+
+QuadricDiscreteMomentDifferential differentiateDiscreteQuadricMoments(
+    const TriangleMesh& design, const QuadricTriangulation& triangulation,
+    const QuadricCoefficients10& quadric, const TriangleMesh& material,
+    const Eigen::VectorXi& birthFaces, double density,
+    const QuadricTriangulationSettings& triangulationSettings) {
     QuadricDiscreteMomentDifferential out;
     const auto fail=[&](const std::string& why) {
-        out.defined=false; out.diagnostic=why; out.jacobian.setZero(); return out;
+        out.defined=false; out.diagnostic=classifiedFailure(why); out.jacobian.setZero(); return out;
     };
     const auto& source=triangulation.closedBoundary;
-    if(triangulation.type!=QuadricSurfaceType::Ellipsoid)
-        return fail("discrete differential supports finite ellipsoids only; caps and other types unsupported");
-    if(triangulation.fixedNormals.rows()!=source.vertices.rows() ||
-       triangulation.fixedNormals.cols()!=3 || !triangulation.fixedNormals.allFinite())
-        return fail("missing or nonfinite fixed-normal point provenance");
+    if(triangulation.type!=QuadricSurfaceType::Ellipsoid &&
+       triangulation.type!=QuadricSurfaceType::Hyperboloid)
+        return fail("unsupported rank-deficient quadric stratum for full-rank discrete differential");
     if(!design.vertices.allFinite() || !source.vertices.allFinite() ||
        !material.vertices.allFinite() || !std::isfinite(density) || density<=0 ||
        birthFaces.size()!=material.faces.rows()) return fail("invalid discrete geometry/provenance data");
     std::vector<Jacobian> fixed(design.vertices.rows(),Jacobian::Zero());
     std::vector<Jacobian> moving(source.vertices.rows());
-    QuadricInverseGaussMap map(quadric);
-    for(int v=0;v<source.vertices.rows();++v) {
-        const auto differential=map.coefficientDifferential(triangulation.fixedNormals.row(v));
-        if(!differential.valid()) return fail("inverse-Gauss differential: "+differential.diagnostic);
-        if((*differential.point.point-source.vertices.row(v).transpose()).norm()>
-           1e-12*std::max(1.0,source.vertices.row(v).norm()))
-            return fail("fixed-normal point does not match actual triangulation vertex");
-        moving[v]=*differential.coefficientJacobian;
+    if(triangulation.type==QuadricSurfaceType::Ellipsoid) {
+        if(triangulation.fixedNormals.rows()!=source.vertices.rows() ||
+           triangulation.fixedNormals.cols()!=3 || !triangulation.fixedNormals.allFinite())
+            return fail("missing or nonfinite fixed-normal point provenance");
+        QuadricInverseGaussMap map(quadric);
+        for(int v=0;v<source.vertices.rows();++v) {
+            const auto differential=triangulationSettings.algebraicFiniteMap
+                ? map.algebraicCoefficientDifferential(triangulation.fixedNormals.row(v))
+                : map.coefficientDifferential(triangulation.fixedNormals.row(v));
+            if(!differential.valid()) return fail("inverse-Gauss differential: "+differential.diagnostic);
+            if((*differential.point.point-source.vertices.row(v).transpose()).norm()>
+               1e-12*std::max(1.0,source.vertices.row(v).norm()))
+                return fail("fixed-normal point does not match actual triangulation vertex");
+            moving[v]=*differential.coefficientJacobian;
+        }
+    } else {
+        QuadricTriangulationSettings sourceSettings=triangulationSettings;
+        sourceSettings.retainFixedNormalProvenance=true;
+        const auto sourceMotion=evaluateQuadricSourceMotion(
+            quadric,design.vertices,sourceSettings);
+        if(!sourceMotion.defined)
+            return fail("hyperboloid source motion: "+sourceMotion.diagnostic);
+        const auto& rebuilt=sourceMotion.triangulation;
+        if(rebuilt.hash!=triangulation.hash ||
+           rebuilt.type!=triangulation.type ||
+           rebuilt.truncationRadius!=triangulation.truncationRadius ||
+           rebuilt.interfaceVertexCount!=triangulation.interfaceVertexCount ||
+           rebuilt.interfaceFaceCount!=triangulation.interfaceFaceCount ||
+           rebuilt.capFaceCount!=triangulation.capFaceCount ||
+           rebuilt.closedBoundary.vertices.rows()!=source.vertices.rows() ||
+           rebuilt.closedBoundary.faces.rows()!=source.faces.rows() ||
+           rebuilt.faceIsCap.size()!=triangulation.faceIsCap.size() ||
+           rebuilt.fixedNormals.rows()!=triangulation.fixedNormals.rows() ||
+           rebuilt.fixedNormals.cols()!=triangulation.fixedNormals.cols())
+            return fail("hyperboloid source-motion triangulation does not match Boolean source");
+        if((rebuilt.closedBoundary.vertices.array()!=source.vertices.array()).any() ||
+           (rebuilt.closedBoundary.faces.array()!=source.faces.array()).any() ||
+           (rebuilt.faceIsCap.array()!=triangulation.faceIsCap.array()).any() ||
+           (rebuilt.fixedNormals.array()!=triangulation.fixedNormals.array()).any())
+            return fail("hyperboloid source-motion provenance differs from Boolean source");
+        if(sourceMotion.velocity.size()!=static_cast<std::size_t>(source.vertices.rows()))
+            return fail("hyperboloid source-motion vertex count mismatch");
+        for(int v=0;v<source.vertices.rows();++v)
+            moving[v]=sourceMotion.velocity[v];
     }
     std::vector<std::set<int>> incident(material.vertices.rows());
     for(int f=0;f<material.faces.rows();++f) {
@@ -201,7 +257,56 @@ QuadricDiscreteMomentDifferential differentiateDiscreteEllipsoidMoments(
     }
     if(!out.jacobian.allFinite()) return fail("nonfinite discrete moment differential");
     out.defined=true;
-    out.diagnostic="supported finite ellipsoid with fixed source-feature topology";
+    out.diagnostic="VALID_FIXED_BOOLEAN_TOPOLOGY: supported full-rank quadric with fixed source-feature topology";
+    return out;
+}
+
+QuadricStratumDiscreteMomentDifferential differentiateDiscreteQuadricStratumMoments(
+    const TriangleMesh& design,const QuadricTriangulation& triangulation,
+    const QuadricCoefficients10& quadric,const TriangleMesh& material,
+    const Eigen::VectorXi& birthFaces,double density,
+    const QuadricTriangulationSettings& settings) {
+    QuadricStratumDiscreteMomentDifferential out;
+    const auto fail=[&](const std::string& why) {
+        out.defined=false;out.diagnostic=classifiedFailure(why);
+        out.coefficientBasis.resize(0,0);out.jacobian.resize(0,0);
+        out.vertexProvenance.clear();return out;
+    };
+    if(triangulation.type!=QuadricSurfaceType::Plane &&
+       triangulation.type!=QuadricSurfaceType::EllipticCylinder &&
+       triangulation.type!=QuadricSurfaceType::HyperbolicCylinder &&
+       triangulation.type!=QuadricSurfaceType::ParabolicCylinder &&
+       triangulation.type!=QuadricSurfaceType::Paraboloid)
+        return fail("unsupported rank-deficient stratum; restricted differential supports planes, simple elliptic/hyperbolic/parabolic cylinders, and simple-spectrum paraboloids");
+    if(!std::isfinite(density)||density<=0.0||
+       birthFaces.size()!=material.faces.rows())
+        return fail("invalid density or Boolean face provenance shape");
+    QuadricTriangulationSettings sourceSettings=settings;
+    const auto sourceMotion=evaluateQuadricStratumSourceMotion(
+        quadric,design.vertices,sourceSettings);
+    if(!sourceMotion.defined)
+        return fail("rank-deficient source motion: "+sourceMotion.diagnostic);
+    const auto& rebuilt=sourceMotion.triangulation;
+    const auto& source=triangulation.closedBoundary;
+    if(rebuilt.hash!=triangulation.hash||
+       rebuilt.type!=triangulation.type||
+       rebuilt.truncationRadius!=triangulation.truncationRadius||
+       rebuilt.closedBoundary.vertices.rows()!=source.vertices.rows()||
+       rebuilt.closedBoundary.faces.rows()!=source.faces.rows()||
+       (rebuilt.closedBoundary.vertices.array()!=source.vertices.array()).any()||
+       (rebuilt.closedBoundary.faces.array()!=source.faces.array()).any())
+        return fail("restricted source motion does not match the exact Boolean source mesh");
+    const auto differential=differentiateRestrictedPolyhedralMaterialMoments(
+        design,source,sourceMotion.vertexVelocity,material,birthFaces,density);
+    if(!differential.defined)
+        return fail("fixed-topology Boolean transport: "+differential.diagnostic);
+    out.defined=true;out.diagnostic=differential.diagnostic;
+    out.coefficientBasis=sourceMotion.coefficientBasis;
+    out.jacobian=differential.jacobian;
+    out.vertexProvenance=differential.vertexProvenance;
+    out.constructedIntersectionVertexCount=differential.constructedIntersectionVertexCount;
+    out.maximumConstraintResidual=differential.maximumConstraintResidual;
+    out.minimumConstraintSingularRatio=differential.minimumConstraintSingularRatio;
     return out;
 }
 }

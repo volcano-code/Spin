@@ -24,11 +24,14 @@ Eigen::Array3d cycle(const Eigen::Array3d& v)
 
 namespace spin2014
 {
-detail::TriangleMomentValues detail::surfaceTriangleMoments(
+static detail::TriangleMomentValues surfaceTriangleMomentsObserved(
     const Eigen::Vector3d& av, const Eigen::Vector3d& bv,
-    const Eigen::Vector3d& cv, TriangleMomentJacobian* jacobian,
-    NormalOverflowCategory normalOverflow)
+    const Eigen::Vector3d& cv, detail::TriangleMomentJacobian* jacobian,
+    detail::NormalOverflowCategory normalOverflow, detail::TriangleMomentTrace* trace)
 {
+    using detail::TriangleMomentValues;
+    using detail::NormalOverflowCategory;
+    if (trace) { trace->completed=false; trace->derivativesRecorded=false; }
     const Eigen::Array3d a=av.array(), b=bv.array(), c=cv.array();
     if (!a.isFinite().all() || !b.isFinite().all() || !c.isFinite().all())
         throw std::overflow_error("surface triangle has nonfinite coordinates");
@@ -53,7 +56,12 @@ detail::TriangleMomentValues detail::surfaceTriangleMoments(
     local << n.x()*h1.x(), (n*h3).matrix(), (n*h8).matrix(), (n*h4).matrix();
     for (int row=0; row<10; ++row) values(nativeRow[row])=factor[row]*local(row);
     if (!values.allFinite()) throw std::overflow_error("surface triangle moment overflow");
-    if (!jacobian) return values;
+    if (trace) {
+        trace->normal=n.matrix();
+        trace->h={h1,h2,h3,h4,h5,h6,h7,h8};
+        trace->unscaledPaperOrder=local;
+    }
+    if (!jacobian) { if (trace) trace->completed=true; return values; }
     const std::array<Eigen::Matrix3d,3> dn={skew(v)-skew(u),-skew(v),skew(u)};
     const std::array<Eigen::Array3d,3> d3={2*a+b+c,a+2*b+c,a+b+2*c};
     const Eigen::Array3d d5a=6*a+2*b+2*c, d6b=2*a+6*b+2*c, d7c=2*a+2*b+6*c;
@@ -80,14 +88,32 @@ detail::TriangleMomentValues detail::surfaceTriangleMoments(
             jacobian->block<1,3>(nativeRow[row],3*vertex)=factor[row]*block.row(row);
     }
     if (!jacobian->allFinite()) throw std::overflow_error("surface triangle derivative overflow");
+    if (trace) {
+        trace->normalDerivative=dn; trace->d3=d3; trace->d8=d8;
+        trace->derivativesRecorded=true; trace->completed=true;
+    }
     return values;
+}
+detail::TriangleMomentValues detail::surfaceTriangleMoments(
+    const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c,
+    TriangleMomentJacobian* jacobian, NormalOverflowCategory normalOverflow)
+{
+    return surfaceTriangleMomentsObserved(a,b,c,jacobian,normalOverflow,nullptr);
+}
+detail::TriangleMomentValues detail::traceSurfaceTriangleMoments(
+    const Eigen::Vector3d& a, const Eigen::Vector3d& b, const Eigen::Vector3d& c,
+    TriangleMomentJacobian* jacobian, TriangleMomentTrace& trace,
+    NormalOverflowCategory normalOverflow)
+{
+    return surfaceTriangleMomentsObserved(a,b,c,jacobian,normalOverflow,&trace);
 }
 namespace {
 physics::RawMassMoments10 integrate(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
     double density,
-    Eigen::MatrixXd* jacobian
+    Eigen::MatrixXd* jacobian,
+    const SurfaceMomentObserver* observer = nullptr
 )
 {
     if (vertices.cols() != 3 || vertices.rows() == 0 || !vertices.allFinite() ||
@@ -106,13 +132,15 @@ physics::RawMassMoments10 integrate(
     for (Eigen::Index face = 0; face < faces.rows(); ++face)
     {
         detail::TriangleMomentJacobian localJacobian;
-        values += density*detail::surfaceTriangleMoments(
+        detail::TriangleMomentTrace trace;
+        values += density*surfaceTriangleMomentsObserved(
             vertices.row(faces(face,0)).transpose(),vertices.row(faces(face,1)).transpose(),
             vertices.row(faces(face,2)).transpose(),jacobian ? &localJacobian : nullptr,
-            detail::NormalOverflowCategory::LegacyInvalidArgument);
+            detail::NormalOverflowCategory::LegacyInvalidArgument,observer ? &trace : nullptr);
         if (!jacobian) continue;
         for (int vertex = 0; vertex < 3; ++vertex)
             jacobian->block<10,3>(0,3*faces(face,vertex)) += density*localJacobian.block<10,3>(0,3*vertex);
+        if (observer) (*observer)(face,trace,values,*jacobian);
     }
     MassMoments mass;
     mass.mass = values(0);
@@ -138,6 +166,15 @@ SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
 {
     SurfaceRawMomentDifferential result;
     result.moments = integrate(vertices, faces, density, &result.jacobian);
+    return result;
+}
+SurfaceRawMomentDifferential differentiateSurfaceRawMomentsObserved(
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& faces, double density,
+    const SurfaceMomentObserver& observer)
+{
+    if (!observer) throw std::invalid_argument("surface observer must not be empty");
+    SurfaceRawMomentDifferential result;
+    result.moments=integrate(vertices,faces,density,&result.jacobian,&observer);
     return result;
 }
 } // namespace spin2014

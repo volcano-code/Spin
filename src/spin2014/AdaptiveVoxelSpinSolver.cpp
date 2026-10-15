@@ -1,5 +1,7 @@
 #include "spin2014/AdaptiveVoxelSpinSolver.h"
 
+#include <Eigen/LU>
+
 #include "manufacturing/SlicerValidation.h"
 #include "spin2014/AdaptiveFillFunctional.h"
 #include "spin2014/AdaptiveVoxelDomain.h"
@@ -109,6 +111,8 @@ const char* adaptiveSpinStatusToken(AdaptiveSpinStatus status) noexcept
 
 void validateAdaptiveVoxelSpinRequest(const AdaptiveVoxelSpinRequest& request)
 {
+    if(request.slqp.directionPolicy!=SlqpDirectionPolicy::ProjectedGradientV1)
+        throw std::invalid_argument("metric tangent rescue requires the source-surface path");
     if(request.slqp.algorithm!=SlqpAlgorithm::LegacyV3 &&
        request.slqp.algorithm!=SlqpAlgorithm::AuditedKktRestorationV1)
         throw std::invalid_argument("unknown SLQP algorithm");
@@ -126,6 +130,18 @@ void validateAdaptiveVoxelSpinRequest(const AdaptiveVoxelSpinRequest& request)
     if (!request.domain)
     {
         throw std::invalid_argument("Spin-It 2014 domain must not be null");
+    }
+    const Eigen::Matrix3d gram = request.targetFrame.axes.transpose() *
+        request.targetFrame.axes;
+    const double determinant = request.targetFrame.axes.determinant();
+    if (!request.targetFrame.origin.allFinite() ||
+        !request.targetFrame.axes.allFinite() ||
+        !gram.isApprox(Eigen::Matrix3d::Identity(), 1e-12) ||
+        !std::isfinite(determinant) || std::abs(determinant - 1.0) > 1e-12)
+    {
+        throw std::invalid_argument(
+            "Spin-It 2014 target frame must be finite, right-handed, and orthonormal"
+        );
     }
     if (request.mode == spin::SpinMode::FidgetSpinner)
     {
@@ -218,6 +234,16 @@ std::string computeAdaptiveVoxelSpinRequestHash(
         appendDouble(bytes,request.slqp.audit.lpTimeLimit);
         appendDouble(bytes,request.slqp.audit.lpFeasibilityTolerance);
     }
+    const bool identityTarget = request.targetFrame.origin.isZero(0.0) &&
+        request.targetFrame.axes == Eigen::Matrix3d::Identity();
+    if (!identityTarget)
+    {
+        bytes += "target-frame-v1";
+        for (int i = 0; i < 3; ++i) appendDouble(bytes, request.targetFrame.origin(i));
+        for (int row = 0; row < 3; ++row)
+            for (int column = 0; column < 3; ++column)
+                appendDouble(bytes, request.targetFrame.axes(row, column));
+    }
     return manufacturing::computeContentSha256(bytes);
 }
 
@@ -285,6 +311,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
             request.laplacianWeight,
             request.boundaryDensity,
             request.interiorDensity
+            ,request.targetFrame
         );
         const double passInitialPhi=result.finalPhi;
         const SlqpLbfgsResult relaxed = paper ? solveSlqpLbfgsPaper(
@@ -414,6 +441,7 @@ AdaptiveVoxelSpinResult solveAdaptiveVoxelSpin(
         request.laplacianWeight,
         request.boundaryDensity,
         request.interiorDensity
+        ,request.targetFrame
     );
     Eigen::VectorXd binary(beta.size());
     result.binaryFill.resize(static_cast<std::size_t>(beta.size()));

@@ -126,6 +126,9 @@ class SealedSpinViewTests(SceneFixture):
         self.assertEqual(scene['support_display'], 'TARGET_POINTS_ONLY_NO_CERTIFIED_HULL')
         self.assertEqual(scene['disclosures']['project_status'], 'PARTIAL_BLOCKED')
         self.assertEqual(scene['disclosures']['solver_target_feasibility'], 'UNKNOWN')
+        self.assertEqual(scene['disclosures']['wall_thickness_status'], 'UNKNOWN')
+        self.assertEqual(scene['disclosures']['manufacturing_admission'],
+                         'BLOCKED_UNKNOWN_WALL_THICKNESS')
         self.assertEqual(scene['disclosures']['numerical_solver_trace_convergence'],
                          'NOT_AUTHENTICATED_BY_GEOMETRY_BUNDLE')
 
@@ -186,8 +189,15 @@ class NativeSealedSpinViewTests(SceneFixture):
         self.assertEqual(summary['layers']['design:d']['faces'], 12)
         self.assertEqual(summary['layers']['original']['vertices_sha256'], p.original.identity['vertices']['sha256'])
         self.assertEqual(summary['disclosures']['solver_target_feasibility'], 'UNKNOWN')
-        self.assertEqual(Path(summary['loaded_paths']['native']).parent,
-                         Path(os.environ['MAKE_IT_STAND_SEALED_VIEWER']).parent/'python')
+        self.assertEqual(summary['disclosures']['wall_thickness_status'], 'UNKNOWN')
+        self.assertEqual(summary['disclosures']['manufacturing_admission'],
+                         'BLOCKED_UNKNOWN_WALL_THICKNESS')
+        expected_extension = os.environ.get('MAKE_IT_STAND_SEALED_VIEWER_EXTENSION')
+        if expected_extension:
+            self.assertEqual(Path(summary['loaded_paths']['native']), Path(expected_extension).resolve())
+        else:
+            self.assertEqual(Path(summary['loaded_paths']['native']).parent,
+                             Path(os.environ['MAKE_IT_STAND_SEALED_VIEWER']).parent/'python')
         self.assertEqual({f.name: f.read_bytes() for f in path.iterdir()}, before)
         for args in [('--check-sealed-spin-bundle', str(path), '0'*64),
                      ('--sealed-spin-bundle', str(path)), ('--check-sealed-spin-bundle',),

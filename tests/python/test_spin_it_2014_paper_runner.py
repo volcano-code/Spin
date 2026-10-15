@@ -22,6 +22,92 @@ def load_runner():
 
 
 class SpinIt2014PaperRunnerTests(unittest.TestCase):
+    def test_configured_level_cap_is_not_reported_as_reproduced_resolution(self) -> None:
+        runner = load_runner()
+        evidence = runner.derive_evidence_flags(
+            asset_class="RECONSTRUCTED_ASSET",
+            configured_maximum_level=9,
+            paper_maximum_level=9,
+            observed_maximum_solved_level=None,
+            paper_numeric_comparison_passed=False,
+            cage_requested=False,
+            cage_statuses=(),
+        )
+        self.assertTrue(evidence["configured_level_cap_at_least_paper"])
+        self.assertEqual(evidence["observed_maximum_solved_level"], None)
+        self.assertFalse(evidence["paper_resolution_reproduced"])
+        self.assertFalse(evidence["paper_numerics_reproduced"])
+
+    def test_reconstructed_asset_cannot_grant_paper_resolution_claim(self) -> None:
+        runner = load_runner()
+        evidence = runner.derive_evidence_flags(
+            asset_class="RECONSTRUCTED_ASSET",
+            configured_maximum_level=9,
+            paper_maximum_level=9,
+            observed_maximum_solved_level=9,
+            paper_numeric_comparison_passed=True,
+            cage_requested=False,
+            cage_statuses=(),
+        )
+        self.assertFalse(evidence["paper_resolution_reproduced"])
+        self.assertFalse(evidence["paper_numerics_reproduced"])
+
+    def test_observed_depth_above_configured_cap_is_rejected(self) -> None:
+        runner = load_runner()
+        evidence = runner.derive_evidence_flags(
+            asset_class="AUTHOR_ORIGINAL",
+            configured_maximum_level=9,
+            paper_maximum_level=9,
+            observed_maximum_solved_level=10,
+            paper_numeric_comparison_passed=True,
+            cage_requested=False,
+            cage_statuses=(),
+        )
+        self.assertFalse(evidence["paper_resolution_reproduced"])
+
+    def test_cage_execution_requires_a_requested_successful_run(self) -> None:
+        runner = load_runner()
+        not_requested = runner.derive_evidence_flags(
+            asset_class="RECONSTRUCTED_ASSET",
+            configured_maximum_level=4,
+            paper_maximum_level=9,
+            observed_maximum_solved_level=4,
+            paper_numeric_comparison_passed=False,
+            cage_requested=False,
+            cage_statuses=(),
+        )
+        requested_and_run = runner.derive_evidence_flags(
+            asset_class="RECONSTRUCTED_ASSET",
+            configured_maximum_level=4,
+            paper_maximum_level=9,
+            observed_maximum_solved_level=4,
+            paper_numeric_comparison_passed=False,
+            cage_requested=True,
+            cage_statuses=("CONVERGED", "CONVERGED"),
+        )
+        incomplete = runner.derive_evidence_flags(
+            asset_class="RECONSTRUCTED_ASSET",
+            configured_maximum_level=4,
+            paper_maximum_level=9,
+            observed_maximum_solved_level=4,
+            paper_numeric_comparison_passed=False,
+            cage_requested=True,
+            cage_statuses=("CONVERGED", "EXECUTION_FAILED"),
+        )
+        self.assertFalse(not_requested["cage_deformation_executed"])
+        self.assertTrue(requested_and_run["cage_deformation_executed"])
+        self.assertFalse(incomplete["cage_deformation_executed"])
+
+    def test_cage_aggregate_counts_only_requested_case_runs(self) -> None:
+        runner = load_runner()
+        summary = runner.aggregate_cage_execution((
+            {"cage_deformation_requested": False, "cage_deformation_executed": False},
+            {"cage_deformation_requested": True, "cage_deformation_executed": True},
+        ))
+        self.assertEqual(summary["requested_case_count"], 1)
+        self.assertEqual(summary["executed_case_count"], 1)
+        self.assertTrue(summary["all_requested_cases_executed"])
+
     def test_rle_decode_and_component_count_are_exact(self) -> None:
         runner = load_runner()
         self.assertEqual(runner.decode_rle([[0, 2], [1, 3], [0, 1]], 6), (0, 0, 1, 1, 1, 0))

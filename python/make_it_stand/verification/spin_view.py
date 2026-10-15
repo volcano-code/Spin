@@ -56,7 +56,11 @@ def load_spin_scene(bundle_directory, *, expected_problem_digest):
     add('cavity', 'cavity', artifact.newly_carved)
     disclosures = {name: facts[name] for name in
                    ('project_status', 'original_evidence_admission', 'physical_validation',
-                    'build_source_attestation', 'solver_target_feasibility')}
+                    'build_source_attestation', 'solver_target_feasibility',
+                    'manufacturing_admission')}
+    disclosures['wall_thickness_status'] = facts['wall_thickness_audit']['overall']
+    disclosures['same_component_feature_thickness'] = facts['same_component_feature_thickness']
+    disclosures['inter_cavity_web_thickness'] = facts['inter_cavity_web_thickness']
     disclosures['numerical_solver_trace_convergence'] = 'NOT_AUTHENTICATED_BY_GEOMETRY_BUNDLE'
     return {'meshes': meshes, 'physical': facts['physical'],
             'principal_axes': _principal_axes(facts['physical']['central_inertia']),

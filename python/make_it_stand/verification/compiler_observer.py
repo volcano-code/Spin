@@ -1,9 +1,13 @@
-"""Opt-in GNU/Linux compiler observations, NOT full build/source attestation.
+"""Opt-in Linux compiler observations, NOT full build/source attestation.
 
 Invoke as a CMake compiler launcher with --evidence-dir DIR --timeout SECONDS
 -- COMPILER ARGS. Outputs must be absent: use a fresh build directory (or let
 the build owner explicitly remove an old object before retrying). No shell,
 response files, PCH, modules or unknown compiler flags are admitted.
+
+Default profile is GNU C/C++. Explicit clang-c-v1 supports Linux Clang18 C
+only: caller must supply --no-default-config and -x c. Forced includes are
+not covered by that profile. Compiler argv are never silently rewritten.
 
 The two dependency probes observe preprocessing closure, including system
 headers. Before/after disk hashes cannot exclude transient reverted changes.
@@ -22,6 +26,7 @@ import hashlib
 import json
 import math
 import os
+import re
 from pathlib import Path
 import shutil
 import signal
@@ -146,14 +151,19 @@ def _run(argv, *, cwd, directory, phase, deadline, receipt):
     return code
 
 
-def _compiler(executable, cwd, directory, phase, deadline, receipt):
+def _compiler(executable, cwd, directory, phase, deadline, receipt, *, profile='gnu'):
     record = _snapshot(executable, cwd, deadline)
     with Path(executable).open("rb") as stream:
         if stream.read(4) != b"\x7fELF":
-            raise ObservationError("direct GNU ELF compiler binary required; script wrappers are unsupported")
-    code = _run([executable, "--version"], cwd=cwd, directory=directory, phase=phase, deadline=deadline, receipt=receipt)
+            raise ObservationError("direct ELF compiler binary required; script wrappers are unsupported")
+    options = ['--no-default-config'] if profile == 'clang-c-v1' else []
+    code = _run([executable, *options, "--version"], cwd=cwd, directory=directory, phase=phase, deadline=deadline, receipt=receipt)
     version = (directory / (phase + ".stdout")).read_text(errors="replace")
-    if code or "Free Software Foundation" not in version:
+    if profile == 'clang-c-v1':
+        if code or not re.search(r'\bclang version 18\.', version):
+            raise ObservationError('Clang18 compiler required for clang-c-v1')
+        record['family'] = 'clang'
+    elif profile != 'gnu' or code or "Free Software Foundation" not in version:
         raise ObservationError("GNU compiler required; version probe failed or unsupported compiler")
     record["version"] = version
     return record
@@ -180,7 +190,7 @@ def _probe(command, cwd, directory, phase, deadline, receipt):
     return snapshots
 
 
-def observe(argv, *, evidence_dir, timeout):
+def observe(argv, *, evidence_dir, timeout, profile='gnu'):
     """Observe an invocation and return its own execution status and receipt path.
 
     No caller-supplied hashes, receipt contents, or success booleans are accepted.
@@ -197,7 +207,7 @@ def observe(argv, *, evidence_dir, timeout):
     deadline = started + timeout
     receipt = {"schema": "make-it-stand-compiler-observation-v1", "invocation_id": directory.name,
                "status": "IN_PROGRESS", "argv": list(argv), "cwd": str(cwd), "compiler_exit_status": None,
-               "operations": [], "settings": {"timeout_seconds": timeout, "evidence_dir": str(root)},
+               "operations": [], "settings": {"timeout_seconds": timeout, "evidence_dir": str(root), 'profile': profile},
                "environment": {k: os.environ.get(k) for k in ENVIRONMENT_KEYS},
                "limitations": ["before/after observations cannot exclude transient reverted changes",
                                "fresh output required; remove old outputs explicitly or use a fresh build directory",
@@ -213,7 +223,12 @@ def observe(argv, *, evidence_dir, timeout):
             raise ObservationError("compiler observer requires GNU/Linux")
         if any(os.environ.get(k) for k in UNSUPPORTED_ENVIRONMENT):
             raise ObservationError("unsupported compiler-affecting environment: " + ", ".join(k for k in UNSUPPORTED_ENVIRONMENT if os.environ.get(k)))
-        command = parse_command(argv)
+        if profile == 'clang-c-v1':
+            hidden = [k for k, v in os.environ.items() if v and
+                      (k.startswith(('CCC_', 'CLANG_', 'CC_PRINT_')) or k == 'QA_OVERRIDE_GCC3_OPTIONS')]
+            if hidden:
+                raise ObservationError('unsupported Clang driver environment: ' + ', '.join(sorted(hidden)))
+        command = parse_command(argv, profile=profile)
         executable = shutil.which(argv[0])
         if executable is None:
             raise ObservationError("compiler executable not found")
@@ -231,7 +246,7 @@ def observe(argv, *, evidence_dir, timeout):
         receipt["observer_code"] = [_snapshot(str(Path(__file__).resolve()), cwd, deadline),
                                     _snapshot(str(Path(__file__).with_name("compiler_dependencies.py").resolve()), cwd, deadline)]
         receipt["python"] = _snapshot(sys.executable, cwd, deadline)
-        receipt["compiler_before"] = _compiler(executable, cwd, directory, "compiler-before", deadline, receipt)
+        receipt["compiler_before"] = _compiler(executable, cwd, directory, "compiler-before", deadline, receipt, profile=profile)
         receipt["inputs_before"] = _probe(command, cwd, directory, "dependencies-before", deadline, receipt)
         inputs = receipt["inputs_before"] + receipt["observer_code"] + [receipt["python"], receipt["compiler_before"]]
         for path in protected:
@@ -262,7 +277,7 @@ def observe(argv, *, evidence_dir, timeout):
             post_errors.append("original dependency bytes/identity changed or missing")
         for name, action in (
             ("inputs_after", lambda: _probe(command, cwd, directory, "dependencies-after", deadline, receipt)),
-            ("compiler_after", lambda: _compiler(executable, cwd, directory, "compiler-after", deadline, receipt)),
+            ("compiler_after", lambda: _compiler(executable, cwd, directory, "compiler-after", deadline, receipt, profile=profile)),
         ):
             try:
                 receipt[name] = action()
@@ -314,6 +329,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evidence-dir", required=True)
     parser.add_argument("--timeout", type=float, required=True)
+    parser.add_argument('--profile', choices=('gnu', 'clang-c-v1'), default='gnu')
     parser.add_argument("compiler_argv", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     compiler_argv = args.compiler_argv
@@ -323,7 +339,7 @@ def main(argv=None):
         raise KeyboardInterrupt("received signal " + str(signum))
     previous = signal.signal(signal.SIGTERM, interrupted)
     try:
-        return observe(compiler_argv[1:], evidence_dir=args.evidence_dir, timeout=args.timeout)[0]
+        return observe(compiler_argv[1:], evidence_dir=args.evidence_dir, timeout=args.timeout, profile=args.profile)[0]
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     finally:

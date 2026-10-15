@@ -1,8 +1,13 @@
 #pragma once
 #include "spin2014/SourceAdaptiveSpinSolver.h"
+#include "spin2014/SourceAdaptiveCheckpoint.h"
 #include "verification/ExactCuboidUnion.h"
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
 namespace spin2014 {
+class SourceMaterialBoundaryResult;
+struct SourceMaterialBoundarySettings;
+SourceMaterialBoundaryResult makeSourceMaterialBoundaryImpl(const SourceAdaptiveDomain&,
+    const Eigen::VectorXd&,double,double,bool,const SourceMaterialBoundarySettings&);
 struct SourceMaterialBoundarySettings {
     verification::ExactCuboidUnionSettings unionSettings;
     // IMPLEMENTATION_DEFAULT engineering contact-clearance request, not paper
@@ -13,16 +18,20 @@ struct SourceMaterialBoundaryFacts {
     std::string algorithm="source-material-boundary-exact-partition-tetrahedra-v1";
     std::string status="NOT_ATTEMPTED_UNKNOWN",diagnostic,inputDigest,productDigest;
     std::string sourceHash,partitionHash,binaryHash,outerMeshHash,materialMeshHash;
-    double density=0,minimumOuterWall=0;
+    bool materialComponentsExported=false;
+    double density=0,boundaryDensity=0,interiorDensity=0,minimumOuterWall=0;
     verification::ExactCuboidUnionFacts unionFacts;
     // Immutable copy at the final validation/failure point, not a live context.
     verification::ExactNefBudgetFacts resourceBudget;
     verification::ExactMaterialRegionFacts outerRegion,designRegion,materialRegion,carvedRegion;
+    verification::ExactMaterialRegionFacts boundaryMaterialRegion,interiorMaterialRegion;
     verification::ExactBoundaryFacts materialBoundary;
     verification::ExactMaterialPartitionFacts partition;
+    verification::ExactMaterialPartitionFacts dualMaterialPartition;
     verification::ExactMaterialRelationFacts carvedSubsetDesign;
     verification::ExactBoundaryClearanceFacts clearance;
     physics::RawMassMoments10 sourceSubtractionMoments,integratedMoments;
+    physics::RawMassMoments10 boundaryMaterialMoments,interiorMaterialMoments;
     Eigen::Matrix<double,10,1> normalizedMomentResiduals=Eigen::Matrix<double,10,1>::Constant(std::numeric_limits<double>::infinity());
     double normalizedMomentError=std::numeric_limits<double>::infinity();
     double minimumCentralInertiaEigenvalue=std::numeric_limits<double>::infinity();
@@ -44,12 +53,20 @@ public:
     const Eigen::MatrixXi& cavityFaces() const {return cavityFaces_;}
     const Eigen::MatrixXd& materialVertices() const {return materialVertices_;}
     const Eigen::MatrixXi& materialFaces() const {return materialFaces_;}
+    const Eigen::MatrixXd& boundaryMaterialVertices() const {return boundaryMaterialVertices_;}
+    const Eigen::MatrixXi& boundaryMaterialFaces() const {return boundaryMaterialFaces_;}
+    const Eigen::MatrixXd& interiorMaterialVertices() const {return interiorMaterialVertices_;}
+    const Eigen::MatrixXi& interiorMaterialFaces() const {return interiorMaterialFaces_;}
 private:
     SourceMaterialBoundary()=default;
     SourceMaterialBoundaryFacts facts_;
     Eigen::MatrixXd outerVertices_,cavityVertices_,materialVertices_;
     Eigen::MatrixXi outerFaces_,cavityFaces_,materialFaces_;
+    Eigen::MatrixXd boundaryMaterialVertices_,interiorMaterialVertices_;
+    Eigen::MatrixXi boundaryMaterialFaces_,interiorMaterialFaces_;
     friend SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain&,const Eigen::VectorXd&,double,const SourceMaterialBoundarySettings&);
+    friend SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain&,const Eigen::VectorXd&,double,double,const SourceMaterialBoundarySettings&);
+    friend SourceMaterialBoundaryResult makeSourceMaterialBoundaryImpl(const SourceAdaptiveDomain&,const Eigen::VectorXd&,double,double,bool,const SourceMaterialBoundarySettings&);
 };
 class SourceMaterialBoundaryResult {
 public:
@@ -59,12 +76,17 @@ private:
     SourceMaterialBoundaryFacts facts_;
     std::shared_ptr<const SourceMaterialBoundary> product_;
     friend SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain&,const Eigen::VectorXd&,double,const SourceMaterialBoundarySettings&);
+    friend SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain&,const Eigen::VectorXd&,double,double,const SourceMaterialBoundarySettings&);
+    friend SourceMaterialBoundaryResult makeSourceMaterialBoundaryImpl(const SourceAdaptiveDomain&,const Eigen::VectorXd&,double,double,bool,const SourceMaterialBoundarySettings&);
     friend class SourceAdaptiveSpinMaterialResult;
 };
 void validateSourceMaterialBoundarySettings(const SourceMaterialBoundarySettings&);
 std::string hashSourceMaterialBoundarySettings(const SourceMaterialBoundarySettings&);
 SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain&,
     const Eigen::VectorXd& binary,double density,const SourceMaterialBoundarySettings& = {});
+SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain&,
+    const Eigen::VectorXd& binary,double boundaryDensity,double interiorDensity,
+    const SourceMaterialBoundarySettings& = {});
 
 /** Calls the actual native source solver and consumes a private terminal domain
  * moved from that invocation. No public mutable solve-result input is accepted.
@@ -80,8 +102,14 @@ private:
     SourceMaterialBoundaryResult boundary_;
     std::string outputDigest_;
     friend SourceAdaptiveSpinMaterialResult solveSourceAdaptiveSpinMaterial(const SourceAdaptiveSpinRequest&,const SourceMaterialBoundarySettings&);
+    friend SourceAdaptiveSpinMaterialResult solveSourceAdaptiveSpinMaterialStages(const SourceAdaptiveSpinRequest&,const SourceMaterialBoundarySettings&,const SourceAdaptiveStageControl*,std::shared_ptr<const SourceAdaptiveCheckpoint>&);
 };
 SourceAdaptiveSpinMaterialResult solveSourceAdaptiveSpinMaterial(
     const SourceAdaptiveSpinRequest&,const SourceMaterialBoundarySettings& = {});
+// Only a private solver endpoint may authorize export. Pauses never export;
+// resumed terminal solves use exactly the same material checks as full runs.
+SourceAdaptiveSpinMaterialResult solveSourceAdaptiveSpinMaterialStages(
+    const SourceAdaptiveSpinRequest&,const SourceMaterialBoundarySettings&,
+    const SourceAdaptiveStageControl*,std::shared_ptr<const SourceAdaptiveCheckpoint>&);
 }
 #endif

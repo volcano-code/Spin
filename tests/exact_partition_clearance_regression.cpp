@@ -1,4 +1,5 @@
 #include "verification/ExactMaterialRegion.h"
+#include "../src/verification/ExactBoundaryDistance.h"
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -37,6 +38,18 @@ int main() {
         require(same.completed && same.applicable==true && same.contact==true && same.atLeastMinimum==true &&
                 same.squaredDistanceExact=="0/1" && same.witnessFaces==std::array<std::size_t,2>({0,0}),
                 "contact has exact zero and lexicographic witness; zero threshold passes");
+        const auto indexedMesh=detail::makeExactBoundaryDistanceIndex(v,f);
+        const auto indexedSame=checkExactBoundaryClearance(a,a,0.,*indexedMesh,*indexedMesh);
+        require(indexedSame.completed&&indexedSame.applicable==same.applicable&&
+                indexedSame.contact==same.contact&&indexedSame.atLeastMinimum==same.atLeastMinimum&&
+                indexedSame.squaredDistanceExact==same.squaredDistanceExact&&
+                indexedSame.witnessFaces==same.witnessFaces&&indexedSame.backend!=same.backend&&
+                indexedSame.clearanceDigest!=same.clearanceDigest,
+                "reusable exact boundary index preserves geometry facts and retains backend provenance");
+        Eigen::MatrixXd displaced=v;displaced.col(0).array()+=8.;
+        const auto mismatchedIndex=detail::makeExactBoundaryDistanceIndex(displaced,f);
+        rejects([&]{checkExactBoundaryClearance(a,a,0.,*indexedMesh,*mismatchedIndex);});
+        rejects([&]{detail::makeExactBoundaryDistanceIndex(v,Eigen::MatrixXi(0,3));});
         require(checkExactBoundaryClearance(a,a,1.).atLeastMinimum==false,"positive threshold fails contact");
         for (double threshold : {-1.,std::numeric_limits<double>::infinity(),std::numeric_limits<double>::quiet_NaN()})
             rejects([&]{checkExactBoundaryClearance(a,a,threshold);});

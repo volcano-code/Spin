@@ -3,10 +3,20 @@
 #include "physics/RawMassMoments10.h"
 
 #include <Eigen/Core>
+#include <functional>
 
 
 namespace spin2014
 {
+namespace detail { struct TriangleMomentTrace; }
+/** Synchronous borrowed observations, valid only during the callback.
+ * Prefixes are not completed artifacts. Exceptions propagate; callers must
+ * require a successful return before accepting a full trace. No trace storage
+ * is retained by the integrator. The native scaling/accumulation is unchanged.
+ */
+using SurfaceMomentObserver = std::function<void(Eigen::Index,
+    const detail::TriangleMomentTrace&, const physics::RawMassMoments10::Vector&,
+    const Eigen::MatrixXd&)>;
 
 /** Value-only supplement Algorithm 1, with no dense vertex Jacobian.
  * Coordinates retain caller length units; moments have units rho*length^(3+d)
@@ -35,6 +45,10 @@ SurfaceRawMomentDifferential differentiateSurfaceRawMoments(
     const Eigen::MatrixXi& faces,
     double density = 1.0
 );
+
+SurfaceRawMomentDifferential differentiateSurfaceRawMomentsObserved(
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& faces, double density,
+    const SurfaceMomentObserver& observer);
 
 
 } // namespace spin2014

@@ -7,9 +7,12 @@ Failed attempts must be supplied in their original event order.
 
 Source policy v1 covers this repository's code/build/test trees and experiment
 scripts. It is a declared policy, not compiler-discovered dependency closure.
-Dependency coverage is bounded to explicitly declared local roots. Git HEAD
-and all three binary diffs are contextual observations: effective file content
-defines freshness, so committing only a report cannot create a source hash cycle.
+The opt-in v2 policy captures only declared runner/checker/build source files;
+assets, binaries, runtime, and declared dependency roots remain independently
+bound. Dependency coverage is bounded to explicitly declared local roots. Git
+HEAD and all three binary diffs are contextual observations: effective file
+content defines freshness, so committing only a report cannot create a source
+hash cycle.
 
 Runtime hashes measure files on disk, not already-loaded memory. Snapshots and
 their integrity digests are unauthenticated and cannot prove author identity,
@@ -35,6 +38,8 @@ from typing import Any
 
 
 SOURCE_POLICY = "make-it-stand-effective-source-v1"
+EXPLICIT_EFFECTIVE_SOURCE_POLICY = "make-it-stand-explicit-effective-source-v2"
+_SOURCE_POLICIES = {SOURCE_POLICY, EXPLICIT_EFFECTIVE_SOURCE_POLICY}
 _TREES = {"src", "include", "bindings", "cmake", "python", "scripts", "tests"}
 _EXCLUDED = {".git", "build", "__pycache__", ".pytest_cache", ".mypy_cache",
              "reports", "results", "output", "outputs"}
@@ -157,6 +162,74 @@ def _records(paths, *, root=None, nonempty=True):
     return sorted(result, key=lambda record: record["path"])
 
 
+def native_build_configuration_files(build, native_module_path, *, receipt=None) -> list[Path]:
+    """Bind an observed build to its product and original configured cache.
+
+    This checks saved file identities, not toolchain completeness or authenticity.
+    An invalid explicit/bundled receipt never falls back to legacy configuration.
+    Returned dependencies must all be passed to ``begin_run``.
+    """
+    build = _path(build, directory=True)
+    module = _path(native_module_path)
+    _require(module.parent == build / "python", "module is outside declared build/python")
+    candidate = build / "build-receipt.json" if receipt is None else Path(receipt)
+    if receipt is None and not candidate.exists() and not candidate.is_symlink():
+        return [_path(build / "CMakeCache.txt")]
+    candidate = _path(candidate)
+    reference = _parse(candidate.read_text(encoding="utf-8"))
+    _require(reference.get("schema") == "native-build-receipt-reference-v1", "unsupported build receipt")
+    files = reference.get("files")
+    _keys(files, ("config", "result", "complete", "summary"), "build receipt")
+    paths, documents, observations = {}, {}, {}
+    for key, item in files.items():
+        _keys(item, ("path", "sha256"), "receipt dependency")
+        _require(isinstance(item["path"], str) and Path(item["path"]).is_absolute(),
+                 "receipt dependency path must be absolute")
+        path = _path(item["path"])
+        record = _record(path)
+        _require(record["sha256"] == item["sha256"], "receipt dependency identity mismatch: " + key)
+        documents[key] = _parse(path.read_text(encoding="utf-8"))
+        _require(_record(path) == record, "receipt dependency changed while reading: " + key)
+        paths[key], observations[key] = path, record
+    result = documents["result"]
+    _require(result.get("schema") == "source-job-result-v1" and
+             result.get("status") == "PROCESS_EXITED" and
+             type(result.get("returncode")) is int and result["returncode"] == 0,
+             "build must have a successful process receipt")
+    _require(documents["complete"].get("result_sha256") == observations["result"]["sha256"],
+             "build completion identity mismatch")
+    summary = documents["summary"]
+    _require(summary.get("status") == "OBSERVED_COMPILE_ARCHIVE_LINK_LOAD", "unsupported observed build summary")
+    product = summary.get("module")
+    _require(type(product) is dict and product.get("path") == str(module) and
+             product.get("sha256") == _record(module)["sha256"], "observed module identity mismatch")
+    config = documents["config"]
+    _require(config.get("schema") == "source-job-v1" and type(config.get("identity")) is dict,
+             "invalid build configuration identity")
+    unit = config.get("unit")
+    _require(type(unit) is str and bool(unit.strip()) and unit == result.get("unit"),
+             "build job unit identity mismatch")
+    # v1 refers to the observed builder's fixed layout, not arbitrary collections
+    # of independently valid files. The reference JSON itself may live anywhere.
+    job = paths["config"].parent
+    expected = {"config": job / "config.json", "result": job / "result.json",
+                "complete": job / "complete.json", "summary": job / "output/summary.json"}
+    _require(paths == expected and build == job / "output/bundle",
+             "receipt dependencies and product must belong to the same build job layout")
+    caches = [item for item in config["identity"].values() if type(item) is dict and
+              type(item.get("path")) is str and Path(item["path"]).name == "CMakeCache.txt"]
+    _require(len(caches) == 1, "build receipt must bind exactly one original cache")
+    cache = caches[0]
+    _require(Path(cache["path"]).is_absolute(), "cache identity path must be absolute")
+    cache_path = _path(cache["path"])
+    actual = _record(cache_path)
+    _require(actual["sha256"] == cache.get("sha256") and actual["size"] == cache.get("size"),
+             "original cache identity mismatch")
+    dependencies = [candidate, *paths.values(), cache_path]
+    _records(dependencies)  # Reject aliases/duplicate receipt inputs as usual.
+    return dependencies
+
+
 def _selected(relative: str) -> bool:
     path = Path(relative)
     if set(path.parts) & _EXCLUDED or path.suffix in {".pyc", ".pyo"}:
@@ -200,9 +273,33 @@ def _head(root):
     return _git(root, "rev-parse", "--verify", "HEAD").decode().strip()
 
 
-def _source(root):
+def _request_source_policy(request):
+    """Read the optional source-policy request field without upgrading v1."""
+    return request.get("source_policy", SOURCE_POLICY)
+
+
+def _explicit_effective_source_paths(root, request):
+    paths = []
+    for group in ("runner_files", "checker_files", "build_configuration_files"):
+        for raw in request[group]:
+            path = _path(raw)
+            try:
+                relative = path.relative_to(root).as_posix()
+            except ValueError:
+                continue
+            if _selected(relative):
+                paths.append(path)
+    _require(bool(paths), "explicit effective source scope has no selected repository source files")
+    return sorted(set(paths), key=lambda path: path.relative_to(root).as_posix())
+
+
+def _source(root, request):
+    policy = _request_source_policy(request)
+    _require(policy in _SOURCE_POLICIES, "unsupported source selection policy")
     head = _head(root)
-    files = _records(_walk(root, source=True), root=root)
+    files = (_records(_walk(root, source=True), root=root)
+             if policy == SOURCE_POLICY else
+             _records(_explicit_effective_source_paths(root, request), root=root))
     tracked = _git(root, "ls-tree", "-r", "--name-only", "-z", "HEAD").decode("utf-8").split("\0")
     indexed = _git(root, "ls-files", "--cached", "-z").decode("utf-8").split("\0")
     paths = sorted({record["path"] for record in files} | {path for path in tracked + indexed if path and _selected(path)})
@@ -212,7 +309,7 @@ def _source(root):
         diff = _git(root, "--literal-pathspecs", "diff", "--binary", "--no-ext-diff", "--no-textconv", *args, "--", *paths)
         context[name + "_diff_base64"] = base64.b64encode(diff).decode("ascii")
     _require(head == _head(root), "Git HEAD changed while capturing source")
-    return {"policy": SOURCE_POLICY, "selected_paths": [item["path"] for item in files],
+    return {"policy": policy, "selected_paths": [item["path"] for item in files],
             "files": files, "content_sha256": _digest(files), "git": context}
 
 
@@ -270,10 +367,12 @@ def _runtime(names, pure_python):
 
 _FILE_GROUPS = ("runner_files", "checker_files", "asset_files", "build_configuration_files")
 _REQUEST_KEYS = {"repository_root", *_FILE_GROUPS, "parameters", "seed_protocol", "dependency_roots", "native_modules", "pure_python"}
+_REQUEST_KEYS_WITH_SOURCE_POLICY = _REQUEST_KEYS | {"source_policy"}
 
 
 def _validate_request(request):
-    _keys(request, _REQUEST_KEYS, "capture request")
+    _require(type(request) is dict and set(request) in (_REQUEST_KEYS, _REQUEST_KEYS_WITH_SOURCE_POLICY),
+             "invalid capture request fields")
     _text(request["repository_root"], "repository root")
     _require(Path(request["repository_root"]).is_absolute(), "repository root must be absolute")
     _nonempty_object(request["parameters"], "parameters")
@@ -301,11 +400,12 @@ def _validate_request(request):
     _require(type(names) is list and all(type(name) is str and bool(name) for name in names), "invalid native module names")
     _require(names == sorted(set(names)), "duplicate native modules")
     _require(type(request["pure_python"]) is bool and ((not names) == request["pure_python"]), "invalid runtime mode")
+    _require(_request_source_policy(request) in _SOURCE_POLICIES, "invalid source selection policy")
 
 
 def _observe(request):
     root = _path(request["repository_root"], directory=True)
-    return {"source": _source(root), "dependencies": _dependencies(request["dependency_roots"]),
+    return {"source": _source(root, request), "dependencies": _dependencies(request["dependency_roots"]),
             "files": {group: _records(request[group]) for group in _FILE_GROUPS},
             "runtime": _runtime(request["native_modules"], request["pure_python"])}
 
@@ -348,7 +448,7 @@ def _validate_begin(value):
     _keys(obs, {"source", "dependencies", "files", "runtime"}, "observation")
     source = obs["source"]
     _keys(source, {"policy", "selected_paths", "files", "content_sha256", "git"}, "source")
-    _require(source["policy"] == SOURCE_POLICY, "unsupported source selection policy")
+    _require(source["policy"] == _request_source_policy(value["request"]), "source selection policy mismatch")
     _validate_records(source["files"])
     _require(source["content_sha256"] == _digest(source["files"]), "source digest mismatch")
     _require(source["selected_paths"] == [item["path"] for item in source["files"]] and
@@ -416,7 +516,8 @@ class RunInputsV2:
 
 def begin_run(*, repository_root, runner_files, checker_files, asset_files,
               build_configuration_files, parameters, seed_protocol,
-              dependency_roots, native_modules, pure_python) -> RunInputsV2:
+              dependency_roots, native_modules, pure_python,
+              source_policy=SOURCE_POLICY) -> RunInputsV2:
     """Read actual inputs now; no caller-provided commit/hash/verification flags."""
     _require(type(dependency_roots) is dict and bool(dependency_roots), "dependency roots must be nonempty")
     request = {"repository_root": str(_path(repository_root, directory=True)),
@@ -427,6 +528,8 @@ def begin_run(*, repository_root, runner_files, checker_files, asset_files,
                "parameters": parameters, "seed_protocol": seed_protocol,
                "dependency_roots": {name: str(_path(root, directory=True)) for name, root in dependency_roots.items()},
                "native_modules": _module_names(native_modules), "pure_python": pure_python}
+    if source_policy != SOURCE_POLICY:
+        request["source_policy"] = source_policy
     _validate_request(request)
     request = _parse(_canonical(request))
     return RunInputsV2(_canonical(_seal({"schema": _BEGIN_SCHEMA, "request": request, "observation": _observe(request)})))

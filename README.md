@@ -1,4 +1,26 @@
-# Make It Stand — Auditable Reproduction
+# Spin — Auditable Geometry and Spinning-Top Research
+
+This repository publishes the current development source snapshot of our
+Spin-It Faster reproduction work, together with the earlier Make It Stand
+and Spin-It implementations. Upstream attribution and commit history are
+preserved below. This is ongoing research, not a completed reproduction.
+
+As of 2026-10-15, the formal Cherchi-based 3D solver has completed small
+seeded solves, terminal material reloads, and an independent repeat. The
+reconstructed flower has optimization and simulation records. The dense
+noodles case has a numerically converged run but its complete terminal
+delivery remains unfinished; the handled heart has not completed a full
+solve. See the [current execution ledger](docs/faster-terminal-recovery-progress-20261014.md)
+for evidence and limitations.
+
+This source publication includes implementation, tests, documentation, and
+experiment drivers. Large generated job trees, native build products,
+local reference archives, model delivery bundles, and videos are not part
+of this initial upload. Some experiment drivers reference those local
+artifacts and cannot be replayed from this source snapshot alone. Full
+reproducible artifact packaging remains a separate delivery task.
+
+## Original project and attribution
 
 This repository is an independent, staged reproduction of the method in
 Prévost et al., *Make It Stand: Balancing Shapes for 3D Fabrication*

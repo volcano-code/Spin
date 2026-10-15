@@ -38,6 +38,12 @@ enum class StaticObjective
 
 const char* staticObjectiveToken(StaticObjective objective) noexcept;
 
+/** Figure 12's pure-height endpoint retains the four spinning-top constraints. */
+enum class SpinningTopObjective { InertiaAndLowering, LowerCenterOfMass };
+
+enum class StaticObjectiveMeasure { DensityWeightedMass, UniformDensityVolume };
+const char* staticObjectiveMeasureToken(StaticObjectiveMeasure measure) noexcept;
+
 
 /** A closed outward-oriented triangle boundary. */
 struct TriangleMesh
@@ -85,6 +91,9 @@ struct SpinSolverSettings
     double maximumGeodesicStep = 0.5;
     unsigned int deterministicSeed = 0;
     SpinEquationProfile equationProfile = SpinEquationProfile::LegacyNativeNormalizedV1;
+    /** Diagnostic-only capture of moments/Jacobian already returned by each
+     * evaluator invocation. Disabled by default; never triggers extra work. */
+    bool captureEvaluationPayload = false;
 };
 
 
@@ -97,6 +106,9 @@ struct BuoyantStabilityData
     double waterlineArea = 0.0;
     Eigen::Matrix2d waterlineCentralSecondMoment = Eigen::Matrix2d::Zero();
     double fixedShellVolume = 0.0;
+    // Zero preserves the legacy interpretation: fixed-shell density equals
+    // the design material density. Strict adapters should provide it explicitly.
+    double fixedShellDensity = 0.0;
 };
 
 
@@ -109,8 +121,11 @@ struct SpinDesignRequest
     SpinTargetFrame targetFrame;
     SpinMode mode = SpinMode::StaticBalance;
     StaticObjective staticObjective = StaticObjective::MaximumMass;
-    /** Paper Fig. 11 weight kappa in -kappa*v+(1-kappa)*c3. */
+    /** Weight in -kappa*(selected measure)+(1-kappa)*c3. */
     double staticParetoWeight = 0.0;
+    // Legacy calls remain mass-weighted. The paper Figure 11 path explicitly
+    // selects volume and verifies a uniform-density geometric fixed shell.
+    StaticObjectiveMeasure staticObjectiveMeasure = StaticObjectiveMeasure::DensityWeightedMass;
     double materialDensity = 1.0;
     double originalUnitsPerNormalizedUnit = 1.0;
     double minimumWallThickness = 0.0;
@@ -121,7 +136,17 @@ struct SpinDesignRequest
     BuoyantStabilityData buoyancy;
 
     SpinSolverSettings settings;
+
+    // Appended to preserve existing aggregate member order. Finite-weight
+    // requests keep their old semantics and identity by default.
+    SpinningTopObjective spinningTopObjective = SpinningTopObjective::InertiaAndLowering;
 };
+
+/** Objective-only validation, also required by caller-owned external maps. */
+void validateSpinningTopObjective(const SpinDesignRequest& request);
+
+/** Convert total mass to the chosen static objective measure after validation. */
+double staticObjectiveMassScale(const SpinDesignRequest& request);
 
 
 enum class SpinSolverStatus
@@ -183,6 +208,41 @@ struct SpinSolverEvent
     std::optional<std::string> materialTopologyHash;
     SpinEquationProfile equationProfile = SpinEquationProfile::LegacyNativeNormalizedV1;
     std::optional<double> rawEquationResidual;
+    struct EvaluationPayload
+    {
+        std::array<double, 10> solverCoordinates{};
+        std::array<double, 10> solverRawMoments{};
+        std::optional<std::array<double, 10>> variableRawMoments;
+        std::optional<Eigen::Matrix<double, 10, 10>> solverMomentJacobian;
+        bool derivativeDefined = false;
+        std::string jacobianCoordinateIdentity;
+        std::string evaluationMapIdentity;
+        std::string booleanBackendIdentity;
+        std::string derivativeIdentity;
+        std::string derivativeDiagnostic;
+        std::string geometryHash;
+        std::string topologyHash;
+        double evaluatorWallSeconds = 0.0;
+        double residualEvaluationSeconds = 0.0;
+        double derivativeEvaluationSeconds = 0.0;
+    };
+    /** Present only in the opt-in versioned event stream. */
+    std::optional<EvaluationPayload> evaluationPayload;
+    struct NewtonSystemPayload
+    {
+        Eigen::MatrixXd matrix;
+        Eigen::VectorXd rightHandSide;
+        Eigen::Index computedRank = 0;
+        Eigen::Index equilibratedRank = -1;
+        std::optional<double> multiplierMu;
+        Eigen::VectorXd constraintMultipliers;
+        Eigen::VectorXd rowScales;
+        Eigen::VectorXd columnScales;
+        double linearResidualInfinityNorm = 0.0;
+        double linearBackwardError = 0.0;
+    };
+    /** Exact assembled Eq. 14 system and reversible solve diagnostics. */
+    std::optional<NewtonSystemPayload> newtonSystemPayload;
 };
 
 
@@ -249,10 +309,13 @@ struct QuadricHollowingResult
 
 /** Throws std::invalid_argument unless every request invariant is satisfied. */
 void validateSpinDesignRequest(const SpinDesignRequest& request);
+/** Opt-in exact represented-coordinate boundary predicates; no material seal. */
+void validateSpinDesignRequest(const SpinDesignRequest& request, bool exactInputBoundary);
 
 
 /** SHA-256 of every normalized, solver-relevant request field. */
 std::string computeSpinDesignRequestHash(const SpinDesignRequest& request);
+std::string computeSpinDesignRequestHash(const SpinDesignRequest& request, bool exactInputBoundary);
 
 
 } // namespace spin

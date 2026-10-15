@@ -1,6 +1,7 @@
 #include "spin2014/SourceCageBbw.h"
 #include "verification/Sha256.h"
 #include <Highs.h>
+#include <Eigen/SparseCholesky>
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -222,6 +223,7 @@ std::string settingsDescription(const SourceCageBbwConfig& c) {
         <<";qp_nullspace_limit="<<c.maximumVariables
         <<";time_limit_per_call="<<c.timeLimitSeconds
         <<";diagnostic_byte_cap=65536;trace=backend-calls-statuses-counts"
+        <<";independent-active-set-polish=exact-reduced-fem-hessian;apply-only-if-independent-kkt-passes"
         <<";independent-redundant-row=0=0;no-implicit-retry";
     return s.str();
 }
@@ -304,6 +306,80 @@ void configure(Highs& highs,const SourceCageBbwConfig& c,SourceCageBbwAttempt& a
     };
     ensure(highs.setCallback(callback,&attempt),"HiGHS diagnostic callback rejected");
     ensure(highs.startCallback(HighsCallbackType::kCallbackLogging),"HiGHS logging callback unavailable");
+}
+bool refineIndependentColumn(const SourceCageFem& fem,const Assembly& q,const Layout& layout,
+                             const SourceCageBbwConfig& config,double scale,int handle,
+                             Eigen::VectorXd& column,SourceCageBbwAttempt& attempt) {
+    attempt.activeSetRefinementAttempted=true;
+    const Eigen::MatrixXd initial=column;
+    const auto before=assess(fem,initial,config,layout,scale,handle);
+    attempt.backendStationarityResidual=before.stationarityResidual;
+    attempt.refinedStationarityResidual=before.stationarityResidual;
+    if(before.optimalityPassed) return false;
+    const std::size_t nodeCount=fem.grid().nodeKeys().size();
+    std::vector<bool> boundary(nodeCount,false);
+    for(const auto& row:fem.boundaryConstraints()) boundary[row.nodeIndex]=true;
+    Eigen::VectorXd fixed=Eigen::VectorXd::Zero(static_cast<Eigen::Index>(nodeCount));
+    for(const auto& row:fem.boundaryConstraints())
+        for(const auto& entry:row.entries)
+            if(entry.handleIndex==handle) fixed(row.nodeIndex)=entry.weight;
+    std::vector<int> freeIndex(nodeCount,-1),freeNodes;
+    freeNodes.reserve(layout.freeNodes.size());
+    for(std::size_t node=0;node<nodeCount;++node) {
+        if(boundary[node]) continue;
+        if(column(static_cast<Eigen::Index>(node))<=config.primalTolerance) fixed(node)=0.;
+        else if(column(static_cast<Eigen::Index>(node))>=1.-config.primalTolerance) fixed(node)=1.;
+        else {
+            freeIndex[node]=static_cast<int>(freeNodes.size());
+            freeNodes.push_back(static_cast<int>(node));
+        }
+    }
+    if(freeNodes.empty()) {
+        attempt.refinedStationarityResidual=before.stationarityResidual;
+        return false;
+    }
+    const long double refinementPeakBytes=static_cast<long double>(layout.bytes)+
+        static_cast<long double>(q.size())*2.*sizeof(Eigen::Triplet<double>)+
+        static_cast<long double>(freeNodes.size())*freeNodes.size()*4.*sizeof(double);
+    if(refinementPeakBytes>static_cast<long double>(config.maximumBytes)) return false;
+    using Sparse=Eigen::SparseMatrix<double>;
+    std::vector<Eigen::Triplet<double>> entries;
+    entries.reserve(q.size()*2);
+    Eigen::VectorXd rhs=Eigen::VectorXd::Zero(static_cast<Eigen::Index>(freeNodes.size()));
+    for(const auto& item:q) {
+        const int i=item.first.first,j=item.first.second;
+        const double value=represented(item.second/scale);
+        const int fi=freeIndex[static_cast<std::size_t>(i)],fj=freeIndex[static_cast<std::size_t>(j)];
+        if(fi>=0 && fj>=0) {
+            entries.emplace_back(fi,fj,value);
+            if(i!=j) entries.emplace_back(fj,fi,value);
+        } else if(fi>=0) rhs(fi)-=value*fixed(j);
+        else if(fj>=0 && i!=j) rhs(fj)-=value*fixed(i);
+    }
+    Sparse reduced(static_cast<int>(freeNodes.size()),static_cast<int>(freeNodes.size()));
+    reduced.setFromTriplets(entries.begin(),entries.end());
+    reduced.makeCompressed();
+    Eigen::SimplicialLDLT<Sparse> factor;
+    factor.compute(reduced);
+    if(factor.info()!=Eigen::Success || !factor.vectorD().allFinite() ||
+       (factor.vectorD().array()<=0.).any()) {
+        attempt.refinedStationarityResidual=before.stationarityResidual;
+        return false;
+    }
+    const Eigen::VectorXd solution=factor.solve(rhs);
+    if(factor.info()!=Eigen::Success || !solution.allFinite()) {
+        attempt.refinedStationarityResidual=before.stationarityResidual;
+        return false;
+    }
+    Eigen::VectorXd refined=fixed;
+    for(std::size_t i=0;i<freeNodes.size();++i)
+        refined(freeNodes[i])=solution(static_cast<Eigen::Index>(i));
+    const auto after=assess(fem,Eigen::MatrixXd(refined),config,layout,scale,handle);
+    attempt.refinedStationarityResidual=after.stationarityResidual;
+    if(!after.primalPassed || !after.optimalityPassed) return false;
+    column=std::move(refined);
+    attempt.activeSetRefinementApplied=true;
+    return true;
 }
 }
 
@@ -445,6 +521,11 @@ void SourceCageBbw::Data::solve() {
                     const int h=coupled?block:call;
                     for(int i=0;i<nf;++i) raw(l.freeNodes[i],h)=solution.col_value[block*nf+i];
                 }
+                if(!coupled) {
+                    Eigen::VectorXd candidate=raw.col(call);
+                    refineIndependentColumn(fem,q,l,config,scale,call,candidate,attempt);
+                    if(attempt.activeSetRefinementApplied) raw.col(call)=candidate;
+                }
                 attempt.assessment=coupled?assess(fem,raw,config,l,scale):
                     assess(fem,Eigen::MatrixXd(raw.col(call)),config,l,scale,call);
             }
@@ -526,6 +607,8 @@ void SourceCageBbw::Data::digest() {
         d.integer(a.handle); d.integer(a.passModelStatus); d.integer(a.runInvoked);
         d.integer(a.returnStatus); d.integer(a.modelStatus);
         d.integer(a.qpIterations); d.integer(a.candidateAvailable); d.text(a.terminalReason);
+        d.integer(a.activeSetRefinementAttempted); d.integer(a.activeSetRefinementApplied);
+        d.real(a.backendStationarityResidual); d.real(a.refinedStationarityResidual);
         hashAssessment(d,a.assessment);
     }
     outputHash=d.finish();

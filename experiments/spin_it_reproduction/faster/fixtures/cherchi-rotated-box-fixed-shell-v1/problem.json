@@ -1,0 +1,47 @@
+{
+  "design_regions": [
+    {
+      "density": 2.0,
+      "id": "editable-domain",
+      "mesh": "design.obj"
+    }
+  ],
+  "fixed_regions": [
+    {
+      "density": 0.75,
+      "id": "fixed-shell",
+      "mesh": "shell.obj"
+    }
+  ],
+  "length_unit": "m",
+  "mass_unit": "kg",
+  "minimum_outer_wall": 0.1,
+  "outer_mesh": "outer.obj",
+  "preflight_quadric_target_normalized": [
+    -0.009020730909074992,
+    0.0,
+    0.0,
+    0.0,
+    0.5773267781807995,
+    0.5773267781807995,
+    0.5773267781807995,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "schema": "faster-cherchi-problem-manifest-v1",
+  "target": {
+    "axis": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "mode": "YO_YO",
+    "origin": [
+      0.25,
+      -0.5,
+      0.75
+    ],
+    "support_points": []
+  }
+}

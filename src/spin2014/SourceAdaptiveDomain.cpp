@@ -26,15 +26,47 @@ void validateBeta(const Eigen::VectorXd& b,std::size_t n) {
 }
 void validateEpsilon(double e) {if(!std::isfinite(e)||e<=0||e>=.5)throw std::invalid_argument("source epsilon must be in (0,.5)");}
 }
-SourceAdaptiveDomain::SourceAdaptiveDomain(std::shared_ptr<const SourceSurfaceOctree> s,int initial,int maximum,std::size_t budget)
+SourceAdaptiveDomain::SourceAdaptiveDomain(std::shared_ptr<const SourceSurfaceOctree> s,int initial,int maximum,std::size_t budget,EmptyPartitionTag)
     :source_(std::move(s)),initialLevel_(initial),maximumLevel_(maximum),maximumLeaves_(budget) {
     if(!source_||initial<0||maximum<initial||maximum>source_->config().maximumDepth||budget==0||budget>static_cast<std::size_t>(std::numeric_limits<int>::max()/6))throw std::invalid_argument("invalid source optimization levels/budget");
+}
+SourceAdaptiveDomain::SourceAdaptiveDomain(std::shared_ptr<const SourceSurfaceOctree> s,int initial,int maximum,std::size_t budget)
+    :SourceAdaptiveDomain(std::move(s),initial,maximum,budget,EmptyPartitionTag{}) {
     std::function<void(SourcePartitionKey)> visit=[&](SourcePartitionKey k) {
         auto q=query(*source_,k);if(q.moments.mass()==0)return;
         if(k.level==initial){if(leaves_.size()>=budget)throw std::length_error("RESOURCE_LIMIT: initial source leaves");leaves_.push_back(q);return;}
         for(int i=0;i<8;++i)visit(child(k,i));
     };
     visit({});rebuild();
+}
+SourceAdaptiveDomain SourceAdaptiveDomain::restorePartition(
+    std::shared_ptr<const SourceSurfaceOctree> s,int initial,int maximum,std::size_t budget,
+    const std::vector<SourcePartitionKey>& keys,const std::string& expectedHash) {
+    SourceAdaptiveDomain result(std::move(s),initial,maximum,budget,EmptyPartitionTag{});
+    if(expectedHash.size()!=64 || !std::all_of(expectedHash.begin(),expectedHash.end(),
+        [](char c){return (c>='0'&&c<='9') || (c>='a'&&c<='f');}))
+        throw std::invalid_argument("invalid restored partition hash");
+    if(keys.size()>budget)throw std::length_error("RESOURCE_LIMIT: restored source leaves");
+    // Check before allocation, geometry queries, integer shifts, or sorting.
+    // Sorting keys alone could silently assign another leaf's saved beta.
+    for(std::size_t i=0;i<keys.size();++i) {
+        const auto& key=keys[i];
+        if(key.level<0 || key.level>maximum || (i && !(keys[i-1]<key)))
+            throw std::invalid_argument("invalid/noncanonical restored source keys");
+        const auto extent=std::uint32_t(1)<<key.level;
+        for(auto coordinate:key.coordinates)if(coordinate>=extent)
+            throw std::invalid_argument("restored source coordinate outside root");
+    }
+    result.leaves_.reserve(keys.size());
+    for(const auto& key:keys) {
+        auto leaf=query(*result.source_,key);
+        if(leaf.moments.mass()<=0)throw std::invalid_argument("empty restored source leaf");
+        result.leaves_.push_back(std::move(leaf));
+    }
+    result.rebuild(); // Requery moments, validate complete nonoverlapping cover.
+    if(result.partitionHash()!=expectedHash)
+        throw std::invalid_argument("restored partition identity mismatch");
+    return result;
 }
 void SourceAdaptiveDomain::validateCoverage() const {
     std::set<SourcePartitionKey> keys;for(const auto& l:leaves_) {

@@ -11,6 +11,30 @@ from make_it_stand import (
 
 
 class SpinIt2014PythonTests(unittest.TestCase):
+    def test_target_frame_is_validated_and_forwarded_to_native_solver(self) -> None:
+        self.assertIn("target_origin", SpinIt2014Request.__dataclass_fields__)
+        self.assertIn("target_axes", SpinIt2014Request.__dataclass_fields__)
+        common = dict(
+            dimensions=(2, 2, 2), minimum=(-1., -1., -1.), maximum=(1., 1., 1.),
+            material_mask=(1,) * 8, carveable_mask=(1,) * 8,
+            initial_level=1, maximum_level=1, maximum_adaptive_passes=1,
+            objective="TOP_INERTIA_ONLY",
+        )
+        with self.assertRaises(ValueError):
+            SpinIt2014Request(**(common | {"target_axes": ((1., 0., 0.), (0., 1., 0.))}))
+        with self.assertRaises(ValueError):
+            SpinIt2014Request(**(common | {"target_axes": ((1., 0., 0.), (0., 1., 0.), (1., 0., 1.))}))
+
+        axes = ((0., 1., 0.), (-1., 0., 0.), (0., 0., 1.))
+        request = SpinIt2014Request(**(common | {
+            "target_origin": (0.2, -0.1, 0.3), "target_axes": axes,
+        }))
+        self.assertEqual(request.target_origin, (0.2, -0.1, 0.3))
+        self.assertEqual(request.target_axes, axes)
+        diagnostics = solve_spin_it_2014(request).diagnostics
+        self.assertEqual(diagnostics["target_origin_model"], [0.2, -0.1, 0.3])
+        self.assertEqual(diagnostics["target_axes_model"], [list(row) for row in axes])
+
     def test_audited_profile_exports_independently_checkable_kkt(self) -> None:
         self.assertIn("slqp_algorithm", SpinIt2014Request.__dataclass_fields__)
         common = dict(dimensions=(4,4,4), minimum=(-1.5,-3.,-1.5), maximum=(1.5,3.,1.5),

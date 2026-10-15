@@ -1,0 +1,28 @@
+{
+  "schema": "faster-planar-method-fixture-v1",
+  "scope": "SYNTHETIC_REGRESSION_NOT_AUTHOR_FLOWER",
+  "protocol": "Geometry fixed before the first CLI run; input-bounds initialization, seeds 0 and 1, eight attempts per run, 60 solver evaluations per attempt. Shared interfaces are permitted. No supplied solution or initial center.",
+  "cases": [{
+    "id": "planar-layered-ledger-method-v1",
+    "mode": "FIDGET_SPINNER",
+    "asset_class": "SYNTHETIC_REGRESSION",
+    "planar_problem": {
+      "design_region_loops": [
+        [[-3,-3],[3,-3],[3,3],[-3,3]],
+        [[0.6853981633974483,0.1],[0.8853981633974483,0.1],[0.8853981633974483,-0.1],[0.6853981633974483,-0.1]]
+      ],
+      "design_areal_density": 1.0,
+      "extrusion_interval": [-0.7,0.8],
+      "extrusion_volume_density": 0.6666666666666666,
+      "fixed_extrusion_layers": [
+        {"loops": [[[0.6853981633974483,-0.1],[0.8853981633974483,-0.1],[0.8853981633974483,0.1],[0.6853981633974483,0.1]]], "z_interval": [-0.1,0], "volume_density": 500.0},
+        {"loops": [[[0.6853981633974483,-0.1],[0.8853981633974483,-0.1],[0.8853981633974483,0.1],[0.6853981633974483,0.1]]], "z_interval": [0,0.1], "volume_density": 500.0}
+      ],
+      "maximum_iterations": 100,
+      "maximum_function_evaluations": 60,
+      "residual_tolerance": 1e-10,
+      "initial_trust_radius": 0.25,
+      "maximum_trust_radius": 1.0
+    }
+  }]
+}

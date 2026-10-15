@@ -1,6 +1,7 @@
 // Missing-operation branch is preserved as the initial TDD RED evidence.
 #if __has_include("spin2014/SourceMaterialBoundary.h")
 #include "spin2014/SourceMaterialBoundary.h"
+#include "spin2014/AdaptiveFillFunctional.h"
 #include "spin2014/SlqpAuditTrace.h"
 #include "source_surface_test_utils.h"
 #include <cstring>
@@ -87,6 +88,74 @@ SourceAdaptiveSpinRequest goodRequest() {
     r.laplacianWeight=1;r.centerWeight=1;r.density=1;
     r.slqp.maximumIterations=300;r.slqp.equalityTolerance=1e-10;r.slqp.projectedGradientTolerance=1e-8;
     return r;
+}
+void sourceDualDensityFunctionalTests() {
+    auto r=goodRequest();
+    SourceAdaptiveDomain domain(r.source,r.initialLevel,r.maximumOptimizationLevel);
+    Eigen::VectorXd beta=Eigen::VectorXd::Constant(domain.leaves().size(),.375);
+    const double shellDensity=1.25,interiorDensity=6.5;
+    AdaptiveFillFunctional dual(domain,
+        SpinIt2014MomentProblem::fromObjective(r.objective,r.inertiaWeight,r.centerWeight),
+        r.laplacianWeight,shellDensity,interiorDensity);
+    const auto expected=(r.source->outerSurfaceMoments()-r.source->designSurfaceMoments()).scaledDensity(shellDensity)
+        +r.source->designSurfaceMoments().scaledDensity(interiorDensity)
+        -domain.removedMoments(beta).scaledDensity(interiorDensity);
+    const auto actual=dual.evaluatePaper(beta,0).finalMoments;
+    close(actual.values(),expected.values(),"source dual density applies shell/interior separately");
+
+    AdaptiveFillFunctional legacy(domain,
+        SpinIt2014MomentProblem::fromObjective(r.objective,r.inertiaWeight,r.centerWeight),
+        r.laplacianWeight,r.density);
+    AdaptiveFillFunctional equal(domain,
+        SpinIt2014MomentProblem::fromObjective(r.objective,r.inertiaWeight,r.centerWeight),
+        r.laplacianWeight,r.density,r.density);
+    close(legacy.evaluatePaper(beta,0).finalMoments.values(),equal.evaluatePaper(beta,0).finalMoments.values(),
+        "source dual equal densities preserve legacy moment semantics");
+
+    auto request=r;request.boundaryDensity=shellDensity;request.interiorDensity=interiorDensity;
+    validateSourceAdaptiveSpinRequest(request);
+    require(request.resolvedBoundaryDensity()==shellDensity && request.resolvedInteriorDensity()==interiorDensity,
+        "source request resolves explicit dual densities");
+    const auto dualHash=computeSourceAdaptiveSpinRequestHash(request);
+    request.boundaryDensity.reset();request.interiorDensity.reset();
+    require(computeSourceAdaptiveSpinRequestHash(request)!=dualHash,"dual densities bind source request identity");
+    request.boundaryDensity=shellDensity;
+    rejects([&]{validateSourceAdaptiveSpinRequest(request);},"partial dual-density request rejected");
+
+    auto product=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Ones(domain.leaves().size()),shellDensity,interiorDensity);
+    require(bool(product.product()),product.facts().diagnostic.c_str());
+    require(product.facts().materialComponentsExported && product.facts().dualMaterialPartition.completePartition==true,
+        "shell/interior/carve geometry is an exact partition of original solid");
+    require(product.product()->boundaryMaterialFaces().rows()>0 && product.product()->interiorMaterialFaces().rows()>0,
+        "both source surface material boundaries are exported");
+    const auto expectedProduct=(r.source->outerSurfaceMoments()-r.source->designSurfaceMoments()).scaledDensity(shellDensity)
+        +r.source->designSurfaceMoments().scaledDensity(interiorDensity)
+        -domain.removedMoments(Eigen::VectorXd::Ones(domain.leaves().size())).scaledDensity(interiorDensity);
+    close(product.facts().integratedMoments.values(),expectedProduct.values(),
+        "two exported source material meshes independently integrate to weighted total");
+    const auto singleDensity=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Ones(domain.leaves().size()),1.);
+    const auto equalDensity=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Ones(domain.leaves().size()),1.,1.);
+    require(bool(singleDensity.product()) && bool(equalDensity.product()) &&
+        equalDensity.facts().materialComponentsExported,
+        "equal-density dual material still exports both component surfaces");
+    close(singleDensity.facts().integratedMoments.values(),equalDensity.facts().integratedMoments.values(),
+        "equal-density dual material preserves single-material total moments");
+    const auto noCarve=makeSourceMaterialBoundary(domain,Eigen::VectorXd::Zero(domain.leaves().size()),shellDensity,interiorDensity);
+    require(bool(noCarve.product()) && noCarve.facts().dualMaterialPartition.completePartition==true &&
+        noCarve.product()->interiorMaterialFaces().rows()==r.source->designFaces().rows(),
+        "empty carve retains the full independently exported interior material");
+    rejects([&]{makeSourceMaterialBoundary(domain,Eigen::VectorXd::Zero(domain.leaves().size()),0.,interiorDensity);},
+        "invalid boundary density is rejected before geometry work");
+
+    auto solveRequest=goodRequest();solveRequest.boundaryDensity=shellDensity;solveRequest.interiorDensity=interiorDensity;
+    SourceMaterialBoundarySettings settings;settings.minimumOuterWall=.5;
+    const auto solved=solveSourceAdaptiveSpinMaterial(solveRequest,settings);
+    require(solved.solve().status==SourceAdaptiveSpinStatus::BinaryMomentValidated &&
+        solved.boundary().product() && solved.boundary().facts().materialComponentsExported,
+        "source dual-density request reaches optimizer, binary rounding and independent material export");
+    require(solved.boundary().facts().normalizedMomentError<=1e-10 &&
+        solved.solve().binaryCheck && solved.solve().binaryCheck->passed,
+        "source dual-density final geometry and constraints independently pass");
 }
 void exactOutputCapTests() {
     // Catch using a loose growth estimate as if it were actual output size.
@@ -250,6 +319,17 @@ void auditorBudgetTests() {
     auto relationBudget=std::make_shared<ExactNefBudget>(100000);
     const auto relation=relateExactMaterialRegionsWithBudget(a,b,relationBudget);
     require(relation.completed && relation.positiveVolumeOverlap==true,"budgeted overlap relation");
+    const auto unitMesh=box({0,0,0},{1,1,1}),shiftedMesh=box({0.5,0,0},{1.5,1,1});
+    const auto unit=makeExactMaterialRegion(unitMesh.v,unitMesh.f);
+    const auto shifted=makeExactMaterialRegion(shiftedMesh.v,shiftedMesh.f);
+    const auto exactDifference=relateExactMaterialRegions(unit,shifted);
+    require(exactDifference.completed && exactDifference.equal==false &&
+        exactDifference.symmetricDifferenceVolumeExact==std::optional<std::string>("1/1"),
+        "exact relation reports rational symmetric-difference volume for shifted unit cubes");
+    const auto exactEqual=relateExactMaterialRegions(unit,unit);
+    require(exactEqual.completed && exactEqual.equal==true &&
+        exactEqual.symmetricDifferenceVolumeExact==std::optional<std::string>("0/1"),
+        "exact equality has zero regularized symmetric-difference volume");
     const auto relationPeak=relationBudget->facts().peakComplexity;
     require(relationPeak>92 && relationBudget->facts().currentComplexity==0,"relation counts both existing operands and live Boolean results, then releases leases");
     at=std::make_shared<ExactNefBudget>(relationPeak);
@@ -309,6 +389,7 @@ int main(int argc,char** argv) {try {
     if(argc==1 || std::string(argv[1])=="--union") unionTests();
     if(argc==1 || std::string(argv[1])=="--cap") exactOutputCapTests();
     if(argc==1 || std::string(argv[1])=="--material") materialTests();
+    if(argc==1 || std::string(argv[1])=="--dual-density") sourceDualDensityFunctionalTests();
     if(argc==1 || std::string(argv[1])=="--solve") wrapperTests();
     std::cout<<"SYNTHETIC_REGRESSION source material tests passed; faster="<<MAKE_IT_STAND_HAS_SPIN_IT_FASTER<<'\n';return 0;
 } catch(const std::exception& e) {std::cerr<<e.what()<<'\n';return 1;}}

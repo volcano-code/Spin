@@ -1,4 +1,5 @@
 #include "spin/SpinMomentProblem.h"
+#include "spin/MomentInertiaAlgebra.h"
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -126,49 +127,20 @@ SecondOrderScalar squared(const SecondOrderScalar& value)
 }
 
 
-struct CentralInertia
-{
-    SecondOrderScalar i11;
-    SecondOrderScalar i22;
-    SecondOrderScalar i33;
-    SecondOrderScalar i12;
-    SecondOrderScalar i13;
-    SecondOrderScalar i23;
-};
+using CentralInertia = spin::detail::CentralInertia10<SecondOrderScalar>;
 
 
 CentralInertia centralInertia(
     const std::vector<SecondOrderScalar>& r
 )
 {
-    const SecondOrderScalar& v = r[0];
-    const SecondOrderScalar& l1 = r[1];
-    const SecondOrderScalar& l2 = r[2];
-    const SecondOrderScalar& l3 = r[3];
-    const SecondOrderScalar& q11 = r[4];
-    const SecondOrderScalar& q22 = r[5];
-    const SecondOrderScalar& q33 = r[6];
-    const SecondOrderScalar& q23 = r[7];
-    const SecondOrderScalar& q13 = r[8];
-    const SecondOrderScalar& q12 = r[9];
-
-    CentralInertia result;
-    result.i11 = q22 + q33 - (squared(l2) + squared(l3)) / v;
-    result.i22 = q11 + q33 - (squared(l1) + squared(l3)) / v;
-    result.i33 = q11 + q22 - (squared(l1) + squared(l2)) / v;
-    result.i12 = -q12 + (l1 * l2) / v;
-    result.i13 = -q13 + (l1 * l3) / v;
-    result.i23 = -q23 + (l2 * l3) / v;
-    return result;
+    return spin::detail::centralInertia10(r);
 }
 
 
 SecondOrderScalar yoyoObjective(const CentralInertia& inertia)
 {
-    const SecondOrderScalar numerator =
-        squared(inertia.i11) + squared(inertia.i22) +
-        2.0 * squared(inertia.i12);
-    return numerator / squared(inertia.i33);
+    return spin::detail::transverseInertiaRatio(inertia);
 }
 
 
@@ -251,7 +223,7 @@ SpinMomentProblem SpinMomentProblem::buoyantStability(
 }
 
 
-SpinMomentProblem SpinMomentProblem::staticBalance(StaticObjective objective)
+SpinMomentProblem SpinMomentProblem::staticBalance(StaticObjective objective, double massScale)
 {
     if (objective == StaticObjective::ParetoTradeoff)
     {
@@ -259,11 +231,15 @@ SpinMomentProblem SpinMomentProblem::staticBalance(StaticObjective objective)
             "Pareto static balance requires an explicit mass weight"
         );
     }
-    return SpinMomentProblem(SpinMode::StaticBalance, objective, 0.0, 0.0);
+    if(!std::isfinite(massScale)||massScale<=0.0)
+        throw std::invalid_argument("static objective mass scale must be finite and positive");
+    auto result=SpinMomentProblem(SpinMode::StaticBalance, objective, 0.0, 0.0);
+    result.staticMassScale_=massScale;
+    return result;
 }
 
 
-SpinMomentProblem SpinMomentProblem::staticBalancePareto(double massWeight)
+SpinMomentProblem SpinMomentProblem::staticBalancePareto(double massWeight, double massScale)
 {
     if (!std::isfinite(massWeight) || massWeight < 0.0 || massWeight > 1.0)
     {
@@ -271,12 +247,16 @@ SpinMomentProblem SpinMomentProblem::staticBalancePareto(double massWeight)
             "static Pareto mass weight must lie in [0,1]"
         );
     }
-    return SpinMomentProblem(
+    if(!std::isfinite(massScale)||massScale<=0.0)
+        throw std::invalid_argument("static objective mass scale must be finite and positive");
+    auto result=SpinMomentProblem(
         SpinMode::StaticBalance,
         StaticObjective::ParetoTradeoff,
         0.0,
         massWeight
     );
+    result.staticMassScale_=massScale;
+    return result;
 }
 
 
@@ -306,18 +286,33 @@ SpinMomentProblem SpinMomentProblem::spinningTop(
     double centerOfMassWeight
 )
 {
+    return spinningTop(centerOfMassWeight, SpinningTopObjective::InertiaAndLowering);
+}
+
+
+SpinMomentProblem SpinMomentProblem::spinningTop(
+    double centerOfMassWeight, SpinningTopObjective objective
+)
+{
     if (!std::isfinite(centerOfMassWeight) || centerOfMassWeight < 0.0)
     {
         throw std::invalid_argument(
             "spinning-top center-of-mass weight must be finite and nonnegative"
         );
     }
-    return SpinMomentProblem(
+    if (objective != SpinningTopObjective::InertiaAndLowering &&
+        objective != SpinningTopObjective::LowerCenterOfMass)
+        throw std::invalid_argument("unsupported spinning-top objective");
+    if (objective == SpinningTopObjective::LowerCenterOfMass && centerOfMassWeight != 0.0)
+        throw std::invalid_argument("pure-height endpoint requires zero extra center-of-mass weight");
+    auto result = SpinMomentProblem(
         SpinMode::SpinningTop,
         StaticObjective::MaximumMass,
         centerOfMassWeight,
         0.0
     );
+    result.spinningTopObjective_ = objective;
+    return result;
 }
 
 
@@ -375,7 +370,7 @@ SpinMomentEvaluation SpinMomentProblem::evaluate(
         constraints = {r[1], r[2]};
         if (staticObjective_ == StaticObjective::MaximumMass)
         {
-            objective = -r[0];
+            objective = -staticMassScale_ * r[0];
         }
         else
         if (staticObjective_ == StaticObjective::LowerCenterOfMass)
@@ -384,7 +379,7 @@ SpinMomentEvaluation SpinMomentProblem::evaluate(
         }
         else
         {
-            objective = -staticParetoWeight_ * r[0] +
+            objective = -(staticParetoWeight_ * staticMassScale_) * r[0] +
                 (1.0 - staticParetoWeight_) * (r[3] / r[0]);
         }
         break;
@@ -424,6 +419,14 @@ SpinMomentEvaluation SpinMomentProblem::evaluate(
     case SpinMode::SpinningTop:
     {
         const CentralInertia inertia = centralInertia(r);
+        constraints = {r[1], r[2], inertia.i13, inertia.i23};
+        if (spinningTopObjective_ == SpinningTopObjective::LowerCenterOfMass)
+        {
+            // Figure 12 endpoint: do not evaluate the removed inertia ratio,
+            // or replace this four-constraint problem with static balance.
+            objective = r[3] / r[0];
+            break;
+        }
         if (std::abs(inertia.i33.value) <= 1e-14)
         {
             throw std::domain_error(
@@ -432,7 +435,6 @@ SpinMomentEvaluation SpinMomentProblem::evaluate(
         }
         objective = yoyoObjective(inertia) +
             centerOfMassWeight_ * (r[3] / r[0]);
-        constraints = {r[1], r[2], inertia.i13, inertia.i23};
         break;
     }
     }

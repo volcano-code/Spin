@@ -1,0 +1,40 @@
+# Faster Cherchi locked-shell Newton integration — 2026-09-27
+
+## Scope
+
+This is a synthetic method-validation case, not a Spin-It Faster paper example. It exercises the current Cherchi path on an editable box with a nonzero-density fixed shell, deterministic initialization, source-bound Boolean evaluations, and durable result evidence. It does not establish paper reproduction or general feasibility.
+
+## Implementation state
+
+- The Cherchi evaluator returns the exact triangulated quadric source mesh and its identity alongside the retained-side Boolean output and discrete moment Jacobian.
+- Terminal material construction evaluates the opposite Boolean side against that same source mesh. The bridge rejects a different source identity or a non-opposite Boolean operation.
+- `SealedSpinArtifact` remains the authority for exact partition, overlap, and domain checks; using the opposite side is not by itself sufficient.
+- Empty initial lists may use the native deterministic initializer. Complement-generation failures are preserved as `FINAL_COMPLEMENT_AUDIT_FAILED` rather than escaping without a result record.
+- The bridge now compares the actual terminal quadric source vertex and face arrays (canonical float64/int32 bytes), not only a caller-provided identity string. If either callback omits the source mesh or the arrays differ, the terminal audit fails closed.
+- The fixed shell in this method case is a real geometric region with density `0.75`; normalized mass is `0.65625`. The editable region has density `1.0`.
+
+## Evidence
+
+1. `experiments/spin_it_reproduction/faster/results/cherchi-locked-shell-same-quadric-complement-20260927-01/` constructs the two sides from the same triangulated quadric source. Retained operation is `intersection`; complement operation is `subtraction`. Exact artifact sealing returned `PASSED`. The saved bundle was reloaded and its scientific digest matched the result digest (`92b6ce64db6a37d97c6aa752c442920f00a504f690f3290378788a07f63ccd2e`). This is a candidate geometry/partition check, not an optimized result.
+2. `experiments/spin_it_reproduction/faster/results/cherchi-locked-shell-seeded-smoke-20260927-03/result.json` records 8/8 evaluations, one deterministic start, a nonzero fixed shell, and `evaluation_map_binding_audit.status = CONSISTENT`. Every logged trial was accepted and the normalized equation residual decreased from `0.8399501595709946` to `0.00014501896148792266`. The process ended at its deliberately limited 8-evaluation budget (`RESOURCE_LIMIT_REACHED`); it did not converge, did not invoke terminal complement generation, and produced no sealed optimized artifact. Thus the lower residual is progress evidence, not a successful solve.
+3. A follow-up 16-evaluation run, using the same request and seed but a distinct output directory, stopped without convergence at evaluation 16. Residuals reached `1.268878940646508e-7`; later trials were rejected because the source-motion bordered differential could not certify its `1e-10` residual, and the quadric-center sign also became numerically degenerate on other trials. The coefficients approached a near-cone/type-boundary regime. This is a documented differentiability/stratum boundary, not evidence of global infeasibility. Full trace and failed trials are retained in `experiments/spin_it_reproduction/faster/results/cherchi-locked-shell-seeded-budget-diagnostic-20260927-01/result.json` and `evaluation-events.jsonl`.
+4. Deterministic seed 1 was run with the planned 60-evaluation/attempt and 8-restart ceilings, but the 60-minute job cap stopped it at 60:36 before the runner emitted a terminal result. Its partial ledger has 132 evaluation records (41 geometry results and 91 rejected trials: 71 source-motion differential and 20 stratum-classification failures). No convergence, infeasibility, or final artifact claim can be made. Exact input/binary/ledger hashes and the incomplete status are recorded in `experiments/spin_it_reproduction/faster/results/cherchi-locked-shell-seeded-development-20260927-01/PARTIAL_RUN_STATUS.md`.
+5. A focused regression now replays the exact near-cone coefficient vector captured at seed-0 evaluation 15. The bordered source-motion differential is correctly still rejected: its relative residual is `1.32002541174067e-10`, just above the unchanged `1e-10` certification gate, while reciprocal condition is `1.4791048575020003e-7` (well above the `1e-12` conditioning floor); the solution norm is `2.1642115991960973e6`. This points to residual certification under a very large solution, not a condition-number cutoff or an infeasibility result. The failure diagnostic now reports these measured quantities at 17-digit precision. No solver threshold or scientific result was changed.
+6. A diagnostic-only prototype of three residual-refinement steps with the same LU factorization reduced the residual to `1.0496716905867743e-10`, but still did not meet the existing gate. The prototype was discarded rather than accepting an uncertified derivative; no refinement algorithm remains in the final source.
+7. The failure diagnostic was extended with a normwise backward error and the fixed normal. For the captured trial, `backward_error=5.7054049081287902e-17` at normal `(-0.50599266182565983,-0.27144044986507432,0.81871332489194881)`. This is evidence that the linear solve itself is backward-stable, but not sufficient to certify the complete local derivative: the first coefficient finite-difference probe at step `1e-5` left the regular inverse-Gauss branch on one side. The residual gate and fail-closed behavior therefore remain unchanged; no claim of a repaired derivative is made.
+
+## Verification
+
+- Cherchi Newton integration runner tests: `62 passed`.
+- Full Faster material bridge tests: `39 passed` in 301.55 s, including the exact-source-array forgery negative test.
+- Cherchi Newton integration runner tests: `62 passed` in 0.49 s.
+- `git diff --check` and Python byte-compilation passed for the modified runner and bridge.
+- The full bridge suite must be rerun after this change before treating the interface as regression-clean.
+- `quadric-source-motion-regression` rebuilt successfully and the complete executable passed (exit 0), including the captured near-cone regression and the source-motion suite. The regression intentionally confirms that this trial remains rejected rather than relaxing the certification gate.
+- The directly affected Python failure-stage classification test passed (`1 passed`). The first full-suite invocation inherited Anaconda's older `libstdc++` and could not load the extension; preloading the build's pinned compiler runtime resolved that loader-order issue, after which the complete Cherchi runner suite passed (`62 passed`).
+- The `spin-it-faster-end-to-end` C++ executable rebuilt and passed (exit 0). Its discrete Boolean-to-Newton yoyo case converged in 5 iterations with residual `4.10e-16`; a separate tangency case remained explicitly fail-closed at its resource limit. The executable also printed an off-target hyperboloid diagnostic from the legacy continuous-derivative comparison (`derivative_error=0.218809`); this is not evidence that the strict discrete Cherchi locked-shell case converges.
+- `git diff --check` passed after the diagnostic and regression updates.
+
+## Remaining gate
+
+The actual locked-shell solve has not yet reached the Eq. 14 residual threshold. Until it converges, the integrated terminal complement callback, exact final partition, and optimizer-to-artifact path are not demonstrated on a converged result. Seed 0 reached a residual of `1.27e-7` before near-cone differential failures; seed 1 remained unfinished at the job cap. Neither seed satisfies the planned two-seed/two-process repeat. The fixed-shell geometry is synthetic and cannot count toward Table 1 or other original-paper experiments. The source-motion failure is now quantitatively localized to a residual barely over its gate despite acceptable reported reciprocal condition; any numerical refinement would need a new mathematical justification and finite-difference/KKT evidence before modifying the algorithm.

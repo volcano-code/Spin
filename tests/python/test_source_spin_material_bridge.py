@@ -1,5 +1,6 @@
 """Actual source solve, immutable run binding, and independent material seal."""
 import importlib
+import json
 import unittest
 from dataclasses import asdict, replace, FrozenInstanceError
 import tempfile
@@ -44,6 +45,84 @@ class SourceBridgeAvailabilityTests(unittest.TestCase):
         self.assertIsNotNone(importlib.util.find_spec(
                         'make_it_stand.verification.source_spin_material'), 'missing independent sealing bridge')
 
+    def test_readonly_source_domain_inspection_exposes_sparse_laplacian(self):
+        """Independent auditors need the actual source-derived leaf graph.
+
+        This is deliberately an inspection-only endpoint: it cannot accept a
+        caller-supplied moment matrix or mutate the adaptive partition.
+        """
+        native = importlib.import_module('_make_it_stand')
+        self.assertTrue(hasattr(native, 'inspect_source_spin2014_domain'),
+                        'missing read-only source-domain inspection entrypoint')
+        outer = box((-1., -1., 0.), (1., 1., 2.))
+        design = box((-.5, -.5, 1.), (.5, .5, 1.5))
+        observed = native.inspect_source_spin2014_domain(
+            *outer, *design,
+            source_settings={'root_origin': [-1., -1., 0.], 'root_side': 2.,
+                             'maximum_depth': 4, 'maximum_nodes': 5_000_000},
+            initial_level=2, maximum_optimization_level=4,
+            maximum_leaf_count=1_000_000,
+        )
+        self.assertEqual(observed['schema'], 'source-spin2014-domain-inspection-v1')
+        self.assertGreater(observed['source']['stats']['boundary_nodes'], 0)
+        cells = observed['source_cells']
+        self.assertEqual(cells[0]['index'], 0)
+        self.assertEqual(cells[0]['level'], 0)
+        boundary = [cell for cell in cells if cell['kind'] == 'BOUNDARY']
+        self.assertEqual(len(boundary), observed['source']['stats']['boundary_nodes'])
+        self.assertTrue(all(cell['level'] == 4 for cell in boundary))
+        for cell in cells[1:]:
+            self.assertLess(cell['parent'], cell['index'])
+        for cell in cells:
+            if cell['kind'] == 'INTERNAL':
+                self.assertEqual(len(cell['children']), 8)
+        leaves = observed['leaves']
+        self.assertGreater(len(leaves), 1)
+        self.assertEqual(observed['leaf_count'], len(leaves))
+        self.assertEqual(len(observed['partition_hash']), 64)
+        self.assertEqual(len(observed['source']['partition_hash']), 64)
+        edge_set = {tuple(edge) for edge in observed['edges']}
+        self.assertTrue(edge_set)
+        matrix = np.zeros((len(leaves), len(leaves)))
+        for row, column, value in observed['laplacian_triplets']:
+            matrix[row, column] += value
+        np.testing.assert_allclose(matrix, matrix.T, atol=0, rtol=0)
+        np.testing.assert_allclose(matrix.sum(axis=1), 0., atol=1e-14, rtol=0)
+        for first, second in edge_set:
+            self.assertEqual(matrix[first, second], -1.)
+            self.assertEqual(matrix[second, first], -1.)
+        beta = np.linspace(.1, .9, len(leaves))
+        independent_energy = sum((beta[first] - beta[second]) ** 2
+                                 for first, second in edge_set)
+        self.assertAlmostEqual(float(beta @ matrix @ beta), independent_energy,
+                               places=12)
+
+    def test_readonly_source_domain_summary_avoids_expanding_cell_payloads(self):
+        """Large source trees can be audited without materializing Python records."""
+        native = importlib.import_module('_make_it_stand')
+        outer = box((-1., -1., 0.), (1., 1., 2.))
+        design = box((-.5, -.5, 1.), (.5, .5, 1.5))
+        observed = native.inspect_source_spin2014_domain(
+            *outer, *design,
+            source_settings={'root_origin': [-1., -1., 0.], 'root_side': 2.,
+                             'maximum_depth': 4, 'maximum_nodes': 5_000_000},
+            initial_level=2, maximum_optimization_level=4,
+            maximum_leaf_count=1_000_000,
+            include_details=False,
+        )
+        self.assertEqual(observed['inspection_detail'], 'SUMMARY')
+        self.assertGreater(observed['source_cell_count'], 0)
+        self.assertGreater(observed['leaf_count'], 0)
+        self.assertTrue(all(type(level) is str
+                            for level in observed['leaf_level_counts']))
+        self.assertEqual(sum(observed['leaf_level_counts'].values()),
+                         observed['leaf_count'])
+        self.assertGreater(observed['edge_count'], 0)
+        self.assertEqual(len(observed['partition_hash']), 64)
+        self.assertEqual(len(observed['source']['source_hash']), 64)
+        for expanded in ('source_cells', 'leaves', 'edges', 'laplacian_triplets'):
+            self.assertNotIn(expanded, observed)
+
 
 class SourceMaterialTests(unittest.TestCase):
     @classmethod
@@ -60,9 +139,12 @@ class SourceMaterialTests(unittest.TestCase):
         self.assertIsNone(r.seal_error)
         self.assertIsNotNone(r.artifact)
         s = r.identity['native_run']['solve']
-        self.assertEqual(s['input_hash'], '83359bc0abc68ff056f49e18ec52ad6bb34d1121e0743f28d074cbab22d7f7a9')
-        self.assertEqual(s['trace_hash'], '72002479f41c4a8a4ef71731e1ff8bc41c42537cd2990e8dbd3417130838d246')
-        self.assertEqual(s['output_hash'], '39b18d241e42e8978295e6bb97c7e2e0c743c59893cee9ca609dbc355b6d9283')
+        # v2 binds the explicit termination policy and post-transition facts.
+        # Scientific trajectory, cuboid count and analytic moments below retain
+        # their v1 expectations; this is an identity-format migration only.
+        self.assertEqual(s['input_hash'], 'a7c9239fa8717f83d2cef88c838d7741ecc8e658cbee19ace3387520a89f23e0')
+        self.assertEqual(s['trace_hash'], 'f4d0604b0c8d76c29e7d24ac850ee9b558e6ec105ebbb0a1193a8d53a119cc87')
+        self.assertEqual(s['output_hash'], 'd8138bc8c744e5a453dd7ae22cb7f5608ca9892f19bf98a597becf22eae39216')
         records = [t for p in s['passes'] for t in p['trace']]
         self.assertEqual([t['iteration'] for t in records], list(range(38))+[0])
         self.assertIn('constraint_jacobian', records[0])
@@ -106,6 +188,71 @@ class SourceMaterialTests(unittest.TestCase):
         with self.assertRaises((FrozenInstanceError, AttributeError)):
             self.solved.status = 'FORGED'
         with self.assertRaises(TypeError): self.m.SourceSpinMaterialResult()
+
+    def test_source_surface_dual_density_exports_both_materials(self):
+        dual = SpinArtifactProblem(original=self.p.original.arrays(),
+            fixed_regions=[('shell', self.p.fixed_regions[0].mesh.arrays(), 1.25)],
+            design_regions=[('design', self.p.design_regions[0].mesh.arrays(), 6.5)],
+            length_unit='m', mass_unit='kg', target=self.p.target, minimum_outer_wall=.5)
+        result = self.m.solve_and_seal_source_spin2014(dual, **self.cfg)
+        self.assertEqual(result.status, 'BINARY_MOMENT_VALIDATED')
+        self.assertIsNotNone(result.artifact)
+        self.assertIsNotNone(result.boundary_material)
+        self.assertIsNotNone(result.interior_material)
+        geometry = result.identity['native_run']['geometry']
+        self.assertTrue(geometry['material_components_exported'])
+        self.assertTrue(geometry['dual_material_partition']['complete_partition'])
+        self.assertEqual(geometry['boundary_density'], 1.25)
+        self.assertEqual(geometry['interior_density'], 6.5)
+        boundary_moments = np.asarray(geometry['boundary_material_moments'])
+        interior_moments = np.asarray(geometry['interior_material_moments'])
+        integrated_moments = np.asarray(geometry['integrated_moments'])
+        # Input shell volume is 7.5 m^3, so its 1.25 density gives 9.375 kg.
+        # The retained binary interior is 0.359375 m^3; 6.5 is applied once.
+        self.assertAlmostEqual(boundary_moments[0], 9.375, places=12)
+        self.assertAlmostEqual(interior_moments[0], 2.3359375, places=12)
+        np.testing.assert_allclose(boundary_moments + interior_moments,
+                                   integrated_moments, atol=1e-10, rtol=0)
+        np.testing.assert_allclose(geometry['integrated_moments'],
+            geometry['source_subtraction_moments'], atol=1e-10, rtol=0)
+        independent = result.identity['dual_material_independent_audit']
+        self.assertEqual(independent['method'], 'INDEPENDENT_SIGNED_TETRAHEDRA_V1')
+        self.assertTrue(independent['density_applied_once'])
+        self.assertTrue(independent['exact_partition']['complete_partition'])
+        self.assertLessEqual(max(independent['normalized_residuals'].values()), 1e-10)
+        np.testing.assert_allclose(independent['boundary_moments'], boundary_moments,
+                                   atol=1e-10, rtol=0)
+        np.testing.assert_allclose(independent['interior_moments'], interior_moments,
+                                   atol=1e-10, rtol=0)
+
+        # The independent gate must reject a density applied with the wrong
+        # material label, even when the native geometry claim remains intact.
+        boundary_snapshot = self.m.MeshSnapshot(result.boundary_material)
+        interior_snapshot = self.m.MeshSnapshot(result.interior_material)
+        with self.assertRaisesRegex(ValueError, 'dual-material independent mass-moment audit failed'):
+            self.m._dual_material_independent_audit(
+                boundary_snapshot, interior_snapshot, 2.5, 6.5, geometry, 2.0,
+            )
+
+        # A missing phase is not equivalent to a zero-density phase.  It must
+        # stop before a combined result can be reported as validated.
+        with self.assertRaisesRegex(ValueError, 'cannot integrate an empty material component'):
+            self.m._dual_material_independent_audit(
+                boundary_snapshot, self.m.MeshSnapshot(None), 1.25, 6.5,
+                geometry, 2.0,
+            )
+
+    def test_equal_density_source_surface_keeps_single_material_path(self):
+        # The equal-density limit must use the ordinary single-material path;
+        # splitting a region must not multiply or otherwise alter its density.
+        result = self.solved
+        self.assertIsNone(result.boundary_material)
+        self.assertIsNone(result.interior_material)
+        self.assertIsNone(result.identity['dual_material_independent_audit'])
+        geometry = result.identity['native_run']['geometry']
+        np.testing.assert_allclose(geometry['integrated_moments'],
+                                   geometry['source_subtraction_moments'],
+                                   atol=1e-10, rtol=0)
 
     def test_resource_and_wall_failures_keep_numerical_status(self):
         cfg = {**self.cfg, 'boundary_settings': self.m.SourceBoundarySettings(maximum_intermediate_complexity=4)}
@@ -154,8 +301,7 @@ class SourceMaterialTests(unittest.TestCase):
             self.m.solve_and_seal_source_spin2014(problem(mode='BUOYANT_STABILITY'), **self.cfg)
         o = self.p.original
         fixed = [(r.region_id,r.mesh,r.density) for r in self.p.fixed_regions]
-        for design in [[('design',self.p.design_regions[0].mesh,2.)],
-                       [('left',box((-.5,-.5,1),(0,.5,1.5)),1.),
+        for design in [[('left',box((-.5,-.5,1),(0,.5,1.5)),1.),
                         ('right',box((0,-.5,1),(.5,.5,1.5)),1.)]]:
             p = SpinArtifactProblem(original=o,fixed_regions=fixed,design_regions=design,
                 length_unit='m',mass_unit='kg',target=self.p.target,minimum_outer_wall=.5)
@@ -166,6 +312,23 @@ class SourceMaterialTests(unittest.TestCase):
                 design_regions=[('design',self.p.design_regions[0].mesh,1.)],
                 length_unit='m',mass_unit='kg',target=self.p.target,minimum_outer_wall=.5,
                 validation_scope='DEFORMATION')
+
+    def test_source_target_frame_binds_problem_axis_and_native_settings(self):
+        axes=((0.,0.,1.),(0.,1.,0.),(-1.,0.,0.))
+        solver=replace(self.cfg['solver_settings'], target_axes=axes)
+        rotated_target=problem(axis=[1,0,0])
+        result=self.m.solve_and_seal_source_spin2014(
+            rotated_target, source_settings=self.cfg['source_settings'],
+            solver_settings=solver, boundary_settings=self.cfg['boundary_settings'],
+        )
+        settings=result.identity['native_run']['settings']['solver_settings']
+        self.assertEqual(settings['target_axes'],[list(row) for row in axes])
+        self.assertEqual(settings['target_origin'],[0.,0.,0.])
+        with self.assertRaisesRegex(ValueError,'NOT_SUPPORTED'):
+            self.m.solve_and_seal_source_spin2014(
+                problem(axis=[0,0,1]), source_settings=self.cfg['source_settings'],
+                solver_settings=solver, boundary_settings=self.cfg['boundary_settings'],
+            )
 
     def test_direct_native_lossless_mesh_and_settings_boundary(self):
         o, d = self.p.original.arrays(), self.p.design_regions[0].mesh.arrays()
@@ -190,8 +353,28 @@ class SourceMaterialTests(unittest.TestCase):
         with self.assertRaises(TypeError): self.n.NativeSourceSpinMaterialResult()
         direct=self.n.solve_source_spin2014_material(*o,*d,**args)
         identity=direct.diagnostics
+        storage=direct.trace_storage
+        compact_lines=list(direct.iter_stage_audit_json())
+        compact_events=[__import__('json').loads(line) for line in compact_lines]
+        self.assertEqual(compact_events[0]['kind'],'header')
+        self.assertEqual(compact_events[0]['trace_counts'],
+                         [len(p['trace']) for p in identity['solve']['passes']])
+        iteration_events=[event for event in compact_events if event['kind']=='iteration']
+        self.assertEqual(len(iteration_events),storage['record_count'])
+        counts=compact_events[0]['trace_counts']; cursor=0
+        for pass_index,count in enumerate(counts):
+            pass_events=[event for event in iteration_events if event['pass_index']==pass_index]
+            self.assertEqual([event['trace_index'] for event in pass_events],list(range(count)))
+            for event in pass_events[:-1]: self.assertEqual(event['payload'],{})
+            self.assertTrue(pass_events[-1]['payload'].get('final_state'))
+            self.assertIn('state',pass_events[-1]['payload'])
+            cursor+=count
+        self.assertEqual(cursor,storage['record_count'])
         self.assertEqual(identity['settings']['source_settings'], {**args['source_settings'],'root_origin':[-1.,-1.,0.]})
-        self.assertEqual(identity['settings']['solver_settings'],args['solver_settings'])
+        self.assertEqual(
+            identity['settings']['solver_settings'],
+            json.loads(json.dumps(args['solver_settings'])),
+        )
         self.assertEqual(identity['settings']['boundary_settings'],args['boundary_settings'])
         direct.outer[0][:]=100
         direct.material[1][:]=0
@@ -212,6 +395,39 @@ class SourceMaterialTests(unittest.TestCase):
 
 
 class SourceRunnerTests(unittest.TestCase):
+    def test_transition_runner_preserves_real_split_and_binary_failure(self):
+        root = Path(__file__).resolve().parents[2]
+        path = root/'experiments/spin_it_reproduction/strict/run_source_spin2014_adaptive_transitions.py'
+        self.assertTrue(path.is_file(), 'missing source-derived adaptive transition runner')
+        spec = importlib.util.spec_from_file_location('source_transition_runner',path)
+        runner = importlib.util.module_from_spec(spec); spec.loader.exec_module(runner)
+        import pybind11
+        import _make_it_stand as native
+        from make_it_stand.verification.run_evidence import PaperRunEvidenceV2, check_freshness
+        tmp = Path(tempfile.mkdtemp(prefix='source-transition-runner-test-',dir=root/'build'))
+        summary = runner.run(tmp/'transition',
+            build_directory=Path(native.__file__).resolve().parents[1],
+            dependency_roots={'pybind11':Path(pybind11.get_include())})
+        self.assertEqual(summary['status'], 'BINARY_VALIDATION_FAILED')
+        self.assertEqual(summary['classification'], 'SYNTHETIC_REGRESSION')
+        self.assertFalse(summary['sealed'])
+        native_run = __import__('json').loads((tmp/'transition'/'native-run.json').read_text())
+        solve = native_run['solve']
+        self.assertEqual(solve['termination_policy'], 'PAPER_POST_TRANSITION_V1')
+        self.assertEqual(len(solve['passes']), 3)
+        self.assertTrue(all(item['status'] == 'CONVERGED' for item in solve['passes']))
+        self.assertGreater(sum(len(item['split']['changes']) for item in solve['passes']), 0)
+        self.assertEqual(sum(len(item['merge']['changes']) for item in solve['passes']), 0)
+        self.assertGreater(native_run['source']['stats']['boundary_nodes'], 0)
+        self.assertTrue(solve['passes'][-1]['paper_resolution_complete'])
+        inspection = __import__('json').loads((tmp/'transition'/'domain-inspection.json').read_text())
+        self.assertEqual(inspection['source']['source_hash'], native_run['source']['source_hash'])
+        self.assertEqual(inspection['source']['partition_hash'], native_run['source']['partition_hash'])
+        self.assertGreater(len(inspection['source_cells']), 0)
+        self.assertGreater(len(inspection['edges']), 0)
+        evidence = PaperRunEvidenceV2.from_json((tmp/'transition'/'evidence.json').read_text())
+        self.assertEqual(check_freshness(evidence).status, 'CURRENT')
+
     def test_runner_persists_actual_success_failure_and_freshness(self):
         root = Path(__file__).resolve().parents[2]
         path = root/'experiments/spin_it_reproduction/strict/run_source_spin2014_material.py'

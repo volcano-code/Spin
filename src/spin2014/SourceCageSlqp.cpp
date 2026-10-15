@@ -55,7 +55,11 @@ void markBookkeepingResource(SourceCageSlqpResult& out) noexcept {
     event.reasonSha256.fill('\0'); // Recovery hash is deferred until memory is available.
 }
 void validateSettings(const SourceCageSlqpSettings& settings) {
+    if(!settings.solver.iterationStorePath.empty())
+        throw std::invalid_argument("disk iteration storage is unsupported for cage post-solve phi mutation");
     const auto& s=settings.solver;
+    if(s.directionPolicy!=SlqpDirectionPolicy::ProjectedGradientV1)
+        throw std::invalid_argument("metric tangent rescue is not yet admitted for source cage deformation");
     if(s.algorithm!=SlqpAlgorithm::AuditedKktRestorationV1)
         throw std::invalid_argument("actual source cage SLQP requires AuditedKktRestorationV1");
     validateSlqpAuditSettings(s.audit);
@@ -159,6 +163,13 @@ struct GuardContext {
             }
             a.outcome=g.outcome;a.plannedCheckerBytes=g.plannedCheckerBytes;
             a.pairsVisited=g.pairsVisited;a.exactPairRelations=g.exactPairRelations;
+            a.exactPairCacheHits=g.exactPairCacheHits;
+            a.exactPairCacheMisses=g.exactPairCacheMisses;
+            a.exactPairBooleanEvaluations=g.exactPairBooleanEvaluations;
+            facts.exactPairRelations=add(facts.exactPairRelations,g.exactPairRelations);
+            facts.exactPairCacheHits=add(facts.exactPairCacheHits,g.exactPairCacheHits);
+            facts.exactPairCacheMisses=add(facts.exactPairCacheMisses,g.exactPairCacheMisses);
+            facts.exactPairBooleanEvaluations=add(facts.exactPairBooleanEvaluations,g.exactPairBooleanEvaluations);
             text(a.inputSha256,g.inputSha256.c_str());text(a.sourceOutputSha256,g.sourceOutputSha256.c_str());
             text(a.scientificSha256,g.scientificSha256.c_str());
             if(g.records.size()>facts.resources.stageCapacity-facts.stages.size())resource("retained geometry stages exceeded");
@@ -379,6 +390,8 @@ SourceCageGuardedSlqpAudit solveSourceCageGuardedSlqp(const SourceCagePaperFunct
     const auto& g=settings.geometry;
     for(auto v:{g.maximumPoints,g.maximumTriangles,g.maximumPrimitives,g.maximumPairs,g.maximumRecords,
         g.maximumCheckerBytes,g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes,
+        g.maximumExactPairCacheEntries,g.maximumPrimitiveRegionCacheEntries,
+        g.maximumPrimitiveRegionCacheBytes,g.maximumPrimitiveRegionCacheComplexity,
         settings.budget.maximumGuardCalls,settings.budget.maximumRetainedStageRecords,settings.budget.maximumGuardedBytes})config.integer(v);
     out.configSha256=config.finish();
     Digest h;h.string(out.configSha256);h.string(out.source.scientificSha256);

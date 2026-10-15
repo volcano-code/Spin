@@ -53,6 +53,7 @@ void checkLinks(const SourceCagePaperFunctional& f,const SourceCageGuardedSlqpFa
     const auto& r=a.source;
     require(a.attempts.size()==r.recordCount,"every attempted callback has a guard disposition, including bookkeeping resource failure");
     std::size_t checker=0,values=0,derivatives=0,stages=0,callback=1;
+    std::size_t exactRelations=0,cacheHits=0,cacheMisses=0,booleanEvaluations=0;
     bool resource=false;
     for(std::size_t i=0;i<r.recordCount;++i) {
         const auto& attempt=a.attempts[i];const auto& event=r.records[i];
@@ -60,12 +61,23 @@ void checkLinks(const SourceCagePaperFunctional& f,const SourceCageGuardedSlqpFa
         stages+=attempt.stageCount;require(stages<=a.stages.size(),"bounded complete stage span");
         if(resource)require(!attempt.checkerInvoked&&!event.sourceInvoked,"resource latch prevents geometry and derivative source work");
         checker+=attempt.checkerInvoked;values+=attempt.sourceValuesInvoked;derivatives+=event.sourceInvoked;
+        if(attempt.sourceValuesInvoked) {
+            require(attempt.exactPairCacheHits+attempt.exactPairCacheMisses==attempt.exactPairRelations,
+                    "each completed guarded geometry call accounts for every exact pair result");
+            require(attempt.exactPairBooleanEvaluations==attempt.exactPairCacheMisses,
+                    "guard attempt distinguishes exact cache hits from Boolean work");
+            exactRelations+=attempt.exactPairRelations;cacheHits+=attempt.exactPairCacheHits;
+            cacheMisses+=attempt.exactPairCacheMisses;booleanEvaluations+=attempt.exactPairBooleanEvaluations;
+        }
         if(event.status==SourceCageSlqpEvaluationStatus::ResourceLimit)resource=true;
         if(event.sourceInvoked)require(attempt.checkCompleted&&attempt.outcome==SourceCageGeometryOutcome::ChecksPassed,"actual completed geometry gate before every derivative call");
         if(attempt.sourceOutputSha256[0])require(f.evaluateValues(r.callbackStates.col(i)).outputSha256==attempt.sourceOutputSha256.data(),"guard source hash belongs to exact raw state");
         if(event.status==SourceCageSlqpEvaluationStatus::Evaluated)require(f.evaluate(r.callbackStates.col(i)).outputSha256==event.outputSha256.data(),"full derivative hash belongs to exact raw state");
     }
     require(stages==a.stages.size()&&checker==a.checkerInvocationCount&&values==a.geometryValueEvaluationCount&&derivatives==r.sourceEvaluationCount,"separate actual geometry and full evaluation counts");
+    require(exactRelations==a.exactPairRelations&&cacheHits==a.exactPairCacheHits&&
+            cacheMisses==a.exactPairCacheMisses&&booleanEvaluations==a.exactPairBooleanEvaluations,
+            "guarded audit aggregates cache/work diagnostics without losing per-attempt counts");
     for(const auto& row:r.numerical.trace) {
         bool admitted=false;
         for(std::size_t i=0;i<r.recordCount;++i)if(r.records[i].status==SourceCageSlqpEvaluationStatus::Evaluated&&
@@ -248,6 +260,10 @@ int main(int argc,char** argv) {try {
     const auto unknown=solveSourceCageGuardedSlqp(top,huge,base);checkLinks(top,unknown.facts());
     require(unknown.facts().source.outcome==SourceCageSlqpOutcome::InitialEvaluationFailure&&unknown.facts().attempts.front().outcome==SourceCageGeometryOutcome::Unknown&&unknown.facts().source.sourceEvaluationCount==0,"initial actual source value failure UNKNOWN distinguished from rejected geometry");
     const auto reference=solveSourceCageGuardedSlqp(f,x,base);checkLinks(f,reference.facts());
+    std::cout<<"guarded exact-pair work relations="<<reference.facts().exactPairRelations
+        <<" cache_hits="<<reference.facts().exactPairCacheHits
+        <<" cache_misses="<<reference.facts().exactPairCacheMisses
+        <<" boolean_evaluations="<<reference.facts().exactPairBooleanEvaluations<<'\n';
     auto exact=base;exact.budget.maximumGuardCalls=reference.facts().checkerInvocationCount;
     auto plan=planSourceCageGuardedSlqpResources(f,exact);
     exact.budget.maximumRetainedStageRecords=plan.stageCapacity;exact.budget.maximumGuardedBytes=plan.requiredBytes;

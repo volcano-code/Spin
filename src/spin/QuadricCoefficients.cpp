@@ -51,6 +51,41 @@ QuadricCoefficients10 QuadricCoefficients10::fromUnnormalized(
 }
 
 
+QuadricCoefficients10 QuadricCoefficients10::fromNormalized(
+    const Vector& coefficients
+)
+{
+    // The existing normalized hash contract validates finite/unit coefficients.
+    // In particular, do NOT divide by the norm again at a saved endpoint.
+    (void)hashNormalized(coefficients);
+    return QuadricCoefficients10(coefficients);
+}
+
+
+std::string QuadricCoefficients10::hashNormalized(const Vector& coefficients)
+{
+    if (!coefficients.allFinite())
+    {
+        throw std::invalid_argument("normalized quadric coefficients must be finite");
+    }
+    const double norm = coefficients.norm();
+    if (!std::isfinite(norm) || std::abs(norm - 1.0) > 1e-12)
+    {
+        throw std::invalid_argument(
+            "normalized quadric coefficients must have unit norm"
+        );
+    }
+    std::ostringstream stream;
+    stream.imbue(std::locale::classic());
+    stream << "QuadricCoefficients10-v1;" << std::hexfloat;
+    for (int coordinate = 0; coordinate < coefficients.size(); ++coordinate)
+    {
+        stream << coefficients(coordinate) << ';';
+    }
+    return manufacturing::computeContentSha256(stream.str());
+}
+
+
 const QuadricCoefficients10::Vector& QuadricCoefficients10::values() const
     noexcept
 {
@@ -204,14 +239,7 @@ QuadricCoefficients10 QuadricCoefficients10::inverted() const
 
 std::string QuadricCoefficients10::hash() const
 {
-    std::ostringstream stream;
-    stream.imbue(std::locale::classic());
-    stream << "QuadricCoefficients10-v1;" << std::hexfloat;
-    for (int coordinate = 0; coordinate < coefficients_.size(); ++coordinate)
-    {
-        stream << coefficients_(coordinate) << ';';
-    }
-    return manufacturing::computeContentSha256(stream.str());
+    return hashNormalized(coefficients_);
 }
 
 

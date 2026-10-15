@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
 import unittest
 
 
@@ -33,12 +34,19 @@ class SpinItSourceContractTests(unittest.TestCase):
         for source in sources:
             self.assertTrue(source["url"].startswith("https://research-explorer.ista.ac.at/"))
             self.assertRegex(source["sha256"], r"^[0-9a-f]{64}$")
-        committed_pdf_names = {
-            path.name for path in self.repository.rglob("*.pdf")
-            if ".git" not in path.parts
-        }
+        completed = subprocess.run(
+            ["git", "-C", str(self.repository), "ls-files", "*.pdf"],
+            check=True, capture_output=True, text=True,
+        )
+        committed_pdf_names = {Path(path).name for path in completed.stdout.splitlines()}
         self.assertNotIn("sif-final.pdf", committed_pdf_names)
         self.assertNotIn("sif-supp-final.pdf", committed_pdf_names)
+        ignored = subprocess.run(
+            ["git", "-C", str(self.repository), "check-ignore", "-q",
+             "build/strict-paper-sources/sif-final.pdf"],
+            check=False,
+        )
+        self.assertEqual(ignored.returncode, 0)
 
     def test_equation_contract_records_paper_order_and_solver_constants(self) -> None:
         text = self.equations_path.read_text(encoding="utf-8")

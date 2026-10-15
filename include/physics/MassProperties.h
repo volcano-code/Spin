@@ -103,6 +103,15 @@ MassMoments computeSurfaceMassMoments(
     double density = 1.0
 );
 
+/** Same signed-tetrahedron integral, accumulating both input solids and their
+ * difference in extended precision before one binary64 output conversion.
+ * Not an exact arithmetic or boundary-validity certificate. The legacy
+ * single-surface integrator and its binary64 arithmetic stay unchanged. */
+MassMoments computeSurfaceDifferenceMassMomentsExtended(
+    const Eigen::MatrixXd& outerVertices, const Eigen::MatrixXi& outerFaces,
+    const Eigen::MatrixXd& innerVertices, const Eigen::MatrixXi& innerFaces,
+    double density = 1.0);
+
 
 /**
  * Return true only for a closed, consistently edge-oriented triangle

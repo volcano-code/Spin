@@ -124,7 +124,20 @@ int main(int argc,char** argv) {try {
     require(facts.outcome==SourceCageGeometryOutcome::ChecksPassed,"identity geometry passes all represented checks");
     require(facts.sourceOutputSha256==f.evaluateValues(x).outputSha256,"actual source output identity");
     require(facts.primitiveCount==8&&facts.pairCount==28&&facts.pairsVisited==28,"complete ordered pair coverage");
-    require(facts.scientificSha256==checker.check(x).facts().scientificSha256,"deterministic repeated scientific evidence");
+    std::size_t timedStages=0;
+    for(const auto& record:facts.records) if(record.outcome!=SourceCageGeometryStageOutcome::Attempted) {
+        require(record.elapsedNanoseconds>0,"completed geometry-check stages retain measured elapsed time");
+        timedStages+=record.elapsedNanoseconds;
+    }
+    require(timedStages>0,"geometry checker records stage-level performance evidence");
+    const auto repeated=checker.check(x);
+    require(facts.scientificSha256==repeated.facts().scientificSha256,"cache reuse preserves deterministic scientific evidence");
+    require(facts.exactPairCacheMisses==facts.exactPairRelations&&
+        facts.exactPairBooleanEvaluations==facts.exactPairRelations,
+        "first geometry audit computes every exact pair relation");
+    require(repeated.facts().exactPairCacheHits==facts.exactPairRelations&&
+        repeated.facts().exactPairBooleanEvaluations==0&&!repeated.facts().fullGeometryCacheHit,
+        "identical geometry reuses only complete exact pair proofs");
     const auto copied=a;require(copied.facts().scientificSha256==facts.scientificSha256,"typed audit copy retains immutable evidence");
     std::size_t minimumDiagnosticBytes=0;
     for(const auto& refs:boundary.primitiveBoundaries())minimumDiagnosticBytes+=4*(refs.size()*(refs.size()-1)/2)*sizeof(std::array<int,2>);
@@ -133,6 +146,25 @@ int main(int argc,char** argv) {try {
     auto beta=x;beta[0]=.4;beta[f.angleOffset()]=.3;
     const auto b=checker.check(beta);
     require(b.facts().outcome==facts.outcome&&b.facts().scientificSha256!=facts.scientificSha256,"beta/phi preserve geometry and bind full state");
+    require((f.evaluateValues(beta).world.deformedPoints.array()==f.evaluateValues(x).world.deformedPoints.array()).all(),
+        "beta/phi-only change leaves exact deformed geometry bit-identical");
+    require(b.facts().fullGeometryCacheHit&&
+        b.facts().reusedGeometryProofStages==facts.records.size()-2&&
+        b.facts().exactPairBooleanEvaluations==0&&
+        b.facts().sourceOutputSha256!=facts.sourceOutputSha256,
+        "beta/phi-only state change reuses exact geometry proof but refreshes full-state source identity");
+    std::uint64_t reusedGeometryNanoseconds=0;
+    for(std::size_t i=2;i<b.facts().records.size();++i)reusedGeometryNanoseconds+=b.facts().records[i].elapsedNanoseconds;
+    require(reusedGeometryNanoseconds==0,"reused geometry stages do not claim fresh execution time");
+    const auto uncachedBeta=SourceCageGeometryChecker(f,settings).check(beta);
+    require(uncachedBeta.facts().scientificSha256==b.facts().scientificSha256,
+        "memoized and independently recomputed full-state geometry evidence have identical scientific digest");
+    auto geometryElapsed=[](const SourceCageGeometryFacts& value) {
+        std::uint64_t total=0;for(std::size_t i=2;i<value.records.size();++i)total+=value.records[i].elapsedNanoseconds;return total;
+    };
+    std::cout<<"geometry-proof-memo first_ms="<<geometryElapsed(facts)/1e6
+        <<" reused_ms="<<reusedGeometryNanoseconds/1e6
+        <<" independent_recompute_ms="<<geometryElapsed(uncachedBeta.facts())/1e6<<std::endl;
     auto moved=x;for(std::size_t h=0;h<f.handleCount();++h) {
         const auto& cage=boundary.binding().bbw().fem().grid().cage();
         const Eigen::Vector3d center=cage.boundaryVertices().row(cage.handleVertexIndices()[h]);
@@ -141,7 +173,124 @@ int main(int argc,char** argv) {try {
     require(checker.check(moved).facts().outcome==SourceCageGeometryOutcome::ChecksPassed,"common scale and translation preserve validity");
     near(f.evaluateValues(moved).world.finalMoments.values()[0],8*(.052734375-.25*.015625),"scaled analytic material volume");
     auto nonaffine=x;nonaffine[f.handleOffset()+1]+=.001;
-    require(checker.check(nonaffine).facts().outcome==SourceCageGeometryOutcome::ChecksPassed,"real nonaffine full control motion valid");
+    const auto deformed=checker.check(nonaffine);
+    require(deformed.facts().outcome==SourceCageGeometryOutcome::ChecksPassed,"real nonaffine full control motion valid");
+    require(deformed.facts().exactPairBooleanEvaluations>0&&
+        deformed.facts().exactPairCacheHits+deformed.facts().exactPairCacheMisses==deformed.facts().exactPairRelations,
+        "changed primitive geometry reuses only matching pair identities and recomputes misses");
+
+    // A local handle has compact support on this fixture. Recheck a state in
+    // the same checker so exact-identical primitive material regions can be
+    // reused, while changed regions are rebuilt and every relation to the
+    // current outer domain is still executed.
+    const auto baseEvaluation=f.evaluateValues(x);
+    Eigen::VectorXd partialState;
+    bool foundPartialSupport=false;
+    for(std::size_t h=0;h<f.handleCount()&&!foundPartialSupport;++h) {
+        auto candidate=x;candidate[f.handleOffset()+4*h+1]+=.001;
+        const auto movedEvaluation=f.evaluateValues(candidate);
+        bool unchangedPrimitive=false,changedPrimitive=false;
+        for(std::size_t primitive=0;primitive<boundary.primitiveBoundaries().size();++primitive) {
+            bool changed=false;
+            for(const auto& ref:boundary.primitiveBoundaries()[primitive])
+                for(const auto vertex:boundary.triangles().at(ref.triangle))
+                    changed=changed||!(baseEvaluation.world.deformedPoints.row(vertex).array()==
+                        movedEvaluation.world.deformedPoints.row(vertex).array()).all();
+            unchangedPrimitive=unchangedPrimitive||!changed;
+            changedPrimitive=changedPrimitive||changed;
+        }
+        if(unchangedPrimitive&&changedPrimitive) {
+            partialState=std::move(candidate);foundPartialSupport=true;
+        }
+    }
+    require(foundPartialSupport,"fixture has both unchanged and changed primitive regions under local handle motion");
+    SourceCageGeometryChecker partialChecker(f,settings);
+    partialChecker.check(x);
+    const auto partial=partialChecker.check(partialState);
+    require(partial.facts().outcome==SourceCageGeometryOutcome::ChecksPassed&&
+        !partial.facts().fullGeometryCacheHit,"partial primitive reuse still performs full-domain admission");
+    require(partial.facts().primitiveRegionCacheHits>0&&
+        partial.facts().primitiveRegionCacheMisses>0&&
+        partial.facts().primitiveRegionCacheHits+partial.facts().primitiveRegionCacheMisses==
+            boundary.primitiveBoundaries().size(),
+        "exactly identical primitive Nef regions are reused and changed regions rebuilt");
+    require(partial.facts().outerDistanceIndexBuilds==1&&
+        partial.facts().boundaryDistanceIndexCacheHits==partial.facts().primitiveRegionCacheHits&&
+        partial.facts().boundaryDistanceIndexBuilds==partial.facts().primitiveRegionCacheMisses,
+        "each audit builds one outer exact BVH and reuses/builds primitive exact BVHs by mesh identity");
+    std::size_t subsetRecords=0,clearanceRecords=0;
+    for(const auto& record:partial.facts().records) {
+        if(record.stage==SourceCageGeometryStage::PrimitiveSubset) {
+            ++subsetRecords;
+            require(record.outcome==SourceCageGeometryStageOutcome::Passed,
+                "cached primitive still receives a fresh exact subset check against the current outer");
+        }
+        if(record.stage==SourceCageGeometryStage::OuterDomainClearance) {
+            ++clearanceRecords;
+            require(record.outcome==SourceCageGeometryStageOutcome::Passed,
+                "cached primitive still receives a fresh exact clearance check against the current outer");
+        }
+    }
+    require(subsetRecords==boundary.primitiveBoundaries().size()&&
+        clearanceRecords==boundary.primitiveBoundaries().size(),
+        "partial region cache never suppresses per-geometry containment or clearance proofs");
+    const auto independentPartial=SourceCageGeometryChecker(f,settings).check(partialState);
+    require(independentPartial.facts().scientificSha256==partial.facts().scientificSha256,
+        "memoized partial-region audit equals independent uncached scientific evidence");
+    auto primitiveRegionNanoseconds=[](const SourceCageGeometryFacts& audit) {
+        std::uint64_t total=0;
+        for(const auto& record:audit.records)
+            if(record.stage==SourceCageGeometryStage::PrimitiveRegion)total+=record.elapsedNanoseconds;
+        return total;
+    };
+    auto clearanceNanoseconds=[](const SourceCageGeometryFacts& audit) {
+        std::uint64_t total=0;
+        for(const auto& record:audit.records)
+            if(record.stage==SourceCageGeometryStage::OuterDomainClearance)total+=record.elapsedNanoseconds;
+        return total;
+    };
+    std::cout<<"primitive-region cache hits="<<partial.facts().primitiveRegionCacheHits
+        <<" misses="<<partial.facts().primitiveRegionCacheMisses
+        <<" distance-index builds="<<partial.facts().boundaryDistanceIndexBuilds
+        <<" distance-index cache hits="<<partial.facts().boundaryDistanceIndexCacheHits
+        <<" outer-index builds="<<partial.facts().outerDistanceIndexBuilds
+        <<" stage_ms="<<primitiveRegionNanoseconds(partial.facts())/1e6
+        <<" independent_uncached_stage_ms="<<primitiveRegionNanoseconds(independentPartial.facts())/1e6
+        <<" clearance_stage_ms="<<clearanceNanoseconds(partial.facts())/1e6
+        <<" independent_uncached_clearance_stage_ms="<<clearanceNanoseconds(independentPartial.facts())/1e6
+        <<std::endl;
+    auto compareProofRows=[&](const SourceCageGeometryFacts& a,const SourceCageGeometryFacts& b,
+        const char* message) {
+        require(a.records.size()==b.records.size(),message);
+        for(std::size_t i=0;i<a.records.size();++i) {
+            const auto& lhs=a.records[i];const auto& rhs=b.records[i];
+            require(lhs.stage==rhs.stage&&lhs.outcome==rhs.outcome&&lhs.first==rhs.first&&
+                lhs.second==rhs.second&&lhs.evidenceSha256==rhs.evidenceSha256&&
+                lhs.reasonSha256==rhs.reasonSha256,message);
+        }
+    };
+    auto disabledCache=settings;disabledCache.maximumPrimitiveRegionCacheEntries=0;
+    disabledCache.maximumPrimitiveRegionCacheBytes=0;disabledCache.maximumPrimitiveRegionCacheComplexity=0;
+    SourceCageGeometryChecker noRegionCache(f,disabledCache);
+    noRegionCache.check(x);
+    const auto uncachedPartial=noRegionCache.check(partialState);
+    require(uncachedPartial.facts().outcome==SourceCageGeometryOutcome::ChecksPassed&&
+        uncachedPartial.facts().primitiveRegionCacheHits==0&&
+        uncachedPartial.facts().primitiveRegionCacheMisses==boundary.primitiveBoundaries().size(),
+        "zero-cap configuration disables region retention without changing geometric admission");
+    compareProofRows(partial.facts(),uncachedPartial.facts(),
+        "cached and disabled-cache paths produce the same exact geometric proof rows");
+    auto oneEntryCache=settings;oneEntryCache.maximumPrimitiveRegionCacheEntries=1;
+    SourceCageGeometryChecker evictingChecker(f,oneEntryCache);
+    evictingChecker.check(x);
+    const auto afterEviction=evictingChecker.check(partialState);
+    require(afterEviction.facts().outcome==SourceCageGeometryOutcome::ChecksPassed&&
+        afterEviction.facts().primitiveRegionCacheHits==0&&
+        afterEviction.facts().primitiveRegionCacheMisses==boundary.primitiveBoundaries().size(),
+        "one-entry cache evicts stale regions and preserves exact rechecks");
+    compareProofRows(partial.facts(),afterEviction.facts(),
+        "bounded eviction produces the same exact geometric proof rows");
+
     auto low=settings;low.maximumPoints=boundary.points().rows()-1;
     require(SourceCageGeometryChecker(f,low).check(x).facts().outcome==SourceCageGeometryOutcome::ResourceLimit,"point cap cannot admit");
     low=settings;low.maximumPairs=27;

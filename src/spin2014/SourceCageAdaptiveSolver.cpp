@@ -33,7 +33,9 @@ std::string functionalHash(const SourceCagePaperFunctional& f) {
 void geometryHash(Hash& h,const SourceCageGeometrySettings& g) {
     h.real(g.minimumOuterDomainClearance);
     for(auto n:{g.maximumPoints,g.maximumTriangles,g.maximumPrimitives,g.maximumPairs,g.maximumRecords,
-        g.maximumCheckerBytes,g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes})h.integer(n);
+        g.maximumCheckerBytes,g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes,
+        g.maximumExactPairCacheEntries,g.maximumPrimitiveRegionCacheEntries,
+        g.maximumPrimitiveRegionCacheBytes,g.maximumPrimitiveRegionCacheComplexity})h.integer(n);
 }
 std::string configHash(const SourceCageAdaptiveSolverSettings& s) {
     Hash h;h.string("actual-source-adaptive-solver-v1 cumulative-known-buffer-reservations-v1 no-feasibility-binary-physics-seal-paper-grant");

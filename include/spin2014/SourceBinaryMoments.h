@@ -1,6 +1,7 @@
 #pragma once
 #include "spin2014/SourceAdaptiveDomain.h"
 #include "spin2014/SpinIt2014MomentProblem.h"
+#include "spin/SpinDesignRequest.h"
 #include <optional>
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
 namespace spin2014 {
@@ -31,6 +32,11 @@ SourceBinaryCuboids sourceBinaryCuboids(const SourceAdaptiveDomain&,const Eigen:
  */
 SourceBinaryMomentCheck checkSourceBinaryMoments(const SourceSurfaceOctree& source,
     const SourceBinaryCuboids&,const physics::RawMassMoments10& solverBinaryMoments,
-    Spin2014Objective objective,double phi,double density,double constraintTolerance);
+    Spin2014Objective objective,double phi,double density,double constraintTolerance,
+    const spin::SpinTargetFrame& targetFrame = {});
+SourceBinaryMomentCheck checkSourceBinaryMoments(const SourceSurfaceOctree& source,
+    const SourceBinaryCuboids&,const physics::RawMassMoments10& solverBinaryMoments,
+    Spin2014Objective objective,double phi,double boundaryDensity,double interiorDensity,
+    double constraintTolerance,const spin::SpinTargetFrame& targetFrame = {});
 }
 #endif

@@ -39,7 +39,9 @@ std::string configHash(const SourceCageAdaptiveRebindSettings& s) {
     h.real(s.fractionalEpsilon);h.integer(s.budget.maximumOwnedBytes);
     const auto& g=s.geometry;h.real(g.minimumOuterDomainClearance);
     for(auto n:{g.maximumPoints,g.maximumTriangles,g.maximumPrimitives,g.maximumPairs,g.maximumRecords,
-        g.maximumCheckerBytes,g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes})h.integer(n);
+        g.maximumCheckerBytes,g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes,
+        g.maximumExactPairCacheEntries,g.maximumPrimitiveRegionCacheEntries,
+        g.maximumPrimitiveRegionCacheBytes,g.maximumPrimitiveRegionCacheComplexity})h.integer(n);
     return h.finish();
 }
 void transitionHash(Hash& h,const SourcePartitionTransition& t) {

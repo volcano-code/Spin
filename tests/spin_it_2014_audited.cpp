@@ -16,7 +16,7 @@ using namespace spin2014;
 static SlqpLbfgsSettings audited() {SlqpLbfgsSettings s;s.algorithm=SlqpAlgorithm::AuditedKktRestorationV1;return s;}
 static void independentlyCheck(const SlqpLbfgsResult& result, int betaCount) {
     for(const auto& t:result.trace) {
-        if(!t.kkt.valid)continue;
+        require(t.kkt.valid,"audited trace omitted an independent KKT witness");
         double equality=0,bound=0,stationarity=0,sign=0,comp=0;
         for(int j=0;j<t.constraints.size();++j)equality=std::max(equality,std::abs(t.constraints(j)));
         for(int i=0;i<t.state.size();++i) {
@@ -115,7 +115,15 @@ static void analyticProblems() {
     Eigen::Vector2d initial(0,1);auto q=solveSlqpLbfgs(quadratic,initial,s);
     require(q.status==SlqpStatus::Converged && (q.beta-Eigen::Vector2d(.8,0)).norm()<1e-7,"fixed box quadratic bound release");
     require(std::abs(q.finalKkt.alpha(1)-.2)<1e-7,"final active multiplier");
-    bool reset=false;for(const auto& t:q.trace)reset|=t.historyResetReason.find("ACTIVE_MEMBERSHIP_CHANGED")!=std::string::npos;
+    bool reset=false,activatedLowerBound=false;
+    std::vector<unsigned char> priorMembership;
+    for(const auto& t:q.trace) {
+        if(!priorMembership.empty() && priorMembership[1]==0 && t.activeMembership[1]==1)
+            activatedLowerBound=true;
+        reset|=t.historyResetReason.find("ACTIVE_MEMBERSHIP_CHANGED")!=std::string::npos;
+        priorMembership=t.activeMembership;
+    }
+    require(activatedLowerBound,"descent to the lower bound did not activate its bound constraint");
     require(reset,"real active transition history reset absent");independentlyCheck(q,2);
     auto oneStep=audited();oneStep.maximumIterations=1;
     const auto qLimit=solveSlqpLbfgs(quadratic,initial,oneStep);
@@ -204,6 +212,14 @@ int main() {try {
             "independent first-order KKT witness must certify the equality optimum");
     require(result.trace.front().restoration.attempted && result.trace.front().restoration.accepted,
             "bound release must use actual restoration");
+    bool releasedAfterRestoration=false;
+    for(std::size_t i=1;i<result.trace.size();++i) {
+        if(result.trace[i-1].restoration.accepted && result.trace[i].state(0)>settings.activeSetTolerance &&
+           result.trace[i].activeMembership==std::vector<unsigned char>({0}))
+            releasedAfterRestoration=true;
+    }
+    require(releasedAfterRestoration,
+            "accepted feasible restoration did not release the lower-bound variable into the interior");
     auto e=problem.evaluate(Eigen::VectorXd::Constant(1,1.));
     auto k=spin2014::evaluateKkt(e,Eigen::VectorXd::Constant(1,1.),1,
         Eigen::VectorXd::Constant(1,-1),Eigen::VectorXd::Zero(1),Eigen::VectorXd::Zero(1));

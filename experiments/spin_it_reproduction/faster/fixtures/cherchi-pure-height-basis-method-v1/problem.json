@@ -1,0 +1,13 @@
+{
+  "schema": "cherchi-pure-height-basis-method-v1",
+  "classification": "SYNTHETIC_REGRESSION",
+  "scope": "PURE_HEIGHT_ACTIVE_SUBSPACE_MATERIAL_DERIVATIVE_NOT_ENDPOINT_SOLVE",
+  "design_vertices": [[-0.687,-0.871,-0.743],[0.913,-0.871,-0.743],[0.913,0.729,-0.743],[-0.687,0.729,-0.743],[-0.687,-0.871,0.857],[0.913,-0.871,0.857],[0.913,0.729,0.857],[-0.687,0.729,0.857]],
+  "design_faces": [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]],
+  "coefficients": [0.125,0.3,0.7,-1,0,0,0,0.2,0.4,0],
+  "density": 1.7,
+  "steps": [0.0001,0.00003,0.00001],
+  "paraboloid_grid_resolution": 8,
+  "truncation_radius": 4.0,
+  "maximum_radius_doublings": 4
+}

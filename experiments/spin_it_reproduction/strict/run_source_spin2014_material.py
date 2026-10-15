@@ -18,7 +18,9 @@ import traceback
 import numpy as np
 
 from make_it_stand.verification import source_spin_material as bridge
-from make_it_stand.verification.run_evidence import begin_run, finish_run, check_freshness
+from make_it_stand.verification.run_evidence import (
+    EXPLICIT_EFFECTIVE_SOURCE_POLICY, begin_run, finish_run, check_freshness,
+)
 from make_it_stand.verification.spin_bundle import save_spin_artifact, load_spin_artifact
 from make_it_stand.verification.spin_common import canonical, native, parse
 from make_it_stand.verification.spin_problem import SpinArtifactProblem
@@ -84,7 +86,8 @@ def run(output_directory, *, build_directory, dependency_roots, boundary_setting
                 ROOT/'python/make_it_stand/verification/spin_problem.py',ROOT/'python/make_it_stand/verification/mass_moments.py'],
             asset_files=assets,build_configuration_files=[ROOT/'CMakeLists.txt',build/'CMakeCache.txt'],
             parameters=inputs,seed_protocol={'seed':0,'protocol':'native audited HiGHS simplex: threads=1, parallel=off, random_seed=0'},
-            dependency_roots=dependency_roots,native_modules=[extension],pure_python=False)
+            dependency_roots=dependency_roots,native_modules=[extension],pure_python=False,
+            source_policy=EXPLICIT_EFFECTIVE_SOURCE_POLICY)
         _write(output/'begin.json',begin.as_dict())
         result=bridge.solve_and_seal_source_spin2014(p,**settings)
         scientific={'schema':'source-spin2014-synthetic-scientific-v1','classification':'SYNTHETIC_REGRESSION',

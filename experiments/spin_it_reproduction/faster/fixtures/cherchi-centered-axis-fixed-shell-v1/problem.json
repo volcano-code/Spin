@@ -1,0 +1,39 @@
+{
+  "design_regions": [
+    {
+      "density": 2.0,
+      "id": "editable-domain",
+      "mesh": "../cherchi-rotated-box-fixed-shell-v1/design.obj"
+    }
+  ],
+  "fixed_regions": [
+    {
+      "density": 0.75,
+      "id": "fixed-shell",
+      "mesh": "../cherchi-rotated-box-fixed-shell-v1/shell.obj"
+    }
+  ],
+  "length_unit": "m",
+  "mass_unit": "kg",
+  "minimum_outer_wall": 0.1,
+  "outer_mesh": "../cherchi-rotated-box-fixed-shell-v1/outer.obj",
+  "preflight_quadric_target_normalized": [
+    -0.0090207309090749917,
+    0.0,
+    0.0,
+    0.0,
+    0.57732677818079947,
+    0.57732677818079947,
+    0.57732677818079947,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "schema": "faster-cherchi-problem-manifest-v1",
+  "target": {
+    "axis": [1.0, 0.0, 0.0],
+    "mode": "YO_YO",
+    "origin": [0.0, 0.0, 0.0],
+    "support_points": []
+  }
+}

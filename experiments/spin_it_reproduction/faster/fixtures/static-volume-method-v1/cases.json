@@ -1,0 +1,52 @@
+{
+  "schema": "static-plane-inputs-explicit-volume-v1",
+  "classification": "SYNTHETIC_REGRESSION",
+  "protocol": "Figure 11 objective semantics on method-only nested cubes; input-only seeds 0/1; same kappa .002 across density 1 and 1.7. Original-paper geometry not supplied. Previous mass-profile fixture is unchanged.",
+  "cases": [
+    {
+      "id":"volume-lowering-rho1p7", "mode":"STATIC_BALANCE", "asset_class":"SYNTHETIC_REGRESSION",
+      "outer":{"path":"../static-plane-method-v1/outer.obj","sha256":"be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain":{"path":"../static-plane-method-v1/design.obj","sha256":"7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density":1.7,"target_origin":[0,0,0],"target_axes":[[1,0,0],[0,1,0],[0,0,1]],
+      "static_objective":"LOWER_CENTER_OF_MASS","static_pareto_weight":0,
+      "static_objective_measure":"UNIFORM_DENSITY_VOLUME_V1",
+      "static_plane_settings":{"maximum_iterations":60,"maximum_line_search_steps":24,"constraint_tolerance":1e-10}
+    },
+    {
+      "id":"volume-max-rho1p7", "mode":"STATIC_BALANCE", "asset_class":"SYNTHETIC_REGRESSION",
+      "outer":{"path":"../static-plane-method-v1/outer.obj","sha256":"be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain":{"path":"../static-plane-method-v1/design.obj","sha256":"7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density":1.7,"target_origin":[0,0,0],"target_axes":[[1,0,0],[0,1,0],[0,0,1]],
+      "static_objective":"MAXIMUM_MASS","static_pareto_weight":0,
+      "static_objective_measure":"UNIFORM_DENSITY_VOLUME_V1",
+      "static_plane_settings":{"maximum_iterations":60,"maximum_line_search_steps":24,"constraint_tolerance":1e-10}
+    },
+    {
+      "id":"volume-pareto-rho1", "mode":"STATIC_BALANCE", "asset_class":"SYNTHETIC_REGRESSION",
+      "outer":{"path":"../static-plane-method-v1/outer.obj","sha256":"be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain":{"path":"../static-plane-method-v1/design.obj","sha256":"7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density":1,"target_origin":[0,0,0],"target_axes":[[1,0,0],[0,1,0],[0,0,1]],
+      "static_objective":"PARETO_TRADEOFF","static_pareto_weight":0.002,
+      "static_objective_measure":"UNIFORM_DENSITY_VOLUME_V1",
+      "static_plane_settings":{"maximum_iterations":60,"maximum_line_search_steps":24,"constraint_tolerance":1e-10}
+    },
+    {
+      "id":"volume-pareto-rho1p7", "mode":"STATIC_BALANCE", "asset_class":"SYNTHETIC_REGRESSION",
+      "outer":{"path":"../static-plane-method-v1/outer.obj","sha256":"be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain":{"path":"../static-plane-method-v1/design.obj","sha256":"7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density":1.7,"target_origin":[0,0,0],"target_axes":[[1,0,0],[0,1,0],[0,0,1]],
+      "static_objective":"PARETO_TRADEOFF","static_pareto_weight":0.002,
+      "static_objective_measure":"UNIFORM_DENSITY_VOLUME_V1",
+      "static_plane_settings":{"maximum_iterations":60,"maximum_line_search_steps":24,"constraint_tolerance":1e-10}
+    },
+    {
+      "id":"volume-pareto-full-rho1p7", "mode":"STATIC_BALANCE", "asset_class":"SYNTHETIC_REGRESSION",
+      "outer":{"path":"../static-plane-method-v1/outer.obj","sha256":"be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain":{"path":"../static-plane-method-v1/design.obj","sha256":"7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density":1.7,"target_origin":[0,0,0],"target_axes":[[1,0,0],[0,1,0],[0,0,1]],
+      "static_objective":"PARETO_TRADEOFF","static_pareto_weight":0.5,
+      "static_objective_measure":"UNIFORM_DENSITY_VOLUME_V1",
+      "static_plane_settings":{"maximum_iterations":60,"maximum_line_search_steps":24,"constraint_tolerance":1e-10}
+    }
+  ]
+}

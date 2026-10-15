@@ -501,7 +501,7 @@ def verify_published_section_6_6(
 
 
 def check_evidence_freshness(path: str | Path) -> dict[str, Any]:
-    """Re-hash bound files and scientific data; no stored pass flag is trusted."""
+    """Re-hash bindings and recompute exact science; no stored pass is trusted."""
     try:
         evidence = load_spec(path)
         _require(evidence.get("schema") == "faster-section-6-6-exact-evidence-v1",
@@ -541,6 +541,12 @@ def check_evidence_freshness(path: str | Path) -> dict[str, Any]:
             result = load_spec(outputs["result"]["path"])
             if result.get("scientific_data_sha256") != scientific_sha256(result.get("scientific_data")):
                 mismatches.append("result scientific data digest changed")
+            # Consistent hashes prove byte identity, not mathematical validity.
+            # Re-evaluate the fixed published problem rather than accepting a
+            # caller's modified result together with its newly computed hash.
+            recomputed = verify_published_section_6_6(load_spec(inputs["spec"]["path"]))
+            if not _same_exact(result.get("scientific_data"), recomputed):
+                mismatches.append("scientific data differs from recomputed exact certificate")
         except (KeyError, TypeError, ValueError, OSError) as error:
             mismatches.append("result scientific data cannot be checked: " + str(error))
         return {

@@ -1,0 +1,16 @@
+{
+  "schema": "cherchi-paraboloid-basis-method-v1",
+  "classification": "SYNTHETIC_REGRESSION",
+  "scope": "BOUNDED_FINITE_NORMAL_PATCH_REDUCED_DERIVATIVE_NOT_IDEAL_OR_NEWTON",
+  "source": "quadric_fixed_normal_paraboloid_regression.cpp locked elliptic fixture",
+  "design_vertices": [[-0.2,-0.2,-0.2],[0.2,-0.2,-0.2],[0.2,0.2,-0.2],[-0.2,0.2,-0.2],[-0.2,-0.2,0.2],[0.2,-0.2,0.2],[0.2,0.2,0.2],[-0.2,0.2,0.2]],
+  "design_faces": [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]],
+  "coefficients": [0.125,0.1,-0.08,-1,1,2,0,0,0,0],
+  "density": 1.7,
+  "steps": [0.00001,0.000003,0.000001],
+  "fixed_normal_paraboloid": true,
+  "icosphere_subdivisions": 2,
+  "paraboloid_grid_resolution": 16,
+  "truncation_radius": 16.0,
+  "maximum_radius_doublings": 0
+}

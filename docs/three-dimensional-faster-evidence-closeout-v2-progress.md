@@ -1,0 +1,142 @@
+# Execution ledger — plan: docs/superpowers/plans/2026-10-13-three-dimensional-faster-evidence-closeout-v2.md
+
+2026-10-13 用户要求把以上规划作为持续目标推进，含新独立导数协议。旧五点失败不改；心形/面条及automation保持暂停。
+
+Ruling: 使用当前已隔离worktree（spin-it-strict-computational-v2），不创建新checkout、不提交或清理 — 保留用户全部未提交成果，native继续独立构建 — 成本是审查需按文件/证据而非仅commit范围。
+
+Pre-flight: 任务1输出限定样本导数证据给任务2/5；任务3/4若改变实际映射必须使相应旧证据失效。任务2提供同次材料与日志，任务5消费；任务6消费全部种子而非成功子集。当前无相关长作业运行。
+
+- Task1 in progress：独立高精度参考手算测试5项先RED（缺实现）后GREEN。球/椭球固定法向映射、线面交点、四面体质量矩方向微分、奇异拒绝。无生产导数/积分导入。尚未核验实际保存状态，不授予新协议通过。
+- Task1具体结果：formal-independent-directional-job-01完成70/110位参考，实际保存状态全部10方向J与生产最大差2.18387176734e-14；故意污染J[0,0]+=1e-3判INCONSISTENT。独立源面公式/隐式截断根、线面构造及标量dual四面体积分；native/Boolean/生产导数调用均0。原81点有限分支证书绑定并复用，旧五点失败不改。
+- Ruling: 高精度参考只覆盖当前保存的legacy截断双曲面状态 — 当前正式小型fixture的paper_projective_hyperboloid=false，不能转授新projective修复或任意曲面 — 成本是后续改映射仍需对应证据。固定法向输入复用已保存的共同level2前162法向，实际源点和材料重建误差均检查；条件性与70/110精度一致性记录在job输出。未声明严格区间误差界。
+- 参考7项手算/反向测试通过。Task1尚需低曲率三尺度状态矩阵与完整协议报告，不能仅一状态宣告任务全部完成。
+- Task2推进：新增cherchi_run_evidence正式只读记录检查器，已有真实run可检查；缺日志、篡改材料/来源/后端、无更新、错误终态、旧J及重新hash后旧J均拒绝，10项先RED后GREEN。科学摘要只排除具名成本项。
+- Ruling: 求解器总moments与附件总moments允许既有1e-10独立积分容差 — 封存桥独立重积分固定材料有1e-16舍入差，变量moments仍逐值绑定 — 不是放宽几何或J验收。
+- 真实数组别名RED后修复：复制物理设计域并只读，避免调用者改变绑定输入；请求自身原已有immutable tuple契约。正式入口收敛后写record-verification.json；worker去掉save_spin_artifact已执行的重复Reader。24项作用域测试通过8.72秒；未运行全项目测试，不作全项目通过声明。
+- 当前串行job：formal-cherchi-evidence-closure-job-01，验证新记录检查/单Reader闭环；运行中不改其绑定依赖。任务3–6未完成；心形/面条保持暂停。
+- 2026-10-13后续核验：上述job已PROCESS_EXITED 0；闭环48.330秒、raw 2.0401230723196104e-14，18份材料/17实际接受更新，record_integrity_valid=true。仅闭环与记录完整性，core_admission=false。
+- 新正式三固定状态对照：formal-fixed-states-job-01因读取历史request时未还原嵌套SpinSolverConfig导致AttributeError，保存失败；未改生产代码。修正取证脚本的配置解码后job-02正常结束。
+- formal-fixed-states-job-02：椭球、单叶、双叶三状态正式Cherchi材料与同操作数CGAL精确实体均equal=true、对称差0/1；CGAL导数均可用。moments最大差7.105427357601002e-15，J最大差6.394884621840902e-14。每状态正式Cherchi源面/Boolean/积分/导数各一次。该比较不替代独立生产差分，不覆盖projective路径，core_admission=false。
+- 下一步仍为低曲率三尺度及适用分支证据、随后登记源面侧选择修复；三规模30种子及性能未运行。此次推进无案例长跑、无依赖覆盖。
+- 已启动formal-fixed-derivatives-job-01：登记三固定状态各81唯一点，十方向、原1e-4/5e-5/2.5e-5尺度，保存每点同次材料，独立有理四面体积分；无生产代码修改。session5725及实际worker PID2774008已确认运行，串行资源wrapper，禁止运行中修改绑定文件或重复启动。
+- 当前椭球81点数值检查完成：全部三尺度通过，最大1.56358037628479e-10，source_branch_stable=true；材料连接分类尚未做，不授予完整导数门。单双叶正在同作业后续处理，结束后读取各report及作业终态。后续分类可复用certify_formal_cherchi_samples.py的精确构造重放和有向平面链算法，但须绑定本批原始设计坐标及新增文件格式，不能继承旧样本证书。
+- 后续终态：formal-fixed-derivatives-job-01已PROCESS_EXITED 0，三状态各81点全部三尺度通过；椭球最大1.56358037628479e-10、单叶1.1029671620477188e-10、双叶7.801672047107189e-11；源面分支均一致。没有更改尺度、阈值或重跑失败点。
+- formal-fixed-branch-job-01已PROCESS_EXITED 0：三状态各81点从基点约束精确重放到当前物理源面，顶点双射及有向平面链均通过，全部IDENTICAL_OR_RENUMBERED；Boolean/source调用0。仅这些有限样本认证，不是邻域证明。该批legacy正式映射适用证据补齐，不能转授projective源面修复。
+- 当前无本批运行作业；下一实际缺口为登记第3次source侧选择（bindings/pybind_module.cpp调用的判定函数需追溯）、相关projective证据、一次求值重复计算及30种子性能。未授予整体core_admission。
+- source侧取证：判定实际位于src/spin/QuadricMomentEvaluator.cpp::quadricSolidInteriorIsPositiveRegion及exactQuadricInterfaceInteriorIsPositive。源体积质心未通过内部快速判定时，后备要求每个非cap三角面法向与面心隐式梯度符号一致。
+- 新source-side-exact-face-witness-01.json保存原binary64精确有理符号：冲突面仍为8/9/96/97，均含projective理想射线截断顶点（不是原曲面点）；这些顶点q残差约0.33至8.38，非舍入量级。假设：此类远端连接面不满足该梯度判据，而非全局绕向错误。尚需独立内外/构造见证确认，不据此多数翻面、删除面或直接关闭判定；生产代码未修改。
+- 进一步证据：原保存source有两个各160面闭合分量，体积3336.187/3518.219；分别体积质心q=109.746/113.110，独立立体角绕数各1。全体质心不代表每个分量内部。构造代码已用Gaussian curvature整体定向并audit闭合源面，远端弦面不保证面心梯度对齐。下一候选应逐分量验证内部见证且全部符号一致，保持不确定拒绝，不多数票翻面。
+- 已建立test_registered_source_side.py，旧冻结native上实际RED：source motion defined但selector报4正104负不一致，0.46秒。尚未改生产代码/构建候选。下一步实现最小分量见证及不一致/无内部见证负例，独立构建后转GREEN与受影响回归。
+- 已实施最小候选：QuadricMomentEvaluator.cpp仅paperProjectiveHyperboloid且多分量时，按原面连接分量分别计算体积质心，要求正内部绕数、严格q裕度、所有分量同号；分量冲突明确抛错，无法取得全部见证仍走原拒绝路径。没有改面、源点运动或J，没有多数票。
+- component-selector-build-job-01正在独立构建，session54005、worker2843004/cc1plus2843007已确认活跃。冻结evaluator/binding/header/regression/build脚本期间不得修改。构建完成先运行test_registered_source_side.py期待GREEN，再补反号及无见证/冲突负例、实际Cherchi材料与受影响导数；未通过前仍core_admission=false。旧模块保持。
+- component-selector-build-job-01已PROCESS_EXITED 0。原登记回归RED→GREEN（1 passed 0.35秒），追加q反号检查后2 passed 0.65秒，selector符号随q反号正确切换；有既存pytest_asyncio配置警告。
+- component-selector-material-job-01完成实际正式Cherchi单状态：17.675秒，source/Boolean/integration/derivative各1；源顶点和面与原保存失败逐值相同，返回有效J，独立四面体moments最大差1.734723475976807e-18。仅证明该状态有实际材料，不代表新路径三尺度/分支认证完成。
+- 后续：补分量冲突及缺见证拒绝测试、该projective映射适用导数与分支取证，再关闭缺陷；当前无上述作业运行，案例仍暂停。尚未跑30种子，不授予core_admission。
+- component-selector-derivatives-job-01已启动，session28739，实际worker2866325活跃；原登记q不再归一化、不改尺度，实际Cherchi81点独立保存/积分，24GiB/swap0/60分钟。绑定probe_formal_fixed_derivatives.py及相关正式模块运行中不改。已返回前两点；最终结果待查，不重复启动。
+- 准备tests/quadric_component_selector_regression.cpp：两个闭合外向四面体用于selector契约，覆盖一致正号、分量符号冲突、零裕度无内部符号见证；尚未编译/执行，不能记通过。待当前大型作业结束串行编译测试。它是合成判定单测，不声称其是二次曲面源面。
+- 本轮复核session28739仍活跃，81点日志推进到index13，无失败；未因观察等待重启。已准备build_component_selector_test.py及launch_component_selector_test.py：从候选receipt复用实际对象、移除Python binding对象后链接独立C++契约测试，启动器要求前一大型作业有终态result.json才执行。尚未启动，等待串行空位。
+- 一次求值复用代码检查：FullRankMomentEvaluator.cpp canonical宏路径先调用evaluateQuadricMaterialMoments（已生成native J），再在canonical-source-motion/material-transport重建速度及第二次J；修复不能简单取native J，因为规范化求和语义不同。此项未修改，需保持canonical最终J并将该计算移入一次value→derivative传递，配调用计数RED及相同状态前后对照。
+- test_single_derivative_transport.py已实际RED（1.14秒）：精确材料配置exact_binary64_material_boundary=true下同次出现material-transport-begin及canonical-material-transport-begin。初版普通配置测试直接通过，因为native非精确分支调用differentiateDiscreteQuadricMoments没有相同计时钩子；已记录此覆盖不足并将测试绑定实际重复的精确配置，不据初版通过宣称性能完成。
+- 当前81点session28739仍运行，已index22，无失败；没有修改其绑定模块，未启动独立编译。下一可独立开发项为单次canonical导数传递（需要新增/复用明确策略，不让非canonical或authority路径静默变义）；正式构建仍待串行空位。
+- 构建来源新发现：build_timing_candidate.py及实际overlay的CanonicalPolyhedralMomentDifferential对象来自src/spin/PolyhedralMomentDifferential.cpp，使用符号重命名宏；并非src/spin/CanonicalPolyhedralMomentDifferential.cpp中排序版本。因而“当前候选必须因规范化求和不同保留第二次调用”尚无根据。下一步核实两个对象receipt编译参数/源hash及同状态输出，基于实际生产变体消除重复；普通CMake排序版本仍不可静默改变。尚无生产修改，81点已index34仍活跃。
+- 已核对fixed-design-cache-build-job-01 receipt：两个导数对象source_sha256均c0f87c3e4485f3797f999bb7ad0fb9ec56c2d8ad367a3b838dc0310039a15939，排除-o/-MF/-MT及三个符号重命名宏后编译命令完全相等。此结论仅该候选构建，不转授标准CMake排序实现。
+- 准备component-selector-branch-job-01的worker/launcher，复用精确约束重放与有向平面链，绑定原登记design而非小型fixture；当前未启动，要求81点report存在。实验certifier新增可选输入/设计域/状态参数，旧默认保持。81点session28739仍运行，最新index42；无修改其绑定依赖。
+- 单次transport候选已写入FullRankMomentEvaluator.cpp：仅编译宏MAKE_IT_STAND_IDENTICAL_TRANSPORT_OVERLAY显式启用且native exact material非空、非rational authority时复用同次native J；普通CMake排序实现及其他路径保持。新增build_single_transport.py先校验两个transport对象的源hash、语义编译参数、对象hash和实际link身份一致才启用宏；独立output不覆盖旧module。尚未构建/授予通过。
+- Ruling: 该性能复用限定当前已证明同实现的overlay，不擅自替换标准排序canonical实现 — 生产实际构建是符号重命名同源，重算没有算法必要 — 成本是后续改变transport实现必须重新证明/不启用宏。最终sourceScientificHash改为同次native differential身份，需登记为新构建科学身份，数值/材料前后比较仍必须一致。
+- launch_single_transport_build.py已准备且禁止81点job无终态时启动；当前worker2866325活跃，index55已保存，约16分31秒。后续顺序：检查81点终态→selector契约C++测试→保存材料分支认证→single transport独立构建与RED转GREEN及前后对照。尚无第二大型作业启动。
+- 新增compare_single_transport.py与受限launcher：新旧模块独立进程，三固定状态各冷1/同进程3，逐值比较变量/总moments、实际边界、geometry hash、J及有效/拒绝诊断，要求transport调用2→1；科学构建身份单独登记，不用旧hash冒充新构建。尚未执行，等待候选编译。
+- 已读取实际两个transport对象并对receipt object_sha256核验均一致。81点同session28739仍活跃，最新index64；磁盘约403GiB可用。保存基点实际材料2068顶点/4224面，后续分支比较针对这些同次材料，不重跑Boolean。
+- 最新终态核验：component-selector-derivatives-job-01 PROCESS_EXITED 0，耗时1415.14秒；81点三尺度检查通过，独立积分最大差1.734723475976807e-18，source_branch_stable=true；材料分支仍未授予通过。
+- 按最新最终交付计划执行：component-selector-contract-job-01实际编译、链接并运行成功，正号／冲突／零裕度三类契约检查通过。未修改运行依赖或恢复案例。
+- component-selector-branch-job-01已串行启动，session12340；仅消费保存材料执行精确构造重放和有向平面链认证，等待终态。之后才启动single transport构建，禁止重叠大型作业。
+- component-selector-branch-job-01终态PROCESS_EXITED 0但科学认证未通过：2点IDENTICAL_OR_RENUMBERED、38点EXACT_COPLANAR_RETRIANGULATION、41点RECIPE_NOT_BIJECTIVE。首个失败index1比基点多1顶点2面（2069/4226 vs2068/4224），不能当作纯重编号；需检查额外点来源和是否同平面边界细分，不修改标签、不重跑81点。
+- single-transport-build-job-01独立构建PROCESS_EXITED 0；新模块test_single_derivative_transport.py实际GREEN（1 passed 0.97秒），原两次调用RED保留。正在运行single-transport-comparison-job-01，session9773，三固定状态前后逐值比较；尚不授予数值等价或性能通过。
+- single-transport-comparison-job-01已PROCESS_EXITED 0、passed=true：三状态各4次共12样本，材料、moments、J及判定逐值一致，transport调用2→1。温运行椭球约0.298→0.152秒、单双叶约2.48/2.32→1.27/1.18秒；这覆盖原生fullrank对照路径，不能当作正式Cherchi或整体性能门。
+- 首个连接失败index1追加精确取证：当前2069点自身来源逐值重放通过；基点2068构造在当前源面重放与实际材料相差8个点／7个点，精确有向平面链不同，支撑平面集合差2，不可标为等价重三角化。已启动component-branch-classification-job-01（session55874、worker3071362）逐项分类剩余失败，保留原认证失败；不授予光滑导数门。
+- 运行时已核对QuadricHollowingSolver.cpp：拓扑改变候选使用自身实际材料/J，只有真实残差下降才接受并在下一步重新线性化；源面feature hash含离散构造身份。仍需测试覆盖实际切换、来源错误和当前统一候选正式闭环。已准备launch_unified_candidate_closure.py，待串行空位启动。
+- component-branch-classification-job-01 PROCESS_EXITED 0：81点全部明确分类（2相同／重编号、38精确共面重三角化、41实际构造变化），41点各自来源精确重放成立且有有向平面链差异见证。只关闭有限样本分类缺口，smooth_derivative_gate=false，不将跨真实构造变化的五点数值通过转为光滑门。只读核查41点topology_hash均不同于基点，无漏识别。
+- unified-candidate-closure-job-01已PROCESS_EXITED 0：同一selector+single transport候选正式Cherchi小型seed1闭环通过，raw2.0401230723196104e-14，终态材料digest e27e59a89bd975578f3fe356d34b06702db4b7029179647755432e60d14a1c29，闭环48.282秒（含封存，非纯求解）。适用范围仍是该小型legacy源面配置；不是projective完整求解或三规模通过。
+- test_cherchi_formal_run_evidence.py新增环境变量选择实际run，默认历史路径保持。绑定新统一候选run执行10项实际篡改／日志／旧J等回归，10 passed 0.23秒。整体core_admission仍false；后续projective适用光滑证据、三规模十种子、重复和性能及独立审查尚未全部完成。
+- projective-formal-pipeline-job-01 PROCESS_EXITED 0：显式paper_projective_hyperboloid=true，同一统一候选三固定状态与同操作数CGAL精确实体均equal、对称差0/1；正式Cherchi三状态各81点全部三尺度通过，最大误差椭球1.56358037628479e-10、单叶1.907878299789445e-10、双叶1.1424321785889063e-10；独立积分最大差1.7763568394002505e-15。没有修改原尺度或阈值。
+- projective-fixed-branch-job-01 PROCESS_EXITED 0：三状态各81点有限精确构造重放与有向平面链认证通过，椭球81相同／重编号；单叶21相同／重编号、60精确共面重三角化；双叶25相同／重编号、56精确共面重三角化。该证据适用于登记的projective映射样本，不转授任意参数邻域。
+- same_entity_refinement helper测试先RED（缺实现）后GREEN：4 passed 0.03秒，包含共享边闭合、精确表面不变、不可表示中点拒绝及输入数组不共享。初版非表示负例1.1/.55实际中点可表示，改为相邻binary64数1和nextafter(1,+inf)，保留真实无舍入要求。
+- core-benchmark-inputs-job-01 PROCESS_EXITED 0：同实体设计域12／12288／98304面，精确有向平面链均相同，闭合共享边检查通过，独立质量矩误差均0。只细分design边界，outer和fixed保持原真实实体和密度；没有生成新造型或改变轴。输入准备约5.70秒，非求解时间。
+- core-benchmark-small-seed-0-job-01已实际启动（session74138），正式Cherchi、projective路径、冻结seed0、8次尝试／60次求值、raw1e-12。大型作业串行，运行中不改绑定依赖。首先观察该完整种子的真实终态，再决定是否展开剩余种子。
+- core-benchmark-small-seed-0-job-01 PROCESS_EXITED 0：projective正式链路真实收敛，raw8.941047604973148e-13，24接受更新；restart0达到60求值上限，restart1收敛，完整保留。正常求解96.243秒、输入准备0.250秒、终态封存5.033秒、保存独立重载6.689秒，总108.225秒。该种子材料闭环通过但不代表十种子或性能通过。
+- 分段真实证据：73次求值的external_geometry_moment_map共39.854秒，其中变量快照10.347秒、变量独立积分3.984秒、重复固定积分5.963秒、目标模型frame核验3.365秒；source共11.298秒、Boolean约4.257秒。性能尚未达到；当前不能把single transport原生对照的加速转授正式Cherchi链路。
+- 已开始core-benchmark-faces-12288-seed-0-job-01，先观察万面规模完整求解的真实成本与热点，不展开批量种子。绑定正式模块运行中禁止修改，心形／面条仍暂停。
+- 万面基准首轮分段证据：实际8点source共1.186秒、Boolean2.580秒；Python rational derivative16.917秒、rational primary integration16.726秒；7次external map共33.747秒，其中variable snapshot28.155秒。基准仍运行（session9479、worker3156519），当前不修改这些绑定模块，也不启动并行构建。
+- 基于上述实测热点，准备bindings/cherchi/RationalMoments.cpp独立GMP精确divergence积分／Reynolds系数候选和受限构建器；保持原有理坐标和公式，最终binary64使用精确整数商余数nearest-even舍入（包含subnormal，避免两次舍入）。尚未构建、未接入正式求解，不声称加速或通过。
+- 新算术候选12项测试已实际RED（缺模块）：原精确表面积分逐值一致、实际Reynolds导数、极小非零面、五项nearest-even/subnormal以及开口／零面积／错误密度／零分母拒绝。候选构建仅在当前万面job终态后启动，后续必须从RED转GREEN并对保存实际材料作同输入对照。
+- core-benchmark-faces-12288-seed-0-job-01终态PROCESS_EXITED 0：正式projective Cherchi seed0收敛并完成材料保存独立重载，raw9.065852604527671e-13，24接受更新；正常求解808.799秒、输入准备1.765秒、终态封存25.705秒、保存重载23.622秒，总859.901秒。该种子正确性闭环通过，万面性能明确未达标；其余种子未启动。
+- 万面完整分段：73次source11.200秒、Boolean（含终态一次）24.174秒、rational derivative189.128秒、primary rational integration192.229秒、external map313.574秒（其中variable snapshot247.087秒、独立积分40.109秒）。下一性能工作须处理这些实际热点；不无修改重跑同一基准。
+- rational-arithmetic-build-job-01独立编译成功，12项从缺模块RED转GREEN（12 passed 0.05秒）。rational-arithmetic-comparison-job-01实际5样本通过：三个projective固定状态及万面首点／终态，源面重放一致、Boolean调用0，原moments/J与保存记录一致，新旧moments/J逐值一致。万面终态kernel积分2.445→0.827秒、导数2.342→0.455秒；未接入正式adapter，不是整次求解加速。
+- 已按局部三角面精确平面关系进一步约简divergence积分：area.dot(x)在面上恒为K，原三次项展开精确化为K/6、K*sum(x)/24及K*(sum(x)sum(y)+sum(xy))/120；不是几何近似，也不共享独立验证器代码。rational-arithmetic-build-job-02独立编译通过，旧module保留。12 tests passed 0.06秒。
+- rational-arithmetic-comparison-job-02 PROCESS_EXITED 0、passed=true：同样5份实际材料moments/J全部逐值一致，误差0；万面终态精确积分2.44→0.156秒、导数2.34→0.450秒，万面首点积分1.05→0.064秒。当前仅kernel证据；正式CMake目标、显式adapter选择、完整正式闭环和整体性能复测待完成。核心/工程/性能均未授予整体通过。
+- 显式NATIVE_GMP_SURFACE_V1已接入正式InProcessCherchiEvaluator与solve入口，旧默认PYTHON_FRACTION_V1保持；数学模块SHA与算法身份进入上下文及同次材料/配置。6项新adapter测试先RED后GREEN，新增伪造算术来源记录拒绝先RED后GREEN。正式CMake可选目标MAKE_IT_STAND_CHERCHI_RATIONAL_ARITHMETIC=ON独立构建通过（formal-rational-arithmetic-build-job-01）。
+- native-saved-derivatives-job-01 PROCESS_EXITED 0：正式CMake数学模块在三个登记状态各81保存点上，源面重放相同、moments/J与原保存生产记录逐值一致，243点误差均0，Boolean调用0；绑定原有限分支证书。不能扩大为任意邻域证明。
+- core-benchmark-small-seed-0-gmp-job-01正式闭环通过：73求值、24接受更新、raw8.941047604973148e-13；终态材料digest与旧版本完全一致b633e81a0e89cce79f12aca0df41e16876da8631a3aad7b16a842cad2cf2c1f9。正常求解92.777秒，仅较96.243秒略降，整体性能未达标；不可将kernel加速倍数冒充整次求解。
+- 暴露既有auditExactTriangleBoundaryRational原生接口，未改变其谓词或阈值；独立rational-boundary-binding-build-job-01构建通过。5测试先RED后GREEN，覆盖与Nef接受一致、显示塌缩的非零精确面、开口、错误绕向及自交拒绝。
+- 新RationalSolverBoundarySnapshot及显式EXACT_RATIONAL_BOUNDARY_V1只对单个外向、闭合、流形且精确无自交边界使用中间快照，多壳/空腔仍走完整Nef；终态补集及封存仍使用完整区域。4快照测试和6接口测试先RED后GREEN；错误moments/frame/J/backend仍拒绝。追加wrong_display实际发现回调浮点数组绑定遗漏，先RED后补严格字节对应，再GREEN。未删除几何检查。
+- rational-trial-snapshots-job-01五实际材料对照passed：数组、有理坐标、独立moments均一致；万面首点快照2.885→2.712秒、终态3.562→3.022秒，收益有限，说明精确边界谓词仍有显著开销。椭球多壳按规则走Nef，不能升级为单壳快路径。
+- core-benchmark-small-seed-0-boundary-gmp-job-01正式闭环通过：正常89.036秒，raw及24更新、同一终态digest均保持；仍非性能通过。后续需实际I/O计时，不凭总时间猜热点。
+- RunJournal新增显式EVALUATION_CHECKPOINT_V1，旧默认PER_EVENT_FSYNC_V1保持。所有记录仍逐行flush、材料文件仍fsync，求值/尝试起止/运行终态检查点前先同步新材料目录，再同步确认事件；异常关闭同步剩余前缀。4真实fsync顺序/前缀测试先RED后GREEN；伪造durability记录拒绝先RED后GREEN。记录独立serialization/write/fsync计时，不进入科学事件身份。
+- 当前相关集合58 passed 15.66秒；尚非全项目回归。已启动core-benchmark-small-seed-0-checkpoint-boundary-gmp-job-01，session91656，绑定新journal及正式模块；运行中不改依赖、不启动并行大型作业。观察同输入、同求解协议的完整结果与实际I/O成本后再展开规模/种子。
+- core-benchmark-small-seed-0-checkpoint-boundary-gmp-job-01 PROCESS_EXITED 0：同一冻结seed0、73求值、24接受更新，正常25.432秒（原96.243秒）、raw8.941047604973148e-13、同一终态材料digest b633e81a0e89cce79f12aca0df41e16876da8631a3aad7b16a842cad2cf2c1f9；终态封存4.710秒、保存独立重载6.741秒。日志完整性通过，全部求值/拒绝/重启保留，不是只计最后成功尝试。
+- 新I/O实测：directory fsync78次1.569秒、event fsync79次3.653秒、material/metadata fsync78次3.419秒；serialization0.064秒、write/flush0.012秒。source共8.002秒、Boolean0.834秒、derivative0.673秒、integration0.295秒、external map6.313秒。磁盘rotational=1。仍须验证万面/十万面实际成本，不能由小型25秒宣称规模性能门通过。
+- small-core-checkpoint-version-comparison-01.json严格数值轨迹对照passed：全部Newton数值事件（只排除具名成本和版本map identity）、完整trace、终态系数、raw及材料均一致。该跨版本比较不替代同版本独立重复；构建/来源身份差异单独保留。
+- 已启动core-benchmark-faces-12288-seed-0-checkpoint-boundary-gmp-job-01，session60706；同输入正式完整求解测万面收益。禁止修改其绑定模块（含新journal），不启动并行大型作业。三规模30种子、同版本重复、全必要回归与独立审查仍未完成。
+- 本批实际终态复核：上述万面作业已 PROCESS_EXITED 0，正常求解382.901秒，raw9.065852604527671e-13、24更新，终态digest81b692101b819589eaca2a96bdf4de16253003b7883073566b0627aab49d45c8。medium-core-checkpoint-version-comparison-01.json全部数值事件、完整trace、系数、raw及材料一致；不是同版本重复，性能仍未通过。
+- physical-boundary-costs-job-01 因误用canonical文本解析器读取Cherchi二进制有理token失败，保留失败；改用原exact_fraction后job02完成。两个保存点精确仿射对应、体积缩放与判定成立，物理坐标边界检查分别1.848/2.124秒，normalized为2.668/2.946秒；收益有限，未改正式坐标系。
+- filtered-boundary-build-job-01独立编译已成功。候选使用Filtered_kernel<Simple_cartesian<Gmpq>>，坐标／构造仍Gmpq，谓词区间不确定时精确回退。旧模块上后端身份测试RED已保留；新模块实际运行test_exact_filtered_boundary、test_exact_boundary_audit、test_rational_boundary_audit，共26 passed 0.12秒（既存pytest_asyncio配置警告）。尚须实际保存材料冷1／温3对照，不授予整体准入。
+- Ruling: 新v3规划继续复用本权威ledger及既有隔离worktree，不创建重复checkout、不提交或清理 — 用户明确要求保留历史且已有计划长期在此推进 — 成本是最终审查必须覆盖文件与证据身份，不能仅按commit差异。
+- v3 pre-flight: Task1提供精确判定／收益给Task2；Task2统一构建提供Task3/4真实映射；Task3几何变化使相应导数失效；Task4冻结候选供Task5全部种子／重复；Task6消费全部证据。当前开始Task1实际保存材料对照，不恢复案例。
+- filtered-boundary-comparison-job-01 PROCESS_EXITED 0、passed=true：三个固定状态及万面首点／终态各冷1温3，全部事实（除后端名称）逐值一致，包括精确体积、拓扑、自交判定和pair计数，Boolean调用0。万面温中位数2.672→1.235秒、2.952→2.314秒；过滤有收益但仍远不足整体性能门，不宣称求解加速。
+- 正式CMake选择测试实际RED：ON没有进入audit编译命令；禁用exact后端时ON被静默忽略。最小修改新增默认OFF的MAKE_IT_STAND_FILTERED_BOUNDARY_KERNEL，仅给ExactBoundaryAudit.cpp加宏，缺exact后端显式拒绝；待GREEN及从源码实际构建。其他默认／几何公式不改。
+- CMake显式选项3测试已GREEN；其中拒绝信息初版断言依赖CMake换行，实际正确拒绝却测试失败，改为规范化空白后继续断言实际非零退出及指定依赖。新候选连同边界回归共31 passed 1.34秒，覆盖2^-1200非零有理体积与2^-200共享顶点正长度越界。仍有既存pytest_asyncio配置警告。
+- Task1有限候选对照与受影响边界回归已完成；这不等于所有输入正确或性能门通过。Task2正式从源码构建formal-native-core-build-job-01已启动，session36730；普通canonical实现保留，不启用仅overlay已证实的单transport宏。独立输出、不覆盖旧native；所有src/include/bindings/cmake及根CMake绑定，运行中禁止修改。完成后必须核对实际加载及新版本对照，不能只凭编译成功升级准入。
+- Ruling: 正式源码构建保留标准canonical导数语义，不将旧同源overlay宏未经证明搬入CMake — 标准实现另有重排分支，虽可能影响成本，正确性优先且正式Cherchi自身已有独立一次GMP传递 — 成本是若该路径仍重算需按新实际计时及等价证据再修，而不是混用旧对象。
+- formal-native-core-build-job-01已PROCESS_FAILED：配置阶段找不到Boost_INCLUDE_DIR，未编译。只读比较显示直接pytest配置使用/home/lin/anaconda3/include的Boost1.82.0，而受限source_job的PATH只有/usr/bin:/bin，系统/usr/include/boost不存在。显式给CMake绑定相同已用include路径，并登记version.hpp身份；原失败保留，job02独立构建验证，不以改后端绕过。
+- job02已PROCESS_FAILED：Boost路径核验通过，配置继续发现Python3自动选择/usr/bin/python3，与显式Python=/home/lin/anaconda3/bin/python3不一致，既有CMake守卫正确拒绝。原脚本只沿用Cherchi子项目的Python选项，根项目要求两种查找同解释器；现对Python3亦显式绑定同一解释器，job03独立验证。未修改生产守卫，尚未编译或升级准入。
+- job03已进入实际普通CMake编译，session63982；25秒时约36%、165秒时约76%，实际cc1plus进程及source_job cgroup确认活跃。两个环境缺口均已通过既有守卫；当前不得修改绑定源码。已准备后续formal-native-rebuild-check与formal-native-saved-derivatives启动器，前者比较三份保存实际材料/J，后者只重放243点source与已有GMP积分传递、Boolean调用0；未执行前不记通过。
+- job03编译与链接完成但最终实际加载失败，PROCESS_FAILED保留：缺differentiateCanonicalPolyhedralMaterialMoments的带diagnosticObserver重载。FullRankMomentEvaluator现调用该签名，普通canonical.cpp只定义了旧签名；旧overlay由同源符号重命名提供了此签名，因而掩盖普通构建缺口。test_formal_native_module_load实际RED（undefined symbol），并核对nm符号与调用。最小修改新增显式canonical回调重载、旧签名委托空回调，原三份精确坐标仍按原语义转交regular实现；未改数学或重排分支。job04将从源码独立重建，不覆盖job03失败。
+- formal-native-core-build-job-04实际PROCESS_EXITED 0，耗时275.12秒、内存峰值3.97GB；普通CMake源码编译100单元、实际依赖4149文件、对象与链接及实际加载库已记录receipt。标准canonical实现、无overlay宏。载入回归RED→GREEN，新增canonical内层observer转交、异常中止及不改J测试通过；边界／实际Cherchi／算术相关共44 passed 10.42秒，既存pytest_asyncio配置警告仍在。尚未完成保存状态对照、完整求解或性能门。
+- formal-native-rebuild-check-job-01 PROCESS_EXITED 0、passed=true：三登记projective状态，普通源码构建的实际源顶点／面、实际材料有理顶点／面、geometry/topology、moments/J全部与旧保存结果逐值一致，每状态source/Boolean各1次。显式CGAL对照导数可用，moments最大差1.07e-14、J最大差9.24e-14。仅三个固定点，不直接扩大导数门。
+- 当前串行formal-native-saved-derivatives-job-01已启动，重放243点实际source、同次保存材料/GMP导数；不得运行中修改Python/native绑定依赖。后续formal-registered-geometry-check准备完成，只做已保存失败状态，不恢复案例。
+- formal-native-saved-derivatives-job-01实际PROCESS_EXITED 0、passed=true：三状态各81点（243），当前普通源码native源面顶点／面重放一致，GMP积分及实际Reynolds传递与原保存moments/J逐值一致、误差0、Boolean调用0，原有限分支证书身份核验成立。只复用这些登记样本证据，不扩大为任意邻域。
+- 当前formal-registered-geometry-check-job-01已串行启动（session72659）：历史Heart两失败、Noodles方向及极小面/同次规范化回归，optimization_invocations固定为0。运行中不修改绑定native或脚本。随后才可在当前候选进行正式小型seed0闭环；30种子、同版本重复、性能及最终独立审查仍未完成。
+- Previous goal turn classification: no implementation progress（用户请求重订规划）；本目标轮已产出精确谓词实际对照、正式构建选项RED→GREEN、普通构建缺失ABI修复及243点保存映射等价证据，属于progress，不以计划或状态复述计完成。
+- formal-registered-geometry-check-job-01实际PROCESS_EXITED 0、passed=true：Heart两源面/封口回归与Noodles多分量selector回归3 tests通过，Heart两状态实际CGAL材料和有效J返回（19.757/10.339秒）；Noodles保存第7状态实际44856面、有效J返回（82.546秒），同次规范化前后精确有向面／birth链一致（1 test passed 82.55秒）。optimization_invocations=0；这里只关闭登记固定失败回归，不意味着复杂模型完成或性能通过。
+- 当前普通源码候选具备三固定点对照、243点原有限证据复用及登记几何回归；正式小型seed0闭环即将按原冻结初始化/协议执行。启动器要求以上三门全部通过，记录各报告身份。性能及三十种子总体门仍未通过。
+- formal-core-benchmark-small-seed-0-job-01实际PROCESS_EXITED 0：普通源码候选正式Cherchi projective真实求解、同次材料封存与独立保存重载闭环通过，73求值、24更新，raw8.941047604973148e-13，同一终态digest b633e81a0e89cce79f12aca0df41e16876da8631a3aad7b16a842cad2cf2c1f9。正常24.972秒，旧checkpoint候选25.432秒；不是性能通过。
+- small-formal-native-version-comparison-01.json实际passed：完整数值事件、trace、终态系数、raw及材料完全一致，只排除具名成本及登记map版本身份；不是同版本独立重复。当前准备对这个正式版本运行受影响核心／材料接口回归，随后测万面；其余种子、十万面、重复及最终审查仍未完成。
+- formal-core-regressions-job-01终态PROCESS_FAILED：145 passed、2 failed（134.90秒），失败为filtered CMake ON/OFF测试在受限PATH下找不到Boost；不是算法检查失败。测试配置补与正式worker相同的显式Boost路径，不关闭测试或改生产依赖守卫。
+- 同时发现回归启动器误用了不存在的SPIN_CHERCHI_FORMAL_RUN变量，记录测试实际仍消费历史17更新fixture；纠正为既有MAKE_IT_STAND_FORMAL_EVIDENCE_RUN，并在当前24更新正式run上观测test_actual_completed_run_is_valid实际RED（硬编码17）。改为从独立public trace的positive geodesic steps计数，与verifier event-tape计数对照；保留必须真实更新和完整性要求。job02将重新运行同集合，绑定当前正式run，原失败及误绑记录保留。
+- formal-core-regressions-job-02实际145 passed、2 failed（134.62秒）：CMake受限环境绑定已通过，当前run的更新数量核验已通过。剩两负例原来直接写入“EXACT_RATIONAL_BOUNDARY_V1／EVALUATION_CHECKPOINT_V1”，恰好与当前run原值相同，因此并未产生篡改，verifier正确接受。改为将实际配置切换到另一已登记值，确实制造与实际run不一致；不改生产verifier或放宽门。原失败保留，job03同集合在当前run上最终复核。
+- formal-core-regressions-job-03实际PROCESS_EXITED 0，147 passed 134.99秒；同一普通源码native、正式数学模块及Boolean模块，记录核验／篡改负例绑定当前24更新run，两个配置负例确实改变了配置并被拒绝。是受影响核心与材料链集合，不是全项目／最终独立审查或30种子通过。
+- 正式万面seed0将按新候选测完整成本；启动器要求前述固定／保存映射／几何门及本回归作业成功终态并绑定其证据。运行中不改已绑定Python/native/配置，不启动另一大型作业。新候选的小型正常24.972秒仍未达到完整求解工程目标，不授予性能通过。
+- 当前串行作业formal-core-benchmark-faces-12288-seed-0-job-01，session73980，实际worker PID4020789已确认运行；最新事件实际Boolean返回（约0.273秒），不是凭锁文件推断存活。绑定普通源码native job04及正式Python/GMP/Cherchi模块，运行期间不改依赖、不另开大型作业。终态后读取report、分段成本、材料及完整数值轨迹；只有依赖改变或新诊断才重跑。
+- 本批任务状态：v3 Task1限定候选对照完成；Task2普通源码闭环与相关147回归通过；Task3原三固定状态有限证据及登记失败回归已在该候选复核。Task4正在万面seed0；Task5三十种子/三个同版本重复、十万面与性能及Task6独立审查仍缺。正确性整体/工程整体/性能整体均不宣告全部完成，心形和面条继续暂停。
+- 本目标轮已确认formal-core-benchmark-faces-12288-seed-0-job-01终态PROCESS_EXITED 0：正常340.268秒、raw9.065852604527671e-13、24更新、终态独立材料闭环通过。medium-formal-native-version-comparison-01.json全部数值事件/trace/系数/raw/材料一致，旧382.901秒；仍非同版本重复或性能通过。
+- 完整阶段统计：variable snapshot175.475秒、变量独立积分36.955秒、正式Reynolds导数27.889秒、Boolean含补集20.963秒、primary积分8.990秒、source7.626秒、重复固定积分2.574秒；external map215.365秒为嵌套总值，不能重复相加。最大剩余热点为材料快照。下一诊断只对实际保存边界剖析，明确perf_event_paranoid=4不以未知采样猜热点；用独立-pg诊断程序执行原审计器并保留仪表偏差/动态GMP时间不可完全归因的范围。
+- Previous goal turn classification: progress（普通源码接口缺失修复、147相关测试与真实小型闭环）；本轮万面终态与完整同轨迹成本证据改变下一行动，不重启该完整作业。
+- exact-boundary-profile-job-01实际完成：相同6168面终态10次审计，精确input digest、体积、pair计数及有效判定与正式native一致；gprof记录每次约305万bbox重叠比较，但10次约23秒墙时只有0.66秒可在静态符号采样归因，动态GMP时间不可据此猜分布。
+- 为定位上述不可归因开销，新增仅诊断宏MAKE_IT_STAND_PROFILE_EXACT_BOUNDARY，不进入普通默认构建的分段时钟；exact-boundary-profile-job-02完成10次原审计，精确事实仍相同。平均扫描/相交2.177秒，精确体积0.0456秒、拓扑/退化0.0164秒、树构建0.0097秒、有理解析/identity0.0057秒。没有将仪表计时当生产门或删任何检查。
+- 基于实际扫描热点，准备每次audit按原Gmpq坐标精确排序的整数rank bbox候选；这是保持全序/闭区间关系的表示，不是浮点近邻、体素或几何变形。先写独立极大/极小坐标、闭接触、100成对精确对照与非法输入测试，旧代码缺该helper时观察RED，再最小实现；实际收益及全事实对照通过前不接正式版本。
+- coordinate-rank-box-test-job-01实际RED（所需ExactCoordinateRankBox.h缺失），最小helper以每轴精确Gmpq比较排序并把相等值赋相同整数rank；无舍入/epsilon/跨状态cache。job02实际GREEN：2^1200与1±2^-1200顺序、相等值、闭接触、100盒对原有理比较及非法输入均通过。
+- 仅独立候选宏MAKE_IT_STAND_RANKED_BOUNDARY_BOXES使用rank构造BVH，三角形仍使用原精确点／谓词，原默认路径保持；科学事实除显式backend身份应全部一致。当前准备从普通源码job04实际链接对象独立重建审计单元，旧模块保持；收益或一致性失败不准入正式版本。
+- ranked-boundary-build-job-01实际PROCESS_EXITED 0：仅审计单元独立替换，所有保留普通源码对象／静态库摘要与实际link cwd记录，旧job04未改。新候选32项原生边界、理性非零薄面及trial snapshot测试通过（0.13秒，既存pytest_asyncio警告）。实际五材料冷1／温3全事实对照正在ranked-boundary-comparison-job-01串行执行，未完成前不声明收益或正式准入。
+- ranked-boundary-comparison-job-01实际passed：五材料全部精确事实相同，但万面首点1.221→1.208秒、终态2.283→2.266秒，收益约1%，小型略慢。判定该候选无足够实际收益，不投入正式构建或完整求解；旧默认仍rational bbox。已观测3 fail/1 pass的预写CMake选项RED测试为尚未推广候选需求，原内容移至实验archived_ranked_boundary_option_red.py保存，不给正式CMake增加无收益选项，不把它当标准版本成功测试。
+- Ruling: rank候选正确但无明显性能收益，停止推广 — 有实测收益才纳入正式版本，避免新增无效配置和重复长跑 — 成本是保留实验宏/header供复查，不宣称该候选关闭性能差距。下一诊断按原实际pair的shared-index类别计数／计时，不凭gprof动态GMP未知时间猜具体相交热点。
+- exact-boundary-profile-job-03实际完成且原精确事实一致：每次shared1 37231对约1.478秒，shared0 78603对约0.603秒，shared2 9252对约0.0429秒。热点明确为共同一个索引顶点时仍构造完整三角交，rank bbox不是主要成本。
+- 下一最小候选用共同顶点的正锥交判定：非共面先精确同侧排除，共面用有向边半平面包含，跨面用精确体积权重的正交线方向，不构造完整交多边形。已读固定CGAL coplanar_orientationC3四点语义；全部采用原精确坐标、无epsilon，不改变材料。先写12手算/极小/平移及256随机参考交构造、方向置换/交换对照，再观察缺helper的RED；收益前不接正式入口。
+- shared-vertex-predicate-test-job-01实际RED（helper未实现），最小正锥谓词实现后job02实际GREEN：12手算/2^-200/巨大偏移、256非退化随机构造及各方向置换和面对交换均与原CGAL精确交构造一致。helper要求两非退化三角面，此条件仍由audit在任何相交扫描前确认；真正退化不进入快判定。
+- 独立宏MAKE_IT_STAND_SHARED_VERTEX_CONE_PREDICATE只替换shared1面对处理，shared0/shared2/退化/拓扑和精确体积保持；ranked宏不启用。当前shared-vertex-boundary-build-job-01独立编译后须跑所有边界负例和保存材料全事实对照，未通过或无收益不得正式准入。
+- shared-vertex-boundary-build-job-01实际PROCESS_EXITED 0；原32边界/极小精确面/接口测试32 passed 0.14秒。五实际材料冷1温3对照正在shared-vertex-boundary-comparison-job-01串行运行，期间不修改绑定worker或模块；另外准备filtered kernel及±2^1200偏移/2^-1200缩放的强化单测，待空位执行。
+- shared-vertex-boundary-comparison-job-01实际PROCESS_EXITED 0、passed=true：五材料全部事实（除后端身份）逐值一致，包括pair数、精确体积、拓扑与自交诊断。三小型固定状态约5.54–7.78倍边界提速；万面首点1.209→0.851秒、终态2.271→1.374秒。局部有明显收益，终态仍未达单次整个核心≤1秒要求，不宣称完整求解速度已通过。当前filtered/extreme单测job03串行强化验证，完成后才补正式CMake选择。
+- shared-vertex-predicate-test-job-03实际PROCESS_EXITED 0：真实Filtered_kernel下13手算/极端±2^1200及2^-1200缩放/2^-200超小交、256随机及方向置换/面对交换与独立精确CGAL交构造一致。正式CMake选择测试实际RED（ON未进入编译、禁exact时被忽略）；现新增默认OFF的显式选项及仅审计单元定义，不推广无收益rank bbox宏。待GREEN与独立普通源码job05构建。
+- 正式shared-vertex/filtered选择共6 tests实际GREEN（2.40秒，既存pytest_asyncio配置警告），ON确实只进入ExactBoundaryAudit.cpp，禁exact时显式拒绝，旧默认OFF保持。当前启动formal-native-core-build-job-05：从全部当前源码独立普通CMake构建，共同顶点正锥显式ON；rank bbox与诊断计时宏不启用，旧job04/候选module保留。运行期间不改绑定CPP/header/CMake，尚未授予最终版本或整体性能通过。
+- formal-native-core-build-job-05实际PROCESS_EXITED 0，普通源码、标准canonical实现、显式sharedvertex profile及实际加载身份receipt已返回。下一串行shared-vertex-formal-validation-job-01消费该模块，检查三固定生产映射及150项相关核心／材料接口测试；运行期间不改绑定Python/native/tests。通过后仍需该版本完整种子、终态材料与计时，不以边界局部收益冒充整作业性能。
+- shared-vertex-formal-validation-job-01实际PROCESS_EXITED 0：三登记projective固定状态实际source/材料/moments/J与原保存逐值相同，显式CGAL导数对照在门槛内；同普通源码job05运行150 tests passed 132.81秒。只覆盖相关集合与固定状态，不是全项目/三十种子或独立审查。现在按原seed0、8次尝试/60求值/raw1e-12协议启动shared-vertex-formal-benchmark-small-seed-0-job-01，身份绑定该验证报告和模块。
+- shared-vertex-formal-benchmark-small-seed-0-job-01实际PROCESS_EXITED 0，真实24更新/73求值、raw8.941047604973148e-13、同一终态材料digest b633e81a0e89cce79f12aca0df41e16876da8631a3aad7b16a842cad2cf2c1f9，保存及独立重载通过。正常22.654秒，原普通源码24.972秒；仍不是性能通过。small-shared-vertex-version-comparison-01.json全部数值事件/trace/系数/raw/材料一致；不替代同版本独立重复。
+- 当前开始shared-vertex-formal-benchmark-faces-12288-seed-0-job-01同输入完整成本测量，单作业串行、资源协议不变，运行中不改绑定模块或worker。旧340.268秒是该规模对照；新结果未出前不宣称同样提速。十万面、全部三十种子、三个同版本重复、最终独立审查及性能门仍未完成；心形/面条继续暂停。

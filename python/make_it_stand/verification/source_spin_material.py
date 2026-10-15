@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+import math
 import numpy as np
 
 from .spin_artifact import SealedSpinArtifact, _recheck_problem
+from .mass_moments import TriangleMesh, compute_mass_properties
 from .spin_common import (FRAME, ORDER, SCOPE, canonical, digest, native, parse, require,
                           scalar, vector, implementation_observation)
 from .spin_problem import MeshSnapshot, SpinArtifactProblem
@@ -92,11 +94,19 @@ class SourceSolverSettings:
     inertia_weight: float = 1.
     center_weight: float = 1.
     binary_constraint_tolerance: float = 1e-6
+    target_origin: tuple[float, float, float] = (0., 0., 0.)
+    target_axes: tuple[tuple[float, float, float], ...] = (
+        (1., 0., 0.), (0., 1., 0.), (0., 0., 1.),
+    )
     slqp: AuditedSlqpSettings = field(default_factory=AuditedSlqpSettings)
+    termination_policy: str = 'UNCHANGED_PARTITION_KKT_V1'
 
     def __post_init__(self):
         require(isinstance(self.objective, str) and self.objective in _MODES, 'invalid objective')
         require(self.formulation == 'PAPER_GIVENS', 'unsupported formulation')
+        require(isinstance(self.termination_policy,str) and self.termination_policy in
+                ('UNCHANGED_PARTITION_KKT_V1','PAPER_POST_TRANSITION_V1'),
+                'unsupported termination policy')
         require(type(self.slqp) is AuditedSlqpSettings, 'expected immutable AuditedSlqpSettings')
         for name in ('initial_level', 'maximum_optimization_level'):
             object.__setattr__(self, name, _count(getattr(self, name), name, 0, 20))
@@ -109,6 +119,14 @@ class SourceSolverSettings:
         require(0 <= self.initial_fill <= 1 and 0 < self.fractional_epsilon < .5, 'invalid fill controls')
         require(min(self.laplacian_weight,self.inertia_weight,self.center_weight) >= 0, 'negative weight')
         require(self.objective != 'STATIC_LOWERING' or self.initial_phi == 0, 'static requires phi zero')
+        origin=np.asarray(self.target_origin,dtype=float);axes=np.asarray(self.target_axes,dtype=float)
+        require(origin.shape==(3,) and np.all(np.isfinite(origin)), 'invalid target origin')
+        require(axes.shape==(3,3) and np.all(np.isfinite(axes)), 'invalid target axes')
+        require(np.allclose(axes.T@axes,np.eye(3),rtol=0.,atol=1e-12) and
+                math.isclose(float(np.linalg.det(axes)),1.,rel_tol=0.,abs_tol=1e-12),
+                'target axes must be right-handed orthonormal')
+        object.__setattr__(self,'target_origin',tuple(float(v) for v in origin))
+        object.__setattr__(self,'target_axes',tuple(tuple(float(v) for v in row) for row in axes))
 
 
 @dataclass(frozen=True)
@@ -133,7 +151,10 @@ class SourceSpinMaterialResult:
     _outer: MeshSnapshot | None
     _material: MeshSnapshot | None
     _cavity: MeshSnapshot | None
+    _boundary_material: MeshSnapshot | None
+    _interior_material: MeshSnapshot | None
     _evidence: str
+    _checkpoint: bytes | None
 
     def __init__(self):
         raise TypeError('use solve_and_seal_source_spin2014')
@@ -145,6 +166,9 @@ class SourceSpinMaterialResult:
     def evidence(self): return parse(self._evidence)
 
     @property
+    def checkpoint(self): return self._checkpoint
+
+    @property
     def outer(self): return None if self._outer is None else self._outer.arrays()
 
     @property
@@ -152,6 +176,14 @@ class SourceSpinMaterialResult:
 
     @property
     def cavity(self): return None if self._cavity is None else self._cavity.arrays()
+
+    @property
+    def boundary_material(self):
+        return None if self._boundary_material is None else self._boundary_material.arrays()
+
+    @property
+    def interior_material(self):
+        return None if self._interior_material is None else self._interior_material.arrays()
 
 
 def _normalize_model_moments(moments, normalization):
@@ -174,6 +206,48 @@ def _append_reversed(whole, cavity):
     return MeshSnapshot((np.vstack((v,cv)),np.vstack((f,cf[:,::-1]+len(v)))))
 
 
+def _independent_material_moments(mesh, density):
+    """Independent signed-tetrahedron integral in source model coordinates."""
+    require(not mesh.explicit_empty, 'cannot integrate an empty material component')
+    vertices, faces = mesh.arrays()
+    props = compute_mass_properties(TriangleMesh(
+        tuple(map(tuple, vertices.tolist())), tuple(map(tuple, faces.tolist()))), density)
+    q = props.second_moment
+    return (props.mass, *props.first_moment, q[0][0], q[1][1], q[2][2],
+            q[1][2], q[0][2], q[0][1])
+
+
+def _dual_material_independent_audit(boundary_mesh, interior_mesh, boundary_density,
+                                     interior_density, native_geometry, root_side):
+    """Reintegrate each exported phase and gate sealing on agreement and partition."""
+    boundary = np.asarray(_independent_material_moments(boundary_mesh, boundary_density))
+    interior = np.asarray(_independent_material_moments(interior_mesh, interior_density))
+    combined = boundary + interior
+    claimed_boundary = np.asarray(native_geometry['boundary_material_moments'], dtype=float)
+    claimed_interior = np.asarray(native_geometry['interior_material_moments'], dtype=float)
+    claimed_combined = np.asarray(native_geometry['integrated_moments'], dtype=float)
+    subtraction = np.asarray(native_geometry['source_subtraction_moments'], dtype=float)
+    powers = np.asarray([3,4,4,4,5,5,5,5,5,5], dtype=float)
+    scales = max(boundary_density, interior_density) * np.power(root_side, powers)
+    errors = {
+        'boundary_vs_native': float(np.max(np.abs(boundary-claimed_boundary)/scales)),
+        'interior_vs_native': float(np.max(np.abs(interior-claimed_interior)/scales)),
+        'sum_vs_native': float(np.max(np.abs(combined-claimed_combined)/scales)),
+        'sum_vs_source_subtraction': float(np.max(np.abs(combined-subtraction)/scales)),
+    }
+    require(all(np.isfinite(value) and value <= 1e-10 for value in errors.values()),
+            'dual-material independent mass-moment audit failed: '+canonical(errors))
+    partition = native_geometry['dual_material_partition']
+    require(partition['completed'] and partition['complete_partition'] and
+            partition['no_positive_volume_overlap'],
+            'dual-material exact partition audit failed: '+canonical(partition))
+    return {'method':'INDEPENDENT_SIGNED_TETRAHEDRA_V1',
+            'order':list(ORDER), 'density_applied_once':True,
+            'boundary_moments':boundary.tolist(), 'interior_moments':interior.tolist(),
+            'combined_moments':combined.tolist(), 'normalized_residuals':errors,
+            'normalized_tolerance':1e-10, 'exact_partition':partition}
+
+
 def _observation():
     from .run_evidence import _record
     result = implementation_observation()
@@ -190,8 +264,24 @@ def _observation():
     return result
 
 
-def solve_and_seal_source_spin2014(problem, *, source_settings, solver_settings, boundary_settings):
+def solve_and_seal_source_spin2014(problem, *, source_settings, solver_settings, boundary_settings,
+                                  maximum_new_passes=None, resume_checkpoint=None,
+                                  iteration_store_directory=None, iteration_store_max_bytes=1073741824):
     """One actual solve, original-coordinate export, and independent exact seal."""
+    execution={}
+    if maximum_new_passes is not None:
+        execution['maximum_new_passes']=_count(maximum_new_passes,'maximum_new_passes')
+        require(isinstance(iteration_store_directory,str) and Path(iteration_store_directory).is_absolute(),
+                'staged material requires absolute iteration_store_directory')
+    require(resume_checkpoint is None or (maximum_new_passes is not None and
+            type(resume_checkpoint) is bytes and 0<len(resume_checkpoint)<=64*1024**2),
+            'invalid resume checkpoint/control')
+    if resume_checkpoint is not None:execution['resume_checkpoint']=resume_checkpoint
+    if iteration_store_directory is not None:
+        require(isinstance(iteration_store_directory,str) and '\0' not in iteration_store_directory,
+                'invalid iteration_store_directory')
+        execution['iteration_store_directory']=iteration_store_directory
+        execution['iteration_store_max_bytes']=_count(iteration_store_max_bytes,'iteration_store_max_bytes',maximum=2**63-1)
     for value, cls in ((source_settings,SourceGeometrySettings),(solver_settings,SourceSolverSettings),
                        (boundary_settings,SourceBoundarySettings)):
         require(type(value) is cls, 'expected immutable '+cls.__name__)
@@ -203,31 +293,48 @@ def solve_and_seal_source_spin2014(problem, *, source_settings, solver_settings,
             'optimization depth exceeds source geometry depth')
     require(isinstance(problem, SpinArtifactProblem), 'expected locked SpinArtifactProblem')
     problem = _recheck_problem(problem)
-    require(problem.validation_scope == SCOPE and len(problem.design_regions) == 1,
-            'NOT_SUPPORTED: exactly one design region and hollow-only scope required')
-    densities = [r.density for r in problem.fixed_regions+problem.design_regions]
-    require(all(r == densities[0] for r in densities), 'NOT_SUPPORTED: uniform density required')
+    require(problem.validation_scope == SCOPE and len(problem.fixed_regions) == 1 and len(problem.design_regions) == 1,
+            'NOT_SUPPORTED: exactly one fixed shell and one design region in hollow-only scope required')
+    boundary_density=problem.fixed_regions[0].density
+    interior_density=problem.design_regions[0].density
     target = problem.target
-    require(target['axis'] == [0,0,1] and target['origin'] == [0,0,0],
-            'NOT_SUPPORTED: source solver requires native +z axis and origin zero')
+    axes=np.asarray(solver_settings.target_axes,dtype=float)
+    require(np.allclose(target['origin'],solver_settings.target_origin,rtol=0.,atol=1e-12) and
+            np.allclose(target['axis'],axes[:,2],rtol=0.,atol=1e-12),
+            'NOT_SUPPORTED: problem target must match source solver target frame')
     require(target['mode'] == _MODES[solver_settings.objective], 'NOT_SUPPORTED: objective/target mode mismatch')
     require(target['support_points'] == ([[0,0,0]] if target['mode']=='STATIC_BALANCE' else []),
             'NOT_SUPPORTED: unsupported support context')
     n = native()
     require(hasattr(n, 'solve_source_spin2014_material'), 'source bridge requires native 2014 plus exact geometry')
     before = _observation()
+    solver_config=asdict(solver_settings)
+    if boundary_density != interior_density:
+        solver_config['boundary_density']=boundary_density
+        solver_config['interior_density']=interior_density
     run = n.solve_source_spin2014_material(*problem.original.arrays(), *problem.design_regions[0].mesh.arrays(),
-        source_settings=asdict(source_settings), solver_settings=asdict(solver_settings),
-        boundary_settings=asdict(boundary_settings), density=densities[0], minimum_outer_wall=problem.minimum_outer_wall)
+        source_settings=asdict(source_settings), solver_settings=solver_config,
+        boundary_settings=asdict(boundary_settings), density=boundary_density, minimum_outer_wall=problem.minimum_outer_wall,**execution)
     diagnostics = run.diagnostics
     artifact, error = None, None
-    outer = material = cavity = None
+    outer = material = cavity = boundary_material = interior_material = None
+    dual_material_audit = None
     if run.has_geometry:
         try:
             outer = MeshSnapshot(run.outer)
             require(outer == problem.original, 'native outer bytes differ from locked original')
             material = MeshSnapshot(run.material)
             cavity = MeshSnapshot(run.cavity if len(run.cavity[0]) else None)
+            if boundary_density != interior_density:
+                require(run.boundary_material is not None and run.interior_material is not None,
+                        'native dual-material component boundaries are unavailable')
+                boundary_material=MeshSnapshot(run.boundary_material if len(run.boundary_material[0]) else None)
+                interior_material=MeshSnapshot(run.interior_material if len(run.interior_material[0]) else None)
+                require(not boundary_material.explicit_empty and not interior_material.explicit_empty,
+                        'NOT_SUPPORTED: dual material component geometry is empty')
+                dual_material_audit = _dual_material_independent_audit(
+                    boundary_material, interior_material, boundary_density, interior_density,
+                    diagnostics['geometry'], source_settings.root_side)
             design = problem.design_regions[0]
             clearance = n.check_exact_boundary_clearance(design.mesh.exact_region(),cavity.exact_region(),0.)
             require(clearance['completed'] and (cavity.explicit_empty or clearance['contact'] is False),
@@ -244,13 +351,19 @@ def solve_and_seal_source_spin2014(problem, *, source_settings, solver_settings,
         error = 'native geometry unavailable: '+diagnostics['geometry']['status']+': '+diagnostics['geometry']['diagnostic']
     identity = {'schema':'source-spin2014-locked-material-run-v1','problem_digest':problem.input_digest,
         'input_identity':problem.identity,'source_settings':asdict(source_settings),'solver_settings':asdict(solver_settings),
-        'boundary_settings':asdict(boundary_settings),'density':densities[0], 'minimum_outer_wall':problem.minimum_outer_wall,
+        'boundary_settings':asdict(boundary_settings),'density':boundary_density,
+        'material_densities':{'boundary':boundary_density,'interior':interior_density},
+        'minimum_outer_wall':problem.minimum_outer_wall,
         'settings_authority':'IMPLEMENTATION_DEFAULT','geometry_frame':'MODEL_COORDINATES_NATIVE_Z_ORIGIN_ZERO',
         'claim_frame':FRAME,'normalization':problem.normalization,'native_run':diagnostics,
         'status':diagnostics['solve']['status'],'seal_error':error,
         'artifact_scientific_digest':None if artifact is None else artifact.scientific_digest,
         'outer':None if outer is None else outer.identity,'material':None if material is None else material.identity,
-        'cavity':None if cavity is None else cavity.identity,'project_status':'PARTIAL_BLOCKED',
+        'cavity':None if cavity is None else cavity.identity,
+        'boundary_material':None if boundary_material is None else boundary_material.identity,
+        'interior_material':None if interior_material is None else interior_material.identity,
+        'dual_material_independent_audit':dual_material_audit,
+        'project_status':'PARTIAL_BLOCKED',
         'solver_target_feasibility':'UNKNOWN','physical_validation':'NOT_IN_SCOPE',
         'original_evidence_admission':'BLOCKED_UNKNOWN','build_source_attestation':'NOT_VERIFIED'}
     after = _observation()
@@ -260,6 +373,7 @@ def solve_and_seal_source_spin2014(problem, *, source_settings, solver_settings,
     result = object.__new__(SourceSpinMaterialResult)
     for name,value in dict(status=identity['status'],artifact=artifact,seal_error=error,
         scientific_digest=digest(identity),_identity=canonical(identity),_outer=outer,_material=material,_cavity=cavity,
-        _evidence=canonical(evidence)).items():
+        _boundary_material=boundary_material,_interior_material=interior_material,
+        _evidence=canonical(evidence),_checkpoint=getattr(run,'checkpoint',None)).items():
         object.__setattr__(result,name,value)
     return result

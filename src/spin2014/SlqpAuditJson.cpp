@@ -21,7 +21,21 @@ void writeSlqpAuditControlsJson(std::ostream& o,const SlqpLbfgsSettings& s) {
      <<",\"maximum_iterations\":"<<s.maximumIterations<<",\"maximum_line_search_steps\":"<<s.maximumLineSearchSteps
      <<",\"lbfgs_memory\":"<<s.lbfgsMemory<<",\"equality_tolerance\":"<<s.equalityTolerance
      <<",\"projected_gradient_tolerance\":"<<s.projectedGradientTolerance<<",\"active_set_tolerance\":"<<s.activeSetTolerance
-     <<",\"merit_penalty\":"<<s.meritPenalty<<",\"line_search_reduction\":"<<s.lineSearchReduction<<",\"armijo\":"<<s.armijo<<'}';
+     <<",\"merit_penalty\":"<<s.meritPenalty<<",\"line_search_reduction\":"<<s.lineSearchReduction<<",\"armijo\":"<<s.armijo;
+    if(s.directionPolicy==SlqpDirectionPolicy::MetricTangentRescueV1)
+        o<<",\"direction_policy\":\"METRIC_TANGENT_RESCUE_V1\",\"metric_tangent_maximum_faces\":"<<s.metricTangent.maximumFaces
+         <<",\"metric_tangent_maximum_iterations\":"<<s.metricTangent.maximumIterations
+         <<",\"metric_tangent_residual_tolerance\":"<<s.metricTangent.residualTolerance;
+    if(s.directionPolicy==SlqpDirectionPolicy::FiniteBoxQpV1 || s.directionPolicy==SlqpDirectionPolicy::FiniteBoxPrimalV2) {
+        o<<",\"direction_policy\":"<<std::quoted(s.directionPolicy==SlqpDirectionPolicy::FiniteBoxPrimalV2?"FINITE_BOX_PRIMAL_V2":"FINITE_BOX_QP_V1")
+         <<",\"finite_box_maximum_faces\":";
+        if(s.directionPolicy==SlqpDirectionPolicy::FiniteBoxPrimalV2 && s.metricTangent.maximumFaces==-1)
+            o<<"\"BOUNDED_VARIABLES\"";
+        else o<<s.metricTangent.maximumFaces;
+        o<<",\"finite_box_maximum_iterations\":"<<s.metricTangent.maximumIterations
+         <<",\"finite_box_residual_tolerance\":"<<s.metricTangent.residualTolerance;
+    }
+    o<<'}';
 }
 void writeSlqpAuditJson(std::ostream& o,const SlqpIteration& t) {
     o<<",\"state\":";vector(o,t.state);o<<",\"gradient\":";vector(o,t.gradient);
@@ -45,5 +59,22 @@ void writeSlqpAuditJson(std::ostream& o,const SlqpIteration& t) {
     o<<",\"restoration\":{\"attempted\":"<<(r.attempted?"true":"false")<<",\"accepted\":"<<(r.accepted?"true":"false")
      <<",\"lp_status\":"<<std::quoted(r.status)<<",\"reason\":"<<std::quoted(r.reason)<<",\"direction\":";vector(o,r.direction);
     o<<",\"predicted_residual\":";number(o,r.predictedResidual);o<<",\"trials\":";trials(o,r.trials);o<<'}';
+    if(t.metricTangent.attempted) {
+        const auto& q=t.metricTangent;
+        auto indices=[&](const auto& list){o<<'[';bool first=true;for(auto i:list){if(!first)o<<',';first=false;o<<i;}o<<']';};
+        o<< (q.status.rfind("BOX_QP_",0)==0 ? ",\"finite_box\":" : ",\"metric_tangent\":")
+         <<"{\"attempted\":true,\"checked\":"<<(q.checked?"true":"false")
+         <<",\"status\":"<<std::quoted(q.status)<<",\"selected\":"<<(t.metricTangentSelected?"true":"false")
+         <<",\"accepted\":"<<(t.metricTangentAccepted?"true":"false")
+         <<",\"trial_count\":"<<t.metricTangentTrialCount
+         <<",\"fallback_attempted\":"<<(t.metricTangentFallbackAttempted?"true":"false")<<",\"direction\":";vector(o,q.direction);
+        o<<",\"multipliers\":";vector(o,q.multipliers);o<<",\"working_set\":";indices(q.workingSet);
+        o<<",\"equality_residual\":";number(o,q.equalityResidual);o<<",\"stationarity\":";number(o,q.stationarity);
+        o<<",\"trace\":[";bool first=true;
+        for(const auto& w:q.trace){if(!first)o<<',';first=false;o<<"{\"working_set\":";indices(w.workingSet);
+            o<<",\"action\":"<<std::quoted(w.action)<<",\"changed_index\":"<<w.changedIndex<<",\"equality_residual\":";
+            number(o,w.equalityResidual);o<<",\"stationarity\":";number(o,w.stationarity);o<<'}';}
+        o<<"]}";
+    }
 }
 }

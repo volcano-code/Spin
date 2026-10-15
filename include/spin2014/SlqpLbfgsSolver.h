@@ -2,16 +2,21 @@
 
 #include "spin2014/AdaptiveFillFunctional.h"
 #include "spin2014/SlqpKkt.h"
+#include "spin2014/SlqpTangentQp.h"
 
 #include <Eigen/Core>
 
 #include <string>
 #include <functional>
 #include <vector>
+#include <memory>
+#include <cstdint>
 
 
 namespace spin2014
 {
+class SlqpIterationStore;
+struct SlqpIteration;
 
 // Differentiable equalities with a [0,1] bounded prefix; remaining variables
 // are unbounded. Callback identity is not a code or input attestation.
@@ -35,6 +40,7 @@ enum class SlqpStatus
 
 enum class SlqpAlgorithm { LegacyV3, AuditedKktRestorationV1 };
 const char* slqpAlgorithmToken(SlqpAlgorithm) noexcept;
+enum class SlqpDirectionPolicy { ProjectedGradientV1, MetricTangentRescueV1, FiniteBoxQpV1, FiniteBoxPrimalV2 };
 
 
 struct SlqpLbfgsSettings
@@ -50,7 +56,18 @@ struct SlqpLbfgsSettings
     double armijo = 1e-4;
     SlqpAlgorithm algorithm = SlqpAlgorithm::LegacyV3;
     SlqpAuditSettings audit;
+    SlqpDirectionPolicy directionPolicy = SlqpDirectionPolicy::ProjectedGradientV1;
+    TangentQpSettings metricTangent; // Shared QP budgets; external keys distinguish policies.
+    // Opt-in local artifact; excluded from scientific controls/hashes.
+    // Audited equality-box and source-fill solvers only; cage rejects this.
+    std::string iterationStorePath;
+    std::uint64_t iterationStoreMaximumBytes = 1073741824;
+    // Optional diagnostic observer, called with each completed immutable trace
+    // row. It is excluded from scientific controls/hashes. An exception aborts
+    // the solve so a requested durable observer cannot fail silently.
+    std::function<void(const SlqpIteration&)> iterationObserver;
 };
+void validateSlqpDirectionSettings(const SlqpLbfgsSettings&);
 
 
 struct SlqpIteration
@@ -82,6 +99,13 @@ struct SlqpIteration
     RestorationEvidence restoration;
     std::vector<RestorationTrial> objectiveTrials;
     bool finalState = false;
+    // Historical storage carrier: BOX_QP_* is serialized as finite_box, not
+    // metric_tangent. Reuses version-1 disk layout without relabeling old data.
+    TangentQpResult metricTangent;
+    bool metricTangentSelected = false;
+    bool metricTangentAccepted = false;
+    int metricTangentTrialCount = 0; // Prefix of objectiveTrials for selected QP.
+    bool metricTangentFallbackAttempted = false;
 };
 
 
@@ -92,6 +116,7 @@ struct SlqpLbfgsResult
     Eigen::VectorXd beta;
     AdaptiveFillEvaluation evaluation;
     std::vector<SlqpIteration> trace;
+    std::shared_ptr<SlqpIterationStore> iterationStore;
     std::string traceHash;
     Spin2014Formulation formulation = Spin2014Formulation::LegacyAngleEliminated;
     double initialPhi = 0.0;

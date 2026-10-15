@@ -1,7 +1,9 @@
 #pragma once
 #include <Eigen/Core>
 #include <array>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace verification::detail {
 // Internal helper consumes only authenticated, nonempty, original triangles.
@@ -11,7 +13,48 @@ struct BoundaryDistance {
     std::array<std::size_t,2> witness;
     bool atLeastMinimum, contact;
 };
+
+/** Reusable exact rational BVH for an immutable triangle mesh. The identity is
+ * bound to the input binary64 vertices/faces; callers may reuse the index only
+ * when that exact mesh identity matches. */
+class ExactBoundaryDistanceIndex {
+public:
+    struct Data;
+    const std::string& inputIdentity() const;
+    bool matches(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces) const;
+private:
+    explicit ExactBoundaryDistanceIndex(std::shared_ptr<const Data> data):data_(std::move(data)){}
+    std::shared_ptr<const Data> data_;
+    friend std::shared_ptr<const ExactBoundaryDistanceIndex> makeExactBoundaryDistanceIndex(
+        const Eigen::MatrixXd&,const Eigen::MatrixXi&);
+    friend BoundaryDistance exactBoundaryDistance(const ExactBoundaryDistanceIndex&,
+        const ExactBoundaryDistanceIndex&,double);
+};
+
+std::shared_ptr<const ExactBoundaryDistanceIndex> makeExactBoundaryDistanceIndex(
+    const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces);
+BoundaryDistance exactBoundaryDistance(const ExactBoundaryDistanceIndex& a,
+    const ExactBoundaryDistanceIndex& b,double minimumClearance);
 BoundaryDistance exactBoundaryDistance(const Eigen::MatrixXd& aVertices,
     const Eigen::MatrixXi& aFaces, const Eigen::MatrixXd& bVertices,
     const Eigen::MatrixXi& bFaces, double minimumClearance);
+BoundaryDistance exactBoundaryDistance(
+    const std::vector<std::array<std::string,3>>& aVertices,const Eigen::MatrixXi& aFaces,
+    const std::vector<std::array<std::string,3>>& bVertices,const Eigen::MatrixXi& bFaces,
+    double minimumClearance);
+
+// Diagnostic only: enumerate ALL nonincident triangle pairs at distance <= t.
+// Shared vertex indices are excluded explicitly, not deemed thick/safe. A short
+// distance is not a material wall: material-side and local topology are unknown.
+struct NearBoundaryPair {
+    std::array<std::size_t,2> faces;
+    std::string squaredExact;
+    bool parallel;
+};
+struct NearBoundaryPairs {
+    std::vector<NearBoundaryPair> pairs;
+    std::size_t nodesVisited=0, boxCandidates=0, incidentExcluded=0, distancesEvaluated=0;
+};
+NearBoundaryPairs exactNonincidentNearPairs(const Eigen::MatrixXd& vertices,
+    const Eigen::MatrixXi& faces, double threshold);
 } // namespace verification::detail

@@ -23,7 +23,9 @@ class CompileCommand:
     probe_argv: list[str]
 
 
-def parse_command(argv: list[str]) -> CompileCommand:
+def parse_command(argv: list[str], *, profile: str = 'gnu') -> CompileCommand:
+    if profile not in ('gnu', 'clang-c-v1'):
+        raise ObservationError('unsupported compiler observation profile')
     if not argv or any(not isinstance(a, str) or not a or "\x00" in a or "\n" in a or "\r" in a for a in argv):
         raise ObservationError("expected nonempty compiler argv without NUL/newline")
     if any(a.startswith("@") for a in argv):
@@ -41,7 +43,18 @@ def parse_command(argv: list[str]) -> CompileCommand:
              "-fvisibility=default", "-fvisibility-inlines-hidden", "-fwrapv", "-fno-strict-aliasing",
              "-fstrict-aliasing", "-fno-common", "-fcommon", "-fstack-protector", "-fstack-protector-strong",
              "-m32", "-m64", "-msse", "-msse2", "-msse3", "-mssse3", "-msse4.1", "-msse4.2",
-             "-mavx", "-mavx2", "-mfma", "-mpopcnt"}
+             "-mavx", "-mavx2", "-mfma", "-mpopcnt",
+             "-flto=auto", "-fno-fat-lto-objects"}
+    if profile == 'gnu':
+        # Configured oneTBB/OCCT flags. Preserve the exact driver options in
+        # dependency probes; do not admit arbitrary -m/-f options.
+        plain.update({'-flifetime-dse=1', '-mrtm', '-mwaitpkg', '-s'})
+    if profile == 'clang-c-v1':
+        plain.add('--no-default-config')
+        if '--no-default-config' not in argv:
+            raise ObservationError('Clang C requires explicit --no-default-config')
+        if any(a in ('-include', '-imacros') or a.startswith('-std=') and '++' in a for a in argv):
+            raise ObservationError('Clang C forced includes and C++ modes are unsupported')
     i = 1
     while i < len(argv):
         a = argv[i]
@@ -79,6 +92,8 @@ def parse_command(argv: list[str]) -> CompileCommand:
         elif a in plain or re.fullmatch(r"-O(?:[0-3sgz]|fast)?|-g(?:[0-3]|gdb[0-3]?|dwarf-[2-5])?|-W(?:no-)?[A-Za-z0-9_-]+(?:=[A-Za-z0-9_-]+)?|-std=(?:gnu|c)(?:\+\+)?[0-9a-z]+", a):
             probe.append(a)
         elif not a.startswith("-") and Path(a).suffix in {".c", ".cc", ".cpp", ".cxx", ".C"}:
+            if profile == 'clang-c-v1' and language != ['c']:
+                raise ObservationError('Clang C requires -x c before the source')
             source.append(a)
             probe.append(a)
         else:
@@ -90,8 +105,11 @@ def parse_command(argv: list[str]) -> CompileCommand:
         raise ObservationError("ambiguous dependency output or unsupported language selection")
     if output[0] == "-" or (depfile and depfile[0] == "-"):
         raise ObservationError("stdout outputs are unsupported")
+    if profile == 'clang-c-v1' and (Path(source[0]).suffix != '.c' or language != ['c']):
+        raise ObservationError('Clang C requires an ordinary .c source and explicit -x c')
+    probe_flags = ['-M', '-MT', 'observer-target'] if profile == 'clang-c-v1' else ['-M', '-fpch-preprocess', '-MT', 'observer-target']
     return CompileCommand(source[0], output[0], depfile[0] if depfile else str(Path(output[0]).with_suffix(".d")) if dependencies else None,
-                          probe + ["-M", "-fpch-preprocess", "-MT", "observer-target"])
+                          probe + probe_flags)
 
 
 def parse_dependencies(text: str) -> list[str]:

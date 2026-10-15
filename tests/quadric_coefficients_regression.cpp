@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -52,6 +53,25 @@ Quadric make(const Vector10& values)
 
 int main()
 {
+    // Re-normalizing a saved unit vector can change its represented geometry.
+    const Vector10 saved = (Vector10() <<
+        -8.13645371385572e-25, 2.614050534547747e-15,
+        -3.034437291903922e-17, 3.2530544979661192e-15,
+        .12168606307734217, .26311511023847906, -.9276739278498335,
+        3.2035652688754162e-18, -.23533810657135806,
+        -1.1194757484761892e-18).finished();
+    const auto replay = Quadric::fromNormalized(saved);
+    if (!(replay.values().array() == saved.array()).all() ||
+        replay.hash() != Quadric::hashNormalized(saved))
+        return fail("saved unit replay changed represented coefficients");
+    if (!throwsInvalid([&]{ Quadric::fromNormalized(2.0*saved); }) ||
+        !throwsInvalid([&]{ Quadric::fromNormalized(Vector10::Zero()); }))
+        return fail("normalized replay accepted non-unit coefficients");
+    Vector10 invalidSaved = saved;
+    invalidSaved(0) = std::numeric_limits<double>::quiet_NaN();
+    if (!throwsInvalid([&]{ Quadric::fromNormalized(invalidSaved); }))
+        return fail("normalized replay accepted a nonfinite coefficient");
+
     Vector10 coefficients = Vector10::Zero();
     coefficients(0) = -0.5;
     coefficients(1) = 1.0;

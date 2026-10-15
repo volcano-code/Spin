@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import math
 import os
+import json
+from fractions import Fraction
 from pathlib import Path
 import subprocess
 import sys
 import unittest
+from unittest.mock import patch
 
 from make_it_stand.verification import (
     DensityRegion,
@@ -14,6 +17,10 @@ from make_it_stand.verification import (
     aggregate_mass_properties,
     compute_mass_properties,
     integrate_geometric_moments,
+)
+from make_it_stand.verification.mass_moments import (
+    compare_exact_rational_and_exported_moments,
+    integrate_exact_rational_raw_moments,
 )
 
 
@@ -69,6 +76,38 @@ def transformed_mesh(mesh: TriangleMesh, transform) -> TriangleMesh:
 
 
 class IndependentMassMomentOracleTests(unittest.TestCase):
+    def test_exact_rational_tetrahedron_moments_do_not_round_cut_vertex(self) -> None:
+        vertices = (("0/1", "0/1", "0/1"), ("1/3", "0/1", "0/1"),
+                    ("0/1", "1/1", "0/1"), ("0/1", "0/1", "1/1"))
+        result = integrate_exact_rational_raw_moments(vertices, TETRAHEDRON.faces)
+        self.assertEqual(result, (Fraction(1, 18), Fraction(1, 216),
+                                  Fraction(1, 72), Fraction(1, 72),
+                                  Fraction(1, 1620), Fraction(1, 180),
+                                  Fraction(1, 180), Fraction(1, 360),
+                                  Fraction(1, 1080), Fraction(1, 1080)))
+        rounded = integrate_exact_rational_raw_moments(
+            tuple(tuple(float(Fraction(value)) for value in row) for row in vertices),
+            TETRAHEDRON.faces)
+        self.assertNotEqual(result, rounded)
+
+    def test_exact_rounding_moment_gate_is_not_exact_solid_equivalence(self) -> None:
+        vertices = (("0/1", "0/1", "0/1"), ("1/3", "0/1", "0/1"),
+                    ("0/1", "1/1", "0/1"), ("0/1", "0/1", "1/1"))
+        rounded = tuple(tuple(float(Fraction(value))
+                              for value in row) for row in vertices)
+        facts = compare_exact_rational_and_exported_moments(
+            vertices, TETRAHEDRON.faces, rounded, TETRAHEDRON.faces, 1.0)
+        self.assertGreater(facts['maximum_absolute_normalized_difference'], 0)
+        self.assertTrue(facts['within_1e_6_numeric_gate'])
+        self.assertEqual(facts['scope'], 'ten-geometric-moments-only;not-exact-solid-equivalence')
+        self.assertEqual(facts, json.loads(json.dumps(facts)),
+                         'saved scientific evidence must equal recomputed facts')
+        shifted = list(rounded)
+        shifted[1] = (0.4, 0., 0.)
+        bad = compare_exact_rational_and_exported_moments(
+            vertices, TETRAHEDRON.faces, shifted, TETRAHEDRON.faces, 1.0)
+        self.assertFalse(bad['within_1e_6_numeric_gate'])
+
     def assertVectorAlmostEqual(self, actual, expected, places=12):
         self.assertEqual(len(actual), len(expected))
         for got, want in zip(actual, expected):
@@ -388,6 +427,101 @@ class IndependentMassMomentValidationTests(unittest.TestCase):
                     compute_mass_properties(TETRAHEDRON, density=density)
         with self.assertRaisesRegex(GeometryValidationError, "at least one density region"):
             aggregate_mass_properties(())
+
+
+class ExactRationalReductionTests(unittest.TestCase):
+    def test_gmp_cut_coordinates_and_density_combination_are_not_rounded(self):
+        vertices=(("0/1","0/1","0/1"),("1/3","0/1","0/1"),
+                  ("0/1","1/1","0/1"),("0/1","0/1","1/1"))
+        actual=integrate_exact_rational_raw_moments(vertices,TETRAHEDRON.faces,
+            arithmetic_backend='GMPY2_2_2_1_EXACT_V1')
+        expected=(Fraction(1,18),Fraction(1,216),Fraction(1,72),Fraction(1,72),
+                  Fraction(1,1620),Fraction(1,180),Fraction(1,180),Fraction(1,360),
+                  Fraction(1,1080),Fraction(1,1080))
+        self.assertEqual(actual,expected)
+        outer=integrate_exact_rational_raw_moments(TETRAHEDRON.vertices,TETRAHEDRON.faces,
+            arithmetic_backend='GMPY2_2_2_1_EXACT_V1')
+        # Unit-volume outer tetrahedron: shell density 2, inner density 5.
+        self.assertEqual(2*(outer[0]-actual[0])+5*actual[0],Fraction(13,6))
+        binary=[list(row) for row in vertices]
+        binary[1][0]='0b1/0b11'
+        self.assertEqual(integrate_exact_rational_raw_moments(binary,TETRAHEDRON.faces,
+            arithmetic_backend='GMPY2_2_2_1_EXACT_V1'),expected)
+
+    def test_gmp_rational_integration_matches_analytic_components_exactly(self):
+        vertices, faces, expected = self.rational_tetrahedra(17)
+        for sequence in (faces, faces[::-1], faces[::2]+faces[1::2]):
+            actual = integrate_exact_rational_raw_moments(vertices, iter(sequence),
+                arithmetic_backend='GMPY2_2_2_1_EXACT_V1')
+            self.assertEqual(actual, expected)
+            self.assertTrue(all(isinstance(value,Fraction) for value in actual))
+
+    def test_gmp_rational_integration_rejects_invalid_geometry_and_backend(self):
+        vertices, faces, _ = self.rational_tetrahedra(1)
+        for bad_vertices,bad_faces in (([(True,0,0)]+vertices[1:],faces),
+                ([(float('nan'),0,0)]+vertices[1:],faces),
+                (vertices,[(0,0,1)]),(vertices,[(0,1,100)]),
+                (vertices,[(a,c,b) for a,b,c in faces])):
+            with self.assertRaises(GeometryValidationError):
+                integrate_exact_rational_raw_moments(bad_vertices,bad_faces,
+                    arithmetic_backend='GMPY2_2_2_1_EXACT_V1')
+        with self.assertRaisesRegex(ValueError,'unsupported rational integration backend'):
+            integrate_exact_rational_raw_moments(vertices,faces,arithmetic_backend='FLOAT_FAST')
+
+    @staticmethod
+    def rational_tetrahedra(count):
+        """Disjoint translated tetrahedra with analytic simplex moments."""
+        q = Fraction
+        vertices, faces, expected = [], [], [q(0) for _ in range(10)]
+        primes, candidate = [], 101
+        while len(primes) < count:
+            if all(candidate % p for p in range(2, math.isqrt(candidate)+1)):
+                primes.append(candidate)
+            candidate += 1
+        for i, p in enumerate(primes):
+            x, a, b, c = q(2*i), q(1, p), q(2, p+2), q(3, p+4)
+            offset = len(vertices)
+            vertices.extend(((x, 0, 0), (x+a, 0, 0), (x, b, 0), (x, 0, c)))
+            faces.extend(tuple(offset+j for j in f) for f in TETRAHEDRON.faces)
+            v = a*b*c/6
+            values = (v, v*(x+a/4), v*b/4, v*c/4,
+                      v*(x*x+x*a/2+a*a/10), v*b*b/10, v*c*c/10,
+                      v*b*c/20, v*(x*c/4+a*c/20), v*(x*b/4+a*b/20))
+            expected = [old+value for old, value in zip(expected, values)]
+        return vertices, faces, tuple(expected)
+
+    def test_exact_translated_components_are_independent_of_face_order(self):
+        vertices, faces, expected = self.rational_tetrahedra(17)
+        for sequence in (faces, faces[::-1], faces[::2]+faces[1::2]):
+            actual = integrate_exact_rational_raw_moments(vertices, iter(sequence))
+            self.assertEqual([(q.numerator, q.denominator) for q in actual],
+                             [(q.numerator, q.denominator) for q in expected])
+
+    def test_large_denominator_addition_work_is_not_quadratic(self):
+        # Count real operand size, not wall time or an accumulator's private
+        # representation. Restoring sequential global sums fails this bound.
+        original = Fraction.__add__
+        costs = []
+        for count in (64, 256):
+            vertices, faces, expected = self.rational_tetrahedra(count)
+            work = [0]
+            def counted_add(left, right):
+                work[0] += left.denominator.bit_length()
+                if isinstance(right, Fraction):
+                    work[0] += right.denominator.bit_length()
+                return original(left, right)
+            with patch.object(Fraction, '__add__', counted_add):
+                actual = integrate_exact_rational_raw_moments(vertices, iter(faces))
+            self.assertEqual(actual, expected)
+            costs.append(work[0])
+        self.assertLess(costs[1], 8*costs[0], str(costs))
+
+    def test_empty_reversed_and_cancelling_face_streams_remain_rejected(self):
+        vertices, faces, _ = self.rational_tetrahedra(1)
+        reversed_faces = [(a, c, b) for a, b, c in faces]
+        for stream in ([], reversed_faces, faces+reversed_faces):
+            with self.assertRaisesRegex(GeometryValidationError, 'nonpositive volume'):
+                integrate_exact_rational_raw_moments(vertices, iter(stream))
 
 
 if __name__ == "__main__":

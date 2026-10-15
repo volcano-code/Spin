@@ -27,30 +27,43 @@ SourceBinaryCuboids sourceBinaryCuboids(const SourceAdaptiveDomain& domain,const
     r.outputHash=manufacturing::computeContentSha256(o.str());return r;
 }
 SourceBinaryMomentCheck checkSourceBinaryMoments(const SourceSurfaceOctree& source,const SourceBinaryCuboids& output,
-    const physics::RawMassMoments10& expected,Spin2014Objective objective,double phi,double density,double tolerance) {
+    const physics::RawMassMoments10& expected,Spin2014Objective objective,double phi,double density,double tolerance,
+    const spin::SpinTargetFrame& targetFrame) {
+    return checkSourceBinaryMoments(source,output,expected,objective,phi,density,density,tolerance,targetFrame);
+}
+SourceBinaryMomentCheck checkSourceBinaryMoments(const SourceSurfaceOctree& source,const SourceBinaryCuboids& output,
+    const physics::RawMassMoments10& expected,Spin2014Objective objective,double phi,
+    double boundaryDensity,double interiorDensity,double tolerance,const spin::SpinTargetFrame& targetFrame) {
     SourceBinaryMomentCheck r;
-    if(!std::isfinite(density)||density<=0||!std::isfinite(tolerance)||tolerance<=0||!std::isfinite(phi))throw std::invalid_argument("invalid binary check controls");
+    if(!std::isfinite(boundaryDensity)||boundaryDensity<=0||!std::isfinite(interiorDensity)||interiorDensity<=0||
+       !std::isfinite(tolerance)||tolerance<=0||!std::isfinite(phi))throw std::invalid_argument("invalid binary check controls");
     try {
         // This geometric integration intentionally uses only the original outer
-        // triangles and emitted box coordinates, never oracle moment queries.
-        MassMoments total=computeSurfaceMassMoments(source.outerVertices(),source.outerFaces(),density);
+        // and design triangles and emitted box coordinates, never oracle moment queries.
+        MassMoments total=computeSurfaceMassMoments(source.outerVertices(),source.outerFaces(),boundaryDensity)
+            -computeSurfaceMassMoments(source.designVertices(),source.designFaces(),boundaryDensity)
+            +computeSurfaceMassMoments(source.designVertices(),source.designFaces(),interiorDensity);
         Eigen::MatrixXd vertices(8,3);Eigen::MatrixXi faces(12,3);
         faces<<0,2,1,1,2,3,4,5,6,5,7,6,0,1,4,1,5,4,2,6,3,3,6,7,0,4,2,2,4,6,1,3,5,3,7,5;
         for(const auto& b:output.cuboids){
             if(!b.lower.allFinite()||!b.upper.allFinite()||(b.upper.array()<=b.lower.array()).any())throw std::invalid_argument("invalid emitted cuboid");
             for(int i=0;i<8;++i)for(int a=0;a<3;++a)vertices(i,a)=(i&(1<<a))?b.upper(a):b.lower(a);
-            total-=computeSurfaceMassMoments(vertices,faces,density);
+            total-=computeSurfaceMassMoments(vertices,faces,interiorDensity);
         }
         if(!total.isFinite()||!expected.isFinite())throw std::invalid_argument("nonfinite binary geometric moments");
         r.independentMoments=physics::RawMassMoments10::fromMassMoments(total);
-        const double side=source.config().rootSide;double scale[3]={density*std::pow(side,3),density*std::pow(side,4),density*std::pow(side,5)};
+        const double densityScale=std::max(boundaryDensity,interiorDensity);
+        const double side=source.config().rootSide;double scale[3]={densityScale*std::pow(side,3),densityScale*std::pow(side,4),densityScale*std::pow(side,5)};
         for(double s:scale)if(!std::isfinite(s)||s<=0)throw std::invalid_argument("invalid fixed root scaling");
         r.normalizedMomentError=0;for(int i=0;i<10;++i)r.normalizedMomentError=std::max(r.normalizedMomentError,std::abs(r.independentMoments->values()(i)-expected.values()(i))/scale[i==0?0:(i<=3?1:2)]);
         if(total.mass<=0)throw std::invalid_argument("nonpositive binary mass");
         const Eigen::Matrix3d inertia=total.inertiaAboutCenter();if(!inertia.allFinite())throw std::invalid_argument("nonfinite central inertia");
         Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eigen(inertia);if(eigen.info()!=Eigen::Success)throw std::invalid_argument("central inertia eigensolve failed");
         r.minimumCentralInertiaEigenvalue=eigen.eigenvalues().minCoeff();
-        Spin2014GivensProblem::Vector11 state;state.head<10>()=r.independentMoments->values();state(10)=phi;
+        const auto targetMoments=r.independentMoments->transformed(
+            targetFrame.axes.transpose(),-targetFrame.axes.transpose()*targetFrame.origin
+        );
+        Spin2014GivensProblem::Vector11 state;state.head<10>()=targetMoments.values();state(10)=phi;
         if(objective==Spin2014Objective::StaticLowering&&phi!=0)throw std::invalid_argument("static binary phi must be zero");
         r.constraints=Spin2014GivensProblem(objective).evaluate(state).constraints;
         r.rawConstraintResidual=r.constraints.lpNorm<Eigen::Infinity>();r.normalizedConstraintResidual=0;

@@ -1,0 +1,16 @@
+{
+  "schema": "cherchi-full-basis-method-v1",
+  "classification": "SYNTHETIC_REGRESSION",
+  "scope": "FROZEN_MULTIPLE_CROSSING_SOURCE_TO_CLIPPED_MATERIAL_DIAGNOSTIC_NOT_NEWTON",
+  "source": "quadric_projective_surface_regression.cpp multipleCrossingCaps; same quadric and design cube; radius frozen at observed 16384 before Boolean",
+  "design_vertices": [[-0.2,-0.2,-0.2],[0.2,-0.2,-0.2],[0.2,0.2,-0.2],[-0.2,0.2,-0.2],[-0.2,-0.2,0.2],[0.2,-0.2,0.2],[0.2,0.2,0.2],[-0.2,0.2,0.2]],
+  "design_faces": [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]],
+  "coefficients": [0.125,0,0,1,1,2,-0.0001,0,0,0],
+  "density": 1.7,
+  "steps": [0.00000001,0.000000003,0.000000001],
+  "icosphere_subdivisions": 2,
+  "truncation_radius": 16384.0,
+  "maximum_radius_doublings": 0,
+  "paper_projective_hyperboloid": true,
+  "algebraic_finite_map": true
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "cherchi-full-basis-method-v1",
+  "classification": "SYNTHETIC_REGRESSION",
+  "scope": "FROZEN_LOCAL_DERIVATIVE_NOT_NEWTON_INITIALIZATION_OR_AUTHOR_CASE",
+  "source": "paper-projective-cherchi/full-02: frozen before production interface integration",
+  "design_vertices": [[-0.25,-0.25,0.25],[-0.25,-0.25,0.75],[0.25,-0.25,0.75],[0.25,-0.25,0.25],[-0.25,0.25,0.25],[-0.25,0.25,0.75],[0.25,0.25,0.75],[0.25,0.25,0.25]],
+  "design_faces": [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]],
+  "coefficients": [0.4091598840032713,-0.36688397145905616,-0.019533580749283127,-0.3602578587235418,0.14803212299816212,-0.34789822850316837,-0.25957403943858653,-0.3788370952579597,0.3838860742170953,0.2580806535816809],
+  "density": 2.0,
+  "steps": [0.000003,0.000001,0.0000003],
+  "icosphere_subdivisions": 2,
+  "maximum_radius_doublings": 0,
+  "truncation_radius": 221.70250336881628,
+  "paper_projective_hyperboloid": true
+}

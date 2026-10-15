@@ -10,7 +10,10 @@ from typing import Any
 
 
 CATALOGUE_SCHEMA = "spin-it-strict-requirements-v1"
-CATALOGUE_VERSION = 1
+# Row-layout schema is unchanged. Revision 8 separates internal exact Boolean
+# construction from the solver's exported binary64 material. Old evidence
+# must supply both rows; an internal match cannot auto-pass final geometry.
+CATALOGUE_VERSION = 8
 
 
 def _row(
@@ -43,6 +46,9 @@ _ROWS = [
         for number in range(1, 9)
     ],
     _row("spin2014.objective.static", "Spin-It (2014), static balancing objective", "FORMULA", "MATCH_PUBLISHED_OBJECTIVE", "Independent value, gradient, and Hessian checks for the static objective."),
+    _row("spin2014.objective.variants", "Spin-It (2014), Sections 3 and 8: yo-yo and three spinning-top objectives", "FORMULA", "DISTINGUISH_PUBLISHED_SPINNING_OBJECTIVES", "Independent value, constraint, gradient, and Hessian checks for the yo-yo, inertia-only, lowering-only, and mass-and-lowering objective paths on non-axis-aligned moments."),
+    _row("spin2014.hollowing.minimum_wall", "Spin-It (2014), Section 5.1 and Figure 3", "METHOD", "MATCH_DECLARED_MINIMUM_WALL_CONTRACT", "A representation-invariant, all-surface thickness contract with declared units, error bound, sharp-feature semantics, and an independently checked final-material result. Fixed-shell/domain clearance alone is insufficient."),
+    _row("spin2014.hollowing.fixed_shell", "Spin-It (2014), Section 5.1 and Figure 3", "METHOD", "PRESERVE_FIXED_SHELL_AND_INTERIOR_DOMAIN", "Source-bound original/fixed-shell/interior partition, whole design-domain clearance, removal containment, and preservation of fixed material and outer geometry. The input shell parameter must have provenance. This does not replace the full feature-thickness engineering gate."),
     _row("spin2014.fill.continuous", "Spin-It (2014), Sections 5.2-5.3", "METHOD", "MATCH_CONTINUOUS_FILL_SEMANTICS", "Trace demonstrating continuous fill variables and published bounds."),
     _row("spin2014.fill.binary", "Spin-It (2014), Section 5.3", "METHOD", "MATCH_BINARY_SEMANTICS", "Independent binary-tolerance and rounding audit at the published threshold.", ("spin2014.fill.continuous",)),
     _row("spin2014.octree.boundary_subtrees", "Spin-It (2014), Section 5.4", "METHOD", "MATCH_BOUNDARY_SUBTREE_CONSTRUCTION", "Source-to-tree audit proving boundary subtrees are constructed from the original surface."),
@@ -53,6 +59,7 @@ _ROWS = [
     _row("spin2014.solver.lbfgs", "Spin-It (2014), Section 5.4", "METHOD", "MATCH_LBFGS", "Trace and independent step audit of the published L-BFGS subproblem behavior.", ("spin2014.solver.slqp",)),
     _row("spin2014.cage.complete_octree", "Spin-It (2014), Section 6 and Figure 4", "METHOD", "MATCH_COMPLETE_OCTREE_CAGE", "Geometry audit proving every required intersecting cell contributes to the cage."),
     _row("spin2014.cage.bbw_interpolation", "Spin-It (2014), Section 6 and Figure 4", "METHOD", "MATCH_BBW_INTERPOLATION", "Independent BBW solve and interpolation comparison on the complete cage.", ("spin2014.cage.complete_octree",)),
+    _row("spin2014.deformation.regularizers", "Spin-It (2014), Section 6.1", "METHOD", "MATCH_BILAPLACIAN_AND_SURFACE_DISPLACEMENT_REGULARIZERS", "Independent value and gradient checks for both the bi-Laplacian linearized-rotation regularizer and the original-surface displacement penalty, with separately bound declared weights."),
     _row("spin2014.deformation.joint", "Spin-It (2014), Section 6.1", "METHOD", "MATCH_JOINT_DEFORMATION", "Joint beta/shape optimization trace with independent geometry checks.", ("spin2014.cage.bbw_interpolation",)),
     _row("spin2014.material.dual_density", "Spin-It (2014), Section 7", "METHOD", "MATCH_DUAL_DENSITY", "Independent material-label and density-weighted moment audit."),
     _row("spin2014.supplement.algorithm.1", "Spin-It (2014), Supplement Algorithm 1", "ALGORITHM", "MATCH_PUBLISHED_ALGORITHM", "Stepwise trace checked independently against Supplement Algorithm 1."),
@@ -109,6 +116,11 @@ _ROWS += [
     _row("faster.theorem.quadric_reduction", "Spin-It Faster, Theorem 1, Section 3.3", "THEOREM", "MATCH_THEOREM_CONDITIONS", "Independent evaluation of hypotheses, conclusion, and numerical instances."),
     _row("faster.theorem.optimality", "Spin-It Faster, Theorem 2, Section 3.4", "THEOREM", "MATCH_THEOREM_CONDITIONS", "Independent optimality and boundary-condition checks."),
     _row("faster.theorem.degenerate_conditions", "Spin-It Faster, Theorem 2, Section 3.4 (p = 0 branch)", "THEOREM", "MATCH_DEGENERATE_CONDITIONS", "Explicit audit of every stated degenerate precondition and outcome."),
+    _row("faster.application.static_stability", "Spin-It Faster, Section 4.2", "METHOD", "MATCH_STATIC_STABILITY_CONTRACT", "Independent checks of support-target coordinates, first-moment equality constraints, maximum-volume and lowering objectives, the planar-interface conditions, and the declared p != 0 condition."),
+    _row("faster.application.buoyant_stability", "Spin-It Faster, Section 4.3", "METHOD", "MATCH_BUOYANT_STABILITY_CONTRACT", "Independent checks of prescribed waterline/displaced domain, shell and liquid densities, equilibrium constraints, metacenter construction, stability inequality, and the feasibility conclusion.", ("faster.hydrostatics.actual",)),
+    _row("faster.application.fidget_spinner", "Spin-It Faster, Section 4.4", "METHOD", "MATCH_FIDGET_SPINNER_CONTRACT", "Independent two-dimensional polar-inertia objective, center constraints, coefficient conditions, and circular-empty-region construction audit.", ("faster.2d.methods",)),
+    _row("faster.application.yoyo", "Spin-It Faster, Section 4.5", "METHOD", "MATCH_YOYO_CONTRACT", "Independent spin-frame convention, center and inertia block constraints, yo-yo objective, coefficient conditions, and p != 0 audit.", ("faster.eq14.newton",)),
+    _row("faster.application.spinning_top", "Spin-It Faster, Section 4.6", "METHOD", "MATCH_SPINNING_TOP_CONTRACT", "Independent gravity-frame convention, axial center/inertia constraints, lowering-weight objective, central-inertia correction, coefficient condition, and p != 0 audit.", ("faster.eq14.newton",)),
     _row("faster.eq14.newton", "Spin-It Faster, Equation 14", "ALGORITHM", "MATCH_NEWTON_UPDATE", "Independent residual and Newton-step trace."),
     _row("faster.eq14.geodesic", "Spin-It Faster, Equation 14", "ALGORITHM", "MATCH_GEODESIC_UPDATE", "Independent sphere-geodesic and step-cap audit.", ("faster.eq14.newton",)),
     _row("faster.eq14.multiplier", "Spin-It Faster, Equation 14", "ALGORITHM", "MATCH_MULTIPLIER_UPDATE", "Independent per-step multiplier computation audit.", ("faster.eq14.newton",)),
@@ -119,6 +131,9 @@ _ROWS += [
     _row("faster.geometry.caps", "Spin-It Faster, Section 5", "METHOD", "MATCH_CAPS", "Independent cap construction, closure, and orientation audit."),
     _row("faster.geometry.degenerate_types", "Spin-It Faster, Section 5", "METHOD", "MATCH_DEGENERATE_TYPES", "Each published degenerate geometry type classified and checked independently."),
     _row("faster.geometry.boolean_independent", "Spin-It Faster, Section 5", "INDEPENDENT_CHECK", "MATCH_BOOLEAN_RESULT", "Boolean result checked by an implementation independent of the primary construction."),
+    _row("faster.geometry.exported_material_boolean", "Spin-It Faster, Sections 5-6: final discrete material", "INDEPENDENT_CHECK", "MATCH_EXPORTED_MATERIAL_TO_BOOLEAN", "The actual material consumed by the solver and delivered as digital geometry must be independently bound to the requested Boolean solid, with explicit rounding, topology, containment and ten-moment error evidence; internal exact constructions alone do not grant this requirement.", ("faster.geometry.boolean_independent",)),
+    _row("faster.2d.methods", "Spin-It Faster, 2D method and Table 1 exception", "METHOD", "MATCH_PLANAR_METHODS", "Independent planar dogleg, polygon/disk, mass-moment, and 2D-to-3D extrusion method audit; not an author-case claim."),
+    _row("faster.cad.methods", "Spin-It Faster, Section 6.1 implementation and fabrication details", "METHOD", "MATCH_PINNED_CAD_ROUNDTRIP_METHOD", "Pinned OCCT B-rep/STEP roundtrip and analytic mass-invariant regression; not an author CAD-case claim."),
     _row("faster.2d.dogleg", "Spin-It Faster, 2D dogleg example", "ORIGINAL_EXPERIMENT", "MATCH_2D_DOGLEG", "Actual 2D moments, topology, and result checked independently."),
     _row("faster.2d.polygon_circle", "Spin-It Faster, polygon/circle example", "ORIGINAL_EXPERIMENT", "MATCH_POLYGON_CIRCLE", "Polygon/disk Boolean and moment results checked independently."),
     _row("faster.2d.extrusion", "Spin-It Faster, 2D-to-3D extrusion comparison", "ORIGINAL_EXPERIMENT", "MATCH_EXTRUSION_EQUIVALENCE", "Independent 2D/3D moment and objective equivalence audit."),

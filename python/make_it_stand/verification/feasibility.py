@@ -227,6 +227,130 @@ def _witness(system: ExactSystem, retained: Any) -> AlgebraicWitness:
 
 
 @dataclass(frozen=True)
+class ContinuousMomentCapacityCertificate:
+    """Exact directional first-moment upper bound for a continuous box domain."""
+
+    schema: str = 'continuous-axis-aligned-box-moment-capacity-v1'
+    constrained_axis: int = -1
+    direction_sign: int = 0
+    target_coordinate: Q | None = None
+    fixed_density: Q | None = None
+    fixed_volume: Q | None = None
+    fixed_first_moment: Q | None = None
+    fixed_relative_first_moment: Q | None = None
+    editable_density: Q | None = None
+    box_lower: tuple[Q, ...] = ()
+    box_upper: tuple[Q, ...] = ()
+    maximum_editable_positive_moment: Q | None = None
+    total_moment_upper_bound: Q | None = None
+    input_sha256: str = ''
+    asset_sha256: tuple[tuple[str, str], ...] = ()
+    assumptions: tuple[str, ...] = ()
+
+    @property
+    def valid(self) -> bool:
+        if self.schema != 'continuous-axis-aligned-box-moment-capacity-v1':
+            return False
+        if self.constrained_axis not in (0, 1, 2) or self.direction_sign not in (-1, 1):
+            return False
+        values = (self.target_coordinate, self.fixed_density, self.fixed_volume,
+                  self.fixed_first_moment, self.fixed_relative_first_moment,
+                  self.editable_density, self.maximum_editable_positive_moment,
+                  self.total_moment_upper_bound)
+        if any(not isinstance(value, Q) for value in values) or len(self.box_lower) != 3 or len(self.box_upper) != 3:
+            return False
+        if any(not isinstance(value, Q) for value in (*self.box_lower, *self.box_upper)):
+            return False
+        if self.fixed_density <= 0 or self.fixed_volume <= 0 or self.editable_density <= 0:
+            return False
+        if any(self.box_lower[i] >= self.box_upper[i] for i in range(3)):
+            return False
+        axis = self.constrained_axis
+        lo = self.box_lower[axis] * self.direction_sign
+        hi = self.box_upper[axis] * self.direction_sign
+        lo, hi = min(lo, hi), max(lo, hi)
+        target = self.target_coordinate * self.direction_sign
+        transverse_area = Q(1)
+        for index in range(3):
+            if index != axis:
+                transverse_area *= self.box_upper[index] - self.box_lower[index]
+        # Independently integrate the linear positive part as a trapezoid.
+        # Its lower endpoint height is not zero when target lies below lo.
+        cut = max(lo, target)
+        positive_extent = max(Q(0), hi-cut)
+        endpoint_sum = max(Q(0), cut-target) + max(Q(0), hi-target)
+        expected_capacity = self.editable_density * transverse_area * positive_extent * endpoint_sum / 2
+        expected_fixed = self.fixed_density * (self.fixed_first_moment - self.target_coordinate * self.fixed_volume) * self.direction_sign
+        return (expected_capacity == self.maximum_editable_positive_moment
+                and expected_fixed == self.fixed_relative_first_moment
+                and expected_fixed + expected_capacity == self.total_moment_upper_bound
+                and self.total_moment_upper_bound < 0
+                and len(self.input_sha256) == 64
+                and bool(self.asset_sha256)
+                and all(len(digest) == 64 for _, digest in self.asset_sha256))
+
+
+@dataclass(frozen=True)
+class ContinuousMomentSymmetryWitness:
+    """Analytic material witness for a centered, axis-aligned yoyo fixture."""
+
+    schema: str = 'centered-ellipsoid-yoyo-symmetry-witness-v1'
+    constrained_axis: int = -1
+    target: tuple[Q, ...] = ()
+    design_lower: tuple[Q, ...] = ()
+    design_upper: tuple[Q, ...] = ()
+    ellipsoid_semiaxes: tuple[Q, ...] = ()
+    ellipsoid_density: Q | None = None
+    fixed_density_weighted_second_moment: tuple[tuple[Q, ...], ...] = ()
+    inertia_gap_per_mass: Q | None = None
+    input_sha256: str = ''
+    asset_sha256: tuple[tuple[str, str], ...] = ()
+
+    @property
+    def valid(self) -> bool:
+        if (self.schema != 'centered-ellipsoid-yoyo-symmetry-witness-v1'
+                or self.constrained_axis not in (0, 1, 2)
+                or len(self.target) != 3 or len(self.design_lower) != 3
+                or len(self.design_upper) != 3 or len(self.ellipsoid_semiaxes) != 3
+                or len(self.fixed_density_weighted_second_moment) != 3):
+            return False
+        if any(len(row) != 3 for row in self.fixed_density_weighted_second_moment):
+            return False
+        values = (*self.target, *self.design_lower, *self.design_upper,
+                  *self.ellipsoid_semiaxes, self.ellipsoid_density,
+                  self.inertia_gap_per_mass,
+                  *(value for row in self.fixed_density_weighted_second_moment for value in row))
+        if any(not isinstance(value, Q) for value in values):
+            return False
+        if self.ellipsoid_density <= 0 or self.inertia_gap_per_mass <= 0:
+            return False
+        if any(self.design_lower[k] >= self.design_upper[k] for k in range(3)):
+            return False
+        if any(self.target[k] != (self.design_lower[k]+self.design_upper[k])/2 for k in range(3)):
+            return False
+        if any(self.ellipsoid_semiaxes[k] <= 0 or
+               self.ellipsoid_semiaxes[k] > min(self.target[k]-self.design_lower[k],
+                                                 self.design_upper[k]-self.target[k])
+               for k in range(3)):
+            return False
+        second = self.fixed_density_weighted_second_moment
+        if any(second[i][j] != 0 for i in range(3) for j in range(3) if i != j):
+            return False
+        if not (second[0][0] == second[1][1] == second[2][2] > 0):
+            return False
+        transverse = [self.ellipsoid_semiaxes[i] for i in range(3) if i != self.constrained_axis]
+        if len(transverse) != 2:
+            return False
+        axis_inertia_factor = sum((self.ellipsoid_semiaxes[i]**2 for i in range(3) if i != self.constrained_axis), Q(0))
+        other_inertia_factors = tuple(sum((self.ellipsoid_semiaxes[i]**2 for i in range(3) if i != other), Q(0))
+                                      for other in range(3) if other != self.constrained_axis)
+        expected_gap = min(axis_inertia_factor-value for value in other_inertia_factors) / 5
+        return (self.inertia_gap_per_mass == expected_gap and expected_gap > 0
+                and len(self.input_sha256) == 64 and bool(self.asset_sha256)
+                and all(len(digest) == 64 for _, digest in self.asset_sha256))
+
+
+@dataclass(frozen=True)
 class ObservedNativeIdentity:
     path: str = ''
     sha256: str = ''
@@ -240,6 +364,8 @@ class FeasibilityReport:
     system_hash: str = ''
     certificate: ExactCertificate = field(default_factory=ExactCertificate)
     witness: AlgebraicWitness = field(default_factory=AlgebraicWitness)
+    continuous_certificate: ContinuousMomentCapacityCertificate = field(default_factory=ContinuousMomentCapacityCertificate)
+    continuous_witness: ContinuousMomentSymmetryWitness = field(default_factory=ContinuousMomentSymmetryWitness)
     checker_sha256: str = ''
     native_identity: ObservedNativeIdentity = field(default_factory=ObservedNativeIdentity)
     native_input_hash: str = ''
@@ -249,7 +375,7 @@ class FeasibilityReport:
     native_primal_status: str = ''
     native_certificate_status: str = ''
     candidate_origin: str = 'SUPPLIED_EXACT_ROW_WEIGHTS'
-    scope: str = field(default=SCOPE, init=False)
+    scope: str = SCOPE
     geometry_validation: str = field(default='NOT_VERIFIED', init=False)
     continuous_geometry: str = field(default='UNKNOWN', init=False)
     physical_validation: str = field(default='NOT_IN_SCOPE', init=False)
@@ -259,13 +385,28 @@ class FeasibilityReport:
     def status(self) -> str:
         # No public geometry-valid flag or path to FEASIBLE_WITNESS. That status
         # requires future SealedSpinArtifact auditing outside this checker.
-        return 'INFEASIBLE_CERTIFIED' if self.reason == 'EXACT_INFEASIBILITY_CERTIFICATE' and self.certificate.valid else 'UNKNOWN'
+        if self.reason == 'EXACT_INFEASIBILITY_CERTIFICATE' and self.certificate.valid:
+            return 'INFEASIBLE_CERTIFIED'
+        if (self.reason == 'EXACT_GEOMETRIC_MOMENT_CAPACITY_CERTIFICATE'
+                and self.continuous_certificate.valid
+                and self.continuous_certificate.input_sha256 == self.input_hash):
+            return 'INFEASIBLE_CERTIFIED'
+        if (self.reason == 'EXACT_ANALYTIC_SYMMETRY_WITNESS'
+                and self.continuous_witness.valid
+                and self.continuous_witness.input_sha256 == self.input_hash):
+            return 'FEASIBLE_WITNESS'
+        return 'UNKNOWN'
 
     def to_dict(self) -> dict[str, Any]:
         result = _encode(asdict(self))
-        result.update(schema='represented-discrete-feasibility-v1', status=self.status)
+        schema = ('continuous-geometric-feasibility-v1'
+                  if self.scope.startswith('CONTINUOUS_GEOMETRIC_')
+                  else 'represented-discrete-feasibility-v1')
+        result.update(schema=schema, status=self.status)
         result['certificate']['valid'] = self.certificate.valid
         result['witness']['valid'] = self.witness.valid
+        result['continuous_certificate']['valid'] = self.continuous_certificate.valid
+        result['continuous_witness']['valid'] = self.continuous_witness.valid
         return result
 
 

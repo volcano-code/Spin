@@ -78,8 +78,25 @@ void integration() {
     const auto initialFailure=solveAdaptiveVoxelSpin(request);
     check(initialFailure.status==AdaptiveSpinStatus::ResourceLimitReached&&initialFailure.finalPhi==phi,"resource failure initial angle provenance");
     request.maximumLeafCount=1000000;
+    // Same deterministic iteration allowance used by the converged joint
+    // functional fixture above; this is not a paper-case parameter search.
+    request.slqp.maximumIterations=180;
     DualMaterialSpinRequest dual;dual.hollowing=request;
-    rejects([&]{solveDualMaterialSpin(dual);});
+    dual.boundaryDensity=1.;dual.interiorDensity=1.;
+    const auto directPaper=solveAdaptiveVoxelSpin(request);
+    const auto dualResult=solveDualMaterialSpin(dual);
+    std::cout<<"dual paper status="<<adaptiveSpinStatusToken(dualResult.hollowing.status)
+             <<" diagnostic="<<dualResult.hollowing.diagnostic
+             <<" final_phi="<<dualResult.hollowing.finalPhi<<'\n';
+    check(dualResult.hollowing.status==AdaptiveSpinStatus::Converged&&
+          dualResult.hollowing.formulation==Spin2014Formulation::PaperGivens,
+          "dual-material product must preserve a converged PAPER_GIVENS solve");
+    check(dualResult.hollowing.outputHash==directPaper.outputHash&&
+          dualResult.hollowing.finalPhi==directPaper.finalPhi,
+          "equal-density dual-material product changed the paper Givens result");
+    check(dualResult.hollowing.finalMoments.values().isApprox(
+              (dualResult.boundaryContribution+dualResult.interiorContribution).values(),1e-11),
+          "dual-material PAPER_GIVENS contributions do not reproduce final moments");
     request.initialLevel=1;
     const auto refined=solveAdaptiveVoxelSpin(request);
     check(refined.adaptiveTrace.size()>1,"fixture must exercise adaptive angle carry");

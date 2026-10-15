@@ -36,8 +36,8 @@ class SpinMomentProblem
 public:
     using Vector10 = Eigen::Matrix<double, 10, 1>;
 
-    static SpinMomentProblem staticBalance(StaticObjective objective);
-    static SpinMomentProblem staticBalancePareto(double massWeight);
+    static SpinMomentProblem staticBalance(StaticObjective objective, double massScale = 1.0);
+    static SpinMomentProblem staticBalancePareto(double massWeight, double massScale = 1.0);
     static SpinMomentProblem buoyantStability(
         double targetMass,
         const Eigen::Vector2d& horizontalCenterOfBuoyancy
@@ -45,6 +45,7 @@ public:
     static SpinMomentProblem fidgetSpinner();
     static SpinMomentProblem yoYo();
     static SpinMomentProblem spinningTop(double centerOfMassWeight);
+    static SpinMomentProblem spinningTop(double centerOfMassWeight, SpinningTopObjective objective);
 
     SpinMode mode() const noexcept;
     StaticObjective staticObjective() const noexcept;
@@ -68,8 +69,10 @@ private:
     StaticObjective staticObjective_ = StaticObjective::MaximumMass;
     double centerOfMassWeight_ = 0.0;
     double staticParetoWeight_ = 0.0;
+    double staticMassScale_ = 1.0;
     double targetMass_ = 0.0;
     Eigen::Vector2d horizontalCenterOfBuoyancy_ = Eigen::Vector2d::Zero();
+    SpinningTopObjective spinningTopObjective_ = SpinningTopObjective::InertiaAndLowering;
 };
 
 

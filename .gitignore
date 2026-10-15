@@ -3,6 +3,9 @@
 *.lo
 *.o
 *.obj
+# Required synthetic exact-export regression operands, not compiled objects.
+!/experiments/cherchi_reference_probe/fixtures/large-cap-cut-v1/design.obj
+!/experiments/cherchi_reference_probe/fixtures/large-cap-cut-v1/source.obj
 
 # Precompiled Headers
 *.gch

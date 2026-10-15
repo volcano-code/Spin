@@ -38,6 +38,19 @@ void partitionTests() {
     const auto before=d.removedMoments(b);const auto identity=d.partitionHash();
     auto split=d.splitFractionalLeaves(b,.05);require(split.changes.size()>0 && d.partitionHash()!=identity,"actual fractional split");
     require((b.array()==.37).all(),"exact beta inheritance");close(d.removedMoments(b).values(),before.values(),"split conservation all ten");graph(d);d.validateCoverage();
+    for(double endpoint:{.05,1.-.05}) {
+        SourceAdaptiveDomain boundary(s,2,5);Eigen::VectorXd edgeBeta=Eigen::VectorXd::Constant(boundary.leaves().size(),endpoint);
+        const auto leavesBefore=boundary.leaves().size();const auto momentsBefore=boundary.removedMoments(edgeBeta);
+        const auto splitAtEndpoint=boundary.splitFractionalLeaves(edgeBeta,.05);
+        require(splitAtEndpoint.changes.size()==leavesBefore,"closed fractional interval must split both exact epsilon endpoints");
+        require((edgeBeta.array()==endpoint).all(),"endpoint beta changed during split inheritance");
+        close(boundary.removedMoments(edgeBeta).values(),momentsBefore.values(),"endpoint split preserves all ten moments");
+        const auto splitHash=boundary.partitionHash();
+        const auto mergeAtEndpoint=boundary.mergeBinarySiblings(edgeBeta,.05);
+        require(mergeAtEndpoint.changes.empty() && boundary.partitionHash()==splitHash,
+                "fractional interval endpoints must not be merged as near-binary siblings");
+        boundary.validateCoverage();
+    }
     b.setConstant(.01);auto merge=d.mergeBinarySiblings(b,.05);
     require(merge.changes.size()>1 && d.leaves().size()==1 && d.leaves()[0].level==0 && b(0)==.01,"recursive merge below initial level without snapping");
     close(d.removedMoments(b).values(),s->carveableMoments().scaledDensity(.01).values(),"near bound mass preserved");
@@ -95,6 +108,35 @@ void functionalTests() {
             require(((ep.constraints-em.constraints)/(2*step)-e.constraintJacobian.col(i)).norm()<1e-8,"constraint finite differences");
         }
     }
+    spin::SpinTargetFrame frame;
+    frame.origin=Eigen::Vector3d(.1,-.2,.3);
+    frame.axes=Eigen::AngleAxisd(.37,Eigen::Vector3d(1.,2.,-1.).normalized()).toRotationMatrix();
+    AdaptiveFillFunctional transformed(
+        d,SpinIt2014MomentProblem::fromObjective(Spin2014Objective::YoYo,1.3,.7),
+        .8,2.,frame
+    );
+    const auto transformedValue=transformed.evaluatePaper(b,.23);
+    const auto target=transformedValue.finalMoments.transformed(
+        frame.axes.transpose(),-frame.axes.transpose()*frame.origin
+    );
+    Spin2014GivensProblem::Vector11 targetState;
+    targetState.head<10>()=target.values();targetState(10)=.23;
+    const auto targetEvaluation=Spin2014GivensProblem(
+        Spin2014Objective::YoYo,1.3,.7
+    ).evaluate(targetState);
+    require(std::abs(transformedValue.paperObjective-targetEvaluation.objective)<1e-12,
+        "source target frame evaluates paper objective in target coordinates");
+    require((transformedValue.constraints-targetEvaluation.constraints).norm()<1e-12,
+        "source target frame evaluates constraints in target coordinates");
+    for(double step:{1e-4,1e-5,1e-6}) for(int i=0;i<b.size();++i) {
+        auto plus=b,minus=b;plus(i)+=step;minus(i)-=step;
+        const auto ep=transformed.evaluatePaper(plus,.23);
+        const auto em=transformed.evaluatePaper(minus,.23);
+        require(std::abs((ep.objective-em.objective)/(2*step)-transformedValue.gradient(i))<2e-7,
+            "source target-frame objective finite difference");
+        require(((ep.constraints-em.constraints)/(2*step)-transformedValue.constraintJacobian.col(i)).norm()<1e-8,
+            "source target-frame constraint finite difference");
+    }
 }
 void solverTests() {
     auto r=fixedRequest();auto a=solveSourceAdaptiveSpin(r);
@@ -136,6 +178,54 @@ void solverTests() {
     auto carved=solveSourceAdaptiveSpin(top);require(carved.status==SourceAdaptiveSpinStatus::BinaryMomentValidated && carved.binaryCuboids->cuboids.size()>1 && (carved.binaryFill.array()==1).all(),"known symmetric upper carve optimum");
     auto capped=top;capped.maximumOutputCuboids=1;auto fail=solveSourceAdaptiveSpin(capped);require(fail.status==SourceAdaptiveSpinStatus::ResourceLimitReached && !fail.binaryCuboids && !fail.binaryCheck && fail.finalPartitionHash==carved.finalPartitionHash && fail.relaxedFill==carved.relaxedFill,"output cap preserves valid continuous state and no partial artifact");
 }
+void paperStopTests() {
+    // Sec. 5.3 checks resolution AFTER split/merge. Three solves take this
+    // fixed source from level 2 to 5; a fourth solve is not that paper rule.
+    // This must still fail binary constraints, not become a success shortcut.
+    auto r=fixedRequest();r.maximumAdaptivePasses=3;
+    const auto legacyHash=computeSourceAdaptiveSpinRequestHash(r);
+    r.termination=SourceAdaptiveTermination::PaperPostTransitionV1;
+    require(computeSourceAdaptiveSpinRequestHash(r)!=legacyHash,"termination policy binds input identity");
+    auto a=solveSourceAdaptiveSpin(r);
+    require(a.status==SourceAdaptiveSpinStatus::BinaryValidationFailed && a.binaryCheck,
+        "paper post-transition termination must reach the binary checker after three refinements");
+    require(a.passes.size()==3 && a.passes.back().beforeHash!=a.passes.back().afterHash,
+        "paper stop must exercise a changed terminal partition");
+    require(a.binaryCheck->normalizedConstraintResidual>r.binaryConstraintTolerance,
+        "paper stop must not waive the binary residual gate");
+    require(!a.terminalRelaxationKktApplies && a.passes.back().solve.finalKkt.valid,
+        "pre-transition KKT must not be granted to inherited refined variables");
+    require(a.passes.back().paperResolutionComplete &&
+            a.passes.back().outputFractionalCount>0 &&
+            a.passes.back().outputFractionalLevelCounts[5]==a.passes.back().outputFractionalCount,
+        "paper resolution evidence must count the output leaves");
+    auto again=solveSourceAdaptiveSpin(r);
+    require(a.traceHash==again.traceHash && a.outputHash==again.outputHash,"paper stop deterministic replay");
+    r.termination=SourceAdaptiveTermination::UnchangedPartitionKktV1;
+    auto legacy=solveSourceAdaptiveSpin(r);
+    require(legacy.status==SourceAdaptiveSpinStatus::AdaptivePassLimit && !legacy.binaryCheck,
+        "legacy three-pass limit must not silently adopt paper stopping");
+    r.termination=SourceAdaptiveTermination::PaperPostTransitionV1;
+    r.maximumAdaptivePasses=1;
+    auto early=solveSourceAdaptiveSpin(r);
+    require(early.status==SourceAdaptiveSpinStatus::AdaptivePassLimit && !early.binaryCheck,
+        "fractional leaves below maximum must continue");
+    r.maximumLeafCount=2;
+    auto resource=solveSourceAdaptiveSpin(r);
+    require(resource.status==SourceAdaptiveSpinStatus::ResourceLimitReached && !resource.binaryCheck &&
+            !resource.passes.back().paperResolutionComplete,"failed adaptation is never paper complete");
+    r=fixedRequest(false);r.termination=SourceAdaptiveTermination::PaperPostTransitionV1;
+    auto merged=solveSourceAdaptiveSpin(r);
+    require(merged.status==SourceAdaptiveSpinStatus::BinaryMomentValidated && merged.passes.size()==1 &&
+            !merged.terminalRelaxationKktApplies && merged.passes.back().outputFractionalCount==0,
+        "all-binary post-merge stop does not require an invented extra solve");
+    r=fixedRequest();r.termination=SourceAdaptiveTermination::PaperPostTransitionV1;r.slqp.maximumIterations=1;
+    auto unknown=solveSourceAdaptiveSpin(r);
+    require(unknown.status==SourceAdaptiveSpinStatus::RelaxationUnknown && !unknown.binaryCheck &&
+            !unknown.terminalRelaxationKktApplies,"failed solve cannot become a paper stop");
+    r.termination=static_cast<SourceAdaptiveTermination>(99);
+    rejects([&]{solveSourceAdaptiveSpin(r);},"unknown termination policy rejected");
+}
 void binaryTests() {
     auto r=fixedRequest();SourceAdaptiveDomain d(r.source,2,5);Eigen::VectorXd binary=Eigen::VectorXd::Ones(d.leaves().size());
     auto output=sourceBinaryCuboids(d,binary,1000);const auto identity=d.partitionHash();
@@ -162,6 +252,22 @@ void numericalFailureTests() {
     auto empty=solveSourceAdaptiveSpin(r);require(empty.status==SourceAdaptiveSpinStatus::RelaxationUnknown && !empty.binaryCheck && empty.relaxedFill.size()==0 && empty.passes.size()==1,"zero-variable audited solve is explicit UNKNOWN without fake KKT");
     r=fixedRequest();r.objective=Spin2014Objective::YoYo;r.inertiaWeight=std::numeric_limits<double>::max();
     auto overflow=solveSourceAdaptiveSpin(r);require(overflow.status==SourceAdaptiveSpinStatus::RelaxationUnknown && !overflow.binaryCheck && overflow.finalPartition.size()==2 && (overflow.relaxedFill.array()==.5).all(),"nonfinite objective retains initial state and explicit UNKNOWN");
+    // Every accepted source and every carveable cell lie at positive x, while
+    // the static target requires the retained center x to be zero.  The
+    // current solver reports UNKNOWN here; this is the minimal regression for
+    // the missing exact affine-partition infeasibility certificate.
+    SourceAdaptiveSpinRequest affineImpossible;
+    affineImpossible.source=source(
+        box({.4,-.5,0.},{1.4,.5,1.}),
+        box({.6,-.25,.25},{.8,.25,.75}),
+        5,{0,-1,0},2.0);
+    affineImpossible.objective=Spin2014Objective::StaticLowering;
+    affineImpossible.initialLevel=2;
+    affineImpossible.maximumOptimizationLevel=5;
+    auto affineResult=solveSourceAdaptiveSpin(affineImpossible);
+    require(std::string(sourceAdaptiveSpinStatusToken(affineResult.status))==
+        "INFEASIBLE_CERTIFIED",
+        "fixed source affine constraint must expose an infeasibility certificate");
 }
 void emptySourceAllObjectives() {
     SourceAdaptiveSpinRequest r;
@@ -217,10 +323,11 @@ void canonicalCuboidEndpoints() {
     require(checked.independentMoments.has_value() && checked.normalizedMomentError<=1e-10,"canonical endpoints retain independent tetrahedron moment agreement");
 }
 int main(int argc,char** argv) {try {
+    if(argc>1 && std::string(argv[1])=="--paper-stop"){paperStopTests();return 0;}
     if(argc>1 && std::string(argv[1])=="--empty-source"){emptySourceAllObjectives();return 0;}
     if(argc>1 && std::string(argv[1])=="--canonical-cuboids"){canonicalCuboidEndpoints();return 0;}
     if(argc>1){auto s=source(cube(0,1),cube(.25,.75),9);SourceAdaptiveDomain d(s,2,9);require(s->stats().maximumVisitedLevel==9 && d.leaves().size()==8,"genuine geometry9 coarse partition");graph(d);rusage u{};getrusage(RUSAGE_SELF,&u);std::cout<<"geometry_depth9 nodes="<<s->cells().size()<<" optimization_leaves="<<d.leaves().size()<<" face_keys="<<d.faceKeyCount()<<" rss_KiB="<<u.ru_maxrss<<'\n';return 0;}
-    emptySourceAllObjectives();canonicalCuboidEndpoints();numericalFailureTests();partitionTests();functionalTests();binaryTests();solverTests();std::cout<<"source adaptive tests passed; faster="<<MAKE_IT_STAND_HAS_SPIN_IT_FASTER<<'\n';
+    emptySourceAllObjectives();canonicalCuboidEndpoints();numericalFailureTests();partitionTests();functionalTests();binaryTests();solverTests();paperStopTests();std::cout<<"source adaptive tests passed; faster="<<MAKE_IT_STAND_HAS_SPIN_IT_FASTER<<'\n';
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
 #else
 #include <iostream>

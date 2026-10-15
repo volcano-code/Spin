@@ -2,8 +2,10 @@
 
 #include <Eigen/Core>
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -146,6 +148,28 @@ bool solveAndCheck(
                   << " outer_f_equal="
                   << (result.outerSurface.faces == request.outerSurface.faces)
                   << " diagnostic=" << result.diagnostic << '\n';
+        for (const auto& event : result.events)
+        {
+            if (event.detail.find("BOOLEAN_ARRANGEMENT_PWN_FAILURE") ==
+                std::string::npos)
+                continue;
+            std::cerr << std::setprecision(17)
+                      << "[DIAGNOSTIC] failed_boolean_evaluation="
+                      << event.evaluationIndex
+                      << " restart_evaluation=" << event.restartEvaluationIndex
+                      << " step=" << event.step.value_or(-1.0)
+                      << " q=";
+            if (event.quadricCoefficients)
+            {
+                for (double value : *event.quadricCoefficients)
+                    std::cerr << value << ',';
+            }
+            else
+            {
+                std::cerr << "missing";
+            }
+            std::cerr << " detail=" << event.detail << '\n';
+        }
         return false;
     }
     if (request.mode == spin::SpinMode::BuoyantStability)
@@ -198,6 +222,54 @@ int main()
         ))
     {
         return fail("static planar fixture failed");
+    }
+
+    // Exercise the full design-domain -> Boolean -> mass-moment -> Newton
+    // path from a deterministic seed that is not the known feasible solution.
+    // This is a synthetic algorithm-integration check, not a paper case.
+    Vector10 offTargetValues = staticPlane.values();
+    offTargetValues(0) += 0.025;
+    offTargetValues(1) -= 0.02;
+    const Quadric offTargetSeed =
+        Quadric::fromUnnormalized(offTargetValues);
+    if (offTargetSeed.hash() == staticPlane.hash())
+    {
+        return fail("off-target seed unexpectedly equals known solution");
+    }
+    const spin::QuadricHollowingResult offTargetResult =
+        spin::solveQuadricHollowing(
+            staticRequest,
+            spin::QuadricMomentEvaluatorSettings(),
+            {offTargetSeed}
+        );
+    const spin::QuadricHollowingResult offTargetRepeat =
+        spin::solveQuadricHollowing(
+            staticRequest,
+            spin::QuadricMomentEvaluatorSettings(),
+            {offTargetSeed}
+        );
+    if (
+        offTargetResult.status != spin::SpinSolverStatus::Converged ||
+        offTargetResult.normalizedEquationResidual > 1e-12 ||
+        offTargetResult.physicalRelativeResidual > 1e-6 ||
+        offTargetResult.trace.size() < 2 ||
+        (offTargetResult.quadricCoefficients - offTargetSeed.values()).norm() <
+            1e-8 ||
+        offTargetResult.outputHash != offTargetRepeat.outputHash ||
+        offTargetResult.traceHash != offTargetRepeat.traceHash ||
+        offTargetResult.materialBoundary.faces.rows() == 0 ||
+        offTargetResult.cavityBoundary.faces.rows() == 0
+    )
+    {
+        return fail(
+            "off-target integrated Newton solve failed: status=" +
+            std::string(spin::spinSolverStatusToken(offTargetResult.status)) +
+            " residual=" +
+            std::to_string(offTargetResult.normalizedEquationResidual) +
+            " physical=" +
+            std::to_string(offTargetResult.physicalRelativeResidual) +
+            " trace=" + std::to_string(offTargetResult.trace.size())
+        );
     }
 
     values.setZero();
@@ -316,6 +388,167 @@ int main()
             Eigen::Vector3d(100.0, 100.0, 200.0)
         )
     );
+    Vector10 offTargetYoyoValues = yoyoHyperboloid.values();
+    offTargetYoyoValues(0) += 0.015;
+    offTargetYoyoValues(6) -= 0.025;
+    const Quadric offTargetYoyoSeed =
+        Quadric::fromUnnormalized(offTargetYoyoValues);
+    const spin::QuadricHollowingResult offTargetYoyo =
+        spin::solveQuadricHollowing(
+            yoyoRequest,
+            spin::QuadricMomentEvaluatorSettings(),
+            {offTargetYoyoSeed}
+        );
+    const spin::QuadricMomentEvaluation baseEvaluation =
+        spin::evaluateQuadricMaterialMoments(yoyoRequest, offTargetYoyoSeed);
+    const std::vector<double> derivativeSteps = {1e-4, 1e-5, 1e-6};
+    std::vector<double> derivativeErrors;
+    std::vector<int> topologyChangeCounts;
+    for (const double derivativeStep : derivativeSteps)
+    {
+        Eigen::Matrix<double, 10, 10> finiteDifferenceJacobian;
+        Eigen::Matrix<double, 10, 10> projectedAnalyticJacobian;
+        int topologyChanges = 0;
+        for (int coordinate = 0; coordinate < 10; ++coordinate)
+        {
+            Eigen::Matrix<double, 10, 1> basis =
+                Eigen::Matrix<double, 10, 1>::Zero();
+            basis(coordinate) = 1.0;
+            const Eigen::Matrix<double, 10, 1> direction =
+                offTargetYoyoSeed.projectToTangent(basis);
+            const auto plus = spin::evaluateQuadricMaterialMoments(
+                yoyoRequest,
+                offTargetYoyoSeed.geodesicUpdate(direction, derivativeStep)
+            );
+            const auto minus = spin::evaluateQuadricMaterialMoments(
+                yoyoRequest,
+                offTargetYoyoSeed.geodesicUpdate(-direction, derivativeStep)
+            );
+            finiteDifferenceJacobian.col(coordinate) =
+                (plus.variableMomentsTarget.values() -
+                 minus.variableMomentsTarget.values()) /
+                (2.0 * derivativeStep);
+            projectedAnalyticJacobian.col(coordinate) =
+                baseEvaluation.momentJacobian * direction;
+            topologyChanges += plus.topologyHash != minus.topologyHash ? 1 : 0;
+        }
+        derivativeErrors.push_back(
+            (projectedAnalyticJacobian - finiteDifferenceJacobian).norm() /
+            std::max(1.0, finiteDifferenceJacobian.norm())
+        );
+        topologyChangeCounts.push_back(topologyChanges);
+    }
+    const bool derivativeMismatch = std::any_of(
+        derivativeErrors.begin(), derivativeErrors.end(),
+        [](double error) { return error > 0.2; }
+    );
+    const bool topologyTransitionObserved = std::any_of(
+        topologyChangeCounts.begin(), topologyChangeCounts.end(),
+        [](int count) { return count > 0; }
+    );
+    if (
+        offTargetYoyo.status != spin::SpinSolverStatus::LineSearchExhausted ||
+        offTargetYoyo.trace.size() != 1 || !derivativeMismatch ||
+        !topologyTransitionObserved ||
+        baseEvaluation.derivativeDiagnostic.find(
+            "not the discrete geometry derivative"
+        ) == std::string::npos
+    )
+    {
+        return fail(
+            "hyperboloid derivative-mismatch negative control changed: status=" +
+            std::string(spin::spinSolverStatusToken(offTargetYoyo.status)) +
+            " derivative_mismatch=" + std::to_string(derivativeMismatch) +
+            " topology_transition=" +
+            std::to_string(topologyTransitionObserved)
+        );
+    }
+    std::cerr << "[BLOCKER] scenario=synthetic-yoyo-hyperboloid-off-target"
+              << " status=" << spin::spinSolverStatusToken(offTargetYoyo.status)
+              << " residual=" << offTargetYoyo.normalizedEquationResidual
+              << " derivative_error_1e4=" << derivativeErrors[0]
+              << " derivative_error_1e5=" << derivativeErrors[1]
+              << " derivative_error_1e6=" << derivativeErrors[2]
+              << " topology_changed_directions_1e4=" << topologyChangeCounts[0]
+              << " topology_changed_directions_1e5=" << topologyChangeCounts[1]
+              << " topology_changed_directions_1e6=" << topologyChangeCounts[2]
+              << " classification=LEGACY_CONTINUOUS_DERIVATIVE_NOT_DISCRETE_BOOLEAN_DERIVATIVE\n";
+
+    spin::QuadricMomentEvaluatorSettings discreteSettings;
+    discreteSettings.derivativeMethod =
+        spin::QuadricMomentDerivativeMethod::DiscreteFullRankQuadric;
+    const spin::QuadricHollowingResult discreteOffTargetYoyo =
+        spin::solveQuadricHollowing(
+            yoyoRequest, discreteSettings, {offTargetYoyoSeed});
+    if (discreteOffTargetYoyo.status != spin::SpinSolverStatus::ResourceLimitReached ||
+        discreteOffTargetYoyo.diagnostic.find("degenerate_faces=2") == std::string::npos ||
+        discreteOffTargetYoyo.materialBoundary.faces.rows() != 0)
+    {
+        return fail("tangent-contact negative control did not fail closed: status=" +
+            std::string(spin::spinSolverStatusToken(discreteOffTargetYoyo.status)) +
+            " diagnostic=" + discreteOffTargetYoyo.diagnostic);
+    }
+    std::cout << "[PASS] discrete Boolean-to-Newton tangency failure remains fail-closed status="
+              << spin::spinSolverStatusToken(discreteOffTargetYoyo.status)
+              << " iterations=" << discreteOffTargetYoyo.trace.size() << '\n';
+
+    spin::SpinDesignRequest nonTangentYoyoRequest =
+        baseRequest(spin::SpinMode::YoYo);
+    nonTangentYoyoRequest.designDomain = cube(-0.8, 0.8);
+    nonTangentYoyoRequest = requestWithTarget(
+        nonTangentYoyoRequest,
+        yoyoHyperboloid,
+        rawMoments(20.0, Eigen::Vector3d::Zero(),
+                   Eigen::Vector3d(100.0, 100.0, 200.0)));
+    const auto discreteNonTangentYoyo = spin::solveQuadricHollowing(
+        nonTangentYoyoRequest, discreteSettings, {offTargetYoyoSeed});
+    const auto discreteNonTangentYoyoRepeat = spin::solveQuadricHollowing(
+        nonTangentYoyoRequest, discreteSettings, {offTargetYoyoSeed});
+    bool everyEvaluatedMapIsBoundToItsDifferential = true;
+    int evaluatedMapCount = 0;
+    for (const auto& event : discreteNonTangentYoyo.events)
+    {
+        if (event.type != "evaluation" || event.outcome == "failed")
+            continue;
+        ++evaluatedMapCount;
+        everyEvaluatedMapIsBoundToItsDifferential =
+            everyEvaluatedMapIsBoundToItsDifferential &&
+            event.detail.find("evaluation_map=") != std::string::npos &&
+            event.detail.find("backend=") != std::string::npos &&
+            event.detail.find("derivative=") != std::string::npos;
+    }
+    if (discreteNonTangentYoyo.status != spin::SpinSolverStatus::Converged ||
+        discreteNonTangentYoyo.normalizedEquationResidual > 1e-12 ||
+        discreteNonTangentYoyo.physicalRelativeResidual > 1e-6 ||
+        discreteNonTangentYoyo.derivativeMethod !=
+            spin::quadricMomentDerivativeMethodToken(discreteSettings.derivativeMethod) ||
+        discreteNonTangentYoyo.trace.size() < 2 ||
+        (discreteNonTangentYoyo.quadricCoefficients -
+            offTargetYoyoSeed.values()).norm() < 1e-8 ||
+        discreteNonTangentYoyo.materialBoundary.faces.rows() == 0 ||
+        discreteNonTangentYoyo.cavityBoundary.faces.rows() == 0 ||
+        discreteNonTangentYoyo.outputHash != discreteNonTangentYoyoRepeat.outputHash ||
+        discreteNonTangentYoyo.traceHash != discreteNonTangentYoyoRepeat.traceHash ||
+        discreteNonTangentYoyo.eventHash != discreteNonTangentYoyoRepeat.eventHash ||
+        discreteNonTangentYoyo.geometryHash != discreteNonTangentYoyoRepeat.geometryHash)
+    {
+        return fail("non-tangent discrete Boolean-to-Newton integration failed: status=" +
+            std::string(spin::spinSolverStatusToken(discreteNonTangentYoyo.status)) +
+            " residual=" + std::to_string(discreteNonTangentYoyo.normalizedEquationResidual) +
+            " physical=" + std::to_string(discreteNonTangentYoyo.physicalRelativeResidual) +
+            " trace=" + std::to_string(discreteNonTangentYoyo.trace.size()) +
+            " diagnostic=" + discreteNonTangentYoyo.diagnostic);
+    }
+    if (evaluatedMapCount == 0 || !everyEvaluatedMapIsBoundToItsDifferential)
+    {
+        return fail("strict Newton evaluation events do not bind the actual Boolean backend and derivative identity to the evaluated moment map");
+    }
+    std::cout << "[PASS] discrete Boolean-to-Newton yoyo status="
+              << spin::spinSolverStatusToken(discreteNonTangentYoyo.status)
+              << " iterations=" << discreteNonTangentYoyo.trace.size()
+              << " residual=" << discreteNonTangentYoyo.normalizedEquationResidual
+              << " derivative=" << discreteNonTangentYoyo.derivativeMethod << '\n';
+
     hashes.emplace_back();
     if (!solveAndCheck(
             "yo-yo",
@@ -354,7 +587,21 @@ int main()
         return fail("spinning-top hyperboloid fixture failed");
     }
 
-    std::cout << "[PASS] scenario=spin-it-faster-end-to-end";
+    std::cout << "[PASS] scenario=spin-it-faster-end-to-end"
+              << " off_target_iterations=" << offTargetResult.trace.size()
+              << " off_target_seed_delta="
+              << (offTargetResult.quadricCoefficients -
+                  offTargetSeed.values()).norm()
+              << " off_target_residual="
+              << offTargetResult.normalizedEquationResidual
+              << " off_target_output_hash=" << offTargetResult.outputHash
+              << " off_target_trace_hash=" << offTargetResult.traceHash
+              << " off_target_hyperboloid_iterations="
+              << offTargetYoyo.trace.size()
+              << " off_target_hyperboloid_residual="
+              << offTargetYoyo.normalizedEquationResidual
+              << " off_target_hyperboloid_derivative_error="
+              << derivativeErrors[1];
     for (const std::string& hash : hashes)
     {
         std::cout << ' ' << hash;

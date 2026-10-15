@@ -26,9 +26,12 @@ std::string productDigest(const SourceMaterialBoundaryFacts& f) {
     evidence.imbue(std::locale::classic());evidence<<std::hexfloat;
     for(int i=0;i<10;++i)
         evidence<<f.sourceSubtractionMoments.values()(i)<<','<<f.integratedMoments.values()(i)
+            <<','<<f.boundaryMaterialMoments.values()(i)<<','<<f.interiorMaterialMoments.values()(i)
             <<','<<f.normalizedMomentResiduals(i)<<';';
-    evidence<<f.normalizedMomentError<<';'<<f.minimumCentralInertiaEigenvalue<<';';
-    for(const auto* r:{&f.outerRegion,&f.designRegion,&f.materialRegion,&f.carvedRegion}) {
+    evidence<<f.normalizedMomentError<<';'<<f.minimumCentralInertiaEigenvalue<<';'
+        <<f.materialComponentsExported<<';'<<std::hexfloat<<f.boundaryDensity<<','<<f.interiorDensity<<';';
+    for(const auto* r:{&f.outerRegion,&f.designRegion,&f.materialRegion,&f.carvedRegion,
+                       &f.boundaryMaterialRegion,&f.interiorMaterialRegion}) {
         evidence<<r->regionDigest<<';'<<r->completed<<r->valid<<r->explicitEmpty<<';';
         if(r->materialComponents) evidence<<*r->materialComponents;
         evidence<<',';if(r->boundedVoidComponents) evidence<<*r->boundedVoidComponents;
@@ -42,7 +45,8 @@ std::string productDigest(const SourceMaterialBoundaryFacts& f) {
         evidence<<';';if(value) evidence<<*value;else evidence<<"UNKNOWN";
     };
     optionalBool(f.clearance.applicable);optionalBool(f.clearance.contact);optionalBool(f.clearance.atLeastMinimum);
-    optionalBool(f.partition.completePartition);optionalBool(f.carvedSubsetDesign.aSubsetB);
+    optionalBool(f.partition.completePartition);optionalBool(f.dualMaterialPartition.completePartition);
+    optionalBool(f.carvedSubsetDesign.aSubsetB);
     return digest({f.algorithm,f.inputDigest,f.status,f.diagnostic,f.unionFacts.outputDigest,
         f.outerMeshHash,f.materialMeshHash,f.partition.partitionDigest,f.carvedSubsetDesign.relationDigest,
         f.clearance.clearanceDigest,evidence.str(),verification::hashExactNefBudgetFacts(f.resourceBudget)});
@@ -51,19 +55,44 @@ void requireRegion(const verification::ExactMaterialRegion& r,const char* label)
     if(!r.facts().completed || !r.facts().valid)
         throw std::runtime_error(std::string(label)+": "+r.facts().error);
 }
+void differenceMesh(const Eigen::MatrixXd& wholeVertices,const Eigen::MatrixXi& wholeFaces,
+    const Eigen::MatrixXd& subtractVertices,const Eigen::MatrixXi& subtractFaces,
+    Eigen::MatrixXd& vertices,Eigen::MatrixXi& faces) {
+    vertices.resize(wholeVertices.rows()+subtractVertices.rows(),3);
+    faces.resize(wholeFaces.rows()+subtractFaces.rows(),3);
+    vertices<<wholeVertices,subtractVertices;
+    faces.topRows(wholeFaces.rows())=wholeFaces;
+    faces.bottomRows(subtractFaces.rows())=
+        (subtractFaces.rowwise().reverse().array()+wholeVertices.rows()).matrix();
+}
 void geometricMoments(const SourceAdaptiveDomain& domain,const Eigen::VectorXd& binary,
-    const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,double density,
-    SourceMaterialBoundaryFacts& facts) {
-    facts.sourceSubtractionMoments=domain.source().outerSurfaceMoments().scaledDensity(density)
-        -domain.removedMoments(binary).scaledDensity(density);
-    // Independent signed tetrahedra on the ACTUAL final exported triangle mesh.
-    // Does not call Algorithm1/oracle columns for this geometric integration.
-    const auto moments=computeSurfaceMassMoments(vertices,faces,density);
+    const Eigen::MatrixXd& boundaryVertices,const Eigen::MatrixXi& boundaryFaces,
+    const Eigen::MatrixXd& interiorVertices,const Eigen::MatrixXi& interiorFaces,
+    const Eigen::MatrixXd& compositeVertices,const Eigen::MatrixXi& compositeFaces,
+    double boundaryDensity,double interiorDensity,bool splitMaterials,SourceMaterialBoundaryFacts& facts) {
+    const auto& source=domain.source();
+    facts.sourceSubtractionMoments=(source.outerSurfaceMoments()-source.designSurfaceMoments()).scaledDensity(boundaryDensity)
+        +source.designSurfaceMoments().scaledDensity(interiorDensity)
+        -domain.removedMoments(binary).scaledDensity(interiorDensity);
+    // Independently integrate both exported material boundaries; do not call
+    // the optimizer's cell-moment columns on this validation path.
+    MassMoments boundaryMoments,interiorMoments,moments;
+    if(splitMaterials) {
+        if(boundaryFaces.rows())boundaryMoments=computeSurfaceMassMoments(boundaryVertices,boundaryFaces,boundaryDensity);
+        if(interiorFaces.rows())interiorMoments=computeSurfaceMassMoments(interiorVertices,interiorFaces,interiorDensity);
+        facts.boundaryMaterialMoments=physics::RawMassMoments10::fromMassMoments(boundaryMoments);
+        facts.interiorMaterialMoments=physics::RawMassMoments10::fromMassMoments(interiorMoments);
+        moments=boundaryMoments+interiorMoments;
+    } else {
+        moments=computeSurfaceMassMoments(compositeVertices,compositeFaces,boundaryDensity);
+    }
     facts.integratedMoments=physics::RawMassMoments10::fromMassMoments(moments);
-    if(!moments.isFinite() || !facts.sourceSubtractionMoments.isFinite() || moments.mass<=0)
+    if(!moments.isFinite() || !facts.boundaryMaterialMoments.isFinite() || !facts.interiorMaterialMoments.isFinite() ||
+       !facts.sourceSubtractionMoments.isFinite() || moments.mass<=0)
         throw std::runtime_error("nonfinite or nonpositive final material moments");
     const double side=domain.source().config().rootSide;
-    const double scales[]={density*std::pow(side,3),density*std::pow(side,4),density*std::pow(side,5)};
+    const double densityScale=std::max(boundaryDensity,interiorDensity);
+    const double scales[]={densityScale*std::pow(side,3),densityScale*std::pow(side,4),densityScale*std::pow(side,5)};
     for(double scale:scales)
         if(!std::isfinite(scale) || scale<=0) throw std::runtime_error("invalid fixed root moment scale");
     for(int i=0;i<10;++i)
@@ -94,19 +123,33 @@ std::string hashSourceMaterialBoundarySettings(const SourceMaterialBoundarySetti
 
 SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain& domain,
     const Eigen::VectorXd& binary,double density,const SourceMaterialBoundarySettings& settings) {
+    return makeSourceMaterialBoundaryImpl(domain,binary,density,density,false,settings);
+}
+
+SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDomain& domain,
+    const Eigen::VectorXd& binary,double boundaryDensity,double interiorDensity,
+    const SourceMaterialBoundarySettings& settings) {
+    return makeSourceMaterialBoundaryImpl(domain,binary,boundaryDensity,interiorDensity,true,settings);
+}
+
+SourceMaterialBoundaryResult makeSourceMaterialBoundaryImpl(const SourceAdaptiveDomain& domain,
+    const Eigen::VectorXd& binary,double boundaryDensity,double interiorDensity,bool splitMaterials,
+    const SourceMaterialBoundarySettings& settings) {
     validateSourceMaterialBoundarySettings(settings);
-    if(!std::isfinite(density) || density<=0 || binary.size()!=static_cast<Eigen::Index>(domain.leaves().size()) ||
+    if(!std::isfinite(boundaryDensity) || boundaryDensity<=0 || !std::isfinite(interiorDensity) || interiorDensity<=0 ||
+            binary.size()!=static_cast<Eigen::Index>(domain.leaves().size()) ||
             !binary.allFinite() || ((binary.array()!=0)&&(binary.array()!=1)).any())
-        throw std::invalid_argument("source material requires positive density and finite binary source beta");
+        throw std::invalid_argument("source material requires positive material densities and finite binary source beta");
     SourceMaterialBoundaryResult result;
     auto& facts=result.facts_;
-    facts.density=density;facts.minimumOuterWall=settings.minimumOuterWall;
+    facts.density=boundaryDensity==interiorDensity?boundaryDensity:0.;
+    facts.boundaryDensity=boundaryDensity;facts.interiorDensity=interiorDensity;facts.minimumOuterWall=settings.minimumOuterWall;
     facts.sourceHash=domain.source().partitionSha256();facts.partitionHash=domain.partitionHash();
     std::string binaryText=std::to_string(binary.size())+":";
     for(Eigen::Index i=0;i<binary.size();++i) binaryText+=binary(i)==0?'0':'1';
     facts.binaryHash=digest({"source-material-binary-v1",facts.sourceHash,facts.partitionHash,binaryText});
     facts.inputDigest=digest({facts.algorithm,facts.sourceHash,facts.partitionHash,facts.binaryHash,
-        scalar(density),hashSourceMaterialBoundarySettings(settings)});
+        scalar(boundaryDensity),scalar(interiorDensity),hashSourceMaterialBoundarySettings(settings)});
     const auto budget=std::make_shared<verification::ExactNefBudget>(settings.unionSettings.maximumIntermediateComplexity);
     const auto finishFacts=[&] {
         facts.resourceBudget=budget->facts();
@@ -138,6 +181,9 @@ SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDoma
         facts.carvedSubsetDesign=verification::relateExactMaterialRegionsWithBudget(*united.region(),design,budget);
         if(!facts.carvedSubsetDesign.completed || facts.carvedSubsetDesign.aSubsetB!=true)
             throw std::runtime_error("newly carved union is not an established subset of original design");
+        const auto designInOuter=verification::relateExactMaterialRegionsWithBudget(design,outer,budget);
+        if(!designInOuter.completed || designInOuter.aSubsetB!=true)
+            throw std::runtime_error("design domain is not established as a subset of outer material");
         facts.clearance=verification::checkExactBoundaryClearance(outer,*united.region(),settings.minimumOuterWall);
         if(!facts.clearance.completed || (!boxes.empty() &&
                 (facts.clearance.applicable!=true || facts.clearance.contact!=false || facts.clearance.atLeastMinimum!=true))) {
@@ -156,6 +202,37 @@ SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDoma
         // become cavities, inward void shells become outward retained islands.
         product.materialFaces_.bottomRows(product.cavityFaces_.rows())=
             (product.cavityFaces_.rowwise().reverse().array()+product.outerVertices_.rows()).matrix();
+        const auto emptyRegion=verification::emptyExactMaterialRegionWithBudget(budget);
+        const auto shellEqualsEmpty=designInOuter.equal==true;
+        if(!splitMaterials) {
+            product.boundaryMaterialVertices_.resize(0,3);product.boundaryMaterialFaces_.resize(0,3);
+            product.interiorMaterialVertices_.resize(0,3);product.interiorMaterialFaces_.resize(0,3);
+        } else if(shellEqualsEmpty) {
+            product.boundaryMaterialVertices_.resize(0,3);product.boundaryMaterialFaces_.resize(0,3);
+            facts.boundaryMaterialRegion=emptyRegion.facts();
+        } else {
+            differenceMesh(product.outerVertices_,product.outerFaces_,source.designVertices(),source.designFaces(),
+                product.boundaryMaterialVertices_,product.boundaryMaterialFaces_);
+            const auto boundaryRegion=verification::makeExactMaterialRegionWithBudget(
+                product.boundaryMaterialVertices_,product.boundaryMaterialFaces_,budget);
+            requireRegion(boundaryRegion,"fixed boundary material");facts.boundaryMaterialRegion=boundaryRegion.facts();
+        }
+        if(!splitMaterials) {
+            // The legacy one-material path intentionally does not claim
+            // per-material component surfaces when regions touch at interfaces.
+        } else if(facts.carvedSubsetDesign.equal==true) {
+            product.interiorMaterialVertices_.resize(0,3);product.interiorMaterialFaces_.resize(0,3);
+            facts.interiorMaterialRegion=emptyRegion.facts();
+        } else if(united.region()->facts().explicitEmpty) {
+            product.interiorMaterialVertices_=source.designVertices();product.interiorMaterialFaces_=source.designFaces();
+            facts.interiorMaterialRegion=design.facts();
+        } else {
+            differenceMesh(source.designVertices(),source.designFaces(),product.cavityVertices_,product.cavityFaces_,
+                product.interiorMaterialVertices_,product.interiorMaterialFaces_);
+            const auto interiorRegion=verification::makeExactMaterialRegionWithBudget(
+                product.interiorMaterialVertices_,product.interiorMaterialFaces_,budget);
+            requireRegion(interiorRegion,"retained interior material");facts.interiorMaterialRegion=interiorRegion.facts();
+        }
         const auto material=verification::makeExactMaterialRegionWithBudget(product.materialVertices_,product.materialFaces_,budget);
         facts.materialRegion=material.facts();facts.materialBoundary=material.boundaryFacts();
         requireRegion(material,"final signed material");
@@ -163,7 +240,21 @@ SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDoma
         facts.partition=verification::checkExactMaterialPartitionWithBudget(outer,{material,*united.region()},budget);
         if(!facts.partition.completed || facts.partition.completePartition!=true)
             throw std::runtime_error("exact inclusive final-material/new-carve partition not established");
-        geometricMoments(domain,binary,product.materialVertices_,product.materialFaces_,density,facts);
+        if(splitMaterials) {
+            const auto shellRegion=shellEqualsEmpty?emptyRegion:
+                verification::makeExactMaterialRegionWithBudget(product.boundaryMaterialVertices_,product.boundaryMaterialFaces_,budget);
+            const auto interiorRegion=facts.carvedSubsetDesign.equal==true?emptyRegion:
+                (united.region()->facts().explicitEmpty?design:
+                 verification::makeExactMaterialRegionWithBudget(product.interiorMaterialVertices_,product.interiorMaterialFaces_,budget));
+            facts.dualMaterialPartition=verification::checkExactMaterialPartitionWithBudget(
+                outer,{shellRegion,interiorRegion,*united.region()},budget);
+            if(!facts.dualMaterialPartition.completed || facts.dualMaterialPartition.completePartition!=true)
+                throw std::runtime_error("exact shell/interior/carve material partition not established");
+            facts.materialComponentsExported=true;
+        }
+        geometricMoments(domain,binary,product.boundaryMaterialVertices_,product.boundaryMaterialFaces_,
+            product.interiorMaterialVertices_,product.interiorMaterialFaces_,product.materialVertices_,product.materialFaces_,
+            boundaryDensity,interiorDensity,splitMaterials,facts);
         facts.status="MATERIAL_BOUNDARY_VALIDATED";
         facts.diagnostic="native exact material geometry and independent moments only; no solver/stability/manufacturing authority";
         finishFacts();
@@ -179,13 +270,24 @@ SourceMaterialBoundaryResult makeSourceMaterialBoundary(const SourceAdaptiveDoma
 
 SourceAdaptiveSpinMaterialResult solveSourceAdaptiveSpinMaterial(
     const SourceAdaptiveSpinRequest& request,const SourceMaterialBoundarySettings& settings) {
+    std::shared_ptr<const SourceAdaptiveCheckpoint> checkpoint;
+    return solveSourceAdaptiveSpinMaterialStages(request,settings,nullptr,checkpoint);
+}
+
+SourceAdaptiveSpinMaterialResult solveSourceAdaptiveSpinMaterialStages(
+    const SourceAdaptiveSpinRequest& request,const SourceMaterialBoundarySettings& settings,
+    const SourceAdaptiveStageControl* control,std::shared_ptr<const SourceAdaptiveCheckpoint>& checkpoint) {
     const auto settingsHash=hashSourceMaterialBoundarySettings(settings);
     SourceAdaptiveSpinMaterialResult result;
     detail::SourceAdaptiveSpinEndpoint endpoint;
-    result.solve_=detail::solveSourceAdaptiveSpinEndpoint(request,&endpoint);
+    result.solve_=detail::solveSourceAdaptiveSpinEndpoint(request,&endpoint,control,&checkpoint);
     if(result.solve_.status==SourceAdaptiveSpinStatus::BinaryMomentValidated) {
         if(!endpoint.domain) throw std::logic_error("successful source solve missing private terminal domain");
-        result.boundary_=makeSourceMaterialBoundary(*endpoint.domain,endpoint.binary,request.density,settings);
+        if(request.boundaryDensity)
+            result.boundary_=makeSourceMaterialBoundary(*endpoint.domain,endpoint.binary,
+                request.resolvedBoundaryDensity(),request.resolvedInteriorDensity(),settings);
+        else
+            result.boundary_=makeSourceMaterialBoundary(*endpoint.domain,endpoint.binary,request.density,settings);
     }
     result.outputDigest_=digest({"source-adaptive-spin-material-wrapper-v1",settingsHash,
         result.solve_.inputHash,result.solve_.traceHash,result.solve_.outputHash,

@@ -3,6 +3,7 @@
 #include <Eigen/Geometry>
 
 #include <cmath>
+#include <limits>
 #include <map>
 #include <stdexcept>
 #include <utility>
@@ -272,7 +273,23 @@ MassMoments operator-(MassMoments first, const MassMoments& second)
 }
 
 
-MassMoments computeSurfaceMassMoments(
+namespace {
+template<class Scalar>
+struct SurfaceMomentAccumulator {
+    Scalar mass = 0;
+    Eigen::Matrix<Scalar,3,1> firstMoment = Eigen::Matrix<Scalar,3,1>::Zero();
+    Eigen::Matrix<Scalar,3,3> secondMoment = Eigen::Matrix<Scalar,3,3>::Zero();
+    MassMoments binary64() const {
+        MassMoments out;
+        out.mass = static_cast<double>(mass);
+        out.firstMoment = firstMoment.template cast<double>();
+        out.secondMoment = secondMoment.template cast<double>();
+        return out;
+    }
+};
+
+template<class Scalar>
+SurfaceMomentAccumulator<Scalar> accumulateSurfaceMassMoments(
     const Eigen::MatrixXd& vertices,
     const Eigen::MatrixXi& faces,
     double density
@@ -290,14 +307,16 @@ MassMoments computeSurfaceMassMoments(
         throw std::invalid_argument("mass-moment vertices must be finite");
     }
 
-    MassMoments moments;
+    SurfaceMomentAccumulator<Scalar> moments;
     if (vertices.rows() == 0 || faces.rows() == 0)
     {
         return moments;
     }
 
-    const Eigen::Vector3d reference =
-        vertices.colwise().mean().transpose();
+    using Vector3 = Eigen::Matrix<Scalar,3,1>;
+    using Matrix3 = Eigen::Matrix<Scalar,3,3>;
+    const Eigen::Matrix<Scalar,Eigen::Dynamic,Eigen::Dynamic> points = vertices.cast<Scalar>();
+    const Vector3 reference = points.colwise().mean().transpose();
     for (Eigen::Index row = 0; row < faces.rows(); ++row)
     {
         const int indices[3] =
@@ -314,33 +333,53 @@ MassMoments computeSurfaceMassMoments(
             }
         }
 
-        const Eigen::Vector3d verticesWorld[4] =
+        const Vector3 verticesWorld[4] =
         {
             reference,
-            vertices.row(indices[0]).transpose(),
-            vertices.row(indices[1]).transpose(),
-            vertices.row(indices[2]).transpose()
+            points.row(indices[0]).transpose(),
+            points.row(indices[1]).transpose(),
+            points.row(indices[2]).transpose()
         };
-        const Eigen::Vector3d first = verticesWorld[1] - reference;
-        const Eigen::Vector3d second = verticesWorld[2] - reference;
-        const Eigen::Vector3d third = verticesWorld[3] - reference;
-        const double signedMass =
-            density * first.dot(second.cross(third)) / 6.0;
+        const Vector3 first = verticesWorld[1] - reference;
+        const Vector3 second = verticesWorld[2] - reference;
+        const Vector3 third = verticesWorld[3] - reference;
+        const Scalar signedMass =
+            Scalar(density) * first.dot(second.cross(third)) / Scalar(6);
 
-        Eigen::Vector3d sum = Eigen::Vector3d::Zero();
-        Eigen::Matrix3d selfOuter = Eigen::Matrix3d::Zero();
-        for (const Eigen::Vector3d& vertex : verticesWorld)
+        Vector3 sum = Vector3::Zero();
+        Matrix3 selfOuter = Matrix3::Zero();
+        for (const Vector3& vertex : verticesWorld)
         {
             sum += vertex;
             selfOuter += vertex * vertex.transpose();
         }
 
         moments.mass += signedMass;
-        moments.firstMoment += signedMass * sum / 4.0;
+        moments.firstMoment += signedMass * sum / Scalar(4);
         moments.secondMoment +=
-            signedMass * (sum * sum.transpose() + selfOuter) / 20.0;
+            signedMass * (sum * sum.transpose() + selfOuter) / Scalar(20);
     }
     return moments;
+}
+} // namespace
+
+MassMoments computeSurfaceMassMoments(
+    const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& faces, double density) {
+    return accumulateSurfaceMassMoments<double>(vertices,faces,density).binary64();
+}
+
+MassMoments computeSurfaceDifferenceMassMomentsExtended(
+    const Eigen::MatrixXd& outerVertices, const Eigen::MatrixXi& outerFaces,
+    const Eigen::MatrixXd& innerVertices, const Eigen::MatrixXi& innerFaces,
+    double density) {
+    if (std::numeric_limits<long double>::digits <= std::numeric_limits<double>::digits)
+        throw std::runtime_error("extended input moment accumulation is unavailable on this platform");
+    auto out = accumulateSurfaceMassMoments<long double>(outerVertices,outerFaces,density);
+    const auto inner = accumulateSurfaceMassMoments<long double>(innerVertices,innerFaces,density);
+    out.mass -= inner.mass;
+    out.firstMoment -= inner.firstMoment;
+    out.secondMoment -= inner.secondMoment;
+    return out.binary64();
 }
 
 

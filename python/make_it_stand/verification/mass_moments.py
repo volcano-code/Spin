@@ -1,7 +1,8 @@
 """Independent signed-tetrahedron mass and moment integration.
 
-Only Python's standard library is used.  In particular, this module does not
-call the native solver's mass-moment integrator.  Validation covers finite
+The default uses Python's standard library; an explicitly selected, pinned
+GMP backend accelerates exact rational integration. Neither calls the native
+solver's mass-moment integrator. Validation covers finite
 coordinates, triangle validity, and oriented edge and vertex manifoldness.
 It intentionally does not certify self-intersection freedom, nesting or
 containment of negative components, wall thickness, or overlap between
@@ -11,6 +12,9 @@ density regions.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
+
+from .rational_text import fraction_from_rational_text, fraction_to_rational_text
 import math
 from typing import Iterable, TypeAlias
 
@@ -110,7 +114,10 @@ def _prepare(mesh: TriangleMesh) -> _PreparedMesh:
             raise GeometryValidationError(f"vertex {vertex_index} is not numeric") from error
         if not all(math.isfinite(value) for value in converted):
             raise GeometryValidationError(f"vertex {vertex_index} is not finite")
-        vertices.append(converted)
+        # Internal affine transforms may provide exact rational coordinates.
+        # Do not round these before either predicates or integration.
+        vertices.append(tuple(value if isinstance(value, Fraction) else number
+                              for value, number in zip(vertex, converted)))
 
     minima = tuple(min(vertex[axis] for vertex in vertices) for axis in range(3))
     maxima = tuple(max(vertex[axis] for vertex in vertices) for axis in range(3))
@@ -123,6 +130,14 @@ def _prepare(mesh: TriangleMesh) -> _PreparedMesh:
         tuple((vertex[axis] - reference[axis]) / scale for axis in range(3))
         for vertex in vertices
     )
+
+    def exact_normalized():
+        return tuple(tuple((Fraction(value) - Fraction(reference[axis])) / Fraction(scale)
+                           for axis, value in enumerate(vertex)) for vertex in vertices)
+
+    exact = any(isinstance(value, Fraction) for vertex in vertices for value in vertex)
+    if exact:
+        normalized = exact_normalized()
 
     faces: list[Face] = []
     seen_faces: set[tuple[int, int, int]] = set()
@@ -148,7 +163,17 @@ def _prepare(mesh: TriangleMesh) -> _PreparedMesh:
         ac = tuple(c[axis] - a[axis] for axis in range(3))
         normal = _cross(ab, ac)
         if _dot(normal, normal) == 0.0:
-            raise GeometryValidationError(f"face {face_index} is geometrically degenerate")
+            # Binary64 centering can merge distinct source vertices. Escalate
+            # the WHOLE integral, not just the predicate: otherwise a valid
+            # sliver would be accepted but its material silently discarded.
+            if not exact:
+                normalized = exact_normalized()
+                exact = True
+            a, b, c = (normalized[index] for index in converted_face)
+            normal = _cross(tuple(b[i]-a[i] for i in range(3)),
+                            tuple(c[i]-a[i] for i in range(3)))
+            if not any(normal):
+                raise GeometryValidationError(f"face {face_index} is geometrically degenerate")
 
         faces.append(converted_face)
         for vertex_index in converted_face:
@@ -196,20 +221,29 @@ def _prepare(mesh: TriangleMesh) -> _PreparedMesh:
                 f"vertex {vertex_index} is non-manifold: incident faces form multiple fans"
             )
 
-    return _PreparedMesh(normalized, tuple(faces), reference, scale)
+    if exact:
+        # Recheck earlier faces as well after escalation to exact arithmetic.
+        for face_index, face in enumerate(faces):
+            a, b, c = (normalized[index] for index in face)
+            if not any(_cross(tuple(b[i]-a[i] for i in range(3)),
+                              tuple(c[i]-a[i] for i in range(3)))):
+                raise GeometryValidationError(f"face {face_index} is geometrically degenerate")
+    return _PreparedMesh(normalized, tuple(faces), tuple(map(float, reference)), float(scale))
 
 
 def _normalized_moments(prepared: _PreparedMesh) -> tuple[float, Vector3, Matrix3]:
+    exact = isinstance(prepared.vertices[0][0], Fraction)
+    accumulate = (lambda values: float(sum(values))) if exact else math.fsum
     volumes: list[float] = []
     first_terms = [[], [], []]
     second_terms = [[[] for _ in range(3)] for _ in range(3)]
     for face in prepared.faces:
         a, b, c = (prepared.vertices[index] for index in face)
-        volume = _dot(a, _cross(b, c)) / 6.0
+        volume = _dot(a, _cross(b, c)) / 6
         volumes.append(volume)
         total = tuple(a[axis] + b[axis] + c[axis] for axis in range(3))
         for row in range(3):
-            first_terms[row].append(volume * total[row] / 4.0)
+            first_terms[row].append(volume * total[row] / 4)
             for column in range(3):
                 diagonal_sum = (
                     a[row] * a[column]
@@ -217,13 +251,13 @@ def _normalized_moments(prepared: _PreparedMesh) -> tuple[float, Vector3, Matrix
                     + c[row] * c[column]
                 )
                 second_terms[row][column].append(
-                    volume * (diagonal_sum + total[row] * total[column]) / 20.0
+                    volume * (diagonal_sum + total[row] * total[column]) / 20
                 )
     return (
-        math.fsum(volumes),
-        tuple(math.fsum(axis_terms) for axis_terms in first_terms),
+        accumulate(volumes),
+        tuple(accumulate(axis_terms) for axis_terms in first_terms),
         tuple(
-            tuple(math.fsum(second_terms[row][column]) for column in range(3))
+            tuple(accumulate(second_terms[row][column]) for column in range(3))
             for row in range(3)
         ),
     )
@@ -276,6 +310,134 @@ def integrate_geometric_moments(mesh: TriangleMesh) -> GeometricMoments:
     if not all(math.isfinite(value) for value in values):
         raise GeometryValidationError("moments are not representable as finite floats")
     return GeometricMoments(local_volume, first, second)
+
+
+def integrate_exact_rational_raw_moments(vertices, faces, *,
+        arithmetic_backend='FRACTION_V1') -> tuple[Fraction, ...]:
+    """Integrate ten density-free moments without rounding rational vertices.
+
+    This signed-tetrahedron checker is independent of the native integrator.
+    It does *not* validate closure, nesting, self-intersection, or whether the
+    represented solid equals a Boolean input operation; callers must check
+    those separately. Coordinates may be finite binary64 numbers or exact
+    ``numerator/denominator`` strings (including CGAL binary integers).
+    The order is M,LX,LY,LZ,QXX,QYY,QZZ,QYZ,QXZ,QXY.
+    The explicit GMP backend keeps the same exact formula and public Fraction
+    return contract. It never falls back if its pinned dependency is missing.
+    """
+    if arithmetic_backend == 'FRACTION_V1':
+        convert=lambda value:value
+        zero=Fraction(0)
+    elif arithmetic_backend == 'GMPY2_2_2_1_EXACT_V1':
+        import gmpy2
+        if gmpy2.version()!='2.2.1' or gmpy2.mp_version()!='GMP 6.3.0':
+            raise ValueError('rational integration GMP dependency version mismatch')
+        convert=lambda value:gmpy2.mpq(value.numerator,value.denominator)
+        zero=gmpy2.mpq(0)
+    else:
+        raise ValueError('unsupported rational integration backend')
+    def integer(token: str) -> int:
+        sign = -1 if token.startswith('-') else 1
+        digits = token[1:] if sign < 0 else token
+        if digits.startswith('0b'):
+            return sign * int(digits[2:], 2)
+        return sign * int(digits, 10)
+
+    def rational(value) -> Fraction:
+        if isinstance(value, bool):
+            raise GeometryValidationError('Boolean is not a rational coordinate')
+        if isinstance(value, str) and '/' in value:
+            numerator, denominator = value.split('/')
+            return (fraction_from_rational_text(value) if not numerator.lstrip('-').startswith('0b')
+                    else Fraction(integer(numerator), integer(denominator)))
+        if isinstance(value, float) and not math.isfinite(value):
+            raise GeometryValidationError('nonfinite rational coordinate')
+        try:
+            return Fraction(value)
+        except (TypeError, ValueError, ZeroDivisionError) as error:
+            raise GeometryValidationError('invalid rational coordinate') from error
+
+    points = []
+    for point in vertices:
+        if len(point) != 3:
+            raise GeometryValidationError('rational vertex needs three coordinates')
+        points.append(tuple(convert(rational(value)) for value in point))
+    if not points:
+        raise GeometryValidationError('rational material has no vertices')
+    # One ten-moment block per occupied power-of-two face count. Streaming
+    # balanced reduction avoids repeatedly growing a global denominator, while
+    # keeping the signed-tetrahedron formula and exact rational result intact.
+    # This checker does not call the solver's surface integral or accumulator.
+    partials = []
+    face_count = 0
+    for face in faces:
+        if len(face) != 3 or any(isinstance(index, bool) or not isinstance(index, int)
+                                 or index < 0 or index >= len(points) for index in face) or \
+                len(set(face)) != 3:
+            raise GeometryValidationError('invalid rational material face')
+        a, b, c = (points[index] for index in face)
+        cross = (b[1]*c[2]-b[2]*c[1],
+                 b[2]*c[0]-b[0]*c[2],
+                 b[0]*c[1]-b[1]*c[0])
+        volume = sum(a[axis]*cross[axis] for axis in range(3)) / 6
+        total = tuple(a[axis]+b[axis]+c[axis] for axis in range(3))
+        contribution = [volume]
+        for axis in range(3):
+            contribution.append(volume*total[axis]/4)
+        for row, column in ((0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1)):
+            diagonal = sum(point[row]*point[column] for point in (a, b, c))
+            contribution.append(volume*(diagonal+total[row]*total[column])/20)
+        level = 0
+        while level < len(partials) and partials[level] is not None:
+            contribution = [left+right for left, right in zip(partials[level], contribution)]
+            partials[level] = None
+            level += 1
+        if level == len(partials):
+            partials.append(contribution)
+        else:
+            partials[level] = contribution
+        face_count += 1
+    moments = [sum((block[j] for block in partials if block is not None), zero)
+               for j in range(10)]
+    if not face_count or moments[0] <= 0:
+        raise GeometryValidationError('rational material has nonpositive volume')
+    if arithmetic_backend == 'GMPY2_2_2_1_EXACT_V1':
+        return tuple(Fraction(int(value.numerator),int(value.denominator)) for value in moments)
+    return tuple(moments)
+
+
+def compare_exact_rational_and_exported_moments(
+    exact_vertices, exact_faces, exported_vertices, exported_faces, normalization_length,
+) -> dict[str, object]:
+    """Quantify Boolean output rounding using exact represented-mesh moments.
+
+    A small moment difference is only a *numeric* observation; it cannot
+    certify domain containment, exact set equality, or solver convergence.
+    ``normalization_length`` is fixed from the input design domain, never
+    selected from the exported result.
+    """
+    if isinstance(normalization_length, bool):
+        raise GeometryValidationError('invalid input normalization length')
+    try:
+        length = Fraction(normalization_length)
+    except (TypeError, ValueError, OverflowError) as error:
+        raise GeometryValidationError('invalid input normalization length') from error
+    if length <= 0:
+        raise GeometryValidationError('input normalization length must be positive')
+    exact = integrate_exact_rational_raw_moments(exact_vertices, exact_faces)
+    exported = integrate_exact_rational_raw_moments(exported_vertices, exported_faces)
+    scales = (length**3,) + (length**4,)*3 + (length**5,)*6
+    errors = tuple(abs(a-b)/scale for a, b, scale in zip(exact, exported, scales))
+    maximum = max(errors)
+    return {
+        'scope': 'ten-geometric-moments-only;not-exact-solid-equivalence',
+        'order': ['M', 'LX', 'LY', 'LZ', 'QXX', 'QYY', 'QZZ', 'QYZ', 'QXZ', 'QXY'],
+        'normalization_length_exact': fraction_to_rational_text(length),
+        'maximum_absolute_normalized_difference_exact':
+            fraction_to_rational_text(maximum),
+        'maximum_absolute_normalized_difference': float(maximum),
+        'within_1e_6_numeric_gate': maximum <= Fraction(1, 1000000),
+    }
 
 
 def _mass_properties_from_centered(

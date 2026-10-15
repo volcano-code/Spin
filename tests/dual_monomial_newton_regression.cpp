@@ -30,6 +30,7 @@ void adapter() {
     V weighted=p.values(); weighted.tail<3>()*=2;
     require(std::abs(p.evaluate(x)-weighted.dot(monomials))<1e-15,"all cross-term polynomial duality");
     require(std::abs(c.values().dot(monomials)-p.evaluate(x)/weighted.norm())<1e-15,"dual polynomial normalization");
+    std::cout << "[PASS] literal coefficient/raw-moment cross-term duality\n";
     for(double h : {3e-4,1e-4,3e-5}) {
         M fd;
         for(int j=0;j<10;++j) {
@@ -41,6 +42,7 @@ void adapter() {
         std::cout << "adapter h=" << h << " error=" << error << '\n';
     }
     require((c.geometryJacobian()*c.values()).norm()<1e-15,"adapter radial null");
+    std::cout << "[PASS] literal coefficient-to-geometry differential\n";
     const V d=c.projectToTangent(V::LinSpaced(10,-.3,.8));
     require(std::abs(c.values().dot(d))<1e-15,"dual tangent projection");
     const auto moved=c.geodesicUpdate(d,.25);

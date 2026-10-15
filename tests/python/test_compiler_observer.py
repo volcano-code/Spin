@@ -70,6 +70,76 @@ class CompilerObserverTests(unittest.TestCase):
         subprocess.run([self.cc, "main.o", "-o", "tiny"], cwd=self.root, check=True, capture_output=True)
         self.assertEqual(subprocess.run([str(self.root / "tiny")]).returncode, 0)
 
+    def test_real_cmake_lto_flags_produce_observed_object_without_claiming_link_attestation(self):
+        cxx = shutil.which("c++")
+        self.assertIsNotNone(cxx, "real GNU c++ is required")
+        self.write("main.cpp", '#include "outer.h"\nint main() { return VALUE != 42; }\n')
+        args = [cxx, "-O3", "-flto=auto", "-fno-fat-lto-objects", "-std=gnu++17",
+                "-c", "main.cpp", "-o", "main-lto.o"]
+        result = self.launch(args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt, = self.receipts()
+        self.assertEqual(receipt["status"], "OBSERVED_SUCCESS")
+        self.assertEqual(receipt["argv"], args)
+        self.assertIn("generated.h", [row["logical_path"] for row in receipt["inputs_before"]])
+        self.assertEqual(receipt["object"]["sha256"],
+                         hashlib.sha256((self.root / "main-lto.o").read_bytes()).hexdigest())
+        self.assertEqual(receipt["link_coverage"], "NOT_VERIFIED")
+        self.assertEqual(receipt["build_source_attestation"], "NOT_VERIFIED")
+        # The recorded object must actually link and execute; this separate
+        # test operation does not upgrade the compiler-only receipt's scope.
+        subprocess.run([cxx, "-flto=auto", "main-lto.o", "-o", "lto-program"],
+                       cwd=self.root, check=True, capture_output=True)
+        self.assertEqual(subprocess.run([str(self.root / "lto-program")]).returncode, 0)
+
+    def test_configured_occt_strip_option_keeps_real_compile_observation(self):
+        args = self.argv(output="occt.o", extra=["-O3", "-DNDEBUG", "-s"])
+        result = self.launch(args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt, = self.receipts()
+        self.assertEqual(receipt["argv"], args)
+        self.assertEqual(receipt["status"], "OBSERVED_SUCCESS")
+        self.assertIn("generated.h", [r["logical_path"] for r in receipt["inputs_before"]])
+        subprocess.run([self.cc, "occt.o", "-o", "occt-control"],
+                       cwd=self.root, check=True, capture_output=True)
+        self.assertEqual(subprocess.run([str(self.root / "occt-control")]).returncode, 0)
+        from make_it_stand.verification.compiler_dependencies import parse_command, ObservationError
+        with self.assertRaises(ObservationError):
+            parse_command(["clang", "--no-default-config", "-x", "c", "-s",
+                           "-c", "main.c", "-o", "out.o"], profile="clang-c-v1")
+
+    def test_configured_tbb_gnu_flags_keep_feature_selected_dependency_closure(self):
+        cxx = shutil.which("c++")
+        self.assertIsNotNone(cxx)
+        self.write("rtm-selected.h", "#define RTM_VALUE 17\n")
+        self.write("waitpkg-selected.h", "#define WAIT_VALUE 25\n")
+        self.write("tbb-flags.cpp", '#if !defined(__RTM__) || !defined(__WAITPKG__)\n'
+                   '#error feature flags lost\n#endif\n#include "rtm-selected.h"\n'
+                   '#include "waitpkg-selected.h"\nint main(){return RTM_VALUE+WAIT_VALUE!=42;}\n')
+        args = [cxx, "-O3", "-flifetime-dse=1", "-mrtm", "-mwaitpkg",
+                "-flto=auto", "-fno-fat-lto-objects", "-std=c++20",
+                "-c", "tbb-flags.cpp", "-o", "tbb-flags.o"]
+        result = self.launch(args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt, = self.receipts()
+        self.assertEqual(receipt["argv"], args)
+        self.assertEqual(receipt["status"], "OBSERVED_SUCCESS")
+        for collection in ("inputs_before", "inputs_after"):
+            paths = [row["logical_path"] for row in receipt[collection]]
+            self.assertIn("rtm-selected.h", paths)
+            self.assertIn("waitpkg-selected.h", paths)
+        subprocess.run([cxx, "-flto=1", "tbb-flags.o", "-o", "tbb-flags"],
+                       cwd=self.root, check=True, capture_output=True)
+        self.assertEqual(subprocess.run([str(self.root / "tbb-flags")]).returncode, 0)
+        from make_it_stand.verification.compiler_dependencies import parse_command, ObservationError
+        for flag in ("-flifetime-dse=2", "-mrtm-unknown", "-mwaitpkg=1"):
+            with self.subTest(flag=flag), self.assertRaises(ObservationError):
+                parse_command([cxx, flag, "-c", "main.c", "-o", "out.o"])
+        for flag in ("-flifetime-dse=1", "-mrtm", "-mwaitpkg"):
+            with self.subTest(clang_flag=flag), self.assertRaises(ObservationError):
+                parse_command(["clang", "--no-default-config", "-x", "c", flag,
+                               "-c", "main.c", "-o", "out.o"], profile="clang-c-v1")
+
     def test_include_defines_language_and_dependency_flags_preserved_without_probe_overwrites(self):
         self.write("chosen/selected.h", "#define SELECTED 42\n")
         self.write("main.c", '#include HEADER\nint main(void) { return SELECTED != 42; }\n')
@@ -134,7 +204,7 @@ class CompilerObserverTests(unittest.TestCase):
         self.assertNotEqual(self.launch(extra=["--passed"]).returncode, 0)
         self.assertFalse((self.root / "main.o").exists())
 
-    def run_with_compile_hook(self, hook, after=False):
+    def run_with_compile_hook(self, hook, after=False, profile=None, args=None):
         original = self.api._run
         def controlled(argv, **kwargs):
             if kwargs["phase"] == "compile" and not after:
@@ -147,7 +217,8 @@ class CompilerObserverTests(unittest.TestCase):
         try:
             os.chdir(self.root)
             with patch.object(self.api, "_run", side_effect=controlled), redirect_stderr(io.StringIO()), redirect_stdout(io.StringIO()):
-                return self.api.observe(self.argv(), evidence_dir=self.evidence, timeout=10)
+                options = {} if profile is None else {'profile': profile}
+                return self.api.observe(args or self.argv(), evidence_dir=self.evidence, timeout=10, **options)
         finally:
             os.chdir(previous)
 
@@ -396,6 +467,103 @@ class CompilerObserverTests(unittest.TestCase):
             if child.poll() is None:
                 child.kill()
                 child.communicate()
+
+    def clang_argv(self, output='clang.o', extra=()):
+        self.assertTrue(Path('/usr/bin/clang').is_file(), 'real Clang C required; do not skip')
+        return ['/usr/bin/clang', '--no-default-config', '-x', 'c', *extra,
+                '-c', 'main.c', '-o', output]
+
+    def test_clang_profile_observes_actual_c_headers_and_runnable_object(self):
+        args = self.clang_argv(extra=['-O2', '-fPIC', '-MD', '-MF', 'clang.d'])
+        result = self.launch(args, extra=['--profile', 'clang-c-v1'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt, = self.receipts()
+        self.assertEqual(receipt['settings']['profile'], 'clang-c-v1')
+        self.assertEqual(receipt['argv'], args)
+        self.assertEqual(receipt['compiler_before']['family'], 'clang')
+        self.assertEqual(receipt['inputs_before'], receipt['inputs_after'])
+        paths = [r['logical_path'] for r in receipt['inputs_before']]
+        for name in ('main.c', 'outer.h', 'generated.h'):
+            self.assertIn(name, paths)
+        self.assertTrue(any(p.endswith('stddef.h') for p in paths))
+        self.assertEqual(receipt['object']['sha256'], hashlib.sha256((self.root/'clang.o').read_bytes()).hexdigest())
+        self.assertEqual(receipt['build_source_attestation'], 'NOT_VERIFIED')
+        self.assertTrue((self.root/'clang.d').read_text().startswith('clang.o:'))
+        subprocess.run(['/usr/bin/clang', '--no-default-config', 'clang.o', '-o', 'clang-tiny'], cwd=self.root, check=True, capture_output=True)
+        self.assertEqual(subprocess.run([str(self.root/'clang-tiny')]).returncode, 0)
+
+    def test_clang_mutated_header_and_new_closure_cannot_be_accepted(self):
+        for new in (False, True):
+            self.write('main.c', '#include "outer.h"\n#if __has_include("new.h")\n#include "new.h"\n#endif\nint answer(void){return VALUE;}\n')
+            def mutate():
+                self.write('new.h' if new else 'generated.h', '#define NEW 1\n' if new else '#define VALUE 43\n')
+            result, path = self.run_with_compile_hook(mutate, profile='clang-c-v1', args=self.clang_argv(output=f'mutate-{new}.o'))
+            receipt = json.loads(path.read_text())
+            self.assertNotEqual(result, 0)
+            self.assertEqual(receipt['compiler_exit_status'], 0)
+            self.assertIn('changed', receipt['error'])
+
+    def test_clang_profile_requires_explicit_c_and_no_default_config(self):
+        base = self.clang_argv()
+        for args in ([a for a in base if a != '--no-default-config'],
+                     ['/usr/bin/clang', '--no-default-config', '-c', 'main.c', '-o', 'clang.o'],
+                     [a if a != 'c' else 'c++' for a in base]):
+            result = self.launch(args, extra=['--profile', 'clang-c-v1'])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((self.root/'clang.o').exists())
+        self.assertTrue(all(r['compiler_exit_status'] is None and r['settings']['profile'] == 'clang-c-v1'
+                            for r in self.receipts()))
+        self.assertEqual(len(self.receipts()), 3)
+
+    def test_clang_profile_rejects_unobserved_input_mechanisms(self):
+        for flags in (['-include', 'outer.h'], ['-imacros', 'outer.h'], ['-include-pch', 'outer.pch'],
+                      ['-fmodules'], ['-fmodule-file=outer.pcm'], ['--config=extra.cfg'],
+                      ['-Xclang', '-include-pch'], ['@args']):
+            with self.subTest(flags=flags):
+                result = self.launch(self.clang_argv(extra=flags), extra=['--profile', 'clang-c-v1'])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse((self.root/'clang.o').exists())
+        self.assertEqual(len(self.receipts()), 8)
+        self.assertTrue(all(r['compiler_exit_status'] is None for r in self.receipts()))
+
+    def test_clang_hidden_argument_edits_are_rejected(self):
+        result = self.launch(self.clang_argv(), extra=['--profile', 'clang-c-v1'],
+                             env=dict(os.environ, CCC_OVERRIDE_OPTIONS='+-DVALUE=7'))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('CCC_OVERRIDE_OPTIONS', result.stderr)
+        self.assertFalse((self.root/'clang.o').exists())
+
+    def test_gnu_default_does_not_silently_admit_clang(self):
+        result = self.launch(['/usr/bin/clang', '-c', 'main.c', '-o', 'clang.o'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('GNU compiler required', result.stderr)
+        self.assertFalse((self.root/'clang.o').exists())
+
+    def test_clang_compile_failure_retains_real_diagnostics(self):
+        self.write('main.c', 'syntax error here\n')
+        result = self.launch(self.clang_argv(), extra=['--profile', 'clang-c-v1'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('error:', result.stderr)
+        receipt, = self.receipts()
+        self.assertEqual(receipt['compiler_exit_status'], result.returncode)
+        self.assertEqual(receipt['status'], 'FAILED')
+
+    def test_clang_late_language_cannot_masquerade_as_observed_c(self):
+        self.assertTrue(Path('/usr/bin/clang++').is_file(), 'real Clang++ required')
+        self.write('main.c', '#ifndef __cplusplus\n#error requires C++\n#endif\nint answer(){return 42;}\n')
+        args = ['/usr/bin/clang++', '--no-default-config', '-c', 'main.c', '-x', 'c', '-o', 'late.o']
+        result = self.launch(args, extra=['--profile', 'clang-c-v1'])
+        self.assertNotEqual(result.returncode, 0, 'C++ source was incorrectly accepted under C-only observation')
+        self.assertFalse((self.root/'late.o').exists())
+        receipt, = self.receipts()
+        self.assertIsNone(receipt['compiler_exit_status'])
+
+    def test_clang_explicit_early_c_overrides_cxx_driver(self):
+        self.write('main.c', '#ifdef __cplusplus\n#error requires C\n#endif\nint answer(void){return 42;}\n')
+        args = ['/usr/bin/clang++', '--no-default-config', '-x', 'c', '-c', 'main.c', '-o', 'early.o']
+        result = self.launch(args, extra=['--profile', 'clang-c-v1'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.receipts()[0]['status'], 'OBSERVED_SUCCESS')
 
 
 class CompilerObserverCMakeTests(unittest.TestCase):

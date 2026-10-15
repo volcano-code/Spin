@@ -262,6 +262,71 @@ void check(const std::string& name, const spin::SpinDesignRequest& r,
     require((base.momentJacobian-r.materialDensity*u.momentJacobian).norm()<3e-10,
             "density differential");
 }
+
+void checkHyperboloidDiscreteMap() {
+    auto r=request(1,false);
+    spin::QuadricCoefficients10::Vector p;
+    p<<-.31,.07,-.09,.11,.83,1.17,-.72,.06,-.04,.03;
+    const auto q=spin::QuadricCoefficients10::fromUnnormalized(p);
+    spin::QuadricMomentEvaluatorSettings settings;
+    settings.derivativeMethod=spin::QuadricMomentDerivativeMethod::DiscreteFullRankQuadric;
+    settings.triangulation.icosphereSubdivisions=2;
+    settings.triangulation.truncationRadius=0.5;
+    settings.capRadiusPolicy=spin::QuadricCapRadiusPolicy::GrowToCertifiedV1;
+    const auto base=spin::evaluateQuadricMaterialMoments(r,q,settings);
+    require(base.derivativeDefined,
+        "fixed-topology hyperboloid Boolean moment map lacks a discrete derivative: "+
+        base.derivativeDiagnostic);
+    require(base.quadricTriangulation.type==spin::QuadricSurfaceType::Hyperboloid &&
+            base.quadricTriangulation.capFaceCount>0 &&
+            base.quadricTriangulation.truncationRadius>settings.triangulation.truncationRadius,
+            "hyperboloid fixture must exercise cap-radius growth and moving truncation caps: radius="+
+            std::to_string(base.quadricTriangulation.truncationRadius)+" caps="+
+            std::to_string(base.quadricTriangulation.capFaceCount));
+    std::cout << "hyperboloid cap-radius requested=" << settings.triangulation.truncationRadius
+              << " effective=" << base.quadricTriangulation.truncationRadius
+              << " cap_faces=" << base.quadricTriangulation.capFaceCount << '\n';
+    require((tetraMoments(base.materialBoundaryTarget,r.materialDensity)-
+             base.variableMomentsTarget.values()).norm()<2e-10,
+            "hyperboloid independent tetrahedron moment oracle");
+
+    std::vector<Matrix> differences;
+    std::vector<double> errors;
+    for(double h : {3e-5,1e-5,3e-6}) {
+        Matrix fd;
+        for(int j=0;j<10;++j) {
+            Vector plusValues=q.values(),minusValues=q.values();
+            plusValues(j)+=h; minusValues(j)-=h;
+            const auto plus=spin::evaluateQuadricMaterialMoments(r,
+                spin::QuadricCoefficients10::fromUnnormalized(plusValues),settings);
+            const auto minus=spin::evaluateQuadricMaterialMoments(r,
+                spin::QuadricCoefficients10::fromUnnormalized(minusValues),settings);
+            require(plus.derivativeDefined && minus.derivativeDefined,
+                    "hyperboloid perturbation left derivative applicability");
+            require(plus.provenanceTopologyHash==base.provenanceTopologyHash &&
+                    minus.provenanceTopologyHash==base.provenanceTopologyHash,
+                    "hyperboloid finite difference crossed Boolean/source topology at h="+
+                    std::to_string(h)+" coefficient="+std::to_string(j)+
+                    " provenance(+,-)="+plus.provenanceTopologyHash+","+
+                    minus.provenanceTopologyHash+" base="+base.topologyHash+","+
+                    base.provenanceTopologyHash);
+            fd.col(j)=(plus.variableMomentsTarget.values()-
+                       minus.variableMomentsTarget.values())/(2*h);
+        }
+        errors.push_back((fd-base.momentJacobian).norm()/fd.norm());
+        differences.push_back(fd);
+        std::cout << "hyperboloid discrete-map h=" << h
+                  << " full_map_relative=" << errors.back() << '\n';
+    }
+    require(errors.back()<=1e-6 && errors[1]<errors[0] && errors[2]<errors[1],
+            "hyperboloid full Boolean-to-moment derivative failed multi-step finite differences");
+    const auto repeated=spin::evaluateQuadricMaterialMoments(r,q,settings);
+    require(repeated.geometryHash==base.geometryHash &&
+            repeated.provenanceTopologyHash==base.provenanceTopologyHash &&
+            repeated.derivativeScientificHash==base.derivativeScientificHash &&
+            repeated.momentJacobian==base.momentJacobian,
+            "hyperboloid discrete derivative is not deterministic");
+}
 }
 
 int main() {
@@ -293,7 +358,9 @@ int main() {
         auto r=request(1,false); r.settings.maximumRestarts=1;
         const auto unsupported=spin::evaluateQuadricMaterialMoments(r,plane,settings);
         require(!unsupported.derivativeDefined && !unsupported.derivativeDiagnostic.empty()
-                && unsupported.materialBoundary.faces.rows()>0,"unsupported plane fallback");
+                && unsupported.materialBoundary.faces.rows()>0 &&
+                unsupported.derivativeDiagnostic.rfind("RANK_DEFICIENT: ",0)==0,
+                "rank-deficient plane was misclassified as a topology transition");
         auto solved=spin::solveQuadricHollowing(r,settings,{plane});
         require(solved.status!=spin::SpinSolverStatus::Converged &&
                 solved.diagnostic.find(unsupported.derivativeDiagnostic)!=std::string::npos,
@@ -323,8 +390,63 @@ int main() {
             spin::QuadricCoefficients10::fromUnnormalized(p),settings);
         require(!tangent.derivativeDefined &&
                 tangent.derivativeDiagnostic.find("contact")!=std::string::npos &&
+                tangent.derivativeDiagnostic.rfind("TOPOLOGY_TRANSITION: ",0)==0 &&
                 tangent.materialBoundary.faces.rows()>0,"tangent contact was certified");
-        std::cout << "[PASS] discrete ellipsoid moment differential\n";
+        // A design-vertex contact is a true Boolean topology event, not a
+        // finite-difference perturbation that may borrow a Jacobian from
+        // either adjacent stratum.  Both open strata remain differentiable,
+        // but the contact itself must fail closed and the material topology
+        // identities on its two sides must differ.
+        Vector transitionBelow=Vector::Zero(), transitionAbove=Vector::Zero();
+        transitionBelow(0)=.8; transitionAbove(0)=1.5;
+        transitionBelow.segment<3>(4).setConstant(-1.0);
+        transitionAbove.segment<3>(4).setConstant(-1.0);
+        const auto below=spin::evaluateQuadricMaterialMoments(r,
+            spin::QuadricCoefficients10::fromUnnormalized(transitionBelow),settings);
+        const auto above=spin::evaluateQuadricMaterialMoments(r,
+            spin::QuadricCoefficients10::fromUnnormalized(transitionAbove),settings);
+        require(below.derivativeDefined && above.derivativeDefined &&
+                !tangent.derivativeDefined &&
+                below.topologyHash!=above.topologyHash &&
+                below.derivativeScientificHash!=above.derivativeScientificHash,
+                "topology transition reused a derivative or lost stratum identity");
+        std::cout << "topology-transition below=" << below.topologyHash
+                  << " contact=" << tangent.topologyHash
+                  << " above=" << above.topologyHash
+                  << " contact_derivative=" << tangent.derivativeDefined << '\n';
+        const auto checkOpenStratum = [&](const char* label, const auto& side,
+                                          const Vector& sideValues) {
+            require(side.derivativeDefined, std::string(label)+": open stratum derivative unavailable");
+            Eigen::Matrix<double,10,1> fd;
+            // This fixture is intentionally on a lower-dimensional contact
+            // slice for other coefficient directions.  Only the registered
+            // coefficient-0 normal line is an open one-dimensional stratum;
+            // the full ten-dimensional fixed-topology checks are performed
+            // by the non-contact fixtures above.
+            const double h=1e-5;
+            for(int j : {0}) {
+                Vector plus=sideValues, minus=plus;
+                plus(j)+=h; minus(j)-=h;
+                const auto a=spin::evaluateQuadricMaterialMoments(r,
+                    spin::QuadricCoefficients10::fromUnnormalized(plus),settings);
+                const auto b=spin::evaluateQuadricMaterialMoments(r,
+                    spin::QuadricCoefficients10::fromUnnormalized(minus),settings);
+                require(a.derivativeDefined && b.derivativeDefined &&
+                        a.topologyHash==side.topologyHash && b.topologyHash==side.topologyHash,
+                        std::string(label)+": finite difference crossed an open-stratum boundary at coefficient "+std::to_string(j));
+                fd=(a.variableMomentsTarget.values()-b.variableMomentsTarget.values())/(2*h);
+            }
+            const double relative=(fd-side.momentJacobian.col(0)).norm()/std::max(1.0,fd.norm());
+            std::cout << "topology-open-stratum label=" << label
+                      << " relative=" << relative << '\n';
+            require(relative<=1e-6,std::string(label)+": open-stratum derivative mismatch");
+        };
+        checkOpenStratum("below",below,
+            spin::QuadricCoefficients10::fromUnnormalized(transitionBelow).values());
+        checkOpenStratum("above",above,
+            spin::QuadricCoefficients10::fromUnnormalized(transitionAbove).values());
+        checkHyperboloidDiscreteMap();
+        std::cout << "[PASS] discrete quadric moment differential\n";
         return 0;
     } catch(const std::exception& e) {
         std::cerr << "[FAIL] " << e.what() << '\n'; return 1;

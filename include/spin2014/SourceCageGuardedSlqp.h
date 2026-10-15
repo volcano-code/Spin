@@ -29,6 +29,8 @@ struct SourceCageSlqpGuardAttempt {
     SourceCageGeometryOutcome outcome=SourceCageGeometryOutcome::Unknown;
     std::array<char,65> inputSha256{},sourceOutputSha256{},scientificSha256{};
     std::size_t plannedCheckerBytes=0,pairsVisited=0,exactPairRelations=0;
+    // Runtime geometry-cache/work counters; excluded from scientific hashes.
+    std::size_t exactPairCacheHits=0,exactPairCacheMisses=0,exactPairBooleanEvaluations=0;
 };
 struct SourceCageGuardedSlqpFacts {
     // This legacy subresult retains NOT_EVALUATED. Geometry authorization lives
@@ -39,6 +41,8 @@ struct SourceCageGuardedSlqpFacts {
     std::vector<SourceCageSlqpGuardAttempt> attempts;
     std::vector<SourceCageGeometryRecord> stages;
     std::size_t checkerInvocationCount=0,geometryValueEvaluationCount=0,finalRecheckCount=0;
+    // Aggregates of completed exact source-geometry pair checks.
+    std::size_t exactPairRelations=0,exactPairCacheHits=0,exactPairCacheMisses=0,exactPairBooleanEvaluations=0;
     // False if a checker threw before publishing its actual stage tape. Never
     // describe the sum of known counts as a total in that case.
     bool geometryValueEvaluationCountComplete=true;

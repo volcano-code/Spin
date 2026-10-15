@@ -4,6 +4,7 @@ int main() {std::cerr<<"FAIL: typed actual-source audited joint SLQP adapter is 
 #else
 #include "spin2014/SourceCageSlqp.h"
 #include "spin2014/SlqpAuditTrace.h"
+#include "spin2014/SlqpIterationStore.h"
 #include "source_surface_test_utils.h"
 #include <Eigen/Geometry>
 #include <limits>
@@ -149,6 +150,8 @@ int main() {try {
     frame.rotation=Eigen::AngleAxisd(.17,Eigen::Vector3d::UnitZ()).toRotationMatrix();
     for(const auto objective:{Spin2014Objective::StaticLowering,Spin2014Objective::TopMassAndLowering,Spin2014Objective::TopInertiaOnly,Spin2014Objective::TopLoweringOnly,Spin2014Objective::YoYo}) {
         SourceCagePaperFunctional f(moments,config(objective),frame);const auto x=initialState(f);
+        auto diskSettings=s;diskSettings.solver.iterationStorePath="unsupported-cage.slqptrace";
+        rejects<std::invalid_argument>([&]{solveSourceCageSlqp(f,x,diskSettings);},"cage disk mode must reject before post-solve phi mutation");
         require(x.size()==(f.hasAngle()?113:112)&&f.handleCount()==26,"all original handles and beta dimensions");
         const auto r=solveSourceCageSlqp(f,x,s);check(f,x,s,r);
         const auto repeat=solveSourceCageSlqp(f,x,s);check(f,x,s,repeat);
@@ -165,6 +168,21 @@ int main() {try {
     const auto shortRun=solveSourceCageSlqp(f,x,shortSettings);
     require(shortRun.numerical.status==SlqpStatus::MaximumIterations,"honest short iteration limit");
     const auto reference=solveSourceCageSlqp(f,x,s);
+    auto observedSettings=s;std::vector<std::pair<int,std::string>> progress;
+    observedSettings.solver.iterationObserver=[&](const SlqpIteration& row) {
+        require(row.state.size()==Eigen::Index(f.stateCount())&&row.state.allFinite(),
+            "progress observer receives the completed full-state iteration");
+        progress.emplace_back(row.iteration,row.membershipHash);
+    };
+    const auto observed=solveSourceCageSlqp(f,x,observedSettings);
+    require(!progress.empty()&&progress.size()==slqpTraceCount(observed.numerical),
+        "progress observer sees every completed SLQP trace row");
+    require(observed.scientificSha256==reference.scientificSha256&&
+        observed.callbackTapeSha256==reference.callbackTapeSha256&&
+        observed.numerical.traceHash==reference.numerical.traceHash,
+        "diagnostic progress observer does not change scientific output");
+    for(std::size_t i=0;i<progress.size();++i)
+        require(progress[i].first==int(i),"progress rows preserve ordered iteration identity");
     for(int change=0;change<4;++change) {
         auto c=config(Spin2014Objective::StaticLowering);auto fr=frame;auto settings=s;
         if(change==0)c.fillWeight+=.01;if(change==1)fr.origin.x()+=.01;

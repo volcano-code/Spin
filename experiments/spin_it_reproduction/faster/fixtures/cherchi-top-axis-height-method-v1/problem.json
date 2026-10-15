@@ -1,0 +1,11 @@
+{
+  "schema": "faster-cherchi-problem-manifest-v1",
+  "outer_mesh": "../cherchi-rotated-box-fixed-shell-v1/outer.obj",
+  "design_regions": [{"id": "editable-domain", "density": 2.0, "mesh": "../cherchi-rotated-box-fixed-shell-v1/design.obj"}],
+  "fixed_regions": [{"id": "fixed-shell", "density": 0.75, "mesh": "../cherchi-rotated-box-fixed-shell-v1/shell.obj"}],
+  "length_unit": "m",
+  "mass_unit": "kg",
+  "minimum_outer_wall": 0.1,
+  "target": {"mode": "SPINNING_TOP", "axis": [1.0, 0.0, 0.0], "origin": [-2.0, 0.0, 0.0], "support_points": []},
+  "preflight_quadric_target_normalized": [0.11639103134578267, 0.0, 0.0, -0.49660173374200606, 0.49660173374200606, 0.49660173374200606, 0.49660173374200606, 0.0, 0.0, 0.0]
+}

@@ -9,6 +9,12 @@ midpoint, L its largest span, and R the largest region density. Coordinates
 q=(x-origin)/L and densities rho/R remain in that frame for all perturbations.
 The independent integrator's internal conditioning may change, but it returns
 moments in this SAME q frame; we do not use its internal frame as a new unit.
+The independent q coordinates and finite-difference perturbations are rational,
+so normalization cannot collapse represented nonzero slivers. The native kernel
+receives original physical coordinates; a fixed binomial map transforms its
+raw moments/Jacobian into q units without changing input geometry. Extreme
+world-coordinate cancellation can still produce explicit inconsistency; this
+checker does not silently move vertices or relax its accuracy gates.
 
 For monomial degree d, reported moments have units R*L**(3+d), and derivatives
 with respect to physical vertex coordinates have units R*L**(2+d). The latter
@@ -24,6 +30,8 @@ interleaved xyz, with each region's columns concatenated in input order.
 from __future__ import annotations
 
 from collections import Counter
+from fractions import Fraction
+from .rational_text import fraction_from_rational_text, fraction_to_rational_text
 import math
 from pathlib import Path
 
@@ -44,6 +52,135 @@ ABSOLUTE_TOLERANCE = 1e-10
 MOMENT_TOLERANCE = 1e-10
 ROUNDING_MULTIPLIER = 64
 DEGREES = (0, 1, 1, 1, 2, 2, 2, 2, 2, 2)
+
+
+def five_point_actual_weights(positions, center):
+    """Exact Lagrange derivative weights from ACTUALLY stored abscissae.
+
+    Arithmetic helper only: no geometry, source/build or derivative verdict.
+    The approved order is -H,-H/2,0,H/2,H about the stored central point;
+    binary64 rounding need not make the actual spacings exactly symmetric.
+    """
+    def rational(value):
+        if isinstance(value,(bool,np.bool_)):
+            raise ValueError('boolean is not a difference abscissa')
+        try:
+            return Fraction(value)
+        except (ValueError,TypeError,OverflowError) as error:
+            raise ValueError('nonfinite or invalid difference abscissa') from error
+    nodes=tuple(rational(x) for x in positions)
+    origin=rational(center)
+    if len(nodes)!=5 or nodes[2]!=origin or any(a>=b for a,b in zip(nodes,nodes[1:])):
+        raise ValueError('five distinct ordered abscissae including the actual center required')
+    offsets=tuple(x-origin for x in nodes)
+    weights=[]
+    for i,x in enumerate(offsets):
+        polynomial=[Fraction(1)]
+        denominator=Fraction(1)
+        for j,y in enumerate(offsets):
+            if i==j:
+                continue
+            product=[Fraction(0)]*(len(polynomial)+1)
+            for k,c in enumerate(polynomial):
+                product[k]-=y*c;product[k+1]+=c
+            polynomial=product;denominator*=x-y
+        weights.append(polynomial[1]/denominator)
+    for degree in range(5):
+        if sum(w*x**degree for w,x in zip(weights,offsets))!=(1 if degree==1 else 0):
+            raise ValueError('actual five-point weights fail polynomial reproduction')
+    return tuple(weights)
+
+
+def quadric_five_point_layout(base, steps):
+    """81 distinct represented trials and 30 five-point rows; no map calls.
+
+    h is supplied from the previously frozen input-scale registration. No
+    automatic shrink, larger replacement budget or answer-dependent choice.
+    """
+    base=tuple(_finite_array(base,(10,),'base coefficients').tolist())
+    steps=tuple(_finite_array(steps,(10,),'registered steps').tolist())
+    if any(h<=0 for h in steps):
+        raise ValueError('registered steps must be positive')
+    trials=[base];lookup={}
+    for column,h in enumerate(steps):
+        for power in range(4):
+            for sign in (-1,1):
+                raw=list(base);raw[column]+=sign*h/(2**power)
+                if raw[column]==base[column] or not math.isfinite(raw[column]):
+                    raise ValueError('unrepresented registered perturbation')
+                lookup[column,power,sign]=len(trials);trials.append(tuple(raw))
+    if len(set(trials))!=81:
+        raise ValueError('registered trials collide after representation')
+    rows=[]
+    for column in range(10):
+        for power in range(3):
+            indices=(lookup[column,power,-1],lookup[column,power+1,-1],0,
+                     lookup[column,power+1,1],lookup[column,power,1])
+            five_point_actual_weights([trials[i][column] for i in indices],base[column])
+            rows.append((column,2.**(-power),indices))
+    return tuple(trials),tuple(rows)
+
+
+def compare_quadric_five_point_differential(positions,center,coefficients,moments,jacobian):
+    """Same exact weights on normalized q and independent material moments.
+
+    Returns measured errors, not a production/release certificate. The caller
+    must authenticate all actual calls, authority, density and fixed branches.
+    No subtraction of estimated truncation/rounding errors is permitted.
+    """
+    weights=five_point_actual_weights(positions,center)
+    def vectors(values,label,rows=5):
+        if len(values)!=rows or any(len(row)!=10 for row in values):
+            raise ValueError(label+' has incomplete ten-component observations')
+        if any(isinstance(x,(bool,np.bool_)) for row in values for x in row):
+            raise ValueError(label+' contains boolean observations')
+        try:
+            return tuple(tuple(fraction_from_rational_text(x)
+                               if isinstance(x,str) and '/' in x else Fraction(x)
+                               for x in row) for row in values)
+        except (ValueError,TypeError,OverflowError) as error:
+            raise ValueError(label+' contains nonfinite or invalid observations') from error
+    q=vectors(coefficients,'actual normalized coefficients')
+    mass=vectors(moments,'independent mass moments')
+    # Keep the actual producer's rational Jacobian throughout the check.
+    # Binary64 input stays compatible, but an authority value must not be
+    # converted to a display array before applying the difference weights.
+    matrix=vectors(jacobian,'production Jacobian',rows=10)
+    dq=[sum(w*row[i] for w,row in zip(weights,q)) for i in range(10)]
+    observed=[sum(w*row[i] for w,row in zip(weights,mass)) for i in range(10)]
+    prediction=[sum(matrix[i][j]*dq[j] for j in range(10)) for i in range(10)]
+    errors=[abs(a-b)/max(Fraction(1),abs(b)) for a,b in zip(observed,prediction)]
+    def finite(values):
+        try:
+            result=[float(x) for x in values]
+        except OverflowError as error:
+            raise ValueError('unrepresentable difference result') from error
+        if not all(math.isfinite(x) for x in result):
+            raise ValueError('nonfinite difference result')
+        return result
+    measured=finite(errors)
+    def authority(values):
+        return [fraction_to_rational_text(x) for x in values]
+    return dict(weights=tuple(weights),actual_coefficient_direction=finite(dq),
+                finite_difference=finite(observed),prediction=finite(prediction),
+                coefficient_direction_authority=authority(dq),
+                finite_difference_authority=authority(observed),
+                prediction_authority=authority(prediction),
+                per_moment_error_authority=authority(errors),
+                per_moment_error=measured,maximum_component_error=max(measured),
+                within_tolerance=all(x<=Fraction(1,10**6) for x in errors))
+
+
+def require_complete_quadric_trial_ledger(expected_trials,records):
+    """Accounting only; a complete FAILURE ledger is not scientific success."""
+    if len(expected_trials)!=81 or len(records)!=81:
+        raise ValueError('approved production protocol requires all 81 real trial records')
+    for index,(raw,record) in enumerate(zip(expected_trials,records)):
+        if not isinstance(record,dict) or record.get('index')!=index or \
+           tuple(record.get('raw_coefficients',()))!=tuple(raw):
+            raise ValueError('duplicate, stale or missing production trial identity')
+        if ('evaluation' in record)==('exception' in record):
+            raise ValueError('trial must retain exactly one actual evaluation or failure')
 
 
 def _independent_vector(mesh: TriangleMesh, density: float) -> np.ndarray:
@@ -115,7 +252,21 @@ def verify_surface_derivatives(regions) -> dict:
         density = r.density/density_scale
         if density <= 0:
             raise ValueError("normalized density underflow")
-        normalized.append(DensityRegion(TriangleMesh((v-origin)/length, r.mesh.faces), density))
+        # Exact affine coordinates preserve nonzero Boolean slivers that a
+        # float64 vertex transform could collapse. Only the independent
+        # integrator consumes these rational coordinates.
+        transformed = [[(Fraction(float(x))-Fraction(float(origin[k])))/Fraction(length)
+                        for k, x in enumerate(point)] for point in v]
+        normalized.append(DensityRegion(TriangleMesh(transformed, r.mesh.faces), density))
+
+    # Transform raw world moments/Jacobians algebraically, never by rounding
+    # the geometry passed to the native implementation.
+    translation = np.eye(10)
+    translation[1:4, 0] = -origin
+    for row, (a, b) in enumerate(((0,0),(1,1),(2,2),(1,2),(0,2),(0,1)), 4):
+        translation[row, 0] = origin[a]*origin[b]
+        translation[row, 1+b] -= origin[a]
+        translation[row, 1+a] -= origin[b]
 
     native = _native_module()
     function = getattr(native, "differentiate_surface_raw_moments", None)
@@ -136,12 +287,14 @@ def verify_surface_derivatives(regions) -> dict:
     for index, region in enumerate(normalized):
         count = 3*len(region.mesh.vertices)
         independent_moments.append(_independent_vector(region.mesh, region.density))
-        value = function(region.mesh.vertices, region.mesh.faces, region.density)
+        value = function(vertices[index], regions[index].mesh.faces, regions[index].density)
         if not isinstance(value, dict) or tuple(value.get("order", ())) != ORDER or \
                 value.get("algorithm") != ALGORITHM or value.get("coordinates") != "interleaved-vertex-xyz":
             raise ValueError("native algorithm, ordering or coordinate identity mismatch")
-        native_moments.append(_finite_array(value.get("moments"), (10,), "native moments"))
-        jacobians.append(_finite_array(value.get("jacobian"), (10, count), "native Jacobian"))
+        raw_moments = _finite_array(value.get("moments"), (10,), "native moments")
+        raw_jacobian = _finite_array(value.get("jacobian"), (10, count), "native Jacobian")
+        native_moments.append(_finite_array((translation @ raw_moments)/moment_units, (10,), "normalized native moments"))
+        jacobians.append(_finite_array((translation @ raw_jacobian)/np.asarray(derivative_units)[:,None], (10,count), "normalized native Jacobian"))
         region_columns.append({"region": index, "first_column": column, "column_count": count,
                                "normalized_density": region.density})
         column += count
@@ -160,10 +313,10 @@ def verify_surface_derivatives(regions) -> dict:
         for region in normalized:
             for vertex in range(len(region.mesh.vertices)):
                 for axis in range(3):
-                    plus = np.array(region.mesh.vertices, dtype=float)
+                    plus = np.array(region.mesh.vertices, dtype=object)
                     minus = plus.copy()
-                    plus[vertex, axis] += h
-                    minus[vertex, axis] -= h
+                    plus[vertex, axis] += Fraction(h)
+                    minus[vertex, axis] -= Fraction(h)
                     p = _independent_vector(TriangleMesh(plus, region.mesh.faces), region.density)
                     m = _independent_vector(TriangleMesh(minus, region.mesh.faces), region.density)
                     plus_values[:, column], minus_values[:, column] = p, m
@@ -202,7 +355,8 @@ def verify_surface_derivatives(regions) -> dict:
         "algorithm": ALGORITHM, "order": list(ORDER), "identity": identity,
         "normalization": {"origin": origin.tolist(), "length_scale": length, "density_scale": density_scale,
                           "moment_units": moment_units, "physical_centered_derivative_units": derivative_units,
-                          "degrees": list(DEGREES), "frame_selection": "fixed-input-bbox"},
+                          "degrees": list(DEGREES), "frame_selection": "fixed-input-bbox",
+                          "geometry_transform": "EXACT_RATIONAL_CHECKER_ORIGINAL_NATIVE_COORDINATES"},
         "controls": {"classification": "IMPLEMENTATION_DEFAULT", "steps": list(STEPS),
                      "smooth_relative_tolerance": RELATIVE_TOLERANCE, "near_zero_cutoff": NEAR_ZERO_CUTOFF,
                      "near_zero_absolute_tolerance": ABSOLUTE_TOLERANCE, "moment_absolute_tolerance": MOMENT_TOLERANCE,

@@ -1,4 +1,5 @@
 #include "spin/QuadricHollowingSolver.h"
+#include "spin/DualMonomialCoordinates.h"
 
 #include <Eigen/Core>
 
@@ -6,6 +7,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -139,6 +141,107 @@ int runDualMonomialRegression();
 
 int main(int argc, char** argv)
 {
+    if (argc == 2 && std::string(argv[1]) == "--strict-positive-mu-restart")
+    {
+        Vector10 coefficients = Vector10::Zero();
+        coefficients(0) = -1.0;
+        const auto negativeMuStart =
+            spin::QuadricCoefficients10::fromUnnormalized(coefficients);
+        const auto positiveMuStart = analyticSolution();
+        Vector10 fixedMoments = Vector10::Zero();
+        fixedMoments(0) = 1.0;
+        const auto fixedMap = [fixedMoments](
+            const spin::QuadricCoefficients10&) {
+            spin::SpinMomentMapEvaluation value;
+            value.rawMoments = fixedMoments;
+            value.momentJacobian.setIdentity();
+            value.derivativeDefined = true;
+            value.geometryHash = "strict-positive-mu-fixed-map";
+            value.topologyHash = "strict-positive-mu-fixed-topology";
+            return value;
+        };
+        spin::SpinSolverSettings strict;
+        strict.equationProfile = spin::SpinEquationProfile::DualMonomialRawV1;
+        strict.maximumIterations = 2;
+        strict.maximumRestarts = 2;
+        strict.maximumFunctionEvaluationsPerRestart = 60;
+        const auto solved = spin::solveSpinMomentSystem(
+            spin::SpinMomentProblem::staticBalance(
+                spin::StaticObjective::MaximumMass),
+            strict,
+            fixedMap,
+            {negativeMuStart, positiveMuStart});
+        const bool rejectedNegativeStart = solved.events.size() >= 3 &&
+            solved.events[1].type == "evaluation" &&
+            solved.events[1].outcome == "rejected" &&
+            solved.events[1].reason == "initial_multiplier_nonpositive" &&
+            solved.events[2].type == "attempt_terminal" &&
+            solved.events[2].reason == "initial_multiplier_nonpositive";
+        if (!rejectedNegativeStart ||
+            solved.status != spin::SpinSolverStatus::Converged ||
+            solved.restartCount != 2 || solved.functionEvaluations != 2 ||
+            solved.restartFunctionEvaluations != std::vector<int>({1, 1}) ||
+            solved.multiplierMu <= 0.0 || solved.trace.size() != 1 ||
+            solved.trace.front().restart != 1)
+            return fail("strict profile did not reject and record a nonpositive-mu initial guess before succeeding on restart");
+        return EXIT_SUCCESS;
+    }
+    if (argc == 2 && std::string(argv[1]) == "--strict-nonpositive-stationary-restart")
+    {
+        Vector10 start = Vector10::Zero();
+        start(0) = -0.9;
+        start(3) = 0.4358898943540673;
+        const auto initial =
+            spin::DualMonomialCoordinates10::fromUnnormalized(start).geometry();
+        int evaluation = 0;
+        const auto dynamicMap = [&evaluation](
+            const spin::QuadricCoefficients10& quadric) {
+            spin::SpinMomentMapEvaluation value;
+            const auto coordinates =
+                spin::DualMonomialCoordinates10::fromGeometry(quadric);
+            const auto& p = coordinates.values();
+            value.rawMoments.setZero();
+            value.rawMoments(0) = 1.0;
+            if (evaluation++ == 0) {
+                value.rawMoments(3) = -5.0;
+            } else {
+                if (p(3) <= 1e-8)
+                    throw std::runtime_error(
+                        "controlled candidate left the positive-mu test hemisphere");
+                // At every trial the synthetic measured objective gradient
+                // is aligned with the actual tested coefficient point. This
+                // creates a zero-residual stationary candidate with mu<0.
+                value.rawMoments(3) = -p(0) / p(3);
+            }
+            value.momentJacobian.setIdentity();
+            value.derivativeDefined = true;
+            value.geometryHash = "strict-nonpositive-stationary-controlled-map";
+            value.topologyHash = "strict-nonpositive-stationary-fixed-topology";
+            return value;
+        };
+        spin::SpinSolverSettings strict;
+        strict.equationProfile = spin::SpinEquationProfile::DualMonomialRawV1;
+        strict.maximumIterations = 1;
+        strict.maximumRestarts = 1;
+        strict.maximumFunctionEvaluationsPerRestart = 60;
+        const auto solved = spin::solveSpinMomentSystem(
+            spin::SpinMomentProblem::staticBalance(
+                spin::StaticObjective::LowerCenterOfMass), strict, dynamicMap,
+            {initial});
+        const bool rejectedStationaryCandidate = std::any_of(
+            solved.events.begin(), solved.events.end(),
+            [](const spin::SpinSolverEvent& event) {
+                return event.reason == "stationary_multiplier_nonpositive";
+            });
+        if (!rejectedStationaryCandidate ||
+            solved.status != spin::SpinSolverStatus::OptimizationDidNotConverge ||
+            solved.restartCount != 1 || solved.trace.empty() ||
+            solved.trace.front().multiplierMu <= 0.0 ||
+            solved.events.back().reason !=
+                "stationary_multiplier_nonpositive_restart")
+            return fail("strict profile did not restart after reaching a nonpositive-mu stationary candidate");
+        return EXIT_SUCCESS;
+    }
     if (argc == 2 && std::string(argv[1]) == "--dual-coordinates") return runDualMonomialRegression();
     if (argc == 2 && std::string(argv[1]) == "--raw-stopping")
     {
@@ -254,6 +357,99 @@ int main(int argc, char** argv)
     if (!solved.quadric->values().isApprox(expected, 1e-11))
     {
         return fail("Newton solution is not the analytic coefficient vector");
+    }
+
+    // A Jacobian is only valid inside one Boolean stratum.  A trial carrying
+    // a different topology may proceed only after it has supplied its own
+    // map/Jacobian and independently decreases the residual; the next Newton
+    // iteration must then relinearize at that new stratum.
+    spin::SpinSolverSettings topologySettings = settings;
+    topologySettings.maximumIterations = 1;
+    topologySettings.maximumFunctionEvaluationsPerRestart = 60;
+    int topologyCalls = 0;
+    const auto crossingTopology = [&topologyCalls](
+        const spin::QuadricCoefficients10& quadric) {
+        auto value = identityMoments(quadric);
+        value.topologyHash = (++topologyCalls == 1)
+            ? "topology-stratum-a" : "topology-stratum-b";
+        return value;
+    };
+    const spin::SpinNewtonResult topologyRelinearized =
+        spin::solveSpinMomentSystem(
+            problem, topologySettings, crossingTopology, {initialPoint()});
+    bool sawTopologyRelinearization = false;
+    for (const auto& event : topologyRelinearized.events)
+    {
+        sawTopologyRelinearization = sawTopologyRelinearization ||
+            (event.type == "evaluation" && event.outcome == "accepted" &&
+             event.reason == "topology_transition_relinearized" &&
+             event.materialTopologyHash == "topology-stratum-b" &&
+             event.detail.find("fresh derivative") != std::string::npos);
+    }
+    if (!sawTopologyRelinearization || topologyRelinearized.status !=
+            spin::SpinSolverStatus::ResourceLimitReached ||
+        topologyRelinearized.diagnostic != "maximum Newton iterations reached")
+    {
+        std::cerr << "[DETAIL] topology relinearization saw=" << sawTopologyRelinearization
+                  << " status=" << static_cast<int>(topologyRelinearized.status)
+                  << " diagnostic='" << topologyRelinearized.diagnostic
+                  << "' calls=" << topologyCalls << " events="
+                  << topologyRelinearized.events.size() << "\n";
+        for (const auto& event : topologyRelinearized.events)
+            if (event.type == "evaluation")
+                std::cerr << "[DETAIL] event outcome=" << event.outcome
+                          << " reason=" << event.reason << " detail='"
+                          << event.detail << "' topo='"
+                          << event.materialTopologyHash.value_or("") << "'\n";
+        return fail("residual-decreasing Boolean transition did not relinearize");
+    }
+    int rejectedTopologyCalls = 0;
+    const auto nondecreasingTopology = [&rejectedTopologyCalls](
+        const spin::QuadricCoefficients10& quadric) {
+        auto value = identityMoments(quadric);
+        if (++rejectedTopologyCalls == 1)
+        {
+            value.topologyHash = "topology-stratum-a";
+        }
+        else
+        {
+            // Deliberately violate a static first-moment constraint while
+            // changing topology.  This transition has a fresh map but no
+            // independent improvement and must remain fail-closed.
+            value.rawMoments = initialPoint().values();
+            value.rawMoments(1) = 100.0;
+            value.topologyHash = "topology-stratum-b";
+        }
+        return value;
+    };
+    const spin::SpinNewtonResult topologyRejected =
+        spin::solveSpinMomentSystem(
+            problem, topologySettings, nondecreasingTopology, {initialPoint()});
+    bool sawTopologyGuard = false;
+    for (const auto& event : topologyRejected.events)
+    {
+        sawTopologyGuard = sawTopologyGuard ||
+            (event.type == "evaluation" && event.outcome == "rejected" &&
+             event.reason == "topology_transition" &&
+             event.detail.find("did not decrease") != std::string::npos);
+    }
+    if (!sawTopologyGuard || topologyRejected.status !=
+            spin::SpinSolverStatus::LineSearchExhausted ||
+        topologyRejected.diagnostic.find("topology transition") ==
+            std::string::npos)
+    {
+        std::cerr << "[DETAIL] nondecreasing topology guard saw=" << sawTopologyGuard
+                  << " status=" << static_cast<int>(topologyRejected.status)
+                  << " diagnostic='" << topologyRejected.diagnostic
+                  << "' calls=" << rejectedTopologyCalls << " events="
+                  << topologyRejected.events.size() << "\n";
+        for (const auto& event : topologyRejected.events)
+            if (event.type == "evaluation")
+                std::cerr << "[DETAIL] event outcome=" << event.outcome
+                          << " reason=" << event.reason << " detail='"
+                          << event.detail << "' topo='"
+                          << event.materialTopologyHash.value_or("") << "'\n";
+        return fail("nondecreasing cross-Boolean-topology trial was not fail-closed");
     }
     const spin::SpinNewtonResult repeated = spin::solveSpinMomentSystem(
         problem,
@@ -441,10 +637,12 @@ int main(int argc, char** argv)
 
     Vector10 rankDeficientValues = Vector10::Zero();
     rankDeficientValues(1) = 1.0;
+    spin::SpinSolverSettings rankCaptureSettings = settings;
+    rankCaptureSettings.captureEvaluationPayload = true;
     const spin::SpinNewtonResult rankDeficient =
         spin::solveSpinMomentSystem(
             problem,
-            settings,
+            rankCaptureSettings,
             [](const spin::QuadricCoefficients10& quadric) {
                 spin::SpinMomentMapEvaluation value = identityMoments(quadric);
                 value.rawMoments = analyticSolution().values();
@@ -462,6 +660,44 @@ int main(int argc, char** argv)
     )
     {
         return fail("rank-deficient terminal evidence is incomplete");
+    }
+    if (!rankDeficient.events.back().newtonSystemPayload)
+    {
+        return fail("captured rank-deficient event omitted the Newton system");
+    }
+    if (rankDeficient.events.back().newtonSystemPayload->matrix.rows() == 0 ||
+        rankDeficient.events.back().newtonSystemPayload->matrix.cols() == 0 ||
+        !rankDeficient.events.back().newtonSystemPayload->matrix.allFinite() ||
+        rankDeficient.events.back().newtonSystemPayload->rightHandSide.size() == 0 ||
+        !rankDeficient.events.back().newtonSystemPayload->rightHandSide.allFinite() ||
+        rankDeficient.events.back().newtonSystemPayload->computedRank >=
+            rankDeficient.events.back().newtonSystemPayload->matrix.rows() ||
+        !rankDeficient.events.back().newtonSystemPayload->multiplierMu)
+    {
+        return fail("captured rank-deficient Newton system is incomplete");
+    }
+
+    Eigen::Matrix2d badlyScaled = Eigen::Matrix2d::Zero();
+    badlyScaled(0, 0) = 1e12;
+    badlyScaled(1, 1) = 1e-6;
+    Eigen::Vector2d badlyScaledRhs(2e12, -3e-6);
+    const spin::SpinNewtonLinearSolveResult equilibrated =
+        spin::solveSpinNewtonLinearSystem(badlyScaled, badlyScaledRhs);
+    if (!equilibrated.solved || !equilibrated.usedEquilibration ||
+        equilibrated.originalRank >= badlyScaled.rows() ||
+        equilibrated.equilibratedRank != badlyScaled.rows() ||
+        (equilibrated.solution - Eigen::Vector2d(2.0, -3.0)).norm() > 1e-12 ||
+        equilibrated.backwardError > 128.0 * std::numeric_limits<double>::epsilon() * 2.0)
+    {
+        return fail("reversible diagonal equilibration did not recover the exact linear solve");
+    }
+    Eigen::Matrix2d trulySingular;
+    trulySingular << 1.0, 1.0, 2.0, 2.0;
+    const spin::SpinNewtonLinearSolveResult singularEquilibrated =
+        spin::solveSpinNewtonLinearSystem(trulySingular, Eigen::Vector2d(1.0, 2.0));
+    if (singularEquilibrated.solved)
+    {
+        return fail("equilibration must not turn a truly singular system into a solution");
     }
 
     int exceptionTrialCalls = 0;
@@ -509,7 +745,10 @@ int main(int argc, char** argv)
                 value.rawMoments(1) = 100.0;
                 value.rawMoments(2) = 100.0;
                 value.geometryHash = "finite-rejected-geometry";
-                value.topologyHash = "finite-rejected-topology";
+                // Keep the Boolean stratum fixed: this scenario tests finite
+                // residual rejection, while the dedicated topology case
+                // above tests the cross-stratum guard.
+                value.topologyHash = "synthetic-identity";
             }
             return value;
         };
@@ -528,7 +767,7 @@ int main(int argc, char** argv)
              event.reason == "no_residual_decrease" &&
              event.normalizedEquationResidual.has_value() &&
              event.materialGeometryHash == "finite-rejected-geometry" &&
-             event.materialTopologyHash == "finite-rejected-topology");
+             event.materialTopologyHash == "synthetic-identity");
     }
     if (
         rejectedRecovered.status != spin::SpinSolverStatus::Converged ||

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 import math
+import weakref
 
 import numpy as np
 
@@ -10,6 +12,7 @@ from .mass_moments import TriangleMesh, compute_mass_properties
 from .spin_common import (FRAME, ORDER, SCOPE, TOLERANCE, canonical, digest,
                           implementation_observation, keys, native, parse, require, scalar)
 from .spin_problem import MeshSnapshot, SpinArtifactProblem, partition
+from .rational_text import fraction_from_rational_text, fraction_to_rational_text
 
 
 def _ten(mass, first, second):
@@ -18,9 +21,47 @@ def _ten(mass, first, second):
 
 
 def _integrate(mesh, density, frame=None):
+    rational_vertices = getattr(mesh, 'rational_vertices', None)
+    if rational_vertices is not None:
+        from .mass_moments import integrate_exact_rational_raw_moments
+        vertices = [[fraction_from_rational_text(value) for value in row] for row in rational_vertices]
+        faces = mesh.arrays()[1].tolist()
+        weight = Fraction(float(density))
+        if frame is not None:
+            origin = [Fraction(float(value)) for value in frame['origin']]
+            length = Fraction(float(frame['L']))
+            vertices = [[(value - origin[axis]) / length for axis, value in enumerate(row)]
+                        for row in vertices]
+            weight /= Fraction(float(frame['R']))
+        exact = integrate_exact_rational_raw_moments(vertices, faces)
+        weighted = tuple(value * weight for value in exact)
+        mass, first = weighted[0], weighted[1:4]
+        second = ((weighted[4], weighted[9], weighted[8]),
+                  (weighted[9], weighted[5], weighted[7]),
+                  (weighted[8], weighted[7], weighted[6]))
+        center = tuple(first[axis] / mass for axis in range(3))
+        centered = tuple(tuple(second[i][j] - first[i] * first[j] / mass
+                                for j in range(3)) for i in range(3))
+        trace = sum(centered[i][i] for i in range(3))
+        inertia = tuple(tuple((trace if i == j else 0) - centered[i][j]
+                              for j in range(3)) for i in range(3))
+        geometric = {'volume': float(exact[0]), 'first_moment': [float(x) for x in exact[1:4]],
+                     'second_moment': [[float(x) for x in row] for row in
+                         ((exact[4], exact[9], exact[8]), (exact[9], exact[5], exact[7]),
+                          (exact[8], exact[7], exact[6]))]}
+        properties = {'mass': float(mass), 'moments': [float(x) for x in weighted],
+                      'center_of_mass': [float(x) for x in center],
+                      'central_inertia': [[float(x) for x in row] for row in inertia],
+                      'exact_rational_moments': [fraction_to_rational_text(x) for x in weighted]}
+        require(properties['mass'] > 0, 'density-weighted region mass underflow')
+        canonical(properties)
+        return geometric, properties
     v, f = mesh.arrays()
     if frame is not None:
-        v = (v - np.array(frame['origin'])) / frame['L']
+        # Preserve input geometry through the independent affine integration;
+        # a rounded vertex transform can collapse genuine Boolean slivers.
+        v = np.array([[(Fraction(float(x)) - Fraction(frame['origin'][i])) / Fraction(frame['L'])
+                       for i, x in enumerate(vertex)] for vertex in v], dtype=object)
         density /= frame['R']
     triangle = TriangleMesh(tuple(map(tuple, v.tolist())), tuple(map(tuple, f.tolist())))
     # Independent signed-tetrahedron implementation; one density-free integration
@@ -71,7 +112,11 @@ def _claim(value):
     return {'frame': FRAME, 'order': list(ORDER), 'moments': moments}
 
 
-def _recheck_problem(problem):
+def _recheck_problem(problem, *, reuse_validation=False):
+    require(type(reuse_validation) is bool, 'reuse_validation must be boolean')
+    if reuse_validation:
+        from .spin_problem import _reuse_constructed_problem_validation
+        return _reuse_constructed_problem_validation(problem)
     fresh = SpinArtifactProblem(original=problem.original,
         fixed_regions=[(r.region_id, r.mesh, r.density) for r in problem.fixed_regions],
         design_regions=[(r.region_id, r.mesh, r.density) for r in problem.design_regions],
@@ -121,12 +166,17 @@ def _check(problem, outer, results, material, carved, claim):
         integrate_record(region_id, 'retained', retained, original_design.density)
     material_partition = partition(material_region, fixed_native + retained_native)
     carved_partition = partition(carved_region, carved_native)
-    clearance = native().check_exact_boundary_clearance(outer_region, carved_region, problem.minimum_outer_wall)
-    require(clearance['completed'], 'exact outer-wall distance could not be computed')
     if carved.explicit_empty:
-        require(clearance['state'] == 'NOT_APPLICABLE', 'empty carved clearance must be not applicable')
+        clearance = {'completed': True, 'applicable': False, 'at_least_minimum': True,
+                     'state': 'NOT_APPLICABLE', 'squared_distance_exact': None}
     else:
+        clearance = native().check_exact_boundary_clearance(outer_region, carved_region, problem.minimum_outer_wall)
+        require(clearance['completed'], 'exact outer-wall distance could not be computed')
         require(clearance['applicable'] and clearance['at_least_minimum'], 'minimum outer wall violated')
+    bounded_voids = material_region.facts['bounded_void_components']
+    inter_cavity_web = ('NOT_APPLICABLE'
+                        if type(bounded_voids) is int and bounded_voids < 2
+                        else 'UNKNOWN')
     physical, normalized = _aggregate(world_records), _aggregate(normalized_records)
     differences = [abs(a-b) for a, b in zip(normalized['moments'], claim['moments'])]
     require(all(math.isfinite(x) and x <= TOLERANCE for x in differences),
@@ -134,6 +184,11 @@ def _check(problem, outer, results, material, carved, claim):
     # Unit-density combined geometry is a density-free report only. Actual mass
     # is the aggregate of the authenticated material-labelled regions above.
     combined_geo, _ = _integrate(material, 1.)
+    wall_thickness_audit = {
+        'outer_to_newly_carved': 'NOT_APPLICABLE' if carved.explicit_empty else 'VERIFIED',
+        'same_component_feature': 'UNKNOWN',
+        'inter_cavity_web': inter_cavity_web,
+        'overall': 'UNKNOWN'}
     return {'schema': 'sealed-spin-artifact-v1', 'validation_scope': SCOPE,
             'geometry_status': 'MESH_MATERIAL_VALIDATED',
             'project_status': 'PARTIAL_BLOCKED', 'solver_target_feasibility': 'UNKNOWN',
@@ -143,7 +198,10 @@ def _check(problem, outer, results, material, carved, claim):
             'deformation_validation': 'UNSUPPORTED_NOT_VERIFIED',
             'original_evidence_admission': 'BLOCKED_UNKNOWN',
             'original_obj_source_identity': 'UNKNOWN_NOT_ATTESTED',
-            'inter_cavity_web_thickness': 'NOT_IN_SCOPE',
+            'wall_thickness_audit': wall_thickness_audit,
+            'same_component_feature_thickness': 'UNKNOWN',
+            'inter_cavity_web_thickness': inter_cavity_web,
+            'manufacturing_admission': 'BLOCKED_UNKNOWN_WALL_THICKNESS',
             'problem_digest': problem.input_digest, 'normalization': problem.normalization,
             'outer': outer.identity, 'final_material': material.identity, 'newly_carved': carved.identity,
             'design_results': [{'id': i, 'retained': r.identity, 'carved': c.identity} for i,r,c in results],
@@ -158,7 +216,53 @@ def _check(problem, outer, results, material, carved, claim):
             'physical': physical, 'normalized': normalized,
             'solver_claim': claim, 'moment_comparison': {'frame': FRAME, 'order': list(ORDER),
                 'absolute_errors': differences, 'absolute_tolerance': TOLERANCE,
-                'status': 'WITHIN_ENGINEERING_THRESHOLD'}}
+            'status': 'WITHIN_ENGINEERING_THRESHOLD'}}
+
+
+_CREATED_ARTIFACTS = {}
+
+
+def _artifact_state_digest(artifact):
+    def mesh_state(mesh):
+        if mesh.explicit_empty:
+            return {'identity': mesh.identity, 'explicit_empty': True}
+        region = mesh.exact_region()
+        operands = getattr(region, 'construction_operands', ())
+        return {'identity': mesh.identity, 'region_facts': region.facts,
+                'construction_operands': [operand.facts for operand in operands]}
+    problem = artifact.problem
+    return digest({'problem_digest': problem.input_digest, 'problem_identity': problem.identity,
+        'outer': mesh_state(artifact.outer),
+        'design_results': [{'id': region_id, 'retained': mesh_state(retained),
+                            'carved': mesh_state(carved)}
+                           for region_id, retained, carved in artifact.design_results],
+        'final_material': mesh_state(artifact.final_material),
+        'newly_carved': mesh_state(artifact.newly_carved),
+        'claim': artifact.solver_claim, 'facts': artifact.facts,
+        'scientific_digest': artifact.scientific_digest,
+        'evidence': artifact.evidence, 'evidence_digest': artifact.evidence_digest})
+
+
+def _register_created_artifact(artifact):
+    key = id(artifact)
+    reference = weakref.ref(artifact, lambda ref, key=key:
+        _CREATED_ARTIFACTS.pop(key, None) if _CREATED_ARTIFACTS.get(key, (None,))[0] is ref else None)
+    _CREATED_ARTIFACTS[key] = (reference, _artifact_state_digest(artifact))
+
+
+def _reuse_created_artifact_validation(artifact):
+    """Reuse only this live artifact's completed _check result before save.
+
+    Bundle readback still reconstructs and validates every payload independently.
+    """
+    entry = _CREATED_ARTIFACTS.get(id(artifact))
+    if entry is None or entry[0]() is not artifact:
+        return False
+    try:
+        return (implementation_observation() == artifact.evidence and
+                _artifact_state_digest(artifact) == entry[1])
+    except Exception:
+        return False
 
 
 @dataclass(frozen=True, init=False)
@@ -184,11 +288,11 @@ class SealedSpinArtifact:
 
     @classmethod
     def create(cls, problem, *, outer, design_results, final_material, newly_carved,
-               solver_claim, validation_scope=SCOPE):
+               solver_claim, validation_scope=SCOPE, _reuse_problem_validation=False):
         require(validation_scope == SCOPE, 'unsupported validation profile')
         require(isinstance(problem, SpinArtifactProblem), 'expected locked SpinArtifactProblem')
         before = implementation_observation()
-        problem = _recheck_problem(problem)
+        problem = _recheck_problem(problem, reuse_validation=_reuse_problem_validation)
         claim = _claim(solver_claim)
         require(isinstance(design_results, (tuple, list)), 'design results must be explicit list')
         results, seen = [], set()
@@ -213,6 +317,7 @@ class SealedSpinArtifact:
                  'evidence_digest': digest({'scientific_digest': digest(facts), 'observation': before})}
         for name, value in attrs.items():
             object.__setattr__(obj, name, value)
+        _register_created_artifact(obj)
         return obj
 
     @property

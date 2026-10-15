@@ -81,8 +81,28 @@ class SpinIt2014Request:
     slqp_lp_iteration_limit: int = 10000
     slqp_lp_time_limit: float = 10.0
     slqp_lp_feasibility_tolerance: float = 1e-9
+    target_origin: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    target_axes: tuple[tuple[float, float, float], ...] = (
+        (1.0, 0.0, 0.0),
+        (0.0, 1.0, 0.0),
+        (0.0, 0.0, 1.0),
+    )
 
     def __post_init__(self) -> None:
+        origin = np.asarray(self.target_origin, dtype=np.float64)
+        axes = np.asarray(self.target_axes, dtype=np.float64)
+        if origin.shape != (3,) or not np.all(np.isfinite(origin)):
+            raise ValueError("target_origin must contain three finite values")
+        if axes.shape != (3, 3) or not np.all(np.isfinite(axes)):
+            raise ValueError("target_axes must be a finite 3x3 matrix")
+        if not np.allclose(axes.T @ axes, np.eye(3), rtol=0.0, atol=1e-12) or not math.isclose(
+            float(np.linalg.det(axes)), 1.0, rel_tol=0.0, abs_tol=1e-12
+        ):
+            raise ValueError("target_axes must be a right-handed orthonormal frame")
+        object.__setattr__(self, "target_origin", tuple(float(value) for value in origin))
+        object.__setattr__(
+            self, "target_axes", tuple(tuple(float(value) for value in row) for row in axes)
+        )
         if self.slqp_algorithm not in {"LEGACY_V3", "AUDITED_KKT_RESTORATION_V1"}:
             raise ValueError("unsupported SLQP algorithm")
         if self.slqp_algorithm == "AUDITED_KKT_RESTORATION_V1":
@@ -276,6 +296,8 @@ def solve_spin_it_2014(request: SpinIt2014Request) -> SpinIt2014Result:
         request.slqp_lp_iteration_limit,
         request.slqp_lp_time_limit,
         request.slqp_lp_feasibility_tolerance,
+        np.asarray(request.target_origin, dtype=np.float64),
+        np.asarray(request.target_axes, dtype=np.float64),
     )
     return SpinIt2014Result(artifact)
 

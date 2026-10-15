@@ -1843,6 +1843,8 @@ std::string spinDiagnosticsJson(
            << spin::staticObjectiveToken(request.staticObjective) << "\",\n"
            << "  \"static_pareto_weight\": ";
     appendNumber(output, request.staticParetoWeight);
+    output << ",\n  \"static_objective_measure\": ";
+    appendJsonString(output,spin::staticObjectiveMeasureToken(request.staticObjectiveMeasure));
     output << ",\n"
            << "  \"geometry_sealed\": "
            << jsonBoolean(geometrySealed) << ",\n"
@@ -2036,6 +2038,75 @@ std::string spinDiagnosticsJson(
         if (event.materialTopologyHash)
             appendJsonString(output, *event.materialTopologyHash);
         else output << "null";
+        if (event.evaluationPayload)
+        {
+            const auto& payload = *event.evaluationPayload;
+            output << ",\"evaluation_payload\":{\"schema\":\"spin-evaluation-payload-v1\",\"solver_coordinates\":[";
+            for (std::size_t i = 0; i < payload.solverCoordinates.size(); ++i)
+            {
+                if (i != 0U) output << ',';
+                appendNumber(output, payload.solverCoordinates[i]);
+            }
+            output << "],\"solver_raw_moments\":[";
+            for (std::size_t i = 0; i < payload.solverRawMoments.size(); ++i)
+            {
+                if (i != 0U) output << ',';
+                appendNumber(output, payload.solverRawMoments[i]);
+            }
+            output << "],\"variable_raw_moments\":";
+            if (payload.variableRawMoments)
+            {
+                output << '[';
+                for (std::size_t i = 0; i < payload.variableRawMoments->size(); ++i)
+                {
+                    if (i != 0U) output << ',';
+                    appendNumber(output, (*payload.variableRawMoments)[i]);
+                }
+                output << ']';
+            }
+            else output << "null";
+            output << ",\"solver_moment_jacobian\":";
+            if (payload.solverMomentJacobian)
+            {
+                output << '[';
+                for (Eigen::Index row = 0; row < 10; ++row)
+                {
+                    if (row != 0) output << ',';
+                    output << '[';
+                    for (Eigen::Index column = 0; column < 10; ++column)
+                    {
+                        if (column != 0) output << ',';
+                        appendNumber(output, (*payload.solverMomentJacobian)(row, column));
+                    }
+                    output << ']';
+                }
+                output << ']';
+            }
+            else output << "null";
+            output << ",\"derivative_defined\":"
+                   << jsonBoolean(payload.derivativeDefined)
+                   << ",\"jacobian_coordinate_identity\":";
+            appendJsonString(output, payload.jacobianCoordinateIdentity);
+            output << ",\"evaluation_map_identity\":";
+            appendJsonString(output, payload.evaluationMapIdentity);
+            output << ",\"boolean_backend_identity\":";
+            appendJsonString(output, payload.booleanBackendIdentity);
+            output << ",\"derivative_identity\":";
+            appendJsonString(output, payload.derivativeIdentity);
+            output << ",\"derivative_diagnostic\":";
+            appendJsonString(output, payload.derivativeDiagnostic);
+            output << ",\"geometry_hash\":";
+            appendJsonString(output, payload.geometryHash);
+            output << ",\"topology_hash\":";
+            appendJsonString(output, payload.topologyHash);
+            output << ",\"evaluator_wall_seconds\":";
+            appendNumber(output, payload.evaluatorWallSeconds);
+            output << ",\"residual_evaluation_seconds\":";
+            appendNumber(output, payload.residualEvaluationSeconds);
+            output << ",\"derivative_evaluation_seconds\":";
+            appendNumber(output, payload.derivativeEvaluationSeconds);
+            output << '}';
+        }
         output << '}';
     }
     output << "]\n}\n";

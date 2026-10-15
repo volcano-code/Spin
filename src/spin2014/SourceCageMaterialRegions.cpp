@@ -47,7 +47,7 @@ void hash(Hash& h,const ExactMaterialPartitionFacts& f){
 }
 void hash(Hash& h,const ExactMaterialRelationFacts& f){
     h.fields(f.algorithm,f.semantics,f.aDigest,f.bDigest,f.relationDigest,f.error,f.completed,f.aExplicitEmpty,f.bExplicitEmpty,
-        f.intersectionNonempty,f.positiveVolumeOverlap,f.aSubsetB,f.bSubsetA,f.equal);
+        f.intersectionNonempty,f.positiveVolumeOverlap,f.aSubsetB,f.bSubsetA,f.equal,f.symmetricDifferenceVolumeExact);
 }
 void hash(Hash& h,const ExactBoundaryClearanceFacts& f){
     h.fields(f.algorithm,f.backend,f.semantics,f.aDigest,f.bDigest,f.aInputDigest,f.bInputDigest,f.minimumClearanceExact,

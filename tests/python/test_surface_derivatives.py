@@ -40,6 +40,15 @@ class PublishedSurfaceDerivativeTests(unittest.TestCase):
         np.testing.assert_allclose(j[8, :3], [0, -3/40, 0], atol=1e-14)
         np.testing.assert_allclose(j[7, :3], [-.3, 0, 0], atol=1e-14)
 
+    def test_normalization_keeps_nonzero_subdivision_slivers(self):
+        from test_mass_moment_slivers import tetra
+        checker = self.verifier()
+        for epsilon in (1e-18, 1e-20, 1e-100):
+            with self.subTest(epsilon=epsilon):
+                result = checker.verify_surface_derivatives((DensityRegion(tetra(True, epsilon), 2),))
+                self.assertEqual(result["status"], "consistent")
+                self.assertEqual(result["normalization"]["geometry_transform"], "EXACT_RATIONAL_CHECKER_ORIGINAL_NATIVE_COORDINATES")
+
     def test_every_entry_three_steps_geometries_and_density_regions(self):
         checker = self.verifier()
         outer = box_mesh((-2, -2, -2), (2, 2, 2))

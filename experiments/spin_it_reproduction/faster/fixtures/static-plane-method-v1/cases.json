@@ -1,0 +1,37 @@
+{
+  "schema": "static-plane-method-inputs-v1",
+  "classification": "SYNTHETIC_REGRESSION",
+  "protocol": "Frozen nested cubes, density 1.7, input-only seeds 0/1; not a paper asset or known-solution initialization.",
+  "cases": [
+    {
+      "id": "static-lowering-method",
+      "mode": "STATIC_BALANCE",
+      "asset_class": "SYNTHETIC_REGRESSION",
+      "outer": {"path": "outer.obj", "sha256": "be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain": {"path": "design.obj", "sha256": "7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density": 1.7,
+      "target_origin": [0, 0, 0],
+      "target_axes": [[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+      "minimum_wall_thickness": 0,
+      "static_objective": "LOWER_CENTER_OF_MASS",
+      "static_pareto_weight": 0,
+      "static_plane_settings": {"maximum_iterations": 60, "maximum_line_search_steps": 24, "constraint_tolerance": 1e-10}
+    },
+    {
+      "id": "static-maxmass-method", "mode": "STATIC_BALANCE", "asset_class": "SYNTHETIC_REGRESSION",
+      "outer": {"path": "outer.obj", "sha256": "be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain": {"path": "design.obj", "sha256": "7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density": 1.7, "target_origin": [0,0,0], "target_axes": [[1,0,0],[0,1,0],[0,0,1]],
+      "minimum_wall_thickness": 0, "static_objective": "MAXIMUM_MASS", "static_pareto_weight": 0,
+      "static_plane_settings": {"maximum_iterations": 60, "maximum_line_search_steps": 24, "constraint_tolerance": 1e-10}
+    },
+    {
+      "id": "static-pareto-half-method", "mode": "STATIC_BALANCE", "asset_class": "SYNTHETIC_REGRESSION",
+      "outer": {"path": "outer.obj", "sha256": "be8d4451772a5a36942a199f9efd1e816503ba251a31298e957548c90f0bf382"},
+      "design_domain": {"path": "design.obj", "sha256": "7521462a474ec9b8b93edb227af896848df8b0f4d50eb4a72c41fb8c43bf5c10"},
+      "material_density": 1.7, "target_origin": [0,0,0], "target_axes": [[1,0,0],[0,1,0],[0,0,1]],
+      "minimum_wall_thickness": 0, "static_objective": "PARETO_TRADEOFF", "static_pareto_weight": 0.5,
+      "static_plane_settings": {"maximum_iterations": 60, "maximum_line_search_steps": 24, "constraint_tolerance": 1e-10}
+    }
+  ]
+}

@@ -26,6 +26,41 @@ if(TEST_BINARY_ROOT_REAL STREQUAL SOURCE_DIR_REAL)
     message(FATAL_ERROR "dependency test binary root must not be the source root")
 endif()
 
+set(HIGHS_CHILD_ARGS "")
+if(DEFINED MAKE_IT_STAND_DEPENDENCY_TEST_HIGHS_SOURCE_DIR
+   AND NOT MAKE_IT_STAND_DEPENDENCY_TEST_HIGHS_SOURCE_DIR STREQUAL "")
+    set(highs_source "${MAKE_IT_STAND_DEPENDENCY_TEST_HIGHS_SOURCE_DIR}")
+    if(NOT IS_ABSOLUTE "${highs_source}" OR NOT IS_DIRECTORY "${highs_source}"
+       OR NOT EXISTS "${highs_source}/CMakeLists.txt")
+        message(FATAL_ERROR "explicit local HiGHS source must be an existing absolute source directory")
+    endif()
+    set(pinned_revision "7df0786de3088c832297e5ed821db236d8fab281")
+    if(NOT DEFINED MAKE_IT_STAND_DEPENDENCY_TEST_HIGHS_REVISION
+       OR NOT "${MAKE_IT_STAND_DEPENDENCY_TEST_HIGHS_REVISION}" STREQUAL "${pinned_revision}")
+        message(FATAL_ERROR "explicit local HiGHS source requires pinned revision ${pinned_revision}")
+    endif()
+    find_program(highs_git git)
+    if(NOT highs_git)
+        message(FATAL_ERROR "git is required to verify explicit local HiGHS source")
+    endif()
+    execute_process(
+        COMMAND "${highs_git}" -C "${highs_source}" rev-parse HEAD
+        RESULT_VARIABLE highs_revision_status
+        OUTPUT_VARIABLE highs_actual_revision
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(NOT highs_revision_status EQUAL 0
+       OR NOT "${highs_actual_revision}" STREQUAL "${pinned_revision}")
+        message(FATAL_ERROR "explicit local HiGHS source is not at pinned revision ${pinned_revision}")
+    endif()
+    get_filename_component(highs_source "${highs_source}" REALPATH)
+    list(APPEND HIGHS_CHILD_ARGS
+        "-DFETCHCONTENT_SOURCE_DIR_HIGHS=${highs_source}"
+        "-DFETCHCONTENT_FULLY_DISCONNECTED=ON"
+    )
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/allocate_retained_test_directory.cmake")
 make_it_stand_allocate_retained_test_directory(
     "${TEST_BINARY_ROOT_REAL}"
@@ -88,6 +123,7 @@ run_retained_child(
         -DMAKE_IT_STAND_BUILD_SPIN_IT_FASTER=OFF
         -DMAKE_IT_STAND_BUILD_SPIN_IT_2014=ON
         -DLIBIGL_SKIP_DOWNLOAD=ON
+        ${HIGHS_CHILD_ARGS}
 )
 if(NOT "${configure-enabled_status}" STREQUAL "0")
     fail_retained_contract("enabled Spin-It 2014 configuration failed")
@@ -101,7 +137,10 @@ if(enabled_graph MATCHES "igl_cgal|external/cgal|libgmp|libmpfr")
 endif()
 run_retained_child(
     build-enabled
-    "${CMAKE_COMMAND}" --build "${ENABLED_BINARY_DIR}" --target spin-it-2014-audited -j3
+    # Keep the isolated dependency contract within the project's compile
+    # concurrency cap while avoiding a scheduler-only timeout on a cold HiGHS
+    # tree.
+    "${CMAKE_COMMAND}" --build "${ENABLED_BINARY_DIR}" --target spin-it-2014-audited -j4
 )
 if(NOT "${build-enabled_status}" STREQUAL "0")
     fail_retained_contract("Spin-It 2014-only core did not build")

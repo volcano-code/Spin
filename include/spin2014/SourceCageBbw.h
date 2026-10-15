@@ -40,7 +40,9 @@ struct SourceCageBbwAttempt {
     int passModelStatus=-1, returnStatus=-1, modelStatus=-1;
     long long qpIterations=0;
     bool runInvoked=false, candidateAvailable=false, diagnosticsTruncated=false;
+    bool activeSetRefinementAttempted=false, activeSetRefinementApplied=false;
     double startUnixSeconds=0, endUnixSeconds=0, elapsedSeconds=0;
+    double backendStationarityResidual=0, refinedStationarityResidual=0;
     std::string terminalReason, diagnostics;
     SourceCageBbwAssessment assessment;
 };
@@ -62,7 +64,9 @@ SourceCageBbwAssessment assessSourceCageBbw(
  * digest; settings, statuses, iteration counts, assessments and fields bind it.
  * Independent QPs always include a redundant 0=0 row to avoid the pinned
  * backend's defective zero-row bounded-start path. This preserves the exact
- * objective/feasible set and is never a fallback or a post-solve repair.
+ * objective/feasible set. Independent-column solutions may receive a sparse
+ * active-set KKT polish on the exact reduced FEM Hessian; it is applied only
+ * when the polished point independently passes the unchanged primal/KKT gate.
  * Failure feasibility is UNKNOWN. No geometry/material/physical certificate.
  */
 class SourceCageBbw {

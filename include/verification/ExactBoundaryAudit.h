@@ -3,9 +3,22 @@
 #include <array>
 #include <cstdint>
 #include <string>
+#include <memory>
+#include <map>
+#include <utility>
 #include <vector>
 
 namespace verification {
+
+class VerifiedFixedBoundary;
+struct FixedSubsetBoundaryAudit;
+
+// Observational only: never part of boundary facts, geometry identity or proof.
+struct BoundaryPerformance {
+    std::map<std::string,double> exclusiveSeconds;
+    double totalSeconds = 0;
+    std::uint64_t vertexCount = 0, faceCount = 0, matchedOriginalFaces = 0;
+};
 
 enum class ExactBoundaryOrientation { OutwardPositive = 0, InwardNegative = 1, AnyNonzero = 2 };
 
@@ -40,7 +53,39 @@ private:
     ExactBoundaryFacts facts_;
     friend ExactBoundaryAudit auditExactTriangleBoundary(
         const Eigen::MatrixXd&, const Eigen::MatrixXi&, ExactBoundaryOrientation);
+    friend ExactBoundaryAudit auditExactTriangleBoundaryRational(
+        const std::vector<std::array<std::string,3>>&, const Eigen::MatrixXi&, ExactBoundaryOrientation);
+    friend FixedSubsetBoundaryAudit auditRationalBoundaryWithFixedProof(
+        const std::vector<std::array<std::string,3>>&, const Eigen::MatrixXi&,
+        ExactBoundaryOrientation, const VerifiedFixedBoundary&, BoundaryPerformance*);
 };
+
+// Created only after a complete exact boundary audit. Owns immutable copies;
+// dictionary reports and caller arrays cannot create or alter this proof.
+class VerifiedFixedBoundary {
+public:
+    const ExactBoundaryFacts& facts() const;
+private:
+    struct Data;
+    std::shared_ptr<const Data> data_;
+    explicit VerifiedFixedBoundary(std::shared_ptr<const Data> data):data_(std::move(data)) {}
+    friend VerifiedFixedBoundary verifyFixedRationalBoundary(
+        const std::vector<std::array<std::string,3>>&, const Eigen::MatrixXi&);
+    friend FixedSubsetBoundaryAudit auditRationalBoundaryWithFixedProof(
+        const std::vector<std::array<std::string,3>>&, const Eigen::MatrixXi&,
+        ExactBoundaryOrientation, const VerifiedFixedBoundary&, BoundaryPerformance*);
+};
+
+struct FixedSubsetBoundaryAudit {
+    ExactBoundaryAudit audit;
+    std::uint64_t reusedPairTests = 0;
+};
+
+VerifiedFixedBoundary verifyFixedRationalBoundary(
+    const std::vector<std::array<std::string,3>>&, const Eigen::MatrixXi&);
+FixedSubsetBoundaryAudit auditRationalBoundaryWithFixedProof(
+    const std::vector<std::array<std::string,3>>&, const Eigen::MatrixXi&,
+    ExactBoundaryOrientation, const VerifiedFixedBoundary&, BoundaryPerformance* performance = nullptr);
 
 // Invalid shape, nonfinite/empty input and invalid/repeated face indices throw
 // invalid_argument before geometric predicates. Unreferenced vertices and exact
@@ -48,6 +93,13 @@ private:
 // AnyNonzero does not establish nesting, containment, material union or thickness.
 ExactBoundaryAudit auditExactTriangleBoundary(
     const Eigen::MatrixXd& vertices, const Eigen::MatrixXi& faces,
+    ExactBoundaryOrientation orientation);
+
+// Decimal numerator/positive-denominator strings preserve exact construction
+// coordinates; no binary64 conversion is made. Same topology, winding and
+// self-intersection checks as the binary64 entry point.
+ExactBoundaryAudit auditExactTriangleBoundaryRational(
+    const std::vector<std::array<std::string,3>>& vertices, const Eigen::MatrixXi& faces,
     ExactBoundaryOrientation orientation);
 
 } // namespace verification

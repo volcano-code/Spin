@@ -159,6 +159,25 @@ endif()
 expect_rejected_root("relative" "relative-build-root")
 expect_rejected_root("nonexistent" "${FIXTURE_ROOT}/does-not-exist")
 expect_rejected_root("source" "${SUCCESS_SOURCE}")
+function(expect_rejected_highs label source revision)
+    file(GLOB runs_before "${SUCCESS_ROOT}/spin-2014-dependency-contract-runs/run-*")
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}"
+            "-DMAKE_IT_STAND_DEPENDENCY_TEST_BINARY_ROOT=${SUCCESS_ROOT}"
+            "-DMAKE_IT_STAND_DEPENDENCY_TEST_HIGHS_SOURCE_DIR=${source}"
+            "-DMAKE_IT_STAND_DEPENDENCY_TEST_HIGHS_REVISION=${revision}"
+            -P "${SUCCESS_SOURCE}/tests/cmake/assert_spin_it_2014_dependency.cmake"
+        RESULT_VARIABLE rejected_status
+    )
+    file(GLOB runs_after "${SUCCESS_ROOT}/spin-2014-dependency-contract-runs/run-*")
+    if(rejected_status EQUAL 0 OR NOT "${runs_before}" STREQUAL "${runs_after}")
+        message(FATAL_ERROR "${label} local HiGHS source was not rejected before child configuration")
+    endif()
+endfunction()
+expect_rejected_highs("missing path" "${FIXTURE_ROOT}/does-not-exist" "7df0786de3088c832297e5ed821db236d8fab281")
+if(DEFINED TEST_HIGHS_SOURCE_DIR AND NOT TEST_HIGHS_SOURCE_DIR STREQUAL "")
+    expect_rejected_highs("wrong revision" "${TEST_HIGHS_SOURCE_DIR}" "wrong-revision")
+endif()
 if(EXISTS "${FIXTURE_ROOT}/does-not-exist")
     message(FATAL_ERROR "rejected nonexistent root was created")
 endif()

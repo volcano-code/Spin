@@ -1,21 +1,45 @@
 #include "api/BalanceModel.h"
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014 && MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
 #include "SourceSpinMaterialBindings.h"
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+#include "Spin2014AuthorityBindings.h"
+#endif
 #endif
 #if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
 #include "verification/ExactBoundaryAudit.h"
 #include "verification/ExactMaterialRegion.h"
 #include "ExactMeshSequenceIngestion.h"
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+#include "verification/ExactLibiglBoolean.h"
+#endif
 #endif
 #if MAKE_IT_STAND_HAS_SPIN_IT_2014
 #include "api/SpinIt2014.h"
 #include "spin2014/AutomaticCageBinding.h"
 #include "spin2014/CageSpinDeformation.h"
 #include "spin2014/CageSpinDeformationSolver.h"
+#include "spin2014/Spin2014GivensProblem.h"
 #include "spin2014/SurfaceRawMomentDifferential.h"
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+#include "spin2014/QuadricHollowing.h"
+#include "spin2014/QuadricStaticBalance.h"
+#endif
+#endif
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+#include "spin/CanonicalFullRankHollowing.h"
+#include "spin/BuoyantPlaneBalanceSolver.h"
+#include "spin/HydrostaticGeometry.h"
+#include "spin/PlanarFidgetCircleProblem.h"
+#include "PlanarEvaluationLedger.h"
+#include "spin/PlanarDiskIntersection.h"
+#include "spin/PlaneMomentEvaluator.h"
+#include "spin/PlaneStaticBalanceSolver.h"
+#include "spin/QuadricHollowingSolver.h"
+#include "spin/QuadricSourceMotion.h"
 #endif
 
 #include <pybind11/eigen.h>
+#include <pybind11/functional.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -34,6 +58,342 @@ namespace py = pybind11;
 
 namespace
 {
+
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+py::dict rationalAuthorityToPython(
+    const spin::ExactBooleanVertexCoordinates& material,
+    const spin::ExactBooleanVertexCoordinates& design,
+    const spin::ExactBooleanVertexCoordinates& source,
+    const spin::ExactBooleanVertexCoordinates& lower,
+    const spin::ExactBooleanVertexCoordinates& upper,
+    const Eigen::MatrixXi& sourceFaces, const Eigen::VectorXi& births,
+    const std::vector<std::string>& moments,
+    const std::string& geometryHash, const std::string& sourceIdentity)
+{
+    if(material.empty() || design.empty() || source.empty() ||
+       lower.size()!=source.size() || upper.size()!=source.size() ||
+       moments.size()!=10 || geometryHash.empty() || sourceIdentity.empty())
+        throw std::runtime_error("incomplete same-operation rational authority payload");
+    py::dict out;
+    out["schema"]="rational-quadric-production-authority-v1";
+    out["coordinate_space"]="TARGET_FRAME";
+    out["analytic_coordinates_exact"]=false;
+    out["variable_moment_semantics"]="DENSITY_WEIGHTED";
+    out["material_vertices"]=material;out["design_vertices"]=design;
+    out["source_vertices"]=source;out["source_coordinate_lower"]=lower;
+    out["source_coordinate_upper"]=upper;
+    py::list faces, birthFaces;
+    for(Eigen::Index f=0;f<sourceFaces.rows();++f) {
+        py::list row;
+        for(int k=0;k<3;++k)row.append(sourceFaces(f,k));
+        faces.append(std::move(row));
+    }
+    for(Eigen::Index f=0;f<births.size();++f)birthFaces.append(births(f));
+    out["source_faces"]=std::move(faces);out["material_birth_faces"]=std::move(birthFaces);
+    out["variable_moments"]=moments;out["geometry_hash"]=geometryHash;
+    out["source_construction_identity"]=sourceIdentity;
+    return out;
+}
+
+py::dict rationalAuthorityToPython(const spin::FullRankMomentEvaluation& value)
+{
+    return rationalAuthorityToPython(value.materialExactVerticesTarget,
+        value.designExactVerticesTarget,value.sourceExactVerticesTarget,
+        value.sourceCoordinateLowerTarget,value.sourceCoordinateUpperTarget,
+        value.sourceFaces,value.materialBirthFaces,value.variableMomentsExactTarget,
+        value.geometryHash,value.sourceConstructionIdentity);
+}
+
+py::dict evaluationPayloadToPython(
+    const spin::SpinSolverEvent::EvaluationPayload& payload
+)
+{
+    Eigen::Matrix<double, 10, 1> coordinates;
+    Eigen::Matrix<double, 10, 1> solverMoments;
+    for (Eigen::Index i = 0; i < 10; ++i)
+    {
+        coordinates(i) = payload.solverCoordinates[static_cast<std::size_t>(i)];
+        solverMoments(i) = payload.solverRawMoments[static_cast<std::size_t>(i)];
+    }
+    py::dict result;
+    result["schema"] = "spin-evaluation-payload-v1";
+    result["solver_coordinates"] = coordinates;
+    result["solver_raw_moments"] = solverMoments;
+    if (payload.variableRawMoments)
+    {
+        Eigen::Matrix<double, 10, 1> variableMoments;
+        for (Eigen::Index i = 0; i < 10; ++i)
+            variableMoments(i) = (*payload.variableRawMoments)[
+                static_cast<std::size_t>(i)];
+        result["variable_raw_moments"] = variableMoments;
+    }
+    else
+    {
+        result["variable_raw_moments"] = py::none();
+    }
+    result["solver_moment_jacobian"] = payload.solverMomentJacobian
+        ? py::cast(*payload.solverMomentJacobian) : py::none();
+    result["derivative_defined"] = payload.derivativeDefined;
+    result["jacobian_coordinate_identity"] = payload.jacobianCoordinateIdentity;
+    result["evaluation_map_identity"] = payload.evaluationMapIdentity;
+    result["boolean_backend_identity"] = payload.booleanBackendIdentity;
+    result["derivative_identity"] = payload.derivativeIdentity;
+    result["derivative_diagnostic"] = payload.derivativeDiagnostic;
+    result["geometry_hash"] = payload.geometryHash;
+    result["topology_hash"] = payload.topologyHash;
+    result["evaluator_wall_seconds"] = payload.evaluatorWallSeconds;
+    result["residual_evaluation_seconds"] = payload.residualEvaluationSeconds;
+    result["derivative_evaluation_seconds"] = payload.derivativeEvaluationSeconds;
+    return result;
+}
+
+
+py::dict newtonSystemPayloadToPython(
+    const spin::SpinSolverEvent::NewtonSystemPayload& payload
+)
+{
+    py::dict result;
+    result["schema"] = "spin-newton-system-payload-v2";
+    result["matrix"] = payload.matrix;
+    result["right_hand_side"] = payload.rightHandSide;
+    result["computed_rank"] = payload.computedRank;
+    result["equilibrated_rank"] = payload.equilibratedRank;
+    result["multiplier_mu"] = payload.multiplierMu
+        ? py::cast(*payload.multiplierMu) : py::none();
+    result["constraint_multipliers"] = payload.constraintMultipliers;
+    result["row_scales"] = payload.rowScales;
+    result["column_scales"] = payload.columnScales;
+    result["linear_residual_infinity_norm"] =
+        payload.linearResidualInfinityNorm;
+    result["linear_backward_error"] = payload.linearBackwardError;
+    return result;
+}
+
+
+py::dict solverEventToPython(const spin::SpinSolverEvent& event)
+{
+    py::dict entry;
+    entry["type"] = event.type;
+    entry["restart"] = event.restart;
+    entry["iteration"] = event.iteration;
+    entry["evaluation_index"] = event.evaluationIndex;
+    entry["restart_evaluation_index"] = event.restartEvaluationIndex;
+    entry["step"] = event.step ? py::cast(*event.step) : py::none();
+    entry["outcome"] = event.outcome;
+    entry["reason"] = event.reason;
+    entry["detail"] = event.detail;
+    entry["quadric_hash"] = event.quadricHash;
+    entry["normalized_equation_residual"] = event.normalizedEquationResidual
+        ? py::cast(*event.normalizedEquationResidual) : py::none();
+    entry["physical_relative_residual"] = event.physicalRelativeResidual
+        ? py::cast(*event.physicalRelativeResidual) : py::none();
+    entry["objective"] = event.objective
+        ? py::cast(*event.objective) : py::none();
+    entry["multiplier_mu"] = event.multiplierMu
+        ? py::cast(*event.multiplierMu) : py::none();
+    entry["material_geometry_hash"] = event.materialGeometryHash
+        ? py::cast(*event.materialGeometryHash) : py::none();
+    entry["material_topology_hash"] = event.materialTopologyHash
+        ? py::cast(*event.materialTopologyHash) : py::none();
+    entry["equation_profile"] = spin::spinEquationProfileToken(event.equationProfile);
+    entry["solver_coordinate_identity"] =
+        spin::spinSolverCoordinateIdentity(event.equationProfile);
+    entry["raw_equation_residual"] = event.rawEquationResidual
+        ? py::cast(*event.rawEquationResidual) : py::none();
+    if (event.quadricCoefficients)
+    {
+        Eigen::Matrix<double, 10, 1> coefficients = Eigen::Map<
+            const Eigen::Matrix<double, 10, 1>
+        >(event.quadricCoefficients->data());
+        entry["quadric_coefficients"] = coefficients;
+    }
+    else
+    {
+        entry["quadric_coefficients"] = py::none();
+    }
+    if (event.evaluationPayload)
+        entry["evaluation_payload"] = evaluationPayloadToPython(*event.evaluationPayload);
+    if (event.newtonSystemPayload)
+        entry["newton_system_payload"] =
+            newtonSystemPayloadToPython(*event.newtonSystemPayload);
+    return entry;
+}
+
+py::dict fullRankResultToPython(
+    const spin::FullRankHollowingResult& solved, bool captureEvaluationPayload)
+{
+    py::dict result;
+    result["status"] = spin::spinSolverStatusToken(solved.numerical.status);
+    result["diagnostic"] = solved.numerical.diagnostic;
+    result["final_geometry_verified"] = solved.finalGeometryVerified;
+    result["verification_diagnostic"] = solved.verificationDiagnostic;
+    result["input_hash"] = solved.inputHash;
+    result["output_hash"] = solved.outputHash;
+    result["function_evaluations"] = solved.numerical.functionEvaluations;
+    result["restart_count"] = solved.numerical.restartCount;
+    result["normalized_equation_residual"] = solved.numerical.normalizedEquationResidual;
+    result["physical_relative_residual"] = solved.numerical.physicalRelativeResidual;
+    result["independent_raw_residual"] = solved.independentlyRecomputedRawResidual
+        ? py::cast(*solved.independentlyRecomputedRawResidual) : py::none();
+    result["multiplier_mu"] = solved.numerical.multiplierMu;
+    result["multipliers"] = Eigen::VectorXd(solved.numerical.multipliers);
+    result["quadric_coefficients"] = solved.numerical.quadric
+        ? py::cast(Eigen::VectorXd(solved.numerical.quadric->values())) : py::none();
+    result["equation_profile"] = spin::spinEquationProfileToken(
+        solved.numerical.equationProfile
+    );
+    result["event_hash"] = solved.numerical.eventHash;
+    result["trace_hash"] = solved.numerical.traceHash;
+    if (captureEvaluationPayload)
+        result["event_stream_version"] = solved.numerical.eventStreamVersion;
+    result["restart_function_evaluations"] =
+        solved.numerical.restartFunctionEvaluations;
+
+    py::list trace;
+    for (const auto& item : solved.numerical.trace)
+    {
+        py::dict entry;
+        entry["restart"] = item.restart;
+        entry["iteration"] = item.iteration;
+        entry["function_evaluations"] = item.functionEvaluations;
+        entry["normalized_equation_residual"] = item.normalizedEquationResidual;
+        entry["physical_relative_residual"] = item.physicalRelativeResidual;
+        entry["objective"] = item.objective;
+        entry["multiplier_mu"] = item.multiplierMu;
+        entry["accepted_geodesic_step"] = item.acceptedGeodesicStep;
+        entry["quadric_hash"] = item.quadricHash;
+        entry["material_geometry_hash"] = item.materialGeometryHash;
+        entry["material_topology_hash"] = item.materialTopologyHash;
+        entry["raw_equation_residual"] = item.rawEquationResidual
+            ? py::cast(*item.rawEquationResidual) : py::none();
+        if (item.quadricCoefficients)
+        {
+            Eigen::Matrix<double, 10, 1> coefficients =
+                Eigen::Map<const Eigen::Matrix<double, 10, 1>>(
+                    item.quadricCoefficients->data()
+                );
+            entry["quadric_coefficients"] = coefficients;
+        }
+        else
+        {
+            entry["quadric_coefficients"] = py::none();
+        }
+        trace.append(std::move(entry));
+    }
+    result["trace"] = std::move(trace);
+
+    py::list events;
+    for (const auto& event : solved.numerical.events)
+    {
+        py::dict entry;
+        entry["type"] = event.type;
+        entry["restart"] = event.restart;
+        entry["iteration"] = event.iteration;
+        entry["evaluation_index"] = event.evaluationIndex;
+        entry["restart_evaluation_index"] = event.restartEvaluationIndex;
+        entry["step"] = event.step ? py::cast(*event.step) : py::none();
+        entry["outcome"] = event.outcome;
+        entry["reason"] = event.reason;
+        entry["detail"] = event.detail;
+        entry["quadric_hash"] = event.quadricHash;
+        entry["normalized_equation_residual"] = event.normalizedEquationResidual
+            ? py::cast(*event.normalizedEquationResidual) : py::none();
+        entry["physical_relative_residual"] = event.physicalRelativeResidual
+            ? py::cast(*event.physicalRelativeResidual) : py::none();
+        entry["objective"] = event.objective
+            ? py::cast(*event.objective) : py::none();
+        entry["multiplier_mu"] = event.multiplierMu
+            ? py::cast(*event.multiplierMu) : py::none();
+        entry["material_geometry_hash"] = event.materialGeometryHash
+            ? py::cast(*event.materialGeometryHash) : py::none();
+        entry["material_topology_hash"] = event.materialTopologyHash
+            ? py::cast(*event.materialTopologyHash) : py::none();
+        entry["equation_profile"] =
+            spin::spinEquationProfileToken(event.equationProfile);
+        entry["solver_coordinate_identity"] =
+            spin::spinSolverCoordinateIdentity(event.equationProfile);
+        entry["raw_equation_residual"] = event.rawEquationResidual
+            ? py::cast(*event.rawEquationResidual) : py::none();
+        if (event.quadricCoefficients)
+        {
+            Eigen::Matrix<double, 10, 1> coefficients =
+                Eigen::Map<const Eigen::Matrix<double, 10, 1>>(
+                    event.quadricCoefficients->data()
+                );
+            entry["quadric_coefficients"] = coefficients;
+        }
+        else
+        {
+            entry["quadric_coefficients"] = py::none();
+        }
+        if (event.evaluationPayload)
+            entry["evaluation_payload"] =
+                evaluationPayloadToPython(*event.evaluationPayload);
+        if (event.newtonSystemPayload)
+            entry["newton_system_payload"] =
+                newtonSystemPayloadToPython(*event.newtonSystemPayload);
+        events.append(std::move(entry));
+    }
+    result["events"] = std::move(events);
+
+    py::list evaluationTimings;
+    for (const auto& timing : solved.numerical.evaluationTimings)
+    {
+        py::dict entry;
+        entry["evaluation_index"] = timing.evaluationIndex;
+        entry["restart"] = timing.restart;
+        entry["restart_evaluation_index"] = timing.restartEvaluationIndex;
+        entry["evaluator_returned"] = timing.evaluatorReturned;
+        entry["wall_seconds"] = timing.wallSeconds;
+        entry["reported_residual_seconds"] = timing.reportedResidualSeconds
+            ? py::cast(*timing.reportedResidualSeconds) : py::none();
+        entry["reported_derivative_seconds"] = timing.reportedDerivativeSeconds
+            ? py::cast(*timing.reportedDerivativeSeconds) : py::none();
+        evaluationTimings.append(std::move(entry));
+    }
+    result["evaluation_timings"] = std::move(evaluationTimings);
+
+    if (solved.finalGeometryVerified && solved.finalEvaluation)
+    {
+        const auto& evaluation = *solved.finalEvaluation;
+        result["final_geometry_hash"] = evaluation.geometryHash;
+        result["final_derivative_defined"] = evaluation.coefficientJacobian.has_value();
+        result["final_derivative_diagnostic"] = evaluation.diagnostic;
+        result["final_variable_raw_moments"] =
+            Eigen::VectorXd(evaluation.variableMomentsTarget.values());
+        result["final_total_raw_moments"] =
+            Eigen::VectorXd(evaluation.totalMomentsTarget.values());
+        result["material_vertices"] = Eigen::MatrixXd(
+            evaluation.materialBoundaryTarget.vertices
+        );
+        result["material_faces"] = Eigen::MatrixXi(
+            evaluation.materialBoundaryTarget.faces
+        );
+        if(!evaluation.sourceExactVerticesTarget.empty())
+            result["rational_authority"]=rationalAuthorityToPython(evaluation);
+    }
+    else
+    {
+        result["final_geometry_hash"] = py::none();
+        result["final_derivative_defined"] = false;
+        result["final_derivative_diagnostic"] = solved.verificationDiagnostic;
+        result["final_variable_raw_moments"] = py::none();
+        result["final_total_raw_moments"] = py::none();
+        result["material_vertices"] = py::none();
+        result["material_faces"] = py::none();
+    }
+    if (solved.independentTotalMoments)
+    {
+        result["independent_total_raw_moments"] =
+            Eigen::VectorXd(solved.independentTotalMoments->values());
+    }
+    else
+    {
+        result["independent_total_raw_moments"] = py::none();
+    }
+    return result;
+}
+#endif
 
 
 py::array requireArray(const py::handle& value, const char* name)
@@ -360,6 +720,61 @@ Eigen::MatrixXd weightsFromPython(const py::handle& value)
 
 #if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
 
+py::dict staticPlaneResultToPython(const spin::PlaneStaticBalanceResult& value,
+                                 const spin::SpinDesignRequest& request)
+{
+    py::dict output;
+    output["status"] = spin::planeStaticBalanceStatusToken(value.status);
+    output["diagnostic"] = value.diagnostic;
+    output["plane_coefficients"] = value.coefficients;
+    output["material_region"] = value.evaluation.materialRegion==spin::PlaneMaterialRegion::StrictFull?
+        "STRICT_FULL":value.evaluation.materialRegion==spin::PlaneMaterialRegion::StrictEmpty?
+        "STRICT_EMPTY":"UNCLASSIFIED";
+    output["boundary_optimality"] = py::none();
+    if(value.boundaryOptimality) {
+        py::dict witness;
+        witness["kind"]="STRICT_FULL_DOMAIN_ZERO_EQUALITY_MULTIPLIERS_V1";
+        witness["objective_measure"]=spin::staticObjectiveMeasureToken(request.staticObjectiveMeasure);
+        witness["plane_coefficients"]=value.boundaryOptimality->coefficients;
+        witness["minimum_gradient_polynomial"]=value.boundaryOptimality->minimumGradientPolynomial;
+        output["boundary_optimality"]=std::move(witness);
+    }
+    output["lambda"] = value.lambda;
+    output["constraints"] = value.constraints;
+    output["normalized_constraints"] = value.normalizedConstraints;
+    output["normalized_constraints_norm"] = value.normalizedConstraints.norm();
+    output["normalized_stationarity_residual"] = value.stationarityResidual;
+    output["constraint_scale"] = value.constraintScale;
+    output["variable_raw_moments"] = Eigen::VectorXd(value.evaluation.variableMomentsTarget.values());
+    output["total_raw_moments"] = Eigen::VectorXd(value.evaluation.totalMomentsTarget.values());
+    output["paper_optimality_conditions_verified"] = value.paperOptimalityConditionsVerified;
+    output["iterations"] = value.iterations;
+    output["accepted_steps"] = value.acceptedSteps;
+    output["variable_material_vertices"] = value.evaluation.variableMaterialBoundaryTarget.vertices;
+    output["variable_material_faces"] = value.evaluation.variableMaterialBoundaryTarget.faces;
+    py::list trace;
+    for (const auto& row : value.trace) {
+        py::dict event;
+        event["evaluation"] = row.evaluation;
+        event["iteration"] = row.iteration;
+        event["lambda"] = row.lambda;
+        event["plane_coefficients"] = row.coefficients;
+        event["constraints"] = row.constraints;
+        event["normalized_constraints"] = row.normalizedConstraints;
+        event["normalized_stationarity_residual"] = row.normalizedStationarityResidual;
+        event["residual_norm"] = row.residualNorm;
+        event["variable_mass"] = row.variableMass;
+        event["step"] = row.step;
+        event["accepted"] = row.accepted;
+        event["evaluation_succeeded"] = row.evaluationSucceeded;
+        event["derivative_available"] = row.derivativeAvailable;
+        event["diagnostic"] = row.diagnostic;
+        trace.append(std::move(event));
+    }
+    output["trace"] = std::move(trace);
+    return output;
+}
+
 physics::RawMassMoments10 rawMomentsFromVector(const Eigen::VectorXd& values)
 {
     if (values.size() != physics::RawMassMoments10::Count ||
@@ -425,13 +840,37 @@ PYBIND11_MODULE(_make_it_stand, module)
             out["material_components"]=r.materialComponents; out["bounded_void_components"]=r.boundedVoidComponents;
             out["scope"]="exact-represented-polyhedral-set-only";
             return out;
-        });
+        })
+        .def("matches_rational_boundary", [](const verification::ExactMaterialRegion& region,
+                const std::vector<std::array<std::string,3>>& vertices,const py::object& faces) {
+            return region.matchesRationalBoundary(vertices,exactFacesFromPython(faces));
+        })
+        .def_property_readonly("rational_boundary", [](const verification::ExactMaterialRegion& region) {
+            py::dict result;
+            result["vertices"]=py::cast(region.rationalBoundaryVertices());
+            result["faces"]=py::cast(region.boundaryFaces());
+            return result;
+        })
+        .def_property_readonly("boundary_coordinate_policy",[](const verification::ExactMaterialRegion& region) {
+            return region.boundaryUsesRationals()?"RATIONAL_INDEXED":"BINARY64_INDEXED";
+        })
+        .def_property_readonly("binary64_boundary_vertices",&verification::ExactMaterialRegion::binary64BoundaryVertices)
+        .def_property_readonly("construction_operands",&verification::ExactMaterialRegion::constructionOperands);
+    module.def("make_exact_interior_difference_region", &verification::makeExactInteriorDifferenceRegion,
+        py::arg("outer"),py::arg("carved"),
+        "Construct a strictly interior difference from owned exact operands and an independently checked shared boundary.");
     module.def("make_exact_material_region", [](const py::object& v,const py::object& f) {
         return verification::makeExactMaterialRegion(exactVerticesFromPython(v),exactFacesFromPython(f));
     },py::arg("vertices"),py::arg("faces"),
        "Authenticate an oriented finite regular closed region from exact binary64 indexed triangles. "
        "Inputs are NumPy matrices or nested list/tuple matrices whose rows may also be one-dimensional NumPy arrays. "
        "Negative checker copies only; input geometry is preserved. Empty mesh is malformed.");
+    module.def("make_exact_material_region_from_rationals",
+        [](const std::vector<std::array<std::string,3>>& v,const py::object& f) {
+            return verification::makeExactMaterialRegionFromRationals(v,exactFacesFromPython(f));
+        },py::arg("vertices"),py::arg("faces"),
+        "Authenticate an exact rational indexed-triangle region without binary64 coordinate conversion. "
+        "Coordinates must be decimal numerator/positive-denominator strings; set operations only.");
     module.def("empty_exact_material_region", &verification::emptyExactMaterialRegion,
                "Explicit empty algebra operand, never a valid physical outer artifact.");
     module.def("relate_exact_material_regions", [](const verification::ExactMaterialRegion& a,
@@ -444,11 +883,110 @@ PYBIND11_MODULE(_make_it_stand, module)
         out["completed"]=r.completed; out["error"]=r.error;
         out["intersection_nonempty"]=r.intersectionNonempty; out["positive_volume_overlap"]=r.positiveVolumeOverlap;
         out["a_subset_b"]=r.aSubsetB; out["b_subset_a"]=r.bSubsetA; out["equal"]=r.equal;
+        out["symmetric_difference_volume_exact"]=r.symmetricDifferenceVolumeExact;
+        out["symmetric_difference_measure_scope"]="exact-regularized-volume-not-Hausdorff-bound";
         out["scope"]="exact-represented-polyhedral-set-only";
         return out;
     },py::arg("a"),py::arg("b"),
        "Exact inclusive contact/containment and positive-volume overlap. Invalid operands throw; "
        "failed Booleans return unknown facts. Touching does not imply volume overlap or invalid density regions.");
+    module.def("relate_exact_boolean_operation_to_material",
+        [](const verification::ExactMaterialRegion& design,
+           const verification::ExactMaterialRegion& cutter,
+           const verification::ExactMaterialRegion& material,
+           const std::string& operation) {
+            verification::ExactMaterialBooleanOperation selected;
+            if(operation=="intersection")
+                selected=verification::ExactMaterialBooleanOperation::Intersection;
+            else if(operation=="difference")
+                selected=verification::ExactMaterialBooleanOperation::Difference;
+            else throw std::invalid_argument("unsupported exact Boolean operation");
+            const auto r=verification::relateExactBooleanOperationToMaterial(
+                design,cutter,material,selected);
+            py::dict out;
+            out["algorithm"]=r.algorithm;out["semantics"]=r.semantics;
+            out["a_digest"]=r.aDigest;out["b_digest"]=r.bDigest;
+            out["relation_digest"]=r.relationDigest;
+            out["a_explicit_empty"]=r.aExplicitEmpty;
+            out["b_explicit_empty"]=r.bExplicitEmpty;
+            out["completed"]=r.completed;out["error"]=r.error;
+            out["intersection_nonempty"]=r.intersectionNonempty;
+            out["positive_volume_overlap"]=r.positiveVolumeOverlap;
+            out["a_subset_b"]=r.aSubsetB;out["b_subset_a"]=r.bSubsetA;
+            out["equal"]=r.equal;
+            out["symmetric_difference_volume_exact"]=r.symmetricDifferenceVolumeExact;
+            out["scope"]="exact-input-binary64-represented-polyhedral-Boolean-only";
+            return out;
+        },py::arg("design"),py::arg("cutter"),py::arg("material"),
+        py::arg("operation"),
+        "Compute an exact input-mesh intersection/difference and compare its represented set with an independently supplied material. No continuous-quadric claim.");
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+    module.def("libigl_exact_boolean_construction",
+        [](const Eigen::MatrixXd& designVertices, const Eigen::MatrixXi& designFaces,
+           const Eigen::MatrixXd& cutterVertices, const Eigen::MatrixXi& cutterFaces,
+           const std::string& operation) {
+            verification::ExactMaterialBooleanOperation selected;
+            if (operation == "intersection")
+                selected = verification::ExactMaterialBooleanOperation::Intersection;
+            else if (operation == "difference")
+                selected = verification::ExactMaterialBooleanOperation::Difference;
+            else
+                throw std::invalid_argument("unsupported exact libigl Boolean operation");
+            const auto result = verification::computeExactLibiglBooleanConstruction(
+                designVertices, designFaces, cutterVertices, cutterFaces, selected);
+            py::list vertices;
+            for (const auto& row : result.vertices) {
+                py::list coordinates;
+                for (const auto& value : row)
+                    coordinates.append(value);
+                vertices.append(coordinates);
+            }
+            py::dict out;
+            out["succeeded"] = result.succeeded;
+            out["vertices"] = vertices;
+            out["faces"] = result.faces;
+            out["birth_faces"] = result.birthFaces;
+            out["scope"] = "pinned-libigl-exact-output-before-binary64-assignment";
+            return out;
+        },py::arg("design_vertices"),py::arg("design_faces"),
+        py::arg("cutter_vertices"),py::arg("cutter_faces"),py::arg("operation"),
+        "Diagnostic-only pinned libigl Boolean with rational output coordinates. It does not replace the solver's binary64 material.");
+    module.def("libigl_exact_boolean_construction_from_rationals",
+        [](const std::vector<std::array<std::string,3>>& designVertices,
+           const Eigen::MatrixXi& designFaces,
+           const std::vector<std::array<std::string,3>>& cutterVertices,
+           const Eigen::MatrixXi& cutterFaces, const std::string& operation) {
+            verification::ExactMaterialBooleanOperation selected;
+            if (operation == "intersection")
+                selected = verification::ExactMaterialBooleanOperation::Intersection;
+            else if (operation == "difference")
+                selected = verification::ExactMaterialBooleanOperation::Difference;
+            else throw std::invalid_argument("unsupported exact libigl Boolean operation");
+            const auto result = verification::computeExactLibiglBooleanConstructionFromRationals(
+                designVertices, designFaces, cutterVertices, cutterFaces, selected);
+            py::dict out;
+            out["succeeded"] = result.succeeded;
+            out["vertices"] = result.vertices;
+            out["faces"] = result.faces;
+            out["birth_faces"] = result.birthFaces;
+            out["scope"] = "pinned-libigl-rational-operands-and-output";
+            return out;
+        },py::arg("design_vertices"),py::arg("design_faces"),
+        py::arg("cutter_vertices"),py::arg("cutter_faces"),py::arg("operation"),
+        "Exact rational polyhedral operands and output, with no binary64 roundtrip. Independent material validation remains required.");
+#endif
+    module.def("check_exact_material_subset", [](const verification::ExactMaterialRegion& a,
+                                                   const verification::ExactMaterialRegion& b) {
+        const auto r=verification::checkExactMaterialSubset(a,b);
+        py::dict out;
+        out["algorithm"]=r.algorithm; out["semantics"]=r.semantics;
+        out["a_digest"]=r.aDigest; out["b_digest"]=r.bDigest;
+        out["completed"]=r.completed; out["error"]=r.error;
+        out["a_subset_b"]=r.aSubsetB;
+        out["scope"]="exact-represented-polyhedral-set-only";
+        return out;
+    },py::arg("a"),py::arg("b"),
+       "Exact inclusive represented-set subset predicate; this narrow query does not compute symmetric-difference volume.");
     module.def("check_exact_material_partition", [](const verification::ExactMaterialRegion& whole,
                                                     const std::vector<verification::ExactMaterialRegion>& parts) {
         const auto r=verification::checkExactMaterialPartition(whole,parts);
@@ -485,21 +1023,19 @@ PYBIND11_MODULE(_make_it_stand, module)
        "Exact boundary distance >= explicitly supplied represented threshold; equality passes and contact is distinct. "
        "Explicit empty operands are NOT_APPLICABLE with absent distance/witness/comparison. "
        "This alone does not establish containment, valid shell thickness or a seal.");
-    module.def("audit_exact_triangle_boundary",
-        [](const py::object& vertices, const py::object& faces, const std::string& orientation) {
+    const auto exactBoundaryMode=[](const std::string& orientation) {
             using Mode=verification::ExactBoundaryOrientation;
-            Mode mode;
-            if(orientation=="OutwardPositive") mode=Mode::OutwardPositive;
-            else if(orientation=="InwardNegative") mode=Mode::InwardNegative;
-            else if(orientation=="AnyNonzero") mode=Mode::AnyNonzero;
-            else throw py::value_error("orientation must be OutwardPositive, InwardNegative, or AnyNonzero");
-            const auto audit=verification::auditExactTriangleBoundary(
-                exactVerticesFromPython(vertices), exactFacesFromPython(faces), mode);
-            const auto& r=audit.facts();
+            if(orientation=="OutwardPositive") return Mode::OutwardPositive;
+            if(orientation=="InwardNegative") return Mode::InwardNegative;
+            if(orientation=="AnyNonzero") return Mode::AnyNonzero;
+            throw py::value_error("orientation must be OutwardPositive, InwardNegative, or AnyNonzero");
+    };
+    const auto exactBoundaryFactsToPython=[](const verification::ExactBoundaryFacts& r,
+                                           const std::string& encoding) {
             py::dict out;
             out["algorithm"]=r.algorithm; out["backend"]=r.backend;
             out["input_digest"]=r.inputDigest; out["input_digest_algorithm"]="sha256";
-            out["input_encoding"]="exact-boundary-input-v1/binary64-row-major/u64-big-endian";
+            out["input_encoding"]=encoding;
             out["orientation"]=r.orientation;
             out["boundary_valid"]=r.boundaryValid;
             out["closed"]=r.closed; out["edge_manifold"]=r.edgeManifold;
@@ -523,6 +1059,36 @@ PYBIND11_MODULE(_make_it_stand, module)
             out["scope"]="single-represented-boundary-only";
             out["material_domain_status"]="NOT_VERIFIED";
             return out;
+    };
+    module.def("audit_exact_rational_material_boundary",
+        [exactBoundaryFactsToPython](const std::vector<std::array<std::string,3>>& vertices,
+            const py::object& faces,const py::object& proof) {
+            const verification::VerifiedFixedBoundary* fixed=nullptr;
+            if(!proof.is_none()) fixed=&proof.cast<const verification::VerifiedFixedBoundary&>();
+            const auto r=verification::auditExactRationalMaterialBoundary(vertices,exactFacesFromPython(faces),fixed);
+            py::dict out;
+            out["algorithm"]=r.algorithm;out["completed"]=r.completed;
+            out["classification_valid"]=r.classificationValid;out["error"]=r.error;
+            out["boundary"]=exactBoundaryFactsToPython(r.boundary,
+                "exact-rational-boundary-input-v1/canonical-fractions/u64-big-endian");
+            out["parents"]=r.parents;out["depths"]=r.depths;out["original_signs"]=r.originalSigns;
+            out["witness_vertices"]=r.witnessVertices;out["inside"]=r.inside;
+            out["material_components"]=r.materialComponents;out["bounded_void_components"]=r.boundedVoidComponents;
+            out["fixed_proof_identity"]=r.fixedProofIdentity;out["reused_pair_tests"]=r.reusedPairTests;
+            py::dict performance;performance["boundary_seconds"]=r.boundarySeconds;
+            performance["nesting_seconds"]=r.nestingSeconds;out["performance"]=performance;
+            out["scope"]="exact-embedded-boundary-material-classification-only";
+            return out;
+        },py::arg("vertices"),py::arg("faces"),py::arg("fixed_proof")=py::none(),
+        "Complete exact boundary audit and component point-location nesting/orientation checks; "
+        "no Nef set operations, partition, clearance or final artifact authority.");
+    module.def("audit_exact_triangle_boundary",
+        [exactBoundaryMode,exactBoundaryFactsToPython](const py::object& vertices, const py::object& faces,
+                                                     const std::string& orientation) {
+            const auto audit=verification::auditExactTriangleBoundary(
+                exactVerticesFromPython(vertices),exactFacesFromPython(faces),exactBoundaryMode(orientation));
+            return exactBoundaryFactsToPython(audit.facts(),
+                "exact-boundary-input-v1/binary64-row-major/u64-big-endian");
         }, py::arg("vertices"), py::arg("faces"), py::arg("orientation"),
         "Exact audit of the binary64 represented indexed boundary. No repair or welding. "
         "Inputs are NumPy matrices or nested list/tuple matrices whose rows may also be one-dimensional NumPy arrays. "
@@ -530,6 +1096,52 @@ PYBIND11_MODULE(_make_it_stand, module)
         "Wider floats are rejected. "
         "AnyNonzero is a boundary orientation mode only. Does not verify containment, "
         "nesting, thickness, material union, CAD, source/build identity, or artifact sealing.");
+    module.def("audit_exact_rational_triangle_boundary",
+        [exactBoundaryMode,exactBoundaryFactsToPython](const std::vector<std::array<std::string,3>>& vertices,
+                                                     const py::object& faces,const std::string& orientation) {
+            const auto audit=verification::auditExactTriangleBoundaryRational(
+                vertices,exactFacesFromPython(faces),exactBoundaryMode(orientation));
+            return exactBoundaryFactsToPython(audit.facts(),
+                "exact-rational-boundary-input-v1/canonical-fractions/u64-big-endian");
+        },py::arg("vertices"),py::arg("faces"),py::arg("orientation"),
+        "Exact topology, winding and self-intersection audit of rational indexed coordinates. "
+        "Uses the existing rational boundary predicates without converting to binary64. "
+        "This boundary audit does not establish multi-shell nesting or material partition.");
+    py::class_<verification::VerifiedFixedBoundary>(module,"VerifiedFixedBoundary")
+        .def_property_readonly("reference_identity",[](const verification::VerifiedFixedBoundary& proof){
+            return proof.facts().inputDigest;
+        });
+    module.def("verify_fixed_rational_boundary",
+        [](const std::vector<std::array<std::string,3>>& vertices,const py::object& faces) {
+            return verification::verifyFixedRationalBoundary(vertices,exactFacesFromPython(faces));
+        },py::arg("vertices"),py::arg("faces"),
+        "Own an immutable complete exact self-intersection/topology proof for a fixed boundary.");
+    module.def("audit_rational_boundary_with_fixed_proof",
+        [exactBoundaryMode,exactBoundaryFactsToPython](const std::vector<std::array<std::string,3>>& vertices,
+            const py::object& faces,const std::string& orientation,const verification::VerifiedFixedBoundary& proof,
+            bool profile) {
+            verification::BoundaryPerformance performance;
+            const auto result=verification::auditRationalBoundaryWithFixedProof(
+                vertices,exactFacesFromPython(faces),exactBoundaryMode(orientation),proof,profile?&performance:nullptr);
+            auto out=exactBoundaryFactsToPython(result.audit.facts(),
+                "exact-rational-boundary-input-v1/canonical-fractions/u64-big-endian");
+            out["reused_fixed_pair_tests"]=result.reusedPairTests;
+            out["fixed_proof_identity"]=proof.facts().inputDigest;
+            if(profile) {
+                py::dict detail;
+                detail["exclusive_seconds"]=performance.exclusiveSeconds;
+                detail["total_seconds"]=performance.totalSeconds;
+                detail["vertex_count"]=performance.vertexCount;
+                detail["face_count"]=performance.faceCount;
+                detail["matched_original_faces"]=performance.matchedOriginalFaces;
+                detail["exact_pair_tests"]=result.audit.facts().exactPairTests;
+                detail["reused_pair_tests"]=result.reusedPairTests;
+                out["performance"]=detail;
+            }
+            return out;
+        },py::arg("vertices"),py::arg("faces"),py::arg("orientation"),py::arg("proof"),py::arg("profile")=false,
+        "Reuse only exact unchanged original triangles with bijective indexed vertex correspondence; "
+        "check every new/mixed pair and all current topology, winding and exact volumes.");
 #endif
     module.def(
         "audit_triangle_boundary",
@@ -669,20 +1281,182 @@ PYBIND11_MODULE(_make_it_stand, module)
 #if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
     py::enum_<spin::QuadricMomentDerivativeMethod>(module, "SpinDerivativeMethod")
         .value("LEGACY_CONTINUOUS_IMPLICIT_SHAPE", spin::QuadricMomentDerivativeMethod::LegacyContinuousImplicitShape)
+        .value("DISCRETE_FULL_RANK_QUADRIC", spin::QuadricMomentDerivativeMethod::DiscreteFullRankQuadric)
+        .value("DISCRETE_REDUCED_STRATUM", spin::QuadricMomentDerivativeMethod::DiscreteReducedStratum)
         .value("DISCRETE_ELLIPSOID", spin::QuadricMomentDerivativeMethod::DiscreteEllipsoid);
+    py::enum_<spin::QuadricCapRadiusPolicy>(module, "SpinCapRadiusPolicy")
+        .value("REJECT_UNCERTIFIED", spin::QuadricCapRadiusPolicy::RejectUncertified)
+        .value("GROW_TO_CERTIFIED_V1", spin::QuadricCapRadiusPolicy::GrowToCertifiedV1);
+    module.def(
+        "spin_it_faster_quadric_hash",
+        [](const Eigen::VectorXd& coefficients) {
+            if (coefficients.size() != 10 || !coefficients.allFinite())
+            {
+                throw py::value_error(
+                    "normalized quadric coefficients must contain 10 finite values"
+                );
+            }
+            spin::QuadricCoefficients10::Vector fixed;
+            fixed = coefficients;
+            return spin::QuadricCoefficients10::hashNormalized(fixed);
+        },
+        py::arg("normalized_coefficients"));
     py::class_<spin::QuadricTriangulationSettings>(module, "SpinTriangulationSettings")
         .def(py::init<>())
         .def_readwrite("icosphere_subdivisions", &spin::QuadricTriangulationSettings::icosphereSubdivisions)
+        .def_readwrite("maximum_icosphere_subdivisions", &spin::QuadricTriangulationSettings::maximumIcosphereSubdivisions)
         .def_readwrite("paraboloid_grid_resolution", &spin::QuadricTriangulationSettings::paraboloidGridResolution)
         .def_readwrite("cylinder_angular_resolution", &spin::QuadricTriangulationSettings::cylinderAngularResolution)
+        .def_readwrite("hyperbolic_cylinder_grid_resolution", &spin::QuadricTriangulationSettings::hyperbolicCylinderGridResolution)
+        .def_readwrite("parabolic_cylinder_grid_resolution", &spin::QuadricTriangulationSettings::parabolicCylinderGridResolution)
         .def_readwrite("truncation_radius", &spin::QuadricTriangulationSettings::truncationRadius)
         .def_readwrite("maximum_radius_doublings", &spin::QuadricTriangulationSettings::maximumRadiusDoublings)
-        .def_readwrite("retain_fixed_normal_provenance", &spin::QuadricTriangulationSettings::retainFixedNormalProvenance);
+        .def_readwrite("retain_fixed_normal_provenance", &spin::QuadricTriangulationSettings::retainFixedNormalProvenance)
+        .def_readwrite("paper_projective_hyperboloid", &spin::QuadricTriangulationSettings::paperProjectiveHyperboloid)
+        .def_readwrite("algebraic_finite_map", &spin::QuadricTriangulationSettings::algebraicFiniteMap)
+        .def_readwrite("fixed_normal_paraboloid", &spin::QuadricTriangulationSettings::fixedNormalParaboloid)
+        .def_readwrite("rational_source_coordinates", &spin::QuadricTriangulationSettings::rationalSourceCoordinates)
+        .def_readwrite("compact_rational_source_coordinates", &spin::QuadricTriangulationSettings::compactRationalSourceCoordinates);
+    module.def(
+        "evaluate_spin_it_faster_source_motion",
+        [](
+            const Eigen::VectorXd& coefficients,
+            const py::object& designVertices,
+            const spin::QuadricTriangulationSettings& settings
+        )
+        {
+            if (coefficients.size() != 10 || !coefficients.allFinite())
+            {
+                throw py::value_error("quadric coefficients must contain 10 finite values");
+            }
+            const auto result = spin::evaluateQuadricSourceMotion(
+                spin::QuadricCoefficients10::fromUnnormalized(coefficients),
+                verticesFromPython(designVertices), settings);
+            py::dict output;
+            output["defined"] = result.defined;
+            output["diagnostic"] = result.diagnostic;
+            output["scientific_hash"] = result.scientificHash;
+            if (result.defined)
+            {
+                output["vertices"] = result.triangulation.closedBoundary.vertices;
+                output["faces"] = result.triangulation.closedBoundary.faces;
+                output["face_is_cap"] = result.triangulation.faceIsCap;
+                output["cap_face_count"] = result.triangulation.capFaceCount;
+                try
+                {
+                    output["side_selection_defined"] = true;
+                    output["interior_is_positive"] =
+                        spin::quadricSolidInteriorIsPositiveRegion(
+                            spin::QuadricCoefficients10::fromUnnormalized(coefficients),
+                            result.triangulation);
+                    output["side_selection_method"] =
+                        "interior-centroid-winding-or-oriented-interface-v1";
+                    output["side_selection_diagnostic"] = "";
+                }
+                catch (const std::exception& error)
+                {
+                    output["side_selection_defined"] = false;
+                    output["side_selection_diagnostic"] = error.what();
+                }
+                output["triangulation_hash"] = result.triangulation.hash;
+                output["paper_projective_hyperboloid"] = result.triangulation.paperProjectiveHyperboloid;
+                output["algebraic_finite_map"] = settings.algebraicFiniteMap;
+                output["source_normal_vertices"] = result.triangulation.sourceNormalVertexByVertex;
+                output["source_normal_edges"] = result.triangulation.sourceNormalEdgeByVertex;
+                output["source_projective_rays"] = result.triangulation.sourceProjectiveRayByVertex;
+                output["surface_type"] = spin::quadricSurfaceTypeToken(
+                    result.triangulation.type
+                );
+                output["truncation_radius"] = result.triangulation.truncationRadius;
+                output["initial_icosphere_subdivisions"] =
+                    result.triangulation.initialIcosphereSubdivisions;
+                output["effective_icosphere_subdivisions"] =
+                    result.triangulation.effectiveIcosphereSubdivisions;
+                output["interface_vertex_count"] = result.triangulation.interfaceVertexCount;
+                output["provenance"] = result.provenance;
+                Eigen::MatrixXd velocity(
+                    static_cast<Eigen::Index>(result.velocity.size()) * 3, 10);
+                for (std::size_t vertex = 0; vertex < result.velocity.size(); ++vertex)
+                {
+                    velocity.block<3, 10>(static_cast<Eigen::Index>(vertex) * 3, 0) =
+                        result.velocity[vertex];
+                }
+                output["vertex_velocity"] = std::move(velocity);
+            }
+            return output;
+        },
+        py::arg("coefficients"), py::arg("design_vertices"),
+        py::arg("settings") = spin::QuadricTriangulationSettings());
+    module.def(
+        "evaluate_spin_it_faster_stratum_source_motion",
+        [](const Eigen::VectorXd& coefficients, const py::object& designVertices,
+           const spin::QuadricTriangulationSettings& settings)
+        {
+            if (coefficients.size() != 10 || !coefficients.allFinite())
+                throw py::value_error("quadric coefficients must contain 10 finite values");
+            const auto q = spin::QuadricCoefficients10::fromUnnormalized(coefficients);
+            const auto result = spin::evaluateQuadricStratumSourceMotion(
+                q, verticesFromPython(designVertices), settings);
+            py::dict output;
+            output["defined"] = result.defined;
+            output["diagnostic"] = result.diagnostic;
+            output["scientific_hash"] = result.scientificHash;
+            output["derivative_scope"] = "REDUCED_FIXED_STRATUM_NOT_FULL_EQ14";
+            if (result.defined)
+            {
+                const Eigen::Index dimension = result.coefficientBasis.cols();
+                output["coefficient_basis"] = result.coefficientBasis;
+                output["vertices"] = result.triangulation.closedBoundary.vertices;
+                output["faces"] = result.triangulation.closedBoundary.faces;
+                output["face_is_cap"] = result.triangulation.faceIsCap;
+                output["cap_face_count"] = result.triangulation.capFaceCount;
+                output["triangulation_hash"] = result.triangulation.hash;
+                output["surface_type"] = spin::quadricSurfaceTypeToken(result.triangulation.type);
+                output["truncation_radius"] = result.triangulation.truncationRadius;
+                output["initial_icosphere_subdivisions"] = result.triangulation.initialIcosphereSubdivisions;
+                output["effective_icosphere_subdivisions"] = result.triangulation.effectiveIcosphereSubdivisions;
+                output["interface_vertex_count"] = result.triangulation.interfaceVertexCount;
+                output["provenance"] = result.provenance;
+                if (result.triangulation.fixedNormalParaboloid)
+                {
+                    output["fixed_normal_paraboloid"] = true;
+                    output["fixed_normals"] = result.triangulation.fixedNormals;
+                    output["source_normal_vertices"] = result.triangulation.sourceNormalVertexByVertex;
+                }
+                try
+                {
+                    output["side_selection_defined"] = true;
+                    output["interior_is_positive"] = spin::quadricSolidInteriorIsPositiveRegion(
+                        q, result.triangulation);
+                    output["side_selection_method"] = "interior-centroid-winding-or-oriented-interface-v1";
+                    output["side_selection_diagnostic"] = "";
+                }
+                catch (const std::exception& error)
+                {
+                    output["side_selection_defined"] = false;
+                    output["side_selection_diagnostic"] = error.what();
+                }
+                Eigen::MatrixXd velocity(
+                    static_cast<Eigen::Index>(result.vertexVelocity.size()) * 3, dimension);
+                for (std::size_t vertex = 0; vertex < result.vertexVelocity.size(); ++vertex)
+                    velocity.block(static_cast<Eigen::Index>(vertex) * 3, 0, 3, dimension) =
+                        result.vertexVelocity[vertex];
+                output["vertex_velocity"] = std::move(velocity);
+            }
+            return output;
+        },
+        py::arg("coefficients"), py::arg("design_vertices"),
+        py::arg("settings") = spin::QuadricTriangulationSettings());
     py::class_<spin::QuadricMomentEvaluatorSettings>(module, "SpinEvaluatorSettings")
         .def(py::init<>())
         .def_readwrite("triangulation", &spin::QuadricMomentEvaluatorSettings::triangulation)
         .def_readwrite("minimum_interface_gradient", &spin::QuadricMomentEvaluatorSettings::minimumInterfaceGradient)
-        .def_readwrite("derivative_method", &spin::QuadricMomentEvaluatorSettings::derivativeMethod);
+        .def_readwrite("derivative_method", &spin::QuadricMomentEvaluatorSettings::derivativeMethod)
+        .def_readwrite("diagnostic_stage_observer", &spin::QuadricMomentEvaluatorSettings::diagnosticStageObserver)
+        .def_readwrite("cap_radius_policy", &spin::QuadricMomentEvaluatorSettings::capRadiusPolicy)
+        .def_readwrite("exact_binary64_self_intersection", &spin::QuadricMomentEvaluatorSettings::exactBinary64SelfIntersection)
+        .def_readwrite("exact_binary64_source_boundary", &spin::QuadricMomentEvaluatorSettings::exactBinary64SourceBoundary)
+        .def_readwrite("exact_binary64_material_boundary", &spin::QuadricMomentEvaluatorSettings::exactBinary64MaterialBoundary);
     module.def(
         "integrate_raw_mass_moments",
         [](
@@ -720,6 +1494,13 @@ PYBIND11_MODULE(_make_it_stand, module)
         .value("MAXIMUM_MASS", spin::StaticObjective::MaximumMass)
         .value("LOWER_CENTER_OF_MASS", spin::StaticObjective::LowerCenterOfMass)
         .value("PARETO_TRADEOFF", spin::StaticObjective::ParetoTradeoff);
+    py::enum_<spin::StaticObjectiveMeasure>(module,"StaticObjectiveMeasure")
+        .value("DENSITY_WEIGHTED_MASS_V1",spin::StaticObjectiveMeasure::DensityWeightedMass)
+        .value("UNIFORM_DENSITY_VOLUME_V1",spin::StaticObjectiveMeasure::UniformDensityVolume);
+
+    py::enum_<spin::SpinningTopObjective>(module,"SpinningTopObjective")
+        .value("INERTIA_AND_LOWERING",spin::SpinningTopObjective::InertiaAndLowering)
+        .value("LOWER_CENTER_OF_MASS",spin::SpinningTopObjective::LowerCenterOfMass);
 
     py::enum_<api::SpinItFasterEvidence>(module, "SpinItFasterEvidence")
         .value(
@@ -735,6 +1516,62 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def(py::init<>())
         .def_readwrite("vertices", &spin::TriangleMesh::vertices)
         .def_readwrite("faces", &spin::TriangleMesh::faces);
+
+    py::class_<spin::HydrostaticGeometry>(module, "HydrostaticGeometry")
+        .def_property_readonly("submerged_boundary", [](const spin::HydrostaticGeometry& value) {
+            return value.submergedBoundary;
+        })
+        .def_readonly("displaced_volume", &spin::HydrostaticGeometry::displacedVolume)
+        .def_readonly("center_of_buoyancy", &spin::HydrostaticGeometry::centerOfBuoyancy)
+        .def_readonly("waterline_area", &spin::HydrostaticGeometry::waterlineArea)
+        .def_readonly("waterline_centroid", &spin::HydrostaticGeometry::waterlineCentroid)
+        .def_readonly("waterline_central_second_moment",
+                      &spin::HydrostaticGeometry::waterlineCentralSecondMoment);
+
+    py::class_<spin::HydrostaticEquilibrium>(module, "HydrostaticEquilibrium")
+        .def_readonly("geometry", &spin::HydrostaticEquilibrium::geometry)
+        .def_readonly("waterline_signed_offset",
+                      &spin::HydrostaticEquilibrium::waterlineSignedOffset)
+        .def_readonly("target_displaced_volume",
+                      &spin::HydrostaticEquilibrium::targetDisplacedVolume)
+        .def_readonly("volume_residual", &spin::HydrostaticEquilibrium::volumeResidual)
+        .def_readonly("iterations", &spin::HydrostaticEquilibrium::iterations);
+
+    module.def(
+        "compute_hydrostatic_geometry",
+        [](const py::object& vertices, const py::object& faces,
+           const Eigen::Vector3d& waterlineOrigin,
+           const Eigen::Vector3d& waterlineNormal) {
+            spin::TriangleMesh mesh;
+            mesh.vertices = verticesFromPython(vertices);
+            mesh.faces = facesFromPython(faces);
+            return spin::computeHydrostaticGeometry(mesh, waterlineOrigin, waterlineNormal);
+        },
+        py::arg("vertices"), py::arg("faces"), py::arg("waterline_origin"),
+        py::arg("waterline_normal")
+    );
+
+    module.def(
+        "find_hydrostatic_equilibrium",
+        [](const py::object& vertices, const py::object& faces,
+           const Eigen::Vector3d& referenceOrigin,
+           const Eigen::Vector3d& waterlineNormal,
+           const double targetDisplacedVolume,
+           const double relativeVolumeTolerance,
+           const int maximumIterations) {
+            spin::TriangleMesh mesh;
+            mesh.vertices = verticesFromPython(vertices);
+            mesh.faces = facesFromPython(faces);
+            return spin::findHydrostaticEquilibrium(
+                mesh, referenceOrigin, waterlineNormal, targetDisplacedVolume,
+                relativeVolumeTolerance, maximumIterations
+            );
+        },
+        py::arg("vertices"), py::arg("faces"), py::arg("reference_origin"),
+        py::arg("waterline_normal"), py::arg("target_displaced_volume"),
+        py::arg("relative_volume_tolerance") = 1e-10,
+        py::arg("maximum_iterations") = 80
+    );
 
     py::class_<spin::SpinTargetFrame>(module, "SpinTargetFrame")
         .def(py::init<>())
@@ -761,7 +1598,11 @@ PYBIND11_MODULE(_make_it_stand, module)
         )
         .def_readwrite("line_search_reduction", &spin::SpinSolverSettings::lineSearchReduction)
         .def_readwrite("maximum_geodesic_step", &spin::SpinSolverSettings::maximumGeodesicStep)
-        .def_readwrite("deterministic_seed", &spin::SpinSolverSettings::deterministicSeed);
+        .def_readwrite("deterministic_seed", &spin::SpinSolverSettings::deterministicSeed)
+        .def_readwrite(
+            "capture_evaluation_payload",
+            &spin::SpinSolverSettings::captureEvaluationPayload
+        );
 
     py::class_<spin::BuoyantStabilityData>(module, "BuoyantStabilityData")
         .def(py::init<>())
@@ -782,6 +1623,10 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_readwrite(
             "fixed_shell_volume",
             &spin::BuoyantStabilityData::fixedShellVolume
+        )
+        .def_readwrite(
+            "fixed_shell_density",
+            &spin::BuoyantStabilityData::fixedShellDensity
         );
 
     py::class_<physics::RawMassMoments10>(module, "RawMassMoments10")
@@ -803,6 +1648,7 @@ PYBIND11_MODULE(_make_it_stand, module)
         .def_readwrite("target_frame", &spin::SpinDesignRequest::targetFrame)
         .def_readwrite("mode", &spin::SpinDesignRequest::mode)
         .def_readwrite("static_objective", &spin::SpinDesignRequest::staticObjective)
+        .def_readwrite("static_objective_measure",&spin::SpinDesignRequest::staticObjectiveMeasure)
         .def_readwrite(
             "static_pareto_weight",
             &spin::SpinDesignRequest::staticParetoWeight
@@ -817,8 +1663,405 @@ PYBIND11_MODULE(_make_it_stand, module)
             &spin::SpinDesignRequest::minimumWallThickness
         )
         .def_readwrite("center_of_mass_weight", &spin::SpinDesignRequest::centerOfMassWeight)
+        .def_readwrite("spinning_top_objective", &spin::SpinDesignRequest::spinningTopObjective)
         .def_readwrite("buoyancy", &spin::SpinDesignRequest::buoyancy)
         .def_readwrite("settings", &spin::SpinDesignRequest::settings);
+
+    py::class_<spin::PlaneMomentEvaluatorSettings>(module, "PlaneMomentEvaluatorSettings")
+        .def(py::init<>())
+        .def_readwrite("truncation_radius", &spin::PlaneMomentEvaluatorSettings::truncationRadius);
+
+    py::class_<spin::BuoyantPlaneBalanceSettings>(module, "BuoyantPlaneBalanceSettings")
+        .def(py::init<>())
+        .def_readwrite("maximum_iterations", &spin::BuoyantPlaneBalanceSettings::maximumIterations)
+        .def_readwrite("maximum_line_search_steps", &spin::BuoyantPlaneBalanceSettings::maximumLineSearchSteps)
+        .def_readwrite("constraint_tolerance", &spin::BuoyantPlaneBalanceSettings::constraintTolerance)
+        .def_readwrite("backtracking_factor", &spin::BuoyantPlaneBalanceSettings::backtrackingFactor)
+        .def_readwrite("minimum_step", &spin::BuoyantPlaneBalanceSettings::minimumStep)
+        .def_readwrite("plane_evaluation", &spin::BuoyantPlaneBalanceSettings::planeEvaluation);
+
+    module.def(
+        "solve_planar_fidget_spinner",
+        [](
+            const std::vector<spin::PlanarBoundaryLoop>& designLoops,
+            const std::vector<spin::PlanarBoundaryLoop>& fixedLoops,
+            const std::optional<double>& fixedArealDensity,
+            const double designArealDensity,
+            const Eigen::Vector2d& initialCenter,
+            const std::size_t maximumIterations,
+            const std::size_t maximumFunctionEvaluations,
+            const double residualTolerance,
+            const double initialTrustRadius,
+            const double maximumTrustRadius,
+            const std::optional<Eigen::Vector2d>& extrusionInterval,
+            const std::optional<double>& extrusionVolumeDensity,
+            const py::list& fixedExtrusionLayers
+        )
+        {
+            spin_bindings::PlanarEvaluationLedger ledger;
+            try
+            {
+            if (extrusionInterval.has_value() != extrusionVolumeDensity.has_value())
+                throw std::invalid_argument(
+                    "extrusion interval and volume density must be supplied together");
+            if (fixedExtrusionLayers.empty() && fixedLoops.empty())
+                throw std::invalid_argument(
+                    "fixed material must be supplied as loops or extrusion layers");
+            if (fixedArealDensity &&
+                (!std::isfinite(*fixedArealDensity) || *fixedArealDensity <= 0.0))
+                throw std::invalid_argument(
+                    "fixed areal density must be finite and positive");
+            if (fixedLoops.empty() && fixedArealDensity)
+                throw std::invalid_argument(
+                    "omit fixed areal density when extrusion layers define the fixed material");
+            if (!fixedLoops.empty() && !fixedArealDensity)
+                throw std::invalid_argument(
+                    "fixed areal density is required with fixed material loops");
+            if (!fixedLoops.empty() &&
+                spin::planarRegionsHavePositiveAreaIntersection(
+                    designLoops, fixedLoops))
+                throw std::invalid_argument(
+                    "fixed and editable planar regions have positive-area overlap");
+
+            struct FixedExtrusionLayer
+            {
+                std::vector<spin::PlanarBoundaryLoop> loops;
+                Eigen::Vector2d z = Eigen::Vector2d::Zero();
+                double density = 0.0;
+            };
+            std::vector<FixedExtrusionLayer> layers;
+            Eigen::Matrix<double, 6, 1> projectedFixed =
+                Eigen::Matrix<double, 6, 1>::Zero();
+            std::vector<std::pair<Eigen::Vector2d,
+                std::vector<spin::PlanarBoundaryLoop>>> priorLayerRegions;
+            if (!fixedExtrusionLayers.empty())
+            {
+                if (!extrusionInterval)
+                    throw std::invalid_argument(
+                        "fixed extrusion layers require an extrusion interval for the design material");
+                layers.reserve(fixedExtrusionLayers.size());
+                for (const py::handle item : fixedExtrusionLayers)
+                {
+                    const py::dict layer = py::cast<py::dict>(item);
+                    FixedExtrusionLayer parsed;
+                    parsed.loops = py::cast<
+                        std::vector<spin::PlanarBoundaryLoop>>(layer["loops"]);
+                    parsed.z = py::cast<Eigen::Vector2d>(layer["z_interval"]);
+                    parsed.density = py::cast<double>(layer["volume_density"]);
+                    if (parsed.loops.empty() || !parsed.z.allFinite() ||
+                        !(parsed.z(1) > parsed.z(0)) ||
+                        !std::isfinite(parsed.density) || !(parsed.density > 0.0))
+                        throw std::invalid_argument(
+                            "fixed extrusion layer requires loops, finite increasing z, and positive density");
+                    const bool overlapsDesignZ =
+                        std::max(parsed.z(0), (*extrusionInterval)(0)) <
+                        std::min(parsed.z(1), (*extrusionInterval)(1));
+                    if (overlapsDesignZ &&
+                        spin::planarRegionsHavePositiveAreaIntersection(
+                            designLoops, parsed.loops))
+                        throw std::invalid_argument(
+                            "fixed extrusion layer overlaps the editable design material in 3D");
+                    for (const auto& previous : priorLayerRegions)
+                    {
+                        const bool overlapsZ =
+                            std::max(parsed.z(0), previous.first(0)) <
+                            std::min(parsed.z(1), previous.first(1));
+                        if (overlapsZ &&
+                            spin::planarRegionsHavePositiveAreaIntersection(
+                                parsed.loops, previous.second))
+                            throw std::invalid_argument(
+                                "fixed extrusion layers have positive-volume overlap");
+                    }
+                    const auto planar = spin::integratePlanarBoundaryLoops(parsed.loops);
+                    projectedFixed += planar.weighted(
+                        parsed.density*(parsed.z(1)-parsed.z(0))).vector();
+                    priorLayerRegions.emplace_back(parsed.z, parsed.loops);
+                    layers.push_back(std::move(parsed));
+                }
+                if (!fixedLoops.empty())
+                {
+                    Eigen::Matrix<double, 6, 1> suppliedFixed =
+                        spin::integratePlanarBoundaryLoops(fixedLoops).weighted(
+                            *fixedArealDensity).vector();
+                    for (Eigen::Index i = 0; i < suppliedFixed.size(); ++i)
+                        if (std::abs(projectedFixed(i)-suppliedFixed(i)) >
+                            1e-10*std::max(1.0, std::abs(suppliedFixed(i))))
+                            throw std::invalid_argument(
+                                "fixed extrusion layer projections do not match fixed areal moments");
+                }
+            }
+            spin::PlanarMassMoments6 fixedMoments;
+            if (layers.empty())
+            {
+                const auto supplied = spin::integratePlanarBoundaryLoops(fixedLoops)
+                    .weighted(*fixedArealDensity);
+                fixedMoments = supplied;
+            }
+            else
+            {
+                fixedMoments.mass = projectedFixed(0);
+                fixedMoments.firstX = projectedFixed(1);
+                fixedMoments.firstY = projectedFixed(2);
+                fixedMoments.secondXX = projectedFixed(3);
+                fixedMoments.secondYY = projectedFixed(4);
+                fixedMoments.secondXY = projectedFixed(5);
+            }
+            const spin::PlanarFidgetCircleProblem problem(
+                designLoops, fixedMoments, designArealDensity);
+            const spin::PlanarFidgetCircleEvaluation initial =
+                ledger.assess(problem, initialCenter, "binding_initial_assessment");
+            spin::PlanarDoglegOptions options;
+            options.maximumIterations = maximumIterations;
+            options.maximumFunctionEvaluations = maximumFunctionEvaluations;
+            options.residualTolerance = residualTolerance;
+            options.initialTrustRadius = initialTrustRadius;
+            options.maximumTrustRadius = maximumTrustRadius;
+            options.evaluationSink = [&](const spin::PlanarDoglegEvaluationEvent& event) {
+                ledger.solver.push_back(event);
+            };
+            spin::PlanarDoglegResult solved;
+            ledger.phase = "dogleg";
+            {
+                py::gil_scoped_release release;
+                solved = spin::solvePlanarFidgetCircle(problem, initialCenter, options);
+            }
+            const spin::PlanarFidgetCircleEvaluation final =
+                ledger.assess(problem, solved.center, "binding_final_assessment");
+            ledger.phase = "boundary_and_extrusion";
+            const auto boundary = spin::planarRegionDifferenceBoundary(
+                designLoops, spin::PlanarCircleDisk{solved.center, solved.radius});
+            py::dict output;
+            output["status"] = spin::toString(solved.status);
+            output["center"] = solved.center;
+            output["radius"] = solved.radius;
+            output["initial_normalized_residual"] = initial.normalizedResidual.norm();
+            output["normalized_residual"] = solved.normalizedResidual;
+            output["iterations"] = solved.iterations;
+            output["function_evaluations"] = solved.functionEvaluations;
+            output["accepted_steps"] = solved.acceptedSteps;
+            output["final_trust_radius"] = solved.finalTrustRadius;
+            output["fixed_material_moments"] = fixedMoments.vector();
+            output["initial_material_moments"] = problem.initialMaterial().vector();
+            output["removed_material_moments"] = final.removedMaterial.vector();
+            output["remaining_material_moments"] = final.remainingMaterial.vector();
+            output["normalized_first_moment_residual"] = final.normalizedResidual;
+            output["fixed_editable_region_overlap_status"] =
+                "DISJOINT_BY_EXACT_REGULARIZED_INTERSECTION";
+            output["boundary_defined"] = boundary.defined;
+            output["boundary_diagnostic"] = boundary.diagnostic;
+            py::list cycles;
+            for (const auto& cycle : boundary.cycles)
+            {
+                py::list pieces;
+                for (const auto& piece : cycle)
+                {
+                    py::dict item;
+                    item["type"] = piece.type == spin::PlanarBoundaryPieceType::LineSegment
+                        ? "LINE_SEGMENT" : "CIRCULAR_ARC";
+                    item["start"] = piece.start;
+                    item["end"] = piece.end;
+                    if (piece.type == spin::PlanarBoundaryPieceType::CircularArc)
+                    {
+                        item["center"] = piece.center;
+                        item["radius"] = piece.radius;
+                        item["start_angle"] = piece.startAngle;
+                        item["sweep"] = piece.sweep;
+                    }
+                    pieces.append(std::move(item));
+                }
+                cycles.append(std::move(pieces));
+            }
+            output["boundary_cycles"] = std::move(cycles);
+            output["geometry_scope"] = "exact_2d_line_arc_boundary";
+            if (extrusionInterval)
+            {
+                if (!boundary.defined)
+                    throw std::runtime_error(
+                        "exact extrusion unavailable: " + boundary.diagnostic);
+                const double designHeight = (*extrusionInterval)(1)-(*extrusionInterval)(0);
+                const double effectiveDesignArealDensity =
+                    *extrusionVolumeDensity*designHeight;
+                if (std::abs(effectiveDesignArealDensity-designArealDensity) >
+                    1e-10*std::max(1.0, std::abs(designArealDensity)))
+                    throw std::invalid_argument(
+                        "design areal density must equal extrusion volume density times height");
+                const auto moments = spin::integratePlanarBoundaryCyclesExtruded(
+                    boundary.cycles, (*extrusionInterval)(0), (*extrusionInterval)(1),
+                    *extrusionVolumeDensity);
+                output["extruded_design_material_raw_moments"] = moments.values();
+                output["extrusion_interval"] = *extrusionInterval;
+                output["extrusion_volume_density"] = *extrusionVolumeDensity;
+                output["geometry_scope"] = "exact_2d_boundary_and_analytic_extrusion";
+
+                if (layers.empty())
+                    output["extruded_material_scope"] = "variable_design_region_only";
+                else
+                {
+                    py::list fixedLayerMoments;
+                    py::list fixedLayerGeometry;
+                    auto completeMoments = moments;
+                    for (const auto& layer : layers)
+                    {
+                        std::vector<spin::PlanarBoundaryCycle> cycles;
+                        cycles.reserve(layer.loops.size());
+                        for (const auto& loop : layer.loops)
+                        {
+                            if (loop.size() < 3)
+                                throw std::invalid_argument(
+                                    "fixed extrusion boundary loop requires at least three points");
+                            spin::PlanarBoundaryCycle cycle;
+                            cycle.reserve(loop.size());
+                            for (std::size_t i = 0; i < loop.size(); ++i)
+                            {
+                                spin::PlanarBoundaryPiece piece;
+                                piece.type = spin::PlanarBoundaryPieceType::LineSegment;
+                                piece.start = loop[i];
+                                piece.end = loop[(i+1)%loop.size()];
+                                cycle.push_back(std::move(piece));
+                            }
+                            cycles.push_back(std::move(cycle));
+                        }
+                        const auto layerMoments =
+                            spin::integratePlanarBoundaryCyclesExtruded(
+                                cycles, layer.z(0), layer.z(1), layer.density);
+                        fixedLayerMoments.append(layerMoments.values());
+                        completeMoments += layerMoments;
+
+                        py::dict geometry;
+                        geometry["loops"] = layer.loops;
+                        geometry["z_interval"] = layer.z;
+                        geometry["volume_density"] = layer.density;
+                        fixedLayerGeometry.append(std::move(geometry));
+                    }
+                    output["extruded_fixed_layer_raw_moments"] = std::move(fixedLayerMoments);
+                    output["fixed_extrusion_layers"] = std::move(fixedLayerGeometry);
+                    output["extruded_complete_material_raw_moments"] =
+                        completeMoments.values();
+                    output["extruded_material_scope"] = "design_plus_fixed_layers";
+                    output["geometry_scope"] =
+                        "exact_2d_boundary_and_analytic_layered_extrusion";
+                }
+            }
+            ledger.phase = "complete";
+            output["evaluation_ledger"] = ledger.toPython();
+            return output;
+            }
+            catch (...)
+            {
+                ledger.rethrowWithLedger();
+            }
+        },
+        py::arg("design_region_loops"), py::arg("fixed_material_loops"),
+        py::arg("fixed_areal_density"), py::arg("design_areal_density"),
+        py::arg("initial_center"), py::arg("maximum_iterations") = 100,
+        py::arg("maximum_function_evaluations") = 60,
+        py::arg("residual_tolerance") = 1e-10,
+        py::arg("initial_trust_radius") = 0.25,
+        py::arg("maximum_trust_radius") = 1.0,
+        py::arg("extrusion_interval") = std::nullopt,
+        py::arg("extrusion_volume_density") = std::nullopt,
+        py::arg("fixed_extrusion_layers") = py::list());
+
+    module.def(
+        "evaluate_spin_it_faster_plane_halfspace",
+        [](const spin::SpinDesignRequest& request,
+           const Eigen::Vector4d& coefficients) {
+            if (!coefficients.allFinite() || coefficients.norm() <= 1e-15)
+                throw py::value_error("plane coefficients must be finite and nonzero");
+            spin::PlaneMomentEvaluation value;
+            {
+                py::gil_scoped_release release;
+                value = spin::evaluatePlaneMaterialMoments(request, coefficients);
+            }
+            py::dict output;
+            output["raw_moments"] = Eigen::VectorXd(value.variableMomentsTarget.values());
+            output["vertices"] = value.variableMaterialBoundaryTarget.vertices;
+            output["faces"] = value.variableMaterialBoundaryTarget.faces;
+            output["geometry_hash"] = value.geometryHash;
+            output["cap_separation_certificate"] = value.capSeparationCertificate;
+            output["interface_triangle_count"] = value.interfaceTriangleCount;
+            return output;
+        },
+        py::arg("request"), py::arg("coefficients"),
+        "Evaluate the actual finite Boolean material for one oriented plane half-space. "
+        "Call with c and -c to obtain the complementary design-domain pieces; "
+        "the caller must still authenticate their exact partition.");
+
+    module.def(
+        "solve_buoyant_stability_by_plane",
+        [](const spin::SpinDesignRequest& request,
+           const Eigen::Vector3d& initialParameters,
+           const spin::BuoyantPlaneBalanceSettings& settings) {
+            spin::BuoyantPlaneBalanceResult value;
+            {
+                py::gil_scoped_release release;
+                value = spin::solveBuoyantStabilityByPlane(request, initialParameters, settings);
+            }
+            py::dict output;
+            output["status"] = spin::buoyantPlaneBalanceStatusToken(value.status);
+            output["diagnostic"] = value.diagnostic;
+            output["plane_coefficients"] = value.planeCoefficients;
+            output["total_raw_moments"] = Eigen::VectorXd(value.totalMoments.values());
+            output["variable_raw_moments"] = Eigen::VectorXd(value.variableMoments.values());
+            output["constraints"] = value.constraints;
+            output["normalized_constraints"] = value.normalizedConstraints;
+            output["normalized_constraints_norm"] = value.normalizedConstraints.norm();
+            output["target_total_mass"] = value.targetTotalMass;
+            output["center_of_mass_height"] = value.centerOfMassHeight;
+            output["metacenter_height"] = value.metacenterHeight;
+            output["stability_margin"] = value.stabilityMargin;
+            output["equilibrium_constraints_verified"] = value.equilibriumConstraintsVerified;
+            output["eq7_numerical_conditions_verified"] = value.eq7NumericalConditionsVerified;
+            output["stable_at_prescribed_waterline"] = value.stableAtPrescribedWaterline;
+            output["iterations"] = value.iterations;
+            output["accepted_steps"] = value.acceptedSteps;
+            output["variable_material_vertices"] = value.evaluation.variableMaterialBoundaryTarget.vertices;
+            output["variable_material_faces"] = value.evaluation.variableMaterialBoundaryTarget.faces;
+            py::list trace;
+            for (const auto& row : value.trace) {
+                py::dict event;
+                event["evaluation"] = row.evaluation;
+                event["iteration"] = row.iteration;
+                event["plane_coefficients"] = row.planeCoefficients;
+                event["constraints"] = row.constraints;
+                event["normalized_constraints"] = row.normalizedConstraints;
+                event["residual_norm"] = row.residualNorm;
+                event["step"] = row.step;
+                event["accepted"] = row.accepted;
+                event["evaluation_succeeded"] = row.evaluationSucceeded;
+                event["derivative_available"] = row.derivativeAvailable;
+                event["diagnostic"] = row.diagnostic;
+                trace.append(std::move(event));
+            }
+            output["trace"] = std::move(trace);
+            return output;
+        },
+        py::arg("request"), py::arg("initial_parameters"),
+        py::arg("settings") = spin::BuoyantPlaneBalanceSettings());
+
+    module.def(
+        "solve_static_balance_by_plane_family",
+        [](const spin::SpinDesignRequest& request,
+           const Eigen::Vector4d& initialCoefficients,
+           const int maximumIterations,
+           const int maximumLineSearchSteps,
+           const double constraintTolerance) {
+            spin::PlaneStaticBalanceSettings settings;
+            settings.maximumIterations = maximumIterations;
+            settings.maximumLineSearchSteps = maximumLineSearchSteps;
+            settings.constraintTolerance = constraintTolerance;
+            spin::PlaneStaticBalanceResult value;
+            {
+                py::gil_scoped_release release;
+                value = spin::solveStaticBalanceByPlaneFamily(
+                    request, initialCoefficients, settings);
+            }
+            return staticPlaneResultToPython(value, request);
+        },
+        py::arg("request"), py::arg("initial_coefficients"),
+        py::arg("maximum_iterations") = 60,
+        py::arg("maximum_line_search_steps") = 24,
+        py::arg("constraint_tolerance") = 1e-10);
 
     py::class_<api::SpinItFasterArtifact>(module, "SpinItFasterArtifact")
         .def_property_readonly("status", &api::SpinItFasterArtifact::statusToken)
@@ -990,7 +2233,8 @@ PYBIND11_MODULE(_make_it_stand, module)
         [](
             const spin::SpinDesignRequest& request,
             const Eigen::VectorXd& coefficients,
-            const std::optional<spin::QuadricMomentEvaluatorSettings>& explicitSettings
+            const std::optional<spin::QuadricMomentEvaluatorSettings>& explicitSettings,
+            bool coefficientsAreNormalized
         )
         {
             if (coefficients.size() != 10 || !coefficients.allFinite())
@@ -999,10 +2243,13 @@ PYBIND11_MODULE(_make_it_stand, module)
                     "quadric coefficients must contain 10 finite values"
                 );
             }
+            const auto quadric = coefficientsAreNormalized
+                ? spin::QuadricCoefficients10::fromNormalized(coefficients)
+                : spin::QuadricCoefficients10::fromUnnormalized(coefficients);
             const spin::QuadricMomentEvaluation evaluation =
                 spin::evaluateQuadricMaterialMoments(
                     request,
-                    spin::QuadricCoefficients10::fromUnnormalized(coefficients),
+                    quadric,
                     explicitSettings.value_or(spin::QuadricMomentEvaluatorSettings())
                 );
             py::dict result;
@@ -1014,18 +2261,51 @@ PYBIND11_MODULE(_make_it_stand, module)
             result["topology_hash"] = evaluation.topologyHash;
             if (explicitSettings.has_value())
             {
+                result["boolean_backend_identity"] = evaluation.booleanBackendIdentity;
                 result["base_request_hash"] = spin::computeSpinDesignRequestHash(request);
                 result["request_hash"] = spin::computeQuadricEvaluatorRequestHash(request, *explicitSettings);
                 result["derivative_method"] = spin::quadricMomentDerivativeMethodToken(evaluation.derivativeMethod);
                 result["derivative_defined"] = evaluation.derivativeDefined;
                 result["derivative_diagnostic"] = evaluation.derivativeDiagnostic;
+                result["stratum_derivative_defined"] =
+                    evaluation.stratumDifferential.defined;
+                result["stratum_derivative_diagnostic"] =
+                    evaluation.stratumDifferential.diagnostic;
+                result["stratum_moment_jacobian"] =
+                    evaluation.stratumDifferential.jacobian;
+                result["stratum_coefficient_basis"] =
+                    evaluation.stratumDifferential.coefficientBasis;
                 result["derivative_scientific_hash"] = evaluation.derivativeScientificHash;
                 result["provenance_topology_hash"] = evaluation.provenanceTopologyHash;
+                // This sign is the native Boolean-operation decision made
+                // from the closed finite quadric solid, not a classification
+                // inferred from a reference Boolean result.  It lets an
+                // independent backend receive the same operands *and* the
+                // same intersection/minus semantics for diagnostic checks.
+                result["quadric_solid_is_positive_region"] =
+                    evaluation.quadricSolidIsPositiveRegion;
                 result["vertex_provenance"] = evaluation.vertexProvenance;
+                // Expose the exact finite triangulation passed to the native
+                // Boolean.  This is diagnostic-only and opt-in so an
+                // independent backend can receive byte-identical operands;
+                // it neither reruns nor replaces the CGAL operation.
+                result["interface_vertices"] =
+                    evaluation.quadricTriangulation.closedBoundary.vertices;
+                result["interface_faces"] =
+                    evaluation.quadricTriangulation.closedBoundary.faces;
                 result["material_vertices"] = evaluation.materialBoundary.vertices;
                 result["material_faces"] = evaluation.materialBoundary.faces;
                 result["outer_vertices"] = request.outerSurface.vertices;
                 result["outer_faces"] = request.outerSurface.faces;
+                if(explicitSettings->triangulation.rationalSourceCoordinates)
+                    result["rational_authority"]=rationalAuthorityToPython(
+                        evaluation.materialExactVerticesTarget,evaluation.designExactVerticesTarget,
+                        evaluation.quadricTriangulation.exactVertices,
+                        evaluation.quadricTriangulation.coordinateLower,
+                        evaluation.quadricTriangulation.coordinateUpper,
+                        evaluation.quadricTriangulation.closedBoundary.faces,
+                        evaluation.materialBirthFaces,evaluation.variableMomentsExactTarget,
+                        evaluation.geometryHash,evaluation.quadricTriangulation.rationalConstructionIdentity);
             }
             result["interface_type"] = std::string(
                 spin::quadricSurfaceTypeToken(
@@ -1035,9 +2315,7 @@ PYBIND11_MODULE(_make_it_stand, module)
             result["interface_subtype"] = std::string(
                 spin::quadricSurfaceSubtypeToken(
                     spin::classifyQuadricSurfaceSubtype(
-                        spin::QuadricCoefficients10::fromUnnormalized(
-                            coefficients
-                        )
+                        quadric
                     )
                 )
             );
@@ -1045,7 +2323,670 @@ PYBIND11_MODULE(_make_it_stand, module)
         },
         py::arg("request"),
         py::arg("quadric_coefficients"),
+        py::arg("evaluator_settings") = py::none(),
+        py::arg("coefficients_are_normalized") = false
+    );
+
+    // Opt-in diagnostic export of the exact default-evaluator result used by
+    // the solver. Keep the established moments-only API and solver defaults
+    // unchanged. An undefined ambient derivative is represented by None, not
+    // by the evaluator's zero-initialized storage.
+    module.def(
+        "evaluate_spin_it_faster_quadric_diagnostic",
+        [](
+            const spin::SpinDesignRequest& request,
+            const Eigen::VectorXd& coefficients
+        )
+        {
+            if (coefficients.size() != 10 || !coefficients.allFinite())
+            {
+                throw py::value_error(
+                    "quadric coefficients must contain 10 finite values"
+                );
+            }
+            const spin::QuadricMomentEvaluatorSettings settings{};
+            const spin::QuadricMomentEvaluation evaluation =
+                spin::evaluateQuadricMaterialMoments(
+                    request,
+                    spin::QuadricCoefficients10::fromUnnormalized(coefficients),
+                    settings
+                );
+            py::dict result;
+            result["variable_raw_moments"] =
+                Eigen::VectorXd(evaluation.variableMomentsTarget.values());
+            result["total_raw_moments"] =
+                Eigen::VectorXd(evaluation.totalMomentsTarget.values());
+            py::object momentJacobian = py::none();
+            if (evaluation.derivativeDefined)
+                momentJacobian = py::cast(evaluation.momentJacobian);
+            result["moment_jacobian"] = std::move(momentJacobian);
+            result["derivative_defined"] = evaluation.derivativeDefined;
+            result["derivative_method"] =
+                spin::quadricMomentDerivativeMethodToken(evaluation.derivativeMethod);
+            result["derivative_diagnostic"] = evaluation.derivativeDiagnostic;
+            result["residual_evaluation_seconds"] = evaluation.residualEvaluationSeconds;
+            result["derivative_evaluation_seconds"] = evaluation.derivativeEvaluationSeconds;
+            result["geometry_hash"] = evaluation.geometryHash;
+            result["topology_hash"] = evaluation.topologyHash;
+            result["base_request_hash"] = spin::computeSpinDesignRequestHash(request);
+            result["evaluator_request_hash"] =
+                spin::computeQuadricEvaluatorRequestHash(request, settings);
+            result["derivative_scientific_hash"] = evaluation.derivativeScientificHash;
+            result["provenance_topology_hash"] = evaluation.provenanceTopologyHash;
+            result["equation_profile"] =
+                spin::spinEquationProfileToken(request.settings.equationProfile);
+            return result;
+        },
+        py::arg("request"), py::arg("quadric_coefficients")
+    );
+
+    module.def(
+        "evaluate_spin_it_faster_fullrank_quadric",
+        [](
+            const spin::SpinDesignRequest& request,
+            const Eigen::VectorXd& coefficients,
+            const std::optional<spin::QuadricMomentEvaluatorSettings>& explicitSettings,
+            bool captureMaterialProof
+        )
+        {
+            if (coefficients.size() != 10 || !coefficients.allFinite())
+            {
+                throw py::value_error(
+                    "quadric coefficients must contain 10 finite values"
+                );
+            }
+            spin::FullRankMomentEvaluation evaluation;
+            const auto normalized=spin::QuadricCoefficients10::fromUnnormalized(coefficients);
+            {
+                py::gil_scoped_release release;
+                evaluation = spin::evaluateCanonicalFullRankMaterialMoments(
+                    request,
+                    normalized,
+                    explicitSettings.value_or(spin::QuadricMomentEvaluatorSettings())
+                );
+            }
+            py::dict result;
+            result["variable_raw_moments"] =
+                Eigen::VectorXd(evaluation.variableMomentsTarget.values());
+            result["total_raw_moments"] =
+                Eigen::VectorXd(evaluation.totalMomentsTarget.values());
+            result["geometry_hash"] = evaluation.geometryHash;
+            result["boolean_backend_identity"] = evaluation.booleanBackendIdentity;
+            result["source_scientific_hash"] = evaluation.sourceScientificHash;
+            result["scientific_hash"] = evaluation.scientificHash;
+            result["derivative_defined"] = evaluation.coefficientJacobian.has_value();
+            result["derivative_diagnostic"] = evaluation.diagnostic;
+            if (evaluation.coefficientJacobian)
+            {
+                result["coefficient_jacobian"] = Eigen::MatrixXd(*evaluation.coefficientJacobian);
+            }
+            else
+            {
+                result["coefficient_jacobian"] = py::none();
+            }
+            result["material_vertices"] = Eigen::MatrixXd(evaluation.materialBoundaryTarget.vertices);
+            result["material_faces"] = Eigen::MatrixXi(evaluation.materialBoundaryTarget.faces);
+            if(captureMaterialProof) {
+                // Attach the already-computed SAME Boolean tapes. No replay,
+                // new geometry, derivative or scientific hash is introduced.
+                py::dict proof;
+                proof["schema"]="same-call-cgal-material-proof-v1";
+                proof["exact_material_vertices"]=evaluation.materialExactVerticesTarget;
+                proof["material_birth_faces"]=Eigen::VectorXi(evaluation.materialBirthFaces);
+                proof["source_faces"]=Eigen::MatrixXi(evaluation.sourceFaces);
+                proof["provenance_topology_hash"]=evaluation.topologyHash;
+                proof["geometry_hash"]=evaluation.geometryHash;
+                result["material_proof_attachment"]=std::move(proof);
+            }
+            if(!evaluation.sourceExactVerticesTarget.empty()) {
+                result["rational_authority"]=rationalAuthorityToPython(evaluation);
+                result["normalized_coefficients"]=Eigen::VectorXd(normalized.values());
+                result["branch_identity"]=evaluation.rationalBranchIdentity;
+            }
+            return result;
+        },
+        py::arg("request"),
+        py::arg("coefficients"),
+        py::arg("evaluator_settings") = py::none(),
+        py::arg("capture_material_proof") = false
+    );
+
+    module.def(
+        "capture_spin_it_faster_fullrank_geometry",
+        [](const spin::SpinDesignRequest& request,
+           const Eigen::VectorXd& coefficients,
+           const spin::QuadricMomentEvaluatorSettings& settings)
+        {
+            if (coefficients.size()!=10 || !coefficients.allFinite())
+                throw py::value_error("quadric coefficients must contain 10 finite values");
+            const auto normalized=spin::QuadricCoefficients10::fromUnnormalized(coefficients);
+            std::vector<std::pair<std::string,spin::QuadricMomentEvaluation>> snapshots;
+            std::string error;
+            bool completed=false;
+            {
+                py::gil_scoped_release release;
+                spin::ScopedQuadricGeometryObserver observer(
+                    [&](const std::string& stage,const spin::QuadricMomentEvaluation& value) {
+                        snapshots.emplace_back(stage,value);
+                    });
+                try {
+                    (void)spin::evaluateCanonicalFullRankMaterialMoments(request,normalized,settings);
+                    completed=true;
+                } catch (const std::exception& failure) {
+                    error=failure.what();
+                }
+            }
+            py::list tape;
+            for (const auto& item:snapshots) {
+                const auto& value=item.second;
+                const auto& source=value.quadricTriangulation;
+                py::dict entry;
+                entry["stage"]=item.first;
+                entry["source_vertices"]=source.closedBoundary.vertices;
+                entry["source_faces"]=source.closedBoundary.faces;
+                entry["source_exact_vertices"]=source.exactVertices;
+                entry["source_face_is_cap"]=source.faceIsCap;
+                entry["source_fixed_normals"]=source.fixedNormals;
+                entry["source_normal_edges"]=source.sourceNormalEdgeByVertex;
+                entry["source_normal_vertices"]=source.sourceNormalVertexByVertex;
+                entry["source_projective_rays"]=source.sourceProjectiveRayByVertex;
+                entry["source_hash"]=source.hash;
+                entry["truncation_radius"]=source.truncationRadius;
+                entry["boundary_loop_count"]=source.boundaryLoopCount;
+                entry["material_vertices"]=value.materialBoundaryTarget.vertices;
+                entry["material_faces"]=value.materialBoundaryTarget.faces;
+                entry["exact_material_vertices"]=value.materialExactVerticesTarget;
+                entry["material_birth_faces"]=value.materialBirthFaces;
+                // Before side selection this bool has no semantic value.
+                entry["selected_positive_region"]=item.first=="source-before-side"
+                    ? py::object(py::none()) : py::cast(value.quadricSolidIsPositiveRegion);
+                tape.append(std::move(entry));
+            }
+            py::dict result;
+            result["schema"]="same-production-call-failure-tape-v1";
+            result["production_admission"]=false;
+            result["evaluation_completed"]=completed;
+            result["error"]=error;
+            result["normalized_coefficients"]=Eigen::VectorXd(normalized.values());
+            result["snapshots"]=std::move(tape);
+            return result;
+        },
+        py::arg("request"),py::arg("coefficients"),py::arg("evaluator_settings")
+    );
+
+    module.def(
+        "solve_spin_it_faster_fullrank_quadric",
+        [](
+            const spin::SpinDesignRequest& request,
+            const Eigen::MatrixXd& initialQuadrics,
+            const std::optional<spin::QuadricMomentEvaluatorSettings>& explicitSettings
+        )
+        {
+            if (initialQuadrics.cols() != 10 || !initialQuadrics.allFinite())
+            {
+                throw py::value_error(
+                    "initial quadrics must be a finite N-by-10 matrix"
+                );
+            }
+            std::vector<spin::QuadricCoefficients10> initial;
+            initial.reserve(static_cast<std::size_t>(initialQuadrics.rows()));
+            for (Eigen::Index row = 0; row < initialQuadrics.rows(); ++row)
+            {
+                initial.push_back(spin::QuadricCoefficients10::fromUnnormalized(
+                    initialQuadrics.row(row).transpose()
+                ));
+            }
+
+            spin::FullRankHollowingResult solved;
+            {
+                py::gil_scoped_release release;
+                solved = spin::solveCanonicalFullRankQuadricHollowing(
+                    request,
+                    explicitSettings.value_or(spin::QuadricMomentEvaluatorSettings()),
+                    initial
+                );
+            }
+
+            return fullRankResultToPython(solved, request.settings.captureEvaluationPayload);
+        },
+        py::arg("request"),
+        py::arg("initial_quadrics") = Eigen::MatrixXd(0, 10),
         py::arg("evaluator_settings") = py::none()
+    );
+
+    module.def(
+        "solve_spin_it_faster_external_moment_evaluator",
+        [](
+            const spin::SpinDesignRequest& request,
+            const py::function& pythonEvaluator,
+            const Eigen::MatrixXd& initialQuadrics,
+            const py::object& pythonEventSink,
+            const py::object& pythonSupportBasis
+        )
+        {
+            if (request.settings.equationProfile !=
+                spin::SpinEquationProfile::DualMonomialRawV1)
+            {
+                throw py::value_error(
+                    "external strict evaluator requires DUAL_MONOMIAL_RAW_V1"
+                );
+            }
+            // External maps bypass the normal request-owning solver wrapper.
+            spin::validateSpinningTopObjective(request);
+            // Never interpret arbitrary fixed mass as homogeneous volume.
+            if(request.staticObjectiveMeasure!=spin::StaticObjectiveMeasure::DensityWeightedMass)
+                spin::validateSpinDesignRequest(request);
+            if (!pythonEvaluator || initialQuadrics.cols() != 10 ||
+                !initialQuadrics.allFinite())
+            {
+                throw py::value_error(
+                    "external evaluator and finite N-by-10 initial quadrics are required"
+                );
+            }
+            if (!pythonEventSink.is_none() && !PyCallable_Check(pythonEventSink.ptr()))
+                throw py::value_error("event_sink must be callable or None");
+            const bool directional = !pythonSupportBasis.is_none();
+            const Eigen::MatrixXd supportBasis = directional
+                ? py::cast<Eigen::MatrixXd>(pythonSupportBasis) : Eigen::MatrixXd();
+            if (directional && initialQuadrics.rows()==0)
+                throw py::value_error("supported-space evaluator requires explicit initial quadrics");
+
+            spin::SpinMomentProblem problem = [&]() {
+                switch (request.mode)
+                {
+                case spin::SpinMode::StaticBalance:
+                    return request.staticObjective == spin::StaticObjective::ParetoTradeoff
+                        ? spin::SpinMomentProblem::staticBalancePareto(request.staticParetoWeight,spin::staticObjectiveMassScale(request))
+                        : spin::SpinMomentProblem::staticBalance(request.staticObjective,spin::staticObjectiveMassScale(request));
+                case spin::SpinMode::BuoyantStability:
+                    return spin::SpinMomentProblem::buoyantStability(
+                        request.buoyancy.liquidDensity * request.buoyancy.displacedLiquidVolume,
+                        request.buoyancy.centerOfBuoyancyTarget.head<2>()
+                    );
+                case spin::SpinMode::FidgetSpinner:
+                    return spin::SpinMomentProblem::fidgetSpinner();
+                case spin::SpinMode::YoYo:
+                    return spin::SpinMomentProblem::yoYo();
+                case spin::SpinMode::SpinningTop:
+                    return spin::SpinMomentProblem::spinningTop(request.centerOfMassWeight,request.spinningTopObjective);
+                }
+                throw py::value_error("unsupported Spin-It Faster mode");
+            }();
+
+            std::vector<spin::QuadricCoefficients10> guesses;
+            guesses.reserve(static_cast<std::size_t>(initialQuadrics.rows()));
+            for (Eigen::Index row = 0; row < initialQuadrics.rows(); ++row)
+            {
+                guesses.push_back(spin::QuadricCoefficients10::fromUnnormalized(
+                    initialQuadrics.row(row).transpose()
+                ));
+            }
+            if (guesses.empty())
+            {
+                guesses = spin::deterministicInitialQuadrics(
+                    request.mode, request.settings
+                );
+            }
+
+            int callbackIndex = 0;
+            py::list pythonCallbackDiagnostics;
+            const auto mapEvaluator =
+                [pythonEvaluator,directional,&callbackIndex,&pythonCallbackDiagnostics](const spin::QuadricCoefficients10& quadric)
+            {
+                ++callbackIndex;
+                try
+                {
+                py::tuple coefficients(10);
+                for (Eigen::Index i = 0; i < 10; ++i)
+                {
+                    coefficients[i] = quadric.values()(i);
+                }
+                const py::object returned = pythonEvaluator(coefficients);
+                if (!py::isinstance<py::dict>(returned))
+                {
+                    throw std::runtime_error(
+                        "external evaluator must return a mapping/dict"
+                    );
+                }
+                const py::dict value = py::cast<py::dict>(returned);
+                const auto required = [&value](const char* key) -> py::handle {
+                    if (!value.contains(key))
+                    {
+                        throw std::runtime_error(
+                            std::string("external evaluator omitted '") + key + "'"
+                        );
+                    }
+                    return value[key];
+                };
+                const std::string geometryHash = py::cast<std::string>(
+                    required("geometry_hash")
+                );
+                const std::string topologyHash = py::cast<std::string>(
+                    required("topology_hash")
+                );
+                const std::string evaluationMapIdentity = py::cast<std::string>(
+                    required("evaluation_map_identity")
+                );
+                const std::string booleanBackendIdentity = py::cast<std::string>(
+                    required("boolean_backend_identity")
+                );
+                const std::string derivativeIdentity = py::cast<std::string>(
+                    required("derivative_identity")
+                );
+                if (geometryHash.empty() || topologyHash.empty())
+                {
+                    throw std::runtime_error(
+                        "external evaluator geometry/topology hashes must be nonempty"
+                    );
+                }
+                const auto validIdentity = [](const std::string& identity) {
+                    return !identity.empty() && identity.find(';') == std::string::npos;
+                };
+                if (!validIdentity(evaluationMapIdentity) ||
+                    !validIdentity(booleanBackendIdentity) ||
+                    !validIdentity(derivativeIdentity))
+                {
+                    throw std::runtime_error(
+                        "external evaluator map/backend/derivative identities must be nonempty and delimiter-safe"
+                    );
+                }
+                spin::SpinMomentSubspaceMapEvaluation parsed;
+                auto& map = parsed.material;
+                const Eigen::VectorXd moments = py::cast<Eigen::VectorXd>(
+                    required("raw_moments")
+                );
+                if (moments.size() != 10)
+                {
+                    throw std::runtime_error("external evaluator must return a 10-vector");
+                }
+                map.rawMoments = moments;
+                if (directional)
+                {
+                    if (value.contains("moment_jacobian"))
+                        throw std::runtime_error("directional evaluator must not supply an ambient moment_jacobian");
+                    parsed.nativeTangentBasis = py::cast<Eigen::MatrixXd>(required("native_tangent_basis"));
+                    parsed.nativeDirectionalJacobian = py::cast<Eigen::MatrixXd>(required("native_directional_jacobian"));
+                }
+                else
+                {
+                    const Eigen::MatrixXd jacobian = py::cast<Eigen::MatrixXd>(required("moment_jacobian"));
+                    if (jacobian.rows()!=10 || jacobian.cols()!=10)
+                        throw std::runtime_error("external evaluator must return a 10-vector and 10-by-10 Jacobian");
+                    map.momentJacobian = jacobian;
+                }
+                if (value.contains("variable_raw_moments") &&
+                    !value["variable_raw_moments"].is_none())
+                {
+                    const Eigen::VectorXd variableMoments =
+                        py::cast<Eigen::VectorXd>(value["variable_raw_moments"]);
+                    if (variableMoments.size() != 10 || !variableMoments.allFinite())
+                    {
+                        throw std::runtime_error(
+                            "external evaluator variable_raw_moments must contain 10 finite values"
+                        );
+                    }
+                    map.variableRawMoments = variableMoments;
+                }
+                map.derivativeDefined = py::cast<bool>(
+                    required("derivative_defined")
+                );
+                if (value.contains("derivative_diagnostic"))
+                {
+                    map.derivativeDiagnostic = py::cast<std::string>(
+                        value["derivative_diagnostic"]
+                    );
+                }
+                map.geometryHash = geometryHash;
+                map.topologyHash = topologyHash;
+                map.evaluationMapIdentity = evaluationMapIdentity;
+                map.booleanBackendIdentity = booleanBackendIdentity;
+                map.derivativeIdentity = derivativeIdentity;
+                if (value.contains("residual_evaluation_seconds"))
+                {
+                    map.residualEvaluationSeconds = py::cast<double>(
+                        value["residual_evaluation_seconds"]
+                    );
+                }
+                if (value.contains("derivative_evaluation_seconds"))
+                {
+                    map.derivativeEvaluationSeconds = py::cast<double>(
+                        value["derivative_evaluation_seconds"]
+                    );
+                }
+                return parsed;
+                }
+                catch (const py::error_already_set& error)
+                {
+                    if (!directional) throw; // Historical full-space contract.
+                    const std::string type = py::str(error.type().attr("__module__")).cast<std::string>()
+                        + "." + py::str(error.type().attr("__qualname__")).cast<std::string>();
+                    const std::string message = py::str(error.value()).cast<std::string>();
+                    py::dict diagnostic;
+                    diagnostic["evaluation_index"] = callbackIndex;
+                    diagnostic["exception_type"] = type;
+                    diagnostic["message"] = message;
+                    diagnostic["traceback"] = error.what();
+                    pythonCallbackDiagnostics.append(std::move(diagnostic));
+                    // Both callback and mapping-extraction tracebacks are
+                    // diagnostics, not scientific identity.
+                    throw std::runtime_error(type + ": " + message);
+                }
+            };
+
+            spin::SpinNewtonEventSink eventSink;
+            if (!pythonEventSink.is_none())
+            {
+                const py::function callback = py::cast<py::function>(pythonEventSink);
+                eventSink = [callback](const spin::SpinSolverEvent& event) {
+                    callback(solverEventToPython(event));
+                };
+            }
+            std::optional<spin::SpinNewtonSubspaceResult> supported;
+            spin::SpinNewtonResult solved;
+            if (directional)
+            {
+                supported = spin::solveSpinMomentSubspaceSystem(problem,request.settings,
+                    supportBasis,mapEvaluator,guesses,eventSink);
+                solved = supported->solver;
+            }
+            else
+            {
+                solved = spin::solveSpinMomentSystem(problem,request.settings,
+                    [&](const spin::QuadricCoefficients10& q){return mapEvaluator(q).material;},
+                    guesses,eventSink);
+            }
+            py::dict result;
+            if (supported)
+            {
+                py::dict attachment;
+                attachment["version"] = supported->attachmentVersion;
+                attachment["support_basis"] = supported->supportBasis;
+                attachment["scientific_hash"] = supported->scientificHash;
+                attachment["python_callback_diagnostics"] = pythonCallbackDiagnostics;
+                py::list records;
+                for (const auto& record : supported->evaluations)
+                {
+                    py::dict row;
+                    row["evaluation_index"] = record.evaluationIndex;
+                    row["quadric_coefficients"] = record.quadricCoefficients;
+                    row["error"] = record.error;
+                    row["error_type"] = record.errorType;
+                    row["evaluation"] = py::none();
+                    row["linearization"] = py::none();
+                    if (record.evaluation)
+                    {
+                        const auto& e = *record.evaluation;
+                        py::dict value;
+                        value["raw_moments"] = e.material.rawMoments;
+                        value["variable_raw_moments"] = e.material.variableRawMoments
+                            ? py::cast(*e.material.variableRawMoments) : py::none();
+                        value["native_tangent_basis"] = e.nativeTangentBasis;
+                        value["native_directional_jacobian"] = e.nativeDirectionalJacobian;
+                        value["derivative_defined"] = e.material.derivativeDefined;
+                        value["derivative_diagnostic"] = e.material.derivativeDiagnostic;
+                        value["geometry_hash"] = e.material.geometryHash;
+                        value["topology_hash"] = e.material.topologyHash;
+                        value["evaluation_map_identity"] = e.material.evaluationMapIdentity;
+                        value["boolean_backend_identity"] = e.material.booleanBackendIdentity;
+                        value["derivative_identity"] = e.material.derivativeIdentity;
+                        row["evaluation"] = std::move(value);
+                    }
+                    if (record.linearization)
+                    {
+                        const auto& l = *record.linearization;
+                        py::dict value;
+                        value["solver_tangent"] = l.solverTangent;
+                        value["moment_tangent_jacobian"] = l.momentTangentJacobian;
+                        value["multipliers"] = l.multipliers;
+                        value["multiplier_mu"] = l.multiplierMu;
+                        value["full_residual"] = l.fullResidual;
+                        value["raw_residual"] = l.rawResidual;
+                        value["matrix"] = l.matrix;
+                        value["right_hand_side"] = l.rightHandSide;
+                        row["linearization"] = std::move(value);
+                    }
+                    records.append(std::move(row));
+                }
+                attachment["evaluations"] = std::move(records);
+                result["supported_space"] = std::move(attachment);
+            }
+            result["status"] = spin::spinSolverStatusToken(solved.status);
+            result["diagnostic"] = solved.diagnostic;
+            result["function_evaluations"] = solved.functionEvaluations;
+            result["restart_count"] = solved.restartCount;
+            result["restart_function_evaluations"] = solved.restartFunctionEvaluations;
+            result["normalized_equation_residual"] = solved.normalizedEquationResidual;
+            result["physical_relative_residual"] = solved.physicalRelativeResidual;
+            result["raw_equation_residual"] = solved.rawEquationResidual
+                ? py::cast(*solved.rawEquationResidual) : py::none();
+            result["multiplier_mu"] = solved.multiplierMu;
+            result["multipliers"] = Eigen::VectorXd(solved.multipliers);
+            result["quadric_coefficients"] = solved.quadric
+                ? py::cast(Eigen::VectorXd(solved.quadric->values())) : py::none();
+            result["equation_profile"] = spin::spinEquationProfileToken(
+                solved.equationProfile
+            );
+            result["event_hash"] = solved.eventHash;
+            result["trace_hash"] = solved.traceHash;
+            if (request.settings.captureEvaluationPayload)
+                result["event_stream_version"] = solved.eventStreamVersion;
+            result["final_geometry_verified"] = false;
+            result["scope"] = "numerical_newton_only_external_geometry_not_sealed";
+
+            py::list trace;
+            for (const auto& item : solved.trace)
+            {
+                py::dict entry;
+                entry["restart"] = item.restart;
+                entry["iteration"] = item.iteration;
+                entry["function_evaluations"] = item.functionEvaluations;
+                entry["normalized_equation_residual"] = item.normalizedEquationResidual;
+                entry["physical_relative_residual"] = item.physicalRelativeResidual;
+                entry["objective"] = item.objective;
+                entry["multiplier_mu"] = item.multiplierMu;
+                entry["accepted_geodesic_step"] = item.acceptedGeodesicStep;
+                entry["quadric_hash"] = item.quadricHash;
+                entry["material_geometry_hash"] = item.materialGeometryHash;
+                entry["material_topology_hash"] = item.materialTopologyHash;
+                entry["equation_profile"] = spin::spinEquationProfileToken(
+                    item.equationProfile
+                );
+                entry["solver_coordinate_identity"] =
+                    spin::spinSolverCoordinateIdentity(item.equationProfile);
+                entry["raw_equation_residual"] = item.rawEquationResidual
+                    ? py::cast(*item.rawEquationResidual) : py::none();
+                if (item.quadricCoefficients)
+                {
+                    const Eigen::Matrix<double, 10, 1> coefficients = Eigen::Map<
+                        const Eigen::Matrix<double, 10, 1>
+                    >(item.quadricCoefficients->data());
+                    entry["quadric_coefficients"] = coefficients;
+                }
+                else
+                {
+                    entry["quadric_coefficients"] = py::none();
+                }
+                trace.append(std::move(entry));
+            }
+            result["trace"] = std::move(trace);
+            py::list events;
+            for (const auto& event : solved.events)
+            {
+                py::dict entry;
+                entry["type"] = event.type;
+                entry["restart"] = event.restart;
+                entry["iteration"] = event.iteration;
+                entry["evaluation_index"] = event.evaluationIndex;
+                entry["restart_evaluation_index"] = event.restartEvaluationIndex;
+                entry["step"] = event.step ? py::cast(*event.step) : py::none();
+                entry["outcome"] = event.outcome;
+                entry["reason"] = event.reason;
+                entry["detail"] = event.detail;
+                entry["quadric_hash"] = event.quadricHash;
+                entry["normalized_equation_residual"] = event.normalizedEquationResidual
+                    ? py::cast(*event.normalizedEquationResidual) : py::none();
+                entry["physical_relative_residual"] = event.physicalRelativeResidual
+                    ? py::cast(*event.physicalRelativeResidual) : py::none();
+                entry["objective"] = event.objective
+                    ? py::cast(*event.objective) : py::none();
+                entry["multiplier_mu"] = event.multiplierMu
+                    ? py::cast(*event.multiplierMu) : py::none();
+                entry["material_geometry_hash"] = event.materialGeometryHash
+                    ? py::cast(*event.materialGeometryHash) : py::none();
+                entry["material_topology_hash"] = event.materialTopologyHash
+                    ? py::cast(*event.materialTopologyHash) : py::none();
+                entry["equation_profile"] = spin::spinEquationProfileToken(
+                    event.equationProfile
+                );
+                entry["solver_coordinate_identity"] =
+                    spin::spinSolverCoordinateIdentity(event.equationProfile);
+                entry["raw_equation_residual"] = event.rawEquationResidual
+                    ? py::cast(*event.rawEquationResidual) : py::none();
+                if (event.quadricCoefficients)
+                {
+                    const Eigen::Matrix<double, 10, 1> coefficients = Eigen::Map<
+                        const Eigen::Matrix<double, 10, 1>
+                    >(event.quadricCoefficients->data());
+                    entry["quadric_coefficients"] = coefficients;
+                }
+                else
+                {
+                    entry["quadric_coefficients"] = py::none();
+                }
+                if (event.evaluationPayload)
+                    entry["evaluation_payload"] =
+                        evaluationPayloadToPython(*event.evaluationPayload);
+                if (event.newtonSystemPayload)
+                    entry["newton_system_payload"] =
+                        newtonSystemPayloadToPython(*event.newtonSystemPayload);
+                events.append(std::move(entry));
+            }
+            result["events"] = std::move(events);
+            py::list evaluationTimings;
+            for (const auto& timing : solved.evaluationTimings)
+            {
+                py::dict entry;
+                entry["evaluation_index"] = timing.evaluationIndex;
+                entry["restart"] = timing.restart;
+                entry["restart_evaluation_index"] = timing.restartEvaluationIndex;
+                entry["evaluator_returned"] = timing.evaluatorReturned;
+                entry["wall_seconds"] = timing.wallSeconds;
+                entry["reported_residual_seconds"] = timing.reportedResidualSeconds
+                    ? py::cast(*timing.reportedResidualSeconds) : py::none();
+                entry["reported_derivative_seconds"] = timing.reportedDerivativeSeconds
+                    ? py::cast(*timing.reportedDerivativeSeconds) : py::none();
+                evaluationTimings.append(std::move(entry));
+            }
+            result["evaluation_timings"] = std::move(evaluationTimings);
+            return result;
+        },
+        py::arg("request"), py::arg("evaluator"),
+        py::arg("initial_quadrics") = Eigen::MatrixXd(0, 10),
+        py::arg("event_sink") = py::none(),
+        py::arg("support_basis") = py::none(),
+        "Run strict Eq.14 Newton with an external per-evaluation geometry/moment map. "
+        "The callback must return moments and a Jacobian from the same geometry call. "
+        "This numerical result does not certify or seal final geometry."
     );
 #endif
 
@@ -1107,6 +3048,202 @@ PYBIND11_MODULE(_make_it_stand, module)
             "STATIC_LOWERING",
             spin2014::Spin2014Objective::StaticLowering
         );
+
+#if MAKE_IT_STAND_HAS_SPIN_IT_FASTER
+    py::class_<spin2014::QuadricObjectiveSettings>(module, "Spin2014QuadricObjectiveSettings")
+        .def(py::init<>())
+        .def_readwrite("objective", &spin2014::QuadricObjectiveSettings::objective)
+        .def_readwrite("inertia_weight", &spin2014::QuadricObjectiveSettings::inertiaWeight)
+        .def_readwrite("center_weight", &spin2014::QuadricObjectiveSettings::centerWeight)
+        .def_readwrite("declared_length_unit", &spin2014::QuadricObjectiveSettings::declaredLengthUnit)
+        .def_readwrite("declared_mass_unit", &spin2014::QuadricObjectiveSettings::declaredMassUnit)
+        .def_readwrite("solver_mass_unit_in_declared_units", &spin2014::QuadricObjectiveSettings::solverMassUnitInDeclaredUnits)
+        .def_readwrite("solver_length_unit_in_declared_units", &spin2014::QuadricObjectiveSettings::solverLengthUnitInDeclaredUnits);
+#if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+    registerSpin2014AuthorityBindings(module);
+#endif
+
+    module.def("solve_spin2014_static_quadric_hollowing", [](
+        const spin::SpinDesignRequest& request,
+        const spin2014::QuadricObjectiveSettings& objective,
+        double fixedDensity, const std::optional<Eigen::Vector4d>& initial,
+        int maximumIterations, int maximumLineSearchSteps, double tolerance)
+    {
+        spin::PlaneStaticBalanceSettings settings;
+        settings.maximumIterations=maximumIterations;
+        settings.maximumLineSearchSteps=maximumLineSearchSteps;
+        settings.constraintTolerance=tolerance;
+        spin2014::QuadricStaticMaterialRun run;
+        {
+            py::gil_scoped_release release;
+            run=spin2014::solveSpin2014StaticQuadricHollowing(
+                request,objective,fixedDensity,initial,settings);
+        }
+        auto candidateRequest=run.measuredRequest;
+        candidateRequest.staticObjective=spin::StaticObjective::LowerCenterOfMass;
+        candidateRequest.staticObjectiveMeasure=spin::StaticObjectiveMeasure::DensityWeightedMass;
+        candidateRequest.staticParetoWeight=0;
+        py::dict result, checked;
+        const auto& v=run.squaredHeight;
+        checked["objective"]=v.evaluation.objective;
+        checked["objective_gradient"]=v.evaluation.objectiveGradient;
+        checked["objective_hessian"]=v.evaluation.objectiveHessian;
+        checked["constraints"]=v.evaluation.constraints;
+        checked["constraint_jacobian"]=v.evaluation.constraintJacobian;
+        checked["equality_multipliers"]=v.equalityMultipliers;
+        checked["multiplier"]=v.multiplier;
+        checked["stationarity_residual"]=v.stationarityResidual;
+        checked["degenerate_objective"]=v.degenerateObjective;
+        checked["squared_height_conditions_verified"]=v.squaredHeightConditionsVerified;
+        checked["boundary_witness_verified"]=v.boundaryWitnessVerified;
+        checked["boundary_witness_coefficients"]=v.boundaryWitnessCoefficients;
+        checked["boundary_multiplier"]=v.boundaryMultiplier;
+        checked["boundary_gradient_minimum"]=v.boundaryGradientMinimum;
+        checked["diagnostic"]=v.diagnostic;
+        result["schema"]="spin2014-static-quadric-material-run-v1";
+        result["objective_profile"]=run.objectiveProfile;
+        result["objective_identity"]=run.objectiveIdentity;
+        result["fixed_shell_moments"]=Eigen::VectorXd(run.measuredRequest.fixedShellMoments.values());
+        result["fixed_material_density"]=run.fixedMaterialDensity;
+        result["target_length"]=run.targetLength;
+        result["initialization"]=run.initialization;
+        result["initial_coefficients"]=run.initialCoefficients;
+        result["candidate"]=staticPlaneResultToPython(run.candidate,candidateRequest);
+        result["squared_height"]=std::move(checked);
+        return result;
+    }, py::arg("request"),py::arg("objective_settings"),py::arg("fixed_material_density"),
+       py::arg("initial_coefficients")=py::none(),py::arg("maximum_iterations")=60,
+       py::arg("maximum_line_search_steps")=24,py::arg("constraint_tolerance")=1e-10);
+
+    module.def("solve_spin2014_quadric_hollowing", [](
+        const spin::SpinDesignRequest& request,
+        const spin2014::QuadricObjectiveSettings& settings,
+        double fixedDensity, const spin::QuadricMomentEvaluatorSettings& evaluator,
+        const Eigen::MatrixXd& initialQuadrics, const py::object& pythonEventSink)
+    {
+        if (!pythonEventSink.is_none() && !PyCallable_Check(pythonEventSink.ptr()))
+            throw py::value_error("event_sink must be callable or None");
+        if (initialQuadrics.cols() != 10 || !initialQuadrics.allFinite())
+            throw py::value_error("initial quadrics must be a finite N-by-10 matrix");
+        std::vector<spin::QuadricCoefficients10> initial;
+        for (Eigen::Index row = 0; row < initialQuadrics.rows(); ++row)
+            initial.push_back(spin::QuadricCoefficients10::fromUnnormalized(
+                initialQuadrics.row(row).transpose()));
+        spin2014::QuadricMaterialRun run;
+        spin::SpinNewtonEventSink eventSink;
+        if (!pythonEventSink.is_none()) {
+            const py::function callback = py::cast<py::function>(pythonEventSink);
+            eventSink = [callback](const spin::SpinSolverEvent& event) {
+                py::gil_scoped_acquire acquire;
+                callback(solverEventToPython(event));
+            };
+        }
+        {
+            py::gil_scoped_release release;
+            run = spin2014::solveSpin2014QuadricHollowing(
+                request, settings, fixedDensity, evaluator, initial, eventSink);
+        }
+        py::dict result;
+        result["schema"] = "spin2014-quadric-material-run-v1";
+        result["objective_profile"] = run.objectiveProfile;
+        result["objective_identity"] = run.objectiveIdentity;
+        result["objective_token"] = spin2014::spin2014ObjectiveToken(settings.objective);
+        result["fixed_shell_moments"] = Eigen::VectorXd(run.measuredRequest.fixedShellMoments.values());
+        result["fixed_material_density"] = run.fixedMaterialDensity;
+        result["solve"] = fullRankResultToPython(run.solve, request.settings.captureEvaluationPayload);
+        result["material_export_complete"] = run.materialExportComplete;
+        result["material_export_diagnostic"] = run.materialExportDiagnostic;
+        result["cavity_vertices"] = run.cavityEvaluation
+            ? py::cast(Eigen::MatrixXd(run.cavityEvaluation->materialBoundaryTarget.vertices)) : py::none();
+        result["cavity_faces"] = run.cavityEvaluation
+            ? py::cast(Eigen::MatrixXi(run.cavityEvaluation->materialBoundaryTarget.faces)) : py::none();
+        result["cavity_raw_moments"] = run.cavityEvaluation
+            ? py::cast(Eigen::VectorXd(run.cavityEvaluation->variableMomentsTarget.values())) : py::none();
+        return result;
+    }, py::arg("request"), py::arg("objective_settings"),
+       py::arg("fixed_material_density"), py::arg("evaluator_settings"),
+       py::arg("initial_quadrics") = Eigen::MatrixXd(0, 10),
+       py::arg("event_sink") = py::none());
+#endif
+
+    module.def(
+        "evaluate_spin_it_2014_givens",
+        [](
+            spin2014::Spin2014Objective objective,
+            const Eigen::Matrix<double, 10, 1>& rawMoments,
+            double inertiaWeight,
+            double centerWeight,
+            double phi
+        )
+        {
+            if (
+                objective == spin2014::Spin2014Objective::StaticLowering &&
+                phi != 0.0
+            )
+            {
+                throw std::invalid_argument(
+                    "static Spin-It 2014 Givens evaluation requires phi=0"
+                );
+            }
+            spin2014::Spin2014GivensProblem::Vector11 state;
+            state.head<10>() = rawMoments;
+            state(10) = phi;
+            const spin2014::Spin2014GivensEvaluation evaluation =
+                spin2014::Spin2014GivensProblem(
+                    objective, inertiaWeight, centerWeight
+                ).evaluate(state);
+            py::list constraintHessians;
+            for (const auto& hessian : evaluation.constraintHessians)
+            {
+                constraintHessians.append(hessian);
+            }
+            py::dict result;
+            result["objective_token"] = spin2014::spin2014ObjectiveToken(objective);
+            result["formulation"] = "PAPER_GIVENS";
+            result["objective"] = evaluation.objective;
+            result["objective_gradient"] = evaluation.objectiveGradient;
+            result["objective_hessian"] = evaluation.objectiveHessian;
+            result["constraints"] = evaluation.constraints;
+            result["constraint_jacobian"] = evaluation.constraintJacobian;
+            result["constraint_hessians"] = constraintHessians;
+            return result;
+        },
+        py::arg("objective"),
+        py::arg("raw_moments"),
+        py::arg("inertia_weight") = 1.0,
+        py::arg("center_weight") = 1.0,
+        py::arg("phi") = 0.0,
+        "Evaluate the Spin-It 2014 paper Givens formulation without optimization."
+    );
+
+    module.def(
+        "spin_it_2014_stability_threshold_squared",
+        [](
+            double mass,
+            double gravity,
+            double centerHeight,
+            double axialInertia,
+            double middleInertia
+        )
+        {
+            if (
+                !std::isfinite(mass) || !std::isfinite(gravity) ||
+                !std::isfinite(centerHeight) || !std::isfinite(axialInertia) ||
+                !std::isfinite(middleInertia) || mass <= 0.0 || gravity < 0.0 ||
+                centerHeight < 0.0 || axialInertia <= middleInertia
+            )
+            {
+                throw std::invalid_argument(
+                    "Spin-It 2014 Eq. (1) requires M>0, g>=0, ell>=0 and Ic>Ib"
+                );
+            }
+            return mass * gravity * centerHeight /
+                (axialInertia - middleInertia);
+        },
+        py::arg("mass"), py::arg("gravity"), py::arg("center_height"),
+        py::arg("axial_inertia"), py::arg("middle_inertia"),
+        "Evaluate Spin-It 2014 Eq. (1)'s strict omega-squared stability bound."
+    );
 
     py::class_<api::SpinIt2014Artifact>(module, "SpinIt2014Artifact")
         .def_property_readonly("status", &api::SpinIt2014Artifact::statusToken)
@@ -1215,7 +3352,9 @@ PYBIND11_MODULE(_make_it_stand, module)
             double restorationTrustBound,
             int lpIterationLimit,
             double lpTimeLimit,
-            double lpFeasibilityTolerance
+            double lpFeasibilityTolerance,
+            const Eigen::Vector3d& targetOrigin,
+            const Eigen::Matrix3d& targetAxes
         )
         {
             voxel::GridSpec grid;
@@ -1232,6 +3371,8 @@ PYBIND11_MODULE(_make_it_stand, module)
             request.slqp.audit.lpIterationLimit=lpIterationLimit;
             request.slqp.audit.lpTimeLimit=lpTimeLimit;
             request.slqp.audit.lpFeasibilityTolerance=lpFeasibilityTolerance;
+            request.targetFrame.origin=targetOrigin;
+            request.targetFrame.axes=targetAxes;
             request.domain = voxel::VoxelDomain::create(
                 grid, materialMask, {}, carveableMask
             );
@@ -1285,7 +3426,9 @@ PYBIND11_MODULE(_make_it_stand, module)
         py::arg("slqp_restoration_trust_bound") = 1.0,
         py::arg("slqp_lp_iteration_limit") = 10000,
         py::arg("slqp_lp_time_limit") = 10.0,
-        py::arg("slqp_lp_feasibility_tolerance") = 1e-9
+        py::arg("slqp_lp_feasibility_tolerance") = 1e-9,
+        py::arg("target_origin") = Eigen::Vector3d::Zero(),
+        py::arg("target_axes") = Eigen::Matrix3d::Identity()
     );
 
     module.def(

@@ -152,6 +152,27 @@ class FasterSection66ExactTests(unittest.TestCase):
 
 
 class FasterSection66RunnerTests(unittest.TestCase):
+    def test_consistently_rehashed_wrong_science_is_not_current(self):
+        api = importlib.import_module("make_it_stand.verification.faster_section_6_6")
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "run"
+            result = self.run_cli(SPEC, PDF, output)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result_path = output / "result.json"
+            evidence_path = output / "evidence.json"
+            scientific = json.loads(result_path.read_text())
+            evidence = json.loads(evidence_path.read_text())
+            scientific["scientific_data"]["cases"][0]["objective"] = "1"
+            digest = api.scientific_sha256(scientific["scientific_data"])
+            scientific["scientific_data_sha256"] = digest
+            result_path.write_text(api.canonical_json(scientific))
+            evidence["outputs"]["result"] = api.file_record(result_path)
+            evidence["scientific_data_sha256"] = digest
+            evidence_path.write_text(api.canonical_json(evidence))
+            assessment = api.check_evidence_freshness(evidence_path)
+            self.assertEqual(assessment["status"], "STALE_RESULT")
+            self.assertTrue(any("recomputed" in x for x in assessment["mismatches"]))
+
     def run_cli(self, spec, paper, output):
         environment = dict(os.environ)
         environment["PYTHONPATH"] = str(ROOT / "python")

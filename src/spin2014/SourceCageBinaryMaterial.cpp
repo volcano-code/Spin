@@ -40,7 +40,9 @@ std::string configHash(const SourceCageBinaryMaterialSettings& s) {
     const auto& g=s.geometry;
     for(auto n:{s.maximumPoints,s.maximumTriangles,s.maximumOwnedBytes,s.maximumExactDiagnosticBytes,
         g.maximumPoints,g.maximumTriangles,g.maximumPrimitives,g.maximumPairs,g.maximumRecords,g.maximumCheckerBytes,
-        g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes})h.integer(n);
+        g.maximumNefComplexity,g.maximumConnectedShells,g.maximumExactStringBytes,
+        g.maximumExactPairCacheEntries,g.maximumPrimitiveRegionCacheEntries,
+        g.maximumPrimitiveRegionCacheBytes,g.maximumPrimitiveRegionCacheComplexity})h.integer(n);
     return h.finish();
 }
 void terminal(SourceCageBinaryMaterialFacts& f,Outcome o,const char* s) {

@@ -118,6 +118,61 @@ def objective_for_case(case: dict[str, Any]) -> str:
     ))
 
 
+def derive_evidence_flags(
+    *,
+    asset_class: str,
+    configured_maximum_level: int,
+    paper_maximum_level: int,
+    observed_maximum_solved_level: int | None,
+    paper_numeric_comparison_passed: bool,
+    cage_requested: bool,
+    cage_statuses: Iterable[str],
+) -> dict[str, Any]:
+    """Separate run configuration from observed, provenance-qualified evidence."""
+    exact_input = asset_class in {
+        "AUTHOR_ORIGINAL",
+        "PUBLISHED_EXACT_SPECIFICATION",
+    }
+    cap_matches = configured_maximum_level >= paper_maximum_level
+    observed_level = observed_maximum_solved_level
+    observed_level_verified = (
+        isinstance(observed_level, int)
+        and not isinstance(observed_level, bool)
+        and observed_level >= 0
+    )
+    observed_level_within_cap = (
+        observed_level_verified and observed_level <= configured_maximum_level
+    )
+    cage_rows = tuple(cage_statuses)
+    return {
+        "configured_level_cap_at_least_paper": cap_matches,
+        "observed_maximum_solved_level": observed_level if observed_level_verified else None,
+        "observed_level_consistent_with_cap": observed_level_within_cap,
+        "paper_resolution_reproduced": bool(
+            exact_input
+            and cap_matches
+            and observed_level_within_cap
+            and observed_level >= paper_maximum_level
+        ),
+        "paper_numerics_reproduced": bool(
+            exact_input and paper_numeric_comparison_passed is True
+        ),
+        "cage_deformation_executed": bool(
+            cage_requested and cage_rows and all(status == "CONVERGED" for status in cage_rows)
+        ),
+    }
+
+
+def aggregate_cage_execution(case_rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    requested = [row for row in case_rows if row.get("cage_deformation_requested") is True]
+    executed = [row for row in requested if row.get("cage_deformation_executed") is True]
+    return {
+        "requested_case_count": len(requested),
+        "executed_case_count": len(executed),
+        "all_requested_cases_executed": bool(requested) and len(executed) == len(requested),
+    }
+
+
 def paper_metrics(
     mode: str,
     raw: Iterable[float],
@@ -387,8 +442,27 @@ def run_case(
         )
         for row in rows
     )
+    cage_requested = bool(case.get("cage", {}).get("deformation_enabled", False))
+    evidence = derive_evidence_flags(
+        asset_class="RECONSTRUCTED_ASSET",
+        configured_maximum_level=effective_level,
+        paper_maximum_level=int(case["paper_maximum_octree_level"]),
+        # The current AdaptiveVoxelSpinResult does not expose the deepest
+        # optimization leaf level; the level cap alone is not proof it was hit.
+        observed_maximum_solved_level=None,
+        # This runner has no author-output comparison data; selecting the
+        # published tolerance is reported separately below.
+        paper_numeric_comparison_passed=False,
+        cage_requested=cage_requested,
+        cage_statuses=(
+            row.get("cage_deformation", {}).get("status")
+            for row in rows
+            if "cage_deformation" in row
+        ),
+    )
     payload = {
         "id": case["id"],
+        "scope": "RECONSTRUCTED_SYNTHETIC_REGRESSION",
         "paper_role": case["paper_role"],
         "mode": case["mode"],
         "objective": objective,
@@ -403,10 +477,14 @@ def run_case(
         "physical_validation": False,
         "maximum_octree_level": effective_level,
         "paper_maximum_octree_level": int(case["paper_maximum_octree_level"]),
-        "paper_resolution_reproduced": effective_level >= int(case["paper_maximum_octree_level"]),
+        "configured_level_cap_at_least_paper": evidence["configured_level_cap_at_least_paper"],
+        "observed_maximum_solved_level": evidence["observed_maximum_solved_level"],
+        "observed_level_consistent_with_cap": evidence["observed_level_consistent_with_cap"],
+        "paper_resolution_reproduced": evidence["paper_resolution_reproduced"],
         "binary_constraint_tolerance": effective_binary_tolerance,
         "paper_binary_constraint_tolerance": float(case["paper_binary_constraint_tolerance"]),
-        "paper_numerics_reproduced": effective_binary_tolerance <= float(case["paper_binary_constraint_tolerance"]),
+        "paper_binary_constraint_tolerance_selected": effective_binary_tolerance <= float(case["paper_binary_constraint_tolerance"]),
+        "paper_numerics_reproduced": evidence["paper_numerics_reproduced"],
         "laplacian_weight": effective_laplacian_weight,
         "laplacian_weight_evidence": case["laplacian_weight_evidence"],
         "initial_fill": float(case.get("initial_fill", 0.5)),
@@ -416,11 +494,8 @@ def run_case(
         "paper_reported_manual_cuts": case["manual_planar_cuts"],
         "automatic_cut_optimization": False,
         "mass_reduction_extension": bool(case.get("mass_reduction_extension", False)),
-        "cage_deformation_requested": bool(case.get("cage", {}).get("deformation_enabled", False)),
-        "cage_deformation_executed": bool(rows) and all(
-            row.get("cage_deformation", {}).get("status") == "CONVERGED"
-            for row in rows
-        ) if bool(case.get("cage", {}).get("deformation_enabled", False)) else True,
+        "cage_deformation_requested": cage_requested,
+        "cage_deformation_executed": evidence["cage_deformation_executed"],
         "deterministic": deterministic,
         "passed": passed,
         "repeats": rows,
@@ -448,25 +523,29 @@ def main() -> int:
         run_case(case, args.repeats, args.maximum_level, args.bundle_root)
         for case in cases
     ]
+    cage_summary = aggregate_cage_execution(results)
+    reconstructed_cases_passed = bool(results) and all(row["passed"] for row in results)
     payload = {
-        "schema": "spin-it-2014-paper-results-v1",
-        "schema_version": 1,
+        "schema": "spin-it-2014-reconstructed-run-v2",
+        "schema_version": 2,
+        "scope": "RECONSTRUCTED_SYNTHETIC_REGRESSION",
         "paper_doi": "10.1145/2601097.2601157",
         "asset_class": "RECONSTRUCTED_ASSET",
         "author_exact": False,
         "physical_validation": False,
         "paper_resolution_reproduced": bool(results) and all(row["paper_resolution_reproduced"] for row in results),
         "paper_numerics_reproduced": bool(results) and all(row["paper_numerics_reproduced"] for row in results),
-        "cage_deformation_executed": bool(results) and all(
-            row["cage_deformation_executed"] for row in results
-        ),
-        "all_public_computational_cases_passed": all(row["passed"] for row in results),
+        "cage_deformation_requested_case_count": cage_summary["requested_case_count"],
+        "cage_deformation_executed_case_count": cage_summary["executed_case_count"],
+        "cage_deformation_executed": cage_summary["all_requested_cases_executed"],
+        "all_reconstructed_regression_cases_passed": reconstructed_cases_passed,
+        "all_public_computational_cases_passed": False,
         "cases": results,
     }
     payload["scientific_hash"] = scientific_hash(payload)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return 0 if payload["all_public_computational_cases_passed"] else 2
+    return 0 if payload["all_reconstructed_regression_cases_passed"] else 2
 
 
 if __name__ == "__main__":

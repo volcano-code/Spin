@@ -1,4 +1,5 @@
 #include "verification/ExactMaterialRegion.h"
+#include "verification/ExactRationalCoordinates.h"
 #include "verification/ExactCuboidUnion.h"
 #include "verification/Sha256.h"
 #include "ExactBoundaryDistance.h"
@@ -8,6 +9,7 @@
 #include <CGAL/Polyhedron_incremental_builder_3.h>
 #include <CGAL/Nef_polyhedron_3.h>
 #include <CGAL/Surface_mesh.h>
+#include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/boost/graph/convert_nef_polyhedron_to_polygon_mesh.h>
 #include <algorithm>
 #include <cmath>
@@ -17,6 +19,8 @@
 #include <map>
 #include <functional>
 #include <set>
+#include <limits>
+#include <chrono>
 
 namespace verification {
 ExactNefBudget::ExactNefBudget(std::size_t maximumComplexity) {
@@ -185,18 +189,56 @@ void finiteRegularSolid(Nef& set, bool allowEmpty, const char* operation) {
     if (!difference.is_empty()) throw std::runtime_error(std::string(operation)+": non-regular solid");
 }
 
+CGAL::Gmpq exactRegularizedVolume(const Nef& region) {
+    if(region.is_empty()) return CGAL::Gmpq(0);
+    Nef regular=region.regularization();
+    checked(regular,"symmetric-difference regularization");
+    if(regular.is_empty()) return CGAL::Gmpq(0);
+    CGAL::Gmpq signedVolume(0);
+    const Kernel::Point_3 origin(0,0,0);
+    for(auto facet=regular.halffacets_begin();facet!=regular.halffacets_end();++facet) {
+        if(!facet->incident_volume()->mark()) continue;
+        // The marked-side twin carries the outward-oriented cycles of this
+        // boundary. Summing signed fan tetrahedra over every cycle naturally
+        // subtracts polygon holes and internal cavity shells without meshing.
+        const auto orientedFacet=facet->twin();
+        for(auto cycle=orientedFacet->facet_cycles_begin();cycle!=orientedFacet->facet_cycles_end();++cycle) {
+            if(!cycle.is_shalfedge())
+                throw std::runtime_error("finite Nef volume has a non-polygon facet cycle");
+            Nef::SHalfedge_around_facet_const_circulator current(cycle),end(current);
+            std::vector<Kernel::Point_3> ring;
+            do {
+                ring.push_back(current->source()->center_vertex()->point());
+                ++current;
+            } while(current!=end);
+            if(ring.size()<3)
+                throw std::runtime_error("finite Nef volume has a short facet boundary cycle");
+            for(std::size_t index=1;index+1<ring.size();++index)
+                signedVolume+=CGAL::volume(origin,ring[0],ring[index],ring[index+1]);
+        }
+    }
+    return CGAL::sign(signedVolume)<0 ? -signedVolume : signedVolume;
+}
+
+std::string exactString(const CGAL::Gmpq& value) {
+    std::ostringstream out;
+    out.imbue(std::locale::classic());
+    out<<value;
+    return out.str();
+}
+
 class ComponentBuilder : public CGAL::Modifier_base<Polyhedron::HalfedgeDS> {
-    const Eigen::MatrixXd& vertices_;
+    const std::vector<Kernel::Point_3>& vertices_;
     const Eigen::MatrixXi& faces_;
     const std::vector<int>& components_;
     int component_;
     bool reverse_;
 public:
-    ComponentBuilder(const Eigen::MatrixXd& v,const Eigen::MatrixXi& f,
+    ComponentBuilder(const std::vector<Kernel::Point_3>& v,const Eigen::MatrixXi& f,
                      const std::vector<int>& c,int component,bool reverse)
         : vertices_(v),faces_(f),components_(c),component_(component),reverse_(reverse) {}
     void operator()(Polyhedron::HalfedgeDS& hds) override {
-        std::vector<int> local(vertices_.rows(),-1);
+        std::vector<int> local(vertices_.size(),-1);
         int count=0,faceCount=0;
         for (Eigen::Index i=0;i<faces_.rows();++i) if (components_[i]==component_) {
             ++faceCount;
@@ -205,9 +247,8 @@ public:
         for (auto& index : local) if (index==0) index=count++;
         CGAL::Polyhedron_incremental_builder_3<Polyhedron::HalfedgeDS> builder(hds,true);
         builder.begin_surface(count,faceCount);
-        for (Eigen::Index i=0;i<vertices_.rows();++i) if (local[i]>=0)
-            builder.add_vertex(Kernel::Point_3(CGAL::Gmpq(vertices_(i,0)),
-                                              CGAL::Gmpq(vertices_(i,1)),CGAL::Gmpq(vertices_(i,2))));
+        for (std::size_t i=0;i<vertices_.size();++i) if (local[i]>=0)
+            builder.add_vertex(vertices_[i]);
         for (Eigen::Index i=0;i<faces_.rows();++i) if (components_[i]==component_) {
             builder.begin_facet();
             for (int j=0;j<3;++j) builder.add_vertex_to_facet(local[faces_(i,reverse_?2-j:j)]);
@@ -232,6 +273,95 @@ std::string boundaryError(const ExactBoundaryFacts& b) {
 }
 } // namespace
 
+ExactMaterialBoundaryFacts auditExactRationalMaterialBoundary(
+    const std::vector<std::array<std::string,3>>& vertices,
+    const Eigen::MatrixXi& faces,const VerifiedFixedBoundary* fixedProof) {
+    using Clock=std::chrono::steady_clock;
+    ExactMaterialBoundaryFacts result;
+    const auto started=Clock::now();
+    if(fixedProof) {
+        const auto audit=auditRationalBoundaryWithFixedProof(vertices,faces,
+            ExactBoundaryOrientation::AnyNonzero,*fixedProof);
+        result.boundary=audit.audit.facts();
+        result.reusedPairTests=audit.reusedPairTests;
+        result.fixedProofIdentity=fixedProof->facts().inputDigest;
+    } else result.boundary=auditExactTriangleBoundaryRational(vertices,faces,
+        ExactBoundaryOrientation::AnyNonzero).facts();
+    result.boundarySeconds=std::chrono::duration<double>(Clock::now()-started).count();
+    if(!result.boundary.boundaryValid) {
+        result.completed=result.boundary.intersectionCompleted;
+        result.error=boundaryError(result.boundary);
+        return result;
+    }
+    const auto nestingStarted=Clock::now();
+    try {
+        std::vector<Kernel::Point_3> points;
+        points.reserve(vertices.size());
+        for(const auto& row:vertices)
+            points.emplace_back(parseExactRationalCoordinate(row[0]),
+                parseExactRationalCoordinate(row[1]),parseExactRationalCoordinate(row[2]));
+        result.originalSigns=result.boundary.componentVolumeSigns;
+        const int n=static_cast<int>(result.originalSigns.size());
+        result.witnessVertices.assign(n,-1);
+        for(Eigen::Index face=0;face<faces.rows();++face) {
+            const int component=result.boundary.faceComponents[face];
+            if(result.witnessVertices[component]<0) result.witnessVertices[component]=faces(face,0);
+        }
+        using Side=CGAL::Side_of_triangle_mesh<Polyhedron,Kernel>;
+        // Trees borrow their component surfaces. Keep all surfaces alive until
+        // every exact query completes, and destroy trees before the surfaces.
+        std::vector<std::unique_ptr<Polyhedron>> surfaces;
+        std::vector<std::unique_ptr<Side>> sides;
+        for(int i=0;i<n;++i) {
+            auto surface=std::make_unique<Polyhedron>();
+            ComponentBuilder builder(points,faces,result.boundary.faceComponents,i,result.originalSigns[i]<0);
+            surface->delegate(builder);
+            if(surface->empty() || !surface->is_valid() || !surface->is_closed())
+                throw std::runtime_error("point-location component is not a closed valid surface");
+            surfaces.push_back(std::move(surface));
+            sides.push_back(std::make_unique<Side>(*surfaces.back()));
+        }
+        result.inside.assign(n,std::vector<bool>(n,false));
+        // A connected embedded boundary disjoint from another boundary lies
+        // wholly on one side. Exact location of its actual vertex determines
+        // that side; complete pair intersection checks above are essential.
+        for(int i=0;i<n;++i) for(int j=0;j<n;++j) if(i!=j) {
+            const auto side=(*sides[j])(points[result.witnessVertices[i]]);
+            if(side==CGAL::ON_BOUNDARY)
+                throw std::runtime_error("exact component witness contacts another component");
+            result.inside[i][j]=side==CGAL::ON_BOUNDED_SIDE;
+        }
+        result.parents.assign(n,-1);result.depths.assign(n,0);
+        for(int i=0;i<n;++i) {
+            for(int j=0;j<n;++j) if(result.inside[i][j]) {
+                if(result.inside[j][i]) throw std::runtime_error("mutual component containment");
+                ++result.depths[i];
+                if(result.parents[i]<0 || result.inside[j][result.parents[i]]) result.parents[i]=j;
+            }
+            for(int j=0;j<n;++j) if(result.inside[i][j])
+                for(int k=j+1;k<n;++k)
+                    if(result.inside[i][k] && !result.inside[j][k] && !result.inside[k][j])
+                        throw std::runtime_error("component containers do not form a nesting chain");
+        }
+        result.completed=true;
+        for(int i=0;i<n;++i) {
+            if(result.originalSigns[i]!=(result.depths[i]%2==0?1:-1)) {
+                result.error="component "+std::to_string(i)+" orientation violates positive roots and alternating nesting";
+                result.nestingSeconds=std::chrono::duration<double>(Clock::now()-nestingStarted).count();
+                return result;
+            }
+        }
+        result.materialComponents=0;result.boundedVoidComponents=0;
+        for(int depth:result.depths) {
+            if(depth%2==0)++*result.materialComponents;else ++*result.boundedVoidComponents;
+        }
+        result.classificationValid=true;
+    } catch(const std::exception& error) {result.error=error.what();result.completed=false;}
+      catch(...) {result.error="unknown exact point-location material classification failure";result.completed=false;}
+    result.nestingSeconds=std::chrono::duration<double>(Clock::now()-nestingStarted).count();
+    return result;
+}
+
 std::string hashExactNefBudgetFacts(const ExactNefBudgetFacts& f) {
     std::string operations;
     for(const auto& entry:f.observationsByOperation)
@@ -245,22 +375,181 @@ struct ExactMaterialRegion::Data {
     // Original arrays retained exactly, independent of caller lifetime/mutation.
     Eigen::MatrixXd vertices;
     Eigen::MatrixXi faces;
+    bool rationalCoordinates=false;
+    std::vector<Kernel::Point_3> exactVertices;
     Nef solid;
+    std::vector<ExactMaterialRegion> operationOperands;
     explicit Data(const ExactNefBudgetPtr& budget={}):solid(budget) {}
 };
+
+bool ExactMaterialRegion::matchesRationalBoundary(
+    const std::vector<std::array<std::string,3>>& vertices,
+    const Eigen::MatrixXi& faces) const {
+    if(!data_ || !facts_.completed || !facts_.valid || facts_.explicitEmpty ||
+       vertices.size()!=data_->exactVertices.size() ||
+       faces.rows()!=data_->faces.rows() || faces.cols()!=data_->faces.cols() ||
+       faces.cols()!=3 || !(faces.array()==data_->faces.array()).all()) return false;
+    try {
+        for(std::size_t v=0;v<vertices.size();++v) {
+            const auto& actual=data_->exactVertices[v];
+            if(parseExactRationalCoordinate(vertices[v][0])!=actual.x() ||
+               parseExactRationalCoordinate(vertices[v][1])!=actual.y() ||
+               parseExactRationalCoordinate(vertices[v][2])!=actual.z()) return false;
+        }
+    } catch(const std::invalid_argument&) { return false; }
+    return true;
+}
+
+std::vector<std::array<std::string,3>> ExactMaterialRegion::rationalBoundaryVertices() const {
+    if(!data_ || !facts_.completed || !facts_.valid || facts_.explicitEmpty ||
+       data_->exactVertices.empty() || data_->faces.rows()==0)
+        throw std::invalid_argument("exact boundary export requires a valid nonempty owned region");
+    std::vector<std::array<std::string,3>> rows;
+    rows.reserve(data_->exactVertices.size());
+    const auto token=[](const CGAL::Gmpq& q) {
+        std::ostringstream out;
+        out.imbue(std::locale::classic());
+        out<<q.numerator()<<"/"<<q.denominator();
+        return out.str();
+    };
+    for(const auto& point:data_->exactVertices)
+        rows.push_back({token(point.x()),token(point.y()),token(point.z())});
+    return rows;
+}
+
+Eigen::MatrixXi ExactMaterialRegion::boundaryFaces() const {
+    if(!data_ || !facts_.completed || !facts_.valid || facts_.explicitEmpty ||
+       data_->exactVertices.empty() || data_->faces.rows()==0)
+        throw std::invalid_argument("exact boundary export requires a valid nonempty owned region");
+    return data_->faces;
+}
+
+bool ExactMaterialRegion::boundaryUsesRationals() const {
+    if(!data_ || !facts_.completed || !facts_.valid || facts_.explicitEmpty)
+        throw std::invalid_argument("coordinate policy requires a valid nonempty owned region");
+    return data_->rationalCoordinates;
+}
+
+Eigen::MatrixXd ExactMaterialRegion::binary64BoundaryVertices() const {
+    if(boundaryUsesRationals() || data_->vertices.rows()!=static_cast<Eigen::Index>(data_->exactVertices.size()))
+        throw std::invalid_argument("region does not own a binary64 indexed boundary");
+    return data_->vertices;
+}
+
+std::vector<ExactMaterialRegion> ExactMaterialRegion::constructionOperands() const {
+    if(!data_ || !facts_.completed || !facts_.valid || facts_.explicitEmpty)
+        throw std::invalid_argument("construction operands require a valid nonempty owned region");
+    return data_->operationOperands;
+}
+
+ExactMaterialRegion makeExactInteriorDifferenceRegion(
+    const ExactMaterialRegion& outer,const ExactMaterialRegion& carved) {
+    for(const auto* operand:{&outer,&carved})
+        if(!operand->data_ || !operand->facts_.completed || !operand->facts_.valid || operand->facts_.explicitEmpty)
+            throw std::invalid_argument("interior difference requires nonempty owned exact regions");
+    if(outer.facts_.originalSigns!=std::vector<int>{1} ||
+       outer.facts_.parents!=std::vector<int>{-1} ||
+       carved.facts_.originalSigns.empty() ||
+       !std::all_of(carved.facts_.originalSigns.begin(),carved.facts_.originalSigns.end(),[](int s){return s==1;}) ||
+       !std::all_of(carved.facts_.parents.begin(),carved.facts_.parents.end(),[](int p){return p==-1;}))
+        throw std::invalid_argument("NOT_SUPPORTED: interior difference requires one outer shell and disjoint carved root shells");
+    const auto contained=checkExactMaterialSubset(carved,outer);
+    if(!contained.completed || !contained.aSubsetB || !*contained.aSubsetB)
+        throw std::invalid_argument("interior difference carved region is not certified inside outer");
+    auto rows=outer.rationalBoundaryVertices();
+    const auto removedRows=carved.rationalBoundaryVertices();
+    const std::size_t offset=rows.size();
+    if(offset+removedRows.size()>static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
+       outer.data_->faces.rows()+carved.data_->faces.rows()>std::numeric_limits<int>::max())
+        throw std::length_error("interior difference boundary exceeds signed indices");
+    rows.insert(rows.end(),removedRows.begin(),removedRows.end());
+    Eigen::MatrixXi faces(outer.data_->faces.rows()+carved.data_->faces.rows(),3);
+    faces.topRows(outer.data_->faces.rows())=outer.data_->faces;
+    for(Eigen::Index i=0;i<carved.data_->faces.rows();++i)
+        for(int j=0;j<3;++j)
+            faces(outer.data_->faces.rows()+i,j)=carved.data_->faces(i,2-j)+static_cast<int>(offset);
+    ExactMaterialRegion result;
+    result.boundary_=auditExactTriangleBoundaryRational(rows,faces,ExactBoundaryOrientation::AnyNonzero).facts();
+    // Containment alone permits contact. The exact embedded boundary audit
+    // rejects contact/intersection between outer and carved surfaces as well
+    // as any defect in the actual concatenated indexed boundary.
+    if(!result.boundary_.boundaryValid)
+        throw std::invalid_argument("interior difference boundary is not strictly separated: "+boundaryError(result.boundary_));
+    auto& r=result.facts_;
+    r.algorithm="strict-interior-nef-difference-shared-boundary-v1";
+    r.inputDigest=result.boundary_.inputDigest;
+    r.regionDigest=digest({r.algorithm,r.backend,r.semantics,r.inputDigest,
+        outer.facts_.regionDigest,carved.facts_.regionDigest});
+    r.originalSigns.assign(carved.facts_.originalSigns.size()+1,-1);
+    r.originalSigns[0]=1;
+    if(result.boundary_.componentVolumeSigns!=r.originalSigns)
+        throw std::invalid_argument("interior difference boundary component correspondence changed");
+    r.parents.assign(r.originalSigns.size(),0);r.parents[0]=-1;
+    r.depths.assign(r.originalSigns.size(),1);r.depths[0]=0;
+    for(std::size_t i=1;i<r.originalSigns.size();++i)r.checkerReversedComponents.push_back(static_cast<int>(i));
+    auto data=std::make_shared<ExactMaterialRegion::Data>();
+    data->rationalCoordinates=true;data->vertices.resize(0,3);data->faces=faces;
+    data->operationOperands={outer,carved};
+    data->exactVertices=outer.data_->exactVertices;
+    data->exactVertices.insert(data->exactVertices.end(),carved.data_->exactVertices.begin(),carved.data_->exactVertices.end());
+    result.data_=data;
+    try {
+        Nef raw=outer.data_->solid.difference(carved.data_->solid);
+        checked(raw,"shared-operand interior difference raw set");
+        // Difference of closed sets excludes the carved boundary. Material
+        // regions use regular-closed semantics, as in assemble() above.
+        Nef actual=raw.regularization();
+        finiteRegularSolid(actual,false,"shared-operand interior difference");
+        int material=0,voids=0;
+        auto volume=actual.volumes_begin();++volume;
+        for(;volume!=actual.volumes_end();++volume) {
+            if(volume->mark())++material;else ++voids;
+        }
+        if(material!=1 || voids!=static_cast<int>(carved.facts_.originalSigns.size()))
+            throw std::runtime_error("interior difference Nef topology disagrees with certified shell hierarchy");
+        data->solid=std::move(actual);
+        r.materialComponents=material;r.boundedVoidComponents=voids;
+        r.valid=true;r.completed=true;
+    } catch(const std::exception& error) {r.error=error.what();}
+    catch(...) {r.error="unknown shared-operand interior difference failure";}
+    return result;
+}
 
 ExactMaterialRegion makeExactMaterialRegion(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces) {
     return makeExactMaterialRegionWithBudget(vertices,faces,{});
 }
 ExactMaterialRegion makeExactMaterialRegionWithBudget(const Eigen::MatrixXd& vertices,const Eigen::MatrixXi& faces,const ExactNefBudgetPtr& budget) {
+    return ExactMaterialRegion::assemble(vertices,nullptr,faces,budget);
+}
+
+ExactMaterialRegion makeExactMaterialRegionFromRationals(
+    const std::vector<std::array<std::string,3>>& vertices,const Eigen::MatrixXi& faces) {
+    return ExactMaterialRegion::assemble(Eigen::MatrixXd(),&vertices,faces,{});
+}
+
+ExactMaterialRegion ExactMaterialRegion::assemble(const Eigen::MatrixXd& vertices,
+    const std::vector<std::array<std::string,3>>* rationalVertices,
+    const Eigen::MatrixXi& faces,const ExactNefBudgetPtr& budget) {
     ExactMaterialRegion result;
-    result.boundary_=auditExactTriangleBoundary(vertices,faces,ExactBoundaryOrientation::AnyNonzero).facts();
+    result.boundary_=(rationalVertices?
+        auditExactTriangleBoundaryRational(*rationalVertices,faces,ExactBoundaryOrientation::AnyNonzero):
+        auditExactTriangleBoundary(vertices,faces,ExactBoundaryOrientation::AnyNonzero)).facts();
     auto& r=result.facts_;
+    if(rationalVertices) r.algorithm="signed-shell-nef-exact-rational-construction-v1";
     r.inputDigest=result.boundary_.inputDigest;
     r.regionDigest=digest({r.algorithm,r.backend,r.semantics,"indexed-boundary",r.inputDigest});
     r.originalSigns=result.boundary_.componentVolumeSigns;
     auto data=std::make_shared<ExactMaterialRegion::Data>(budget);
-    data->vertices=vertices; data->faces=faces;
+    data->rationalCoordinates=rationalVertices!=nullptr;
+    if(!rationalVertices) data->vertices=vertices;
+    else data->vertices.resize(0,3);
+    data->faces=faces;
+    data->exactVertices.reserve(rationalVertices?rationalVertices->size():static_cast<std::size_t>(vertices.rows()));
+    if(rationalVertices) for(const auto& row:*rationalVertices)
+        data->exactVertices.emplace_back(parseExactRationalCoordinate(row[0]),
+            parseExactRationalCoordinate(row[1]),parseExactRationalCoordinate(row[2]));
+    else for(Eigen::Index i=0;i<vertices.rows();++i)
+        data->exactVertices.emplace_back(CGAL::Gmpq(vertices(i,0)),CGAL::Gmpq(vertices(i,1)),CGAL::Gmpq(vertices(i,2)));
     result.data_=data;
     if (!result.boundary_.boundaryValid) {
         r.completed=result.boundary_.intersectionCompleted;
@@ -274,7 +563,7 @@ ExactMaterialRegion makeExactMaterialRegionWithBudget(const Eigen::MatrixXd& ver
             const bool reverse=r.originalSigns[i]<0;
             if (reverse) r.checkerReversedComponents.push_back(i);
             Polyhedron surface;
-            ComponentBuilder builder(vertices,faces,result.boundary_.faceComponents,i,reverse);
+            ComponentBuilder builder(data->exactVertices,faces,result.boundary_.faceComponents,i,reverse);
             surface.delegate(builder);
             if (surface.empty() || !surface.is_valid() || !surface.is_closed())
                 throw std::runtime_error("component Polyhedron is not a valid closed surface");
@@ -314,15 +603,23 @@ ExactMaterialRegion makeExactMaterialRegionWithBudget(const Eigen::MatrixXd& ver
             r.completed=true;
             return result;
         }
-        std::vector<int> order(n); std::iota(order.begin(),order.end(),0);
-        std::stable_sort(order.begin(),order.end(),[&](int a,int b){return r.depths[a]<r.depths[b];});
-        for (int i : order) {
-            Nef next=r.originalSigns[i]>0?data->solid.join(solids[i]):data->solid.difference(solids[i]);
-            checked(next,"material signed operation");
-            data->solid=next.regularization();
-            checked(data->solid,"material regularization");
+        if (n==1) {
+            // The first finiteRegularSolid proof certifies this exact owned
+            // component; the sign/depth check above requires a positive root.
+            // regularize(empty union S) == S. Move the same certified object
+            // and its budget lease, without another Boolean or geometry change.
+            data->solid=std::move(solids[0]);
+        } else {
+            std::vector<int> order(n); std::iota(order.begin(),order.end(),0);
+            std::stable_sort(order.begin(),order.end(),[&](int a,int b){return r.depths[a]<r.depths[b];});
+            for (int i : order) {
+                Nef next=r.originalSigns[i]>0?data->solid.join(solids[i]):data->solid.difference(solids[i]);
+                checked(next,"material signed operation");
+                data->solid=next.regularization();
+                checked(data->solid,"material regularization");
+            }
+            finiteRegularSolid(data->solid,false,"assembled region");
         }
-        finiteRegularSolid(data->solid,false,"assembled region");
         // SNC volumes are connected 3D cells. The first is unbounded exterior.
         // Disjoint embedded boundary components and strict alternating nesting
         // ensure distinct material cells cannot connect merely at a boundary.
@@ -367,6 +664,89 @@ ExactMaterialRegion emptyExactMaterialRegionWithBudget(const ExactNefBudgetPtr& 
 ExactMaterialRelationFacts relateExactMaterialRegions(const ExactMaterialRegion& a,const ExactMaterialRegion& b) {
     return relateExactMaterialRegionsWithBudget(a,b,{});
 }
+ExactMaterialRelationFacts relateExactBooleanOperationToMaterial(
+    const ExactMaterialRegion& design,const ExactMaterialRegion& cutter,
+    const ExactMaterialRegion& material,ExactMaterialBooleanOperation operation) {
+    for(const auto* operand:{&design,&cutter,&material})
+        if(!operand->facts_.valid || !operand->facts_.completed || !operand->data_)
+            throw std::invalid_argument("invalid exact Boolean operand: "+operand->facts_.error);
+    if(operation!=ExactMaterialBooleanOperation::Intersection &&
+       operation!=ExactMaterialBooleanOperation::Difference)
+        throw std::invalid_argument("unsupported exact Boolean operation");
+    ExactMaterialRelationFacts r;
+    r.algorithm="nef-exact-input-boolean-vs-material-v1";
+    const std::string token=operation==ExactMaterialBooleanOperation::Intersection
+        ? "intersection":"difference";
+    r.aDigest=digest({r.algorithm,token,design.facts_.regionDigest,
+        cutter.facts_.regionDigest});
+    r.bDigest=material.facts_.regionDigest;
+    r.bExplicitEmpty=material.facts_.explicitEmpty;
+    r.relationDigest=digest({r.algorithm,r.semantics,r.aDigest,r.bDigest,
+        r.bExplicitEmpty?"empty":"nonempty"});
+    try {
+        Nef raw=operation==ExactMaterialBooleanOperation::Intersection
+            ? design.data_->solid.intersection(cutter.data_->solid)
+            : design.data_->solid.difference(cutter.data_->solid);
+        checked(raw,"exact input Boolean");
+        Nef expected=raw.regularization();
+        finiteRegularSolid(expected,true,"exact input Boolean result");
+        r.aExplicitEmpty=expected.is_empty();
+        Nef intersection=expected.intersection(material.data_->solid);
+        checked(intersection,"exact Boolean/material intersection");
+        Nef volume=intersection.regularization();
+        checked(volume,"exact Boolean/material intersection regularization");
+        Nef ab=expected.difference(material.data_->solid);
+        checked(ab,"exact Boolean/material difference A-B");
+        Nef ba=material.data_->solid.difference(expected);
+        checked(ba,"exact Boolean/material difference B-A");
+        const bool equal=ab.is_empty() && ba.is_empty();
+        CGAL::Gmpq symmetricDifferenceVolume(0);
+        if(!equal) {
+            Nef symmetric=expected.symmetric_difference(material.data_->solid);
+            checked(symmetric,"exact Boolean/material symmetric difference");
+            symmetricDifferenceVolume=exactRegularizedVolume(symmetric);
+        }
+        r.intersectionNonempty=!intersection.is_empty();
+        r.positiveVolumeOverlap=!volume.is_empty();
+        r.aSubsetB=ab.is_empty();r.bSubsetA=ba.is_empty();r.equal=equal;
+        r.symmetricDifferenceVolumeExact=exactString(symmetricDifferenceVolume);
+        r.completed=true;
+    } catch(const std::exception& e) {r.error=e.what();}
+    catch(...) {r.error="unknown exact input Boolean operation failure";}
+    return r;
+}
+ExactMaterialSubsetFacts checkExactMaterialSubset(
+    const ExactMaterialRegion& a,const ExactMaterialRegion& b) {
+    return checkExactMaterialSubsetWithBudget(a,b,{});
+}
+ExactMaterialOverlapFacts checkExactPositiveVolumeOverlap(
+    const ExactMaterialRegion& a,const ExactMaterialRegion& b) {
+    return checkExactPositiveVolumeOverlapWithBudget(a,b,{});
+}
+ExactMaterialOverlapFacts checkExactPositiveVolumeOverlapWithBudget(
+    const ExactMaterialRegion& a,const ExactMaterialRegion& b,const ExactNefBudgetPtr& budget) {
+    for(const auto* operand:{&a,&b})
+        if(!operand->facts_.valid||!operand->facts_.completed||!operand->data_)
+            throw std::invalid_argument("invalid exact material operand: "+operand->facts_.error);
+    ExactMaterialOverlapFacts r;
+    r.aDigest=a.facts_.regionDigest;r.bDigest=b.facts_.regionDigest;
+    r.operationDigest=digest({r.algorithm,r.semantics,r.aDigest,r.bDigest,
+        a.facts_.explicitEmpty?"empty":"nonempty",b.facts_.explicitEmpty?"empty":"nonempty"});
+    if(a.facts_.explicitEmpty||b.facts_.explicitEmpty) {
+        r.positiveVolumeOverlap=false;r.completed=true;return r;
+    }
+    try {
+        InputBudgetScope inputs(budget);inputs.add(a.data_->solid);inputs.add(b.data_->solid);
+        Nef intersection=a.data_->solid.intersection(b.data_->solid,budget);
+        checked(intersection,"positive-volume overlap intersection");
+        Nef volume=intersection.regularization();
+        checked(volume,"positive-volume overlap regularization");
+        const bool overlaps=!volume.is_empty();
+        r.positiveVolumeOverlap=overlaps;r.completed=true;
+    } catch(const std::exception& e) {r.error=e.what();}
+    catch(...) {r.error="unknown exact positive-volume overlap failure";}
+    return r;
+}
 ExactMaterialRelationFacts relateExactMaterialRegionsWithBudget(const ExactMaterialRegion& a,const ExactMaterialRegion& b,const ExactNefBudgetPtr& budget) {
     for (const auto* operand : {&a,&b})
         if (!operand->facts_.valid || !operand->facts_.completed || !operand->data_)
@@ -387,14 +767,59 @@ ExactMaterialRelationFacts relateExactMaterialRegionsWithBudget(const ExactMater
         Nef ba=b.data_->solid.difference(a.data_->solid,budget); checked(ba,"relation difference B-A");
         const bool contact=!intersection.is_empty(), overlap=!volume.is_empty();
         const bool aSubsetB=ab.is_empty(), bSubsetA=ba.is_empty();
+        const bool equal=aSubsetB && bSubsetA;
+        CGAL::Gmpq symmetricDifferenceVolume(0);
+        if(!equal) {
+            Nef symmetricDifference=a.data_->solid.symmetric_difference(b.data_->solid,budget);
+            checked(symmetricDifference,"relation symmetric difference");
+            symmetricDifferenceVolume=exactRegularizedVolume(symmetricDifference);
+        }
         // Publish atomically only after every exact operation/predicate succeeds.
         r.intersectionNonempty=contact; r.positiveVolumeOverlap=overlap;
         r.aSubsetB=aSubsetB; r.bSubsetA=bSubsetA;
-        r.equal=aSubsetB && bSubsetA;
+        r.equal=equal;
+        r.symmetricDifferenceVolumeExact=exactString(symmetricDifferenceVolume);
         r.completed=true;
     } catch (const std::exception& e) { r.error=e.what(); }
     catch (...) { r.error="unknown exact relation operation failure"; }
     return r;
+}
+
+ExactMaterialSubsetFacts checkExactMaterialSubsetWithBudget(
+    const ExactMaterialRegion& a,const ExactMaterialRegion& b,
+    const ExactNefBudgetPtr& budget) {
+    for (const auto* operand : {&a,&b})
+        if (!operand->facts_.valid || !operand->facts_.completed || !operand->data_)
+            throw std::invalid_argument("invalid exact material operand: "+operand->facts_.error);
+    ExactMaterialSubsetFacts result;
+    result.aDigest=a.facts_.regionDigest;
+    result.bDigest=b.facts_.regionDigest;
+    try {
+        if (a.facts_.explicitEmpty) {
+            result.aSubsetB=true;
+            result.completed=true;
+            return result;
+        }
+        if (b.facts_.explicitEmpty) {
+            result.aSubsetB=false;
+            result.completed=true;
+            return result;
+        }
+        InputBudgetScope inputs(budget);
+        inputs.add(a.data_->solid);
+        inputs.add(b.data_->solid);
+        // Do not regularize this difference: boundary-only excess is still
+        // content outside the container for inclusive set containment.
+        Nef excess=a.data_->solid.difference(b.data_->solid,budget);
+        checked(excess,"inclusive material subset difference");
+        result.aSubsetB=excess.is_empty();
+        result.completed=true;
+    } catch (const std::exception& error) {
+        result.error=error.what();
+    } catch (...) {
+        result.error="unknown exact material subset failure";
+    }
+    return result;
 }
 
 ExactMaterialPartitionFacts checkExactMaterialPartition(
@@ -471,7 +896,7 @@ ExactBoundaryClearanceFacts checkExactBoundaryClearance(
         if (!operand->facts_.valid || !operand->facts_.completed || !operand->data_)
             throw std::invalid_argument("invalid exact material operand: "+operand->facts_.error);
     ExactBoundaryClearanceFacts r;
-    r.backend=a.facts_.backend+"/Distance_3/Intersections_3";
+    r.backend=a.facts_.backend+"/RationalBoundaryDistance_3/Intersections_3";
     r.aDigest=a.facts_.regionDigest; r.bDigest=b.facts_.regionDigest;
     r.aInputDigest=a.facts_.inputDigest; r.bInputDigest=b.facts_.inputDigest;
     r.aExplicitEmpty=a.facts_.explicitEmpty; r.bExplicitEmpty=b.facts_.explicitEmpty;
@@ -485,8 +910,29 @@ ExactBoundaryClearanceFacts checkExactBoundaryClearance(
         return r;
     }
     try {
-        const auto measured=detail::exactBoundaryDistance(a.data_->vertices,a.data_->faces,
-            b.data_->vertices,b.data_->faces,minimumClearance);
+        auto rationalVertices=[](const auto& data) {
+            std::vector<std::array<std::string,3>> vertices;
+            vertices.reserve(data.exactVertices.size());
+            for(const auto& point:data.exactVertices) {
+                std::array<std::string,3> row;
+                for(int axis=0;axis<3;++axis) {
+                    std::ostringstream coordinate; coordinate<<point[axis];
+                    row[axis]=coordinate.str();
+                }
+                vertices.push_back(std::move(row));
+            }
+            return vertices;
+        };
+        detail::BoundaryDistance measured;
+        if(a.data_->rationalCoordinates || b.data_->rationalCoordinates) {
+            // Exact vertices are retained for both construction paths, so mixed
+            // rational/binary64 operands are measured in one exact coordinate field.
+            const auto av=rationalVertices(*a.data_),bv=rationalVertices(*b.data_);
+            measured=detail::exactBoundaryDistance(av,a.data_->faces,bv,b.data_->faces,minimumClearance);
+        } else {
+            measured=detail::exactBoundaryDistance(a.data_->vertices,a.data_->faces,
+                b.data_->vertices,b.data_->faces,minimumClearance);
+        }
         auto complete=r;
         complete.squaredDistanceExact=measured.squaredExact; complete.witnessFaces=measured.witness;
         complete.atLeastMinimum=measured.atLeastMinimum; complete.contact=measured.contact;
@@ -494,6 +940,44 @@ ExactBoundaryClearanceFacts checkExactBoundaryClearance(
         return complete;
     } catch (const std::exception& e) { r.error=e.what(); }
     catch (...) { r.error="unknown exact boundary distance failure"; }
+    return r;
+}
+
+ExactBoundaryClearanceFacts checkExactBoundaryClearance(
+    const ExactMaterialRegion& a,const ExactMaterialRegion& b,double minimumClearance,
+    const detail::ExactBoundaryDistanceIndex& aIndex,
+    const detail::ExactBoundaryDistanceIndex& bIndex) {
+    if(!std::isfinite(minimumClearance)||minimumClearance<0)
+        throw std::invalid_argument("minimum clearance must be a finite nonnegative binary64 value");
+    for(const auto* operand:{&a,&b})
+        if(!operand->facts_.valid||!operand->facts_.completed||!operand->data_)
+            throw std::invalid_argument("invalid exact material operand: "+operand->facts_.error);
+    if(a.data_->rationalCoordinates || b.data_->rationalCoordinates)
+        throw std::invalid_argument("binary64 boundary clearance does not accept rational construction operands");
+    ExactBoundaryClearanceFacts r;
+    r.backend=a.facts_.backend+"/Distance_3/Intersections_3";
+    r.aDigest=a.facts_.regionDigest;r.bDigest=b.facts_.regionDigest;
+    r.aInputDigest=a.facts_.inputDigest;r.bInputDigest=b.facts_.inputDigest;
+    r.aExplicitEmpty=a.facts_.explicitEmpty;r.bExplicitEmpty=b.facts_.explicitEmpty;
+    std::ostringstream threshold;threshold<<CGAL::Gmpq(minimumClearance);
+    r.minimumClearanceExact=threshold.str();
+    r.clearanceDigest=digest({r.algorithm,r.backend,r.semantics,r.aDigest,r.bDigest,
+        r.aInputDigest,r.bInputDigest,r.minimumClearanceExact,
+        r.aExplicitEmpty?"empty":"nonempty",r.bExplicitEmpty?"empty":"nonempty"});
+    if(r.aExplicitEmpty||r.bExplicitEmpty) {
+        r.state="NOT_APPLICABLE";r.applicable=false;r.completed=true;return r;
+    }
+    if(!aIndex.matches(a.data_->vertices,a.data_->faces)||
+       !bIndex.matches(b.data_->vertices,b.data_->faces))
+        throw std::invalid_argument("exact boundary distance index does not match its material region");
+    try {
+        const auto measured=detail::exactBoundaryDistance(aIndex,bIndex,minimumClearance);
+        auto complete=r;
+        complete.squaredDistanceExact=measured.squaredExact;complete.witnessFaces=measured.witness;
+        complete.atLeastMinimum=measured.atLeastMinimum;complete.contact=measured.contact;
+        complete.applicable=true;complete.state="COMPLETE";complete.completed=true;return complete;
+    } catch(const std::exception& e) {r.error=e.what();}
+    catch(...) {r.error="unknown exact boundary distance failure";}
     return r;
 }
 
@@ -525,8 +1009,13 @@ Nef boxSolid(const ExactCuboid& box,const ExactNefBudgetPtr& budget) {
     faces<<0,2,1,1,2,3,4,5,6,5,7,6,0,1,4,1,5,4,
         2,6,3,3,6,7,0,4,2,2,4,6,1,3,5,3,7,5;
     std::vector<int> components(12,0);
+    std::vector<Kernel::Point_3> exactVertices;
+    exactVertices.reserve(8);
+    for(int i=0;i<8;++i)
+        exactVertices.emplace_back(CGAL::Gmpq(vertices(i,0)),CGAL::Gmpq(vertices(i,1)),
+                                   CGAL::Gmpq(vertices(i,2)));
     Polyhedron surface;
-    ComponentBuilder builder(vertices,faces,components,0,false);
+    ComponentBuilder builder(exactVertices,faces,components,0,false);
     surface.delegate(builder);
     return Nef(surface,budget);
 }

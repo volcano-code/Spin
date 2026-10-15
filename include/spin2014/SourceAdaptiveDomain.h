@@ -27,6 +27,14 @@ class SourceAdaptiveDomain {
 public:
     SourceAdaptiveDomain(std::shared_ptr<const SourceSurfaceOctree> source,int initialLevel,
         int maximumOptimizationLevel,std::size_t maximumLeafCount=1000000);
+    // Restore only a partition, not an optimization/checkpoint result. Keys
+    // must already be canonical (strictly sorted), preserving external beta
+    // correspondence. Moments/adjacency are rederived from the immutable source;
+    // no saved numerical moments are accepted. Hash is integrity, not authority.
+    static SourceAdaptiveDomain restorePartition(
+        std::shared_ptr<const SourceSurfaceOctree> source,int initialLevel,
+        int maximumOptimizationLevel,std::size_t maximumLeafCount,
+        const std::vector<SourcePartitionKey>& keys,const std::string& expectedPartitionHash);
     const SourceSurfaceOctree& source() const {return *source_;}
     const std::vector<SourceAdaptiveLeaf>& leaves() const {return leaves_;}
     const std::vector<std::pair<std::size_t,std::size_t>>& edges() const {return edges_;}
@@ -39,6 +47,9 @@ public:
     SourcePartitionTransition splitFractionalLeaves(Eigen::VectorXd& beta,double epsilon);
     SourcePartitionTransition mergeBinarySiblings(Eigen::VectorXd& beta,double epsilon);
 private:
+    struct EmptyPartitionTag {};
+    SourceAdaptiveDomain(std::shared_ptr<const SourceSurfaceOctree> source,int initialLevel,
+        int maximumOptimizationLevel,std::size_t maximumLeafCount,EmptyPartitionTag);
     std::shared_ptr<const SourceSurfaceOctree> source_;
     int initialLevel_,maximumLevel_;
     std::size_t maximumLeaves_;

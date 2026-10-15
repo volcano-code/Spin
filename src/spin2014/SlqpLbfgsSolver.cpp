@@ -1,4 +1,5 @@
 #include "spin2014/SlqpLbfgsSolver.h"
+#include "spin2014/SlqpIterationStore.h"
 #include "spin2014/SlqpAuditTrace.h"
 #include "spin2014/SlqpHistory.h"
 
@@ -217,6 +218,7 @@ std::string hashTrace(const std::vector<spin2014::SlqpIteration>& trace, bool pa
 
 void validateSettings(const spin2014::SlqpLbfgsSettings& settings)
 {
+    spin2014::validateSlqpDirectionSettings(settings);
     if(settings.algorithm != spin2014::SlqpAlgorithm::LegacyV3 &&
        settings.algorithm != spin2014::SlqpAlgorithm::AuditedKktRestorationV1)
         throw std::invalid_argument("unsupported SLQP algorithm");
@@ -254,6 +256,19 @@ void validateSettings(const spin2014::SlqpLbfgsSettings& settings)
 namespace spin2014
 {
 
+void validateSlqpDirectionSettings(const SlqpLbfgsSettings& s) {
+    if(s.directionPolicy==SlqpDirectionPolicy::ProjectedGradientV1)return;
+    if((s.directionPolicy!=SlqpDirectionPolicy::MetricTangentRescueV1 &&
+        s.directionPolicy!=SlqpDirectionPolicy::FiniteBoxQpV1 &&
+        s.directionPolicy!=SlqpDirectionPolicy::FiniteBoxPrimalV2) ||
+       s.algorithm!=SlqpAlgorithm::AuditedKktRestorationV1 ||
+       ((s.metricTangent.maximumFaces<=0 || s.metricTangent.maximumFaces>100000) &&
+        !(s.directionPolicy==SlqpDirectionPolicy::FiniteBoxPrimalV2 && s.metricTangent.maximumFaces==-1)) ||
+       s.metricTangent.maximumIterations<=0 ||
+       !std::isfinite(s.metricTangent.residualTolerance) || s.metricTangent.residualTolerance<=0)
+        throw std::invalid_argument("invalid metric tangent rescue controls");
+}
+
 
 const char* slqpStatusToken(SlqpStatus status) noexcept
 {
@@ -290,6 +305,8 @@ static SlqpLbfgsResult solveInternal(
     const Eigen::Index betaCount=problem.betaCount;
     validateSettings(settings);
     const bool audited=settings.algorithm==SlqpAlgorithm::AuditedKktRestorationV1;
+    if(!settings.iterationStorePath.empty()&&!audited)
+        throw std::invalid_argument("disk iteration storage requires audited SLQP");
     if (
         initialBeta.size() == 0 || !initialBeta.allFinite() ||
         betaCount < 0 || betaCount > initialBeta.size() ||
@@ -301,6 +318,12 @@ static SlqpLbfgsResult solveInternal(
     }
 
     SlqpLbfgsResult result;
+    const auto last=[&]() -> SlqpIteration& {return result.iterationStore?result.iterationStore->back():result.trace.back();};
+    const auto append=[&](SlqpIteration t){
+        if(result.iterationStore)result.iterationStore->append(std::move(t));
+        else result.trace.push_back(std::move(t));
+        if(settings.iterationObserver)settings.iterationObserver(last());
+    };
     result.algorithm=settings.algorithm;
     result.boundedVariableCount=betaCount;
     result.beta = initialBeta;
@@ -314,6 +337,8 @@ static SlqpLbfgsResult solveInternal(
         return e;
     };
     result.evaluation = checkedEvaluate(result.beta);
+    if(!settings.iterationStorePath.empty())
+        result.iterationStore=std::make_shared<SlqpIterationStore>(settings.iterationStorePath,settings.iterationStoreMaximumBytes);
     LbfgsHistory history;
     history.capacity = settings.lbfgsMemory;
     std::vector<unsigned char> previousMembership;
@@ -321,8 +346,8 @@ static SlqpLbfgsResult solveInternal(
         if(audited) {
             result.finalState=result.beta;
             result.finalKkt=computeKktWitness(result.evaluation,result.beta,betaCount,settings.activeSetTolerance,settings.audit);
-            if(result.trace.empty() || !result.trace.back().state.isApprox(result.beta,0.)) {
-                SlqpIteration t;t.iteration=static_cast<int>(result.trace.size());t.finalState=true;
+            if(slqpTraceCount(result)==0 || !last().state.isApprox(result.beta,0.)) {
+                SlqpIteration t;t.iteration=static_cast<int>(slqpTraceCount(result));t.finalState=true;
                 t.objective=result.evaluation.objective;t.kkt=result.finalKkt;t.kktInfinityNorm=t.kkt.full;
                 t.equalityInfinityNorm=t.kkt.equalityPrimal;
                 t.meritValue=merit(result.evaluation,settings.meritPenalty);
@@ -338,8 +363,9 @@ static SlqpLbfgsResult solveInternal(
                     t.historyResetReason="ACTIVE_MEMBERSHIP_CHANGED";history.resetForMembership(previousMembership,t.activeMembership);t.historyAfter=0;
                 }
                 t.lbfgsHistorySize=history.s.size();
-                captureSlqpState(t,result.evaluation,result.beta);result.trace.push_back(t);
-            } else result.trace.back().finalState=true;
+                captureSlqpState(t,result.evaluation,result.beta);append(std::move(t));
+            } else last().finalState=true;
+            if(result.iterationStore)result.iterationStore->seal();
             result.traceHash=hashAuditedSlqp(result,settings);
         } else result.traceHash=hashTrace(result.trace,paper);
         return result;
@@ -388,7 +414,7 @@ static SlqpLbfgsResult solveInternal(
             trace.historyAfter=history.s.size();previousMembership=trace.activeMembership;
             trace.lbfgsHistorySize=history.s.size();
             if(!witness.valid) {
-                result.trace.push_back(trace);result.status=SlqpStatus::NumericalUnknown;
+                append(std::move(trace));result.status=SlqpStatus::NumericalUnknown;
                 result.diagnostic=witness.status;return finish();
             }
         }
@@ -404,7 +430,7 @@ static SlqpLbfgsResult solveInternal(
                 witness.complementarity<=settings.projectedGradientTolerance) : projectedNorm <= settings.projectedGradientTolerance)
         )
         {
-            result.trace.push_back(trace);
+            append(trace);
             result.status = SlqpStatus::Converged;
             result.diagnostic = audited?"FIRST_ORDER_KKT_TOLERANCES_MET; no minimum or physical certificate":"SLQP equality and projected-gradient tolerances met";
             return finish();
@@ -457,15 +483,54 @@ static SlqpLbfgsResult solveInternal(
         bool needRestoration=audited && infeasible && (!direction.allFinite()||direction.norm()<=1e-15 ||
             !std::isfinite(trace.linearizedConstraintResidual)||trace.linearizedConstraintResidual>settings.equalityTolerance);
 
-        if ((!direction.allFinite() || direction.norm() <= 1e-15) && !needRestoration)
+        if ((!direction.allFinite() || direction.norm() <= 1e-15) && !needRestoration &&
+            settings.directionPolicy!=SlqpDirectionPolicy::FiniteBoxQpV1 &&
+            settings.directionPolicy!=SlqpDirectionPolicy::FiniteBoxPrimalV2)
         {
-            result.trace.push_back(trace);
+            append(trace);
             result.status = SlqpStatus::LineSearchExhausted;
             result.diagnostic = "SLQP subproblem produced no usable direction";
             return finish();
         }
 
         double step = needRestoration?0.:maximumBoundStep(result.beta, direction, betaCount);
+        // Independent opt-in primary QP, including finite displacement bounds.
+        // A failed QP stops UNKNOWN rather than silently selecting another QP.
+        if(audited && (settings.directionPolicy==SlqpDirectionPolicy::FiniteBoxQpV1 ||
+                       settings.directionPolicy==SlqpDirectionPolicy::FiniteBoxPrimalV2)) {
+            auto controls=settings.metricTangent;controls.activeTolerance=settings.activeSetTolerance;
+            const auto solve=settings.directionPolicy==SlqpDirectionPolicy::FiniteBoxPrimalV2 ? solvePrimalBoxQp : solveFiniteBoxQp;
+            trace.metricTangent=solve(result.beta,current.gradient,
+                current.constraintJacobian,current.constraints,betaCount,history,controls);
+            if(!trace.metricTangent.checked) {
+                append(std::move(trace));result.status=SlqpStatus::NumericalUnknown;
+                result.diagnostic="finite-box QP was not verified; UNKNOWN, no infeasibility certificate";
+                return finish();
+            }
+            direction=trace.metricTangent.direction;
+            step=maximumBoundStep(result.beta,direction,betaCount);
+            needRestoration=false;
+            trace.metricTangentSelected=true;
+            trace.linearizedConstraintResidual=(current.constraintJacobian*direction+current.constraints).lpNorm<1>();
+        }
+        // Opt-in rescue of the measured zero-box-step failure. The original
+        // identity-selected membership remains separately auditable. The QP
+        // uses the full SPD metric and its own add/release working set.
+        if(audited && settings.directionPolicy==SlqpDirectionPolicy::MetricTangentRescueV1 &&
+           !infeasible && !needRestoration && step<=1e-14) {
+            auto controls=settings.metricTangent;controls.activeTolerance=settings.activeSetTolerance;
+            trace.metricTangent=solveTangentQp(result.beta,current.gradient,
+                current.constraintJacobian,current.constraints,betaCount,history,controls);
+            if(trace.metricTangent.checked && trace.metricTangent.direction.size()==result.beta.size() &&
+               trace.metricTangent.direction.allFinite()) {
+                const double trialStep=maximumBoundStep(result.beta,trace.metricTangent.direction,betaCount);
+                if(trialStep>1e-14) {
+                    direction=trace.metricTangent.direction;step=trialStep;
+                    trace.metricTangentSelected=true;
+                    trace.linearizedConstraintResidual=(current.constraintJacobian*direction+current.constraints).lpNorm<1>();
+                }
+            }
+        }
         const double oldMerit = merit(current, settings.meritPenalty);
         const double predicted = std::max(
             1e-14,
@@ -495,8 +560,11 @@ static SlqpLbfgsResult solveInternal(
             }
             step *= settings.lineSearchReduction;
         }
+        if(trace.metricTangentSelected)
+            trace.metricTangentTrialCount=static_cast<int>(trace.objectiveTrials.size());
         if (!accepted && !(audited&&infeasible))
         {
+            trace.metricTangentFallbackAttempted=trace.metricTangent.attempted;
             // A stale L-BFGS metric can cease to be a descent metric after a
             // large active-set change.  Retry the same linearized equality
             // subproblem with the identity metric.  This is still an SLQP
@@ -585,9 +653,11 @@ static SlqpLbfgsResult solveInternal(
             }
         }
         trace.acceptedStep = accepted ? step : 0.0;
+        trace.metricTangentAccepted=trace.metricTangentSelected && accepted &&
+            !trace.usedFirstOrderFallback && !trace.restoration.accepted;
         if (!accepted)
         {
-            result.trace.push_back(trace);
+            append(trace);
             if(!trace.restoration.attempted) {
                 result.status = SlqpStatus::LineSearchExhausted;
                 result.diagnostic = "SLQP merit-function line search was exhausted";
@@ -602,7 +672,7 @@ static SlqpLbfgsResult solveInternal(
             trace.curvaturePairAccepted=history.update(stepVector, gradientChange);
             trace.curvaturePairRejected=!trace.curvaturePairAccepted;
         }
-        trace.historyAfter=history.s.size();result.trace.push_back(trace);
+        trace.historyAfter=history.s.size();append(std::move(trace));
         result.beta = std::move(candidateBeta);
         result.evaluation = std::move(candidate);
     }

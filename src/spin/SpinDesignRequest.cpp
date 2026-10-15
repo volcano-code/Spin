@@ -2,11 +2,16 @@
 
 #include "manufacturing/ManufacturingGeometry.h"
 #include "manufacturing/SlicerValidation.h"
+#include "physics/MassProperties.h"
+#if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+#include "verification/ExactBoundaryAudit.h"
+#endif
 
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iomanip>
 #include <limits>
@@ -58,9 +63,40 @@ void appendMatrix(
 void validateMesh(
     const spin::TriangleMesh& mesh,
     const char* name,
-    manufacturing::BoundaryOrientation orientation
+    manufacturing::BoundaryOrientation orientation,
+    bool exactInputBoundary
 )
 {
+    // Two immutable, process-local input proofs cover the usual outer/domain
+    // pair. Keys bind every indexed coordinate/face and the audit policy.
+    // All request scalars/frame/objective checks still run on every request.
+    struct InputMeshProofCache {
+        std::array<std::string,2> keys;
+        std::size_t replacement=0;
+    };
+    static thread_local InputMeshProofCache proofs;
+    std::ostringstream key;key.imbue(std::locale::classic());
+    key<<"FixedInputBoundaryProof-v1;"<<static_cast<int>(orientation)<<';'
+       <<exactInputBoundary<<';';
+    appendMatrix(key,mesh.vertices);appendMatrix(key,mesh.faces);
+    const std::string indexedBoundary=key.str();
+    if(std::find(proofs.keys.begin(),proofs.keys.end(),indexedBoundary)!=proofs.keys.end())return;
+    const auto remember=[&]() {
+        proofs.keys[proofs.replacement]=indexedBoundary;
+        proofs.replacement=(proofs.replacement+1)%proofs.keys.size();
+    };
+    if (exactInputBoundary) {
+#if MAKE_IT_STAND_HAS_EXACT_GEOMETRY_CHECKS
+        const auto audit = verification::auditExactTriangleBoundary(mesh.vertices, mesh.faces,
+            verification::ExactBoundaryOrientation::OutwardPositive);
+        if (!audit.facts().boundaryValid)
+            throw std::invalid_argument(std::string(name) + " failed exact input boundary validation");
+        remember();
+        return;
+#else
+        throw std::invalid_argument("exact input boundary policy requires exact geometry checks");
+#endif
+    }
     const manufacturing::BoundaryAudit audit =
         manufacturing::auditTriangleBoundary(
             mesh.vertices,
@@ -76,6 +112,7 @@ void validateMesh(
             "manifold triangle boundary without self-intersections"
         );
     }
+    remember();
 }
 
 
@@ -173,18 +210,51 @@ const char* spinSolverStatusToken(SpinSolverStatus status) noexcept
     return "UNKNOWN";
 }
 
+const char* staticObjectiveMeasureToken(StaticObjectiveMeasure measure) noexcept {
+    switch(measure) {
+    case StaticObjectiveMeasure::DensityWeightedMass: return "DENSITY_WEIGHTED_MASS_V1";
+    case StaticObjectiveMeasure::UniformDensityVolume: return "UNIFORM_DENSITY_VOLUME_V1";
+    }
+    return "UNKNOWN";
+}
+
+double staticObjectiveMassScale(const SpinDesignRequest& request) {
+    if(request.staticObjectiveMeasure==StaticObjectiveMeasure::DensityWeightedMass)return 1.0;
+    if(request.staticObjectiveMeasure!=StaticObjectiveMeasure::UniformDensityVolume ||
+       request.mode!=SpinMode::StaticBalance || !std::isfinite(request.materialDensity) ||
+       request.materialDensity<=0.0 || !std::isfinite(1.0/request.materialDensity))
+        throw std::invalid_argument("invalid static volume objective measure or density");
+    return 1.0/request.materialDensity;
+}
+
+
+void validateSpinningTopObjective(const SpinDesignRequest& request)
+{
+    if (request.spinningTopObjective != SpinningTopObjective::InertiaAndLowering &&
+        request.spinningTopObjective != SpinningTopObjective::LowerCenterOfMass)
+        throw std::invalid_argument("unsupported spinning-top objective");
+    if (request.spinningTopObjective == SpinningTopObjective::LowerCenterOfMass &&
+        (request.mode != SpinMode::SpinningTop || request.centerOfMassWeight != 0.0))
+        throw std::invalid_argument("pure-height objective requires spinning-top mode and zero extra weight");
+}
+
 
 void validateSpinDesignRequest(const SpinDesignRequest& request)
+{
+    validateSpinDesignRequest(request, false);
+}
+
+void validateSpinDesignRequest(const SpinDesignRequest& request, bool exactInputBoundary)
 {
     validateMesh(
         request.outerSurface,
         "outer surface",
-        manufacturing::BoundaryOrientation::OutwardPositive
+        manufacturing::BoundaryOrientation::OutwardPositive, exactInputBoundary
     );
     validateMesh(
         request.designDomain,
         "design domain",
-        manufacturing::BoundaryOrientation::OutwardPositive
+        manufacturing::BoundaryOrientation::OutwardPositive, exactInputBoundary
     );
 
     if (
@@ -213,6 +283,7 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
     );
     requireFinite(request.minimumWallThickness, "minimum wall thickness");
     requireFinite(request.centerOfMassWeight, "center-of-mass weight");
+    validateSpinningTopObjective(request);
     requireFinite(request.staticParetoWeight, "static Pareto weight");
     if (request.materialDensity <= 0.0)
     {
@@ -234,6 +305,25 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
         throw std::invalid_argument(
             "fixed-shell moments must be finite with nonnegative mass"
         );
+    }
+    (void)staticObjectiveMassScale(request);
+    if(request.staticObjectiveMeasure==StaticObjectiveMeasure::UniformDensityVolume) {
+        const Eigen::Matrix3d rotation=request.targetFrame.axes.transpose();
+        const Eigen::Vector3d translation=-rotation*request.targetFrame.origin;
+        const Eigen::MatrixXd outer=(request.outerSurface.vertices*rotation.transpose()).rowwise()+translation.transpose();
+        const Eigen::MatrixXd design=(request.designDomain.vertices*rotation.transpose()).rowwise()+translation.transpose();
+        const Eigen::Matrix<double,10,1> expected=physics::RawMassMoments10::fromMassMoments(computeSurfaceMassMoments(
+            outer,request.outerSurface.faces,request.materialDensity)).values()-
+            physics::RawMassMoments10::fromMassMoments(computeSurfaceMassMoments(
+            design,request.designDomain.faces,request.materialDensity)).values();
+        const Eigen::Matrix<double,10,1> supplied=request.fixedShellMoments.transformed(rotation,translation).values();
+        const double length=(outer.colwise().maxCoeff()-outer.colwise().minCoeff()).maxCoeff();
+        for(int i=0;i<10;++i) {
+            const double scale=request.materialDensity*std::pow(length,i==0?3:i<4?4:5);
+            if(!std::isfinite(scale)||scale<=0.0||!std::isfinite(expected[i])||
+               std::abs(expected[i]-supplied[i])/scale>1e-10)
+                throw std::invalid_argument("volume objective requires uniform-density fixed shell integrated from outer minus design");
+        }
     }
     if (
         request.mode != SpinMode::SpinningTop &&
@@ -280,6 +370,7 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
         );
         requireFinite(buoyancy.waterlineArea, "waterline area");
         requireFinite(buoyancy.fixedShellVolume, "fixed shell volume");
+        requireFinite(buoyancy.fixedShellDensity, "fixed shell density");
         if (
             !buoyancy.centerOfBuoyancyTarget.allFinite() ||
             !buoyancy.waterlineCentralSecondMoment.allFinite()
@@ -293,7 +384,8 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
             buoyancy.liquidDensity <= 0.0 ||
             buoyancy.displacedLiquidVolume <= 0.0 ||
             buoyancy.waterlineArea <= 0.0 ||
-            buoyancy.fixedShellVolume < 0.0
+            buoyancy.fixedShellVolume < 0.0 ||
+            buoyancy.fixedShellDensity < 0.0
         )
         {
             throw std::invalid_argument(
@@ -322,7 +414,9 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
             );
         }
         const double expectedShellMass =
-            request.materialDensity * buoyancy.fixedShellVolume;
+            (buoyancy.fixedShellDensity > 0.0
+                ? buoyancy.fixedShellDensity
+                : request.materialDensity) * buoyancy.fixedShellVolume;
         const double shellScale = std::max(1.0, std::abs(expectedShellMass));
         if (
             std::abs(
@@ -342,7 +436,8 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
         !buoyancy.centerOfBuoyancyTarget.isZero(0.0) ||
         buoyancy.waterlineArea != 0.0 ||
         !buoyancy.waterlineCentralSecondMoment.isZero(0.0) ||
-        buoyancy.fixedShellVolume != 0.0
+        buoyancy.fixedShellVolume != 0.0 ||
+        buoyancy.fixedShellDensity != 0.0
     )
     {
         throw std::invalid_argument(
@@ -408,15 +503,23 @@ void validateSpinDesignRequest(const SpinDesignRequest& request)
 
 std::string computeSpinDesignRequestHash(const SpinDesignRequest& request)
 {
-    validateSpinDesignRequest(request);
+    return computeSpinDesignRequestHash(request, false);
+}
+
+std::string computeSpinDesignRequestHash(const SpinDesignRequest& request, bool exactInputBoundary)
+{
+    validateSpinDesignRequest(request, exactInputBoundary);
     std::ostringstream stream;
     stream.imbue(std::locale::classic());
+    if (exactInputBoundary) stream << "ExactInputBoundary-binary64-outward-v1;";
     if(request.settings.equationProfile == SpinEquationProfile::DualMonomialRawV1)
         stream << "SpinDesignRequest-v4;" << spinEquationProfileToken(request.settings.equationProfile)
                << ';' << spinSolverCoordinateIdentity(request.settings.equationProfile) << ';';
     else stream << "SpinDesignRequest-v3;";
     stream << spinModeToken(request.mode) << ';';
     stream << staticObjectiveToken(request.staticObjective) << ';';
+    if(request.staticObjectiveMeasure!=StaticObjectiveMeasure::DensityWeightedMass)
+        stream << staticObjectiveMeasureToken(request.staticObjectiveMeasure) << ';';
     appendScalar(stream, request.staticParetoWeight);
     appendMatrix(stream, request.outerSurface.vertices);
     appendMatrix(stream, request.outerSurface.faces);
@@ -429,12 +532,15 @@ std::string computeSpinDesignRequestHash(const SpinDesignRequest& request)
     appendScalar(stream, request.originalUnitsPerNormalizedUnit);
     appendScalar(stream, request.minimumWallThickness);
     appendScalar(stream, request.centerOfMassWeight);
+    if (request.spinningTopObjective == SpinningTopObjective::LowerCenterOfMass)
+        stream << "SpinningTopObjective:LOWER_CENTER_OF_MASS_V1;";
     appendScalar(stream, request.buoyancy.liquidDensity);
     appendScalar(stream, request.buoyancy.displacedLiquidVolume);
     appendMatrix(stream, request.buoyancy.centerOfBuoyancyTarget);
     appendScalar(stream, request.buoyancy.waterlineArea);
     appendMatrix(stream, request.buoyancy.waterlineCentralSecondMoment);
     appendScalar(stream, request.buoyancy.fixedShellVolume);
+    appendScalar(stream, request.buoyancy.fixedShellDensity);
     stream << request.settings.maximumIterations << ';'
            << request.settings.maximumRestarts << ';'
            << request.settings.maximumFunctionEvaluationsPerRestart << ';';

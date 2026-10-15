@@ -316,5 +316,35 @@ class ExactPartitionClearanceTests(unittest.TestCase):
         self.assertNotEqual(fresh['clearance_digest'],self.n.check_exact_boundary_clearance(b,a,.5)['clearance_digest'])
 
 
+    def test_rational_coordinate_clearance_uses_exact_constructed_faces(self):
+        unit = box()
+        faces = unit[1]
+        a_vertices = [[('1/3' if value else '0/1') for value in row]
+                      for row in unit[0].astype(int)]
+        b_vertices = [[('1/1' if axis == 0 and value else
+                        '2/3' if axis == 0 else
+                        '1/3' if value else '0/1')
+                       for axis, value in enumerate(row)]
+                      for row in unit[0].astype(int)]
+        a = self.n.make_exact_material_region_from_rationals(a_vertices, faces)
+        b = self.n.make_exact_material_region_from_rationals(b_vertices, faces)
+        result = self.n.check_exact_boundary_clearance(a, b, 1/3)
+        self.assertTrue(result['completed'], result)
+        self.assertEqual(result['state'], 'COMPLETE')
+        self.assertEqual(Q(result['squared_distance_exact']), Q(1, 9))
+        self.assertTrue(result['at_least_minimum'])
+        self.assertFalse(result['contact'])
+        self.assertEqual(result['a_digest'], a.facts['region_digest'])
+        self.assertEqual(result['b_digest'], b.facts['region_digest'])
+
+        # Mixed input must convert the binary64 operand's exact represented
+        # coordinates into the same rational kernel without rounding the 1/3.
+        binary = self.region(box((1, 0, 0), (2, 1, 1)))
+        mixed = self.n.check_exact_boundary_clearance(a, binary, 2/3)
+        self.assertTrue(mixed['completed'], mixed)
+        self.assertEqual(Q(mixed['squared_distance_exact']), Q(4, 9))
+        self.assertTrue(mixed['at_least_minimum'])
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -93,6 +93,20 @@ int main()
         return fail("mode tokens do not match the public contract");
     }
 
+    auto endpoint=request;endpoint.mode=spin::SpinMode::SpinningTop;
+    const auto topHash=spin::computeSpinDesignRequestHash(endpoint);
+    endpoint.spinningTopObjective=spin::SpinningTopObjective::LowerCenterOfMass;
+    spin::validateSpinDesignRequest(endpoint);
+    if(spin::computeSpinDesignRequestHash(endpoint)==topHash)
+        return fail("pure-height endpoint aliases finite top request identity");
+    endpoint.centerOfMassWeight=1.0;
+    if(!throwsInvalid([&]{spin::validateSpinDesignRequest(endpoint);}))return fail("pure endpoint accepted extra weight");
+    endpoint.centerOfMassWeight=0.0;endpoint.mode=spin::SpinMode::YoYo;
+    if(!throwsInvalid([&]{spin::validateSpinDesignRequest(endpoint);}))return fail("yo-yo accepted top endpoint selection");
+    endpoint.mode=spin::SpinMode::SpinningTop;
+    endpoint.spinningTopObjective=static_cast<spin::SpinningTopObjective>(99);
+    if(!throwsInvalid([&]{spin::validateSpinDesignRequest(endpoint);}))return fail("invalid top objective accepted");
+
     spin::SpinDesignRequest changed = request;
     changed.materialDensity = 1.5;
     if (spin::computeSpinDesignRequestHash(changed) == hash)

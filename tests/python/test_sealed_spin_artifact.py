@@ -85,6 +85,12 @@ class SpinSealTests(unittest.TestCase):
         self.assertEqual(f['geometry_status'], 'MESH_MATERIAL_VALIDATED')
         self.assertEqual(f['validation_scope'], 'HOLLOW_ONLY_MESH_MATERIAL_V1')
         self.assertEqual(f['clearance']['squared_distance_exact'], '1/16')
+        self.assertEqual(f['wall_thickness_audit'], {
+            'outer_to_newly_carved': 'VERIFIED',
+            'same_component_feature': 'UNKNOWN',
+            'inter_cavity_web': 'NOT_APPLICABLE',
+            'overall': 'UNKNOWN'})
+        self.assertEqual(f['manufacturing_admission'], 'BLOCKED_UNKNOWN_WALL_THICKNESS')
         np.testing.assert_allclose(f['normalized']['moments'],
             [7/8, 0, 0, 0, 31/384, 31/384, 31/384, 0, 0, 0], atol=1e-10, rtol=0)
         self.assertAlmostEqual(f['physical']['mass'], 7/8)
@@ -95,6 +101,8 @@ class SpinSealTests(unittest.TestCase):
         self.assertEqual(f['build_source_attestation'], 'NOT_VERIFIED')
         self.assertEqual(f['physical_validation'], 'NOT_IN_SCOPE')
         self.assertEqual(f['original_evidence_admission'], 'BLOCKED_UNKNOWN')
+        self.assertEqual(f['inter_cavity_web_thickness'], 'NOT_APPLICABLE')
+        self.assertEqual(f['same_component_feature_thickness'], 'UNKNOWN')
         self.assertEqual(s.revalidate().scientific_digest, s.scientific_digest)
 
     def test_wall_above_actual_distance_rejected(self):
@@ -107,6 +115,10 @@ class SpinSealTests(unittest.TestCase):
         self.assertEqual(s.facts['clearance']['state'], 'NOT_APPLICABLE')
         self.assertIsNone(s.facts['clearance']['squared_distance_exact'])
         self.assertEqual(s.facts['newly_carved_components'], 0)
+        self.assertEqual(s.facts['wall_thickness_audit']['outer_to_newly_carved'], 'NOT_APPLICABLE')
+        self.assertEqual(s.facts['wall_thickness_audit']['inter_cavity_web'], 'NOT_APPLICABLE')
+        self.assertEqual(s.facts['wall_thickness_audit']['overall'], 'UNKNOWN')
+        self.assertEqual(s.facts['manufacturing_admission'], 'BLOCKED_UNKNOWN_WALL_THICKNESS')
 
     def test_nonconvex_l_prism_hand_integrated_properties(self):
         o = l_prism(); p = self.problem(o)
@@ -129,6 +141,7 @@ class SpinSealTests(unittest.TestCase):
         s = self.seal(p, o, r, carved, r, carved)
         self.assertEqual((s.facts['material_components'], s.facts['bounded_void_components'],
                           s.facts['newly_carved_components']), (2, 2, 2))
+        self.assertEqual(s.facts['wall_thickness_audit']['inter_cavity_web'], 'UNKNOWN')
 
     def test_two_touching_densities_and_fixed_material(self):
         o = box(); left = box(hi=(.5, 1, 1)); right = box(lo=(.5, 0, 0))

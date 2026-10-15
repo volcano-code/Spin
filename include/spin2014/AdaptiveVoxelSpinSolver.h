@@ -54,6 +54,9 @@ struct AdaptiveVoxelSpinRequest
     double binaryConstraintTolerance = 1e-6;
     SlqpLbfgsSettings slqp;
     Spin2014Formulation formulation = Spin2014Formulation::LegacyAngleEliminated;
+    /** Target coordinates for all objective and equality evaluations.  The
+     * voxel/material geometry remains in model coordinates. */
+    spin::SpinTargetFrame targetFrame;
     // Legacy and static requests require zero; paper spinning angle is unbounded.
     double initialPhi = 0.0;
 };

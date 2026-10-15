@@ -126,6 +126,25 @@ class RunEvidenceV2Tests(unittest.TestCase):
                 if extra and extra.exists():
                     extra.unlink()
 
+    def test_explicit_effective_source_scope_ignores_undeclared_source_but_binds_checker(self):
+        """Opt-in effective provenance is not invalidated by unrelated code.
+
+        It must still fail closed when a declared checker changes.  This is the
+        narrow source-scope used by strict evidence runners whose compiler,
+        binary, runner, checker, assets, and build configuration are already
+        recorded separately.
+        """
+        evidence = self.finish(self.begin(
+            source_policy="make-it-stand-explicit-effective-source-v2"
+        ))
+        self.write("src/unrelated.cpp", "int unrelated = 1;\n")
+        self.assertEqual(self.api.check_freshness(evidence).status, "CURRENT")
+        checker = self.root / "experiments/checker.py"
+        checker.write_text("changed checker\n")
+        result = self.api.check_freshness(evidence)
+        self.assertEqual(result.status, "STALE_RESULT")
+        self.assertIn("checker.py", " ".join(result.mismatches))
+
     def test_staged_and_unstaged_binary_diffs_are_observed(self):
         self.write("src/solver.cpp", "staged\n")
         self.git("add", "src/solver.cpp")
