@@ -1,0 +1,11 @@
+{
+  "evaluation": 38,
+  "precision_digits": 100,
+  "max_native_magnitude": 90344953.62564194,
+  "native_reference_absolute_error": "0.00000001366374882034955381656249289921908492182982281250719456980949584449068315840941592795741758436687997",
+  "numpy_reference_absolute_error": "0.00000002856491001419721006656249289921908492182982281250719456980949584449068315840941592795741758436687997",
+  "native_numpy_absolute_difference": 1.4901161193847656e-08,
+  "attachment_absolute_threshold": 1e-10,
+  "attachment_passed": false,
+  "action": "Preserve rejection; require verified native arithmetic replay or revised explicitly approved attachment contract. No derivative threshold changed."
+}

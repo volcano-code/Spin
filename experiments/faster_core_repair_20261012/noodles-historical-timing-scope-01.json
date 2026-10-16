@@ -1,0 +1,41 @@
+{
+  "schema": "faster-exclusive-solver-timing-v1",
+  "solver_completed": true,
+  "solver_wall_ns": 569557492111,
+  "measured_algorithm_ns": 147995593583,
+  "validation_ns": 109932828425,
+  "recording_ns": 0,
+  "unclassified_ns": 311629070103,
+  "completed_stage_unclassified_ns": 311629070103,
+  "exclusive_stage_ns": {
+    "source": 2403809037,
+    "boolean": 47505395708,
+    "derivative": 47267271592,
+    "integration": 50819117246,
+    "map_same_call_material_validation": 1557625709,
+    "map_variable_mesh_snapshot": 108372569948,
+    "map_target_model_frame_identity": 2632768,
+    "external_geometry_moment_map": 297118552,
+    "native_newton_solver": 311331951551
+  },
+  "stage_counts": {
+    "source": 15,
+    "boolean": 15,
+    "derivative": 15,
+    "integration": 15,
+    "map_same_call_material_validation": 15,
+    "map_variable_mesh_snapshot": 15,
+    "map_target_model_frame_identity": 15,
+    "external_geometry_moment_map": 15,
+    "native_newton_solver": 1
+  },
+  "unfinished_stages": [],
+  "paper_comparable_seconds": null,
+  "scope": "First native solver invocation; preparation and terminal seal excluded",
+  "limitation": "Unclassified costs are not assumed to be checks or recording; partial algorithm totals are not a time to convergence",
+  "source": "experiments/faster_core_repair_20261012/noodles-formal-cherchi-seed-0-job-01/output/run",
+  "events_sha256": "775aba2d5f6a28987f8ed5b3da624133ccde63d682fa47a6fa8436f0095d5a03",
+  "numerical_convergence_recorded": true,
+  "original_run_status_unchanged": true,
+  "performance_gate_passed": false
+}

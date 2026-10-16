@@ -163,7 +163,14 @@ def canonical_core_mesh(vertices,faces):
     used=np.unique(retained)
     compact=np.full(len(unique),-1,dtype=np.int64);compact[used]=np.arange(len(used))
     mesh=trimesh.Trimesh(unique[used],compact[retained],process=False)
-    if np.any(mesh.area_faces==0):raise ValueError('COLLINEAR_DISTINCT_VERTEX_FACE')
+    # trimesh marks sufficiently small cross products as zero using its
+    # tolerance. Only exact binary64 collinearity is a degeneracy here.
+    from fractions import Fraction
+    for face in mesh.faces[np.flatnonzero(mesh.area_faces==0)]:
+        a,b,c=[[Fraction(float(x)) for x in mesh.vertices[i]] for i in face]
+        u=[b[i]-a[i] for i in range(3)];v=[c[i]-a[i] for i in range(3)]
+        if all(u[i]*v[(i+1)%3]-u[(i+1)%3]*v[i]==0 for i in range(3)):
+            raise ValueError('COLLINEAR_DISTINCT_VERTEX_FACE')
     if not mesh.is_watertight or not mesh.is_winding_consistent or mesh.volume<=0:
         raise ValueError('CORE_BOUNDARY_NOT_CLOSED_ORIENTED_POSITIVE')
     # Collapsing coordinate aliases must not turn two vertex fans into a pinch.

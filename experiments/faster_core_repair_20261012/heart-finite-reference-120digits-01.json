@@ -1,0 +1,50 @@
+{
+  "decimal_precision": 120,
+  "base_sha256": "847e169df6c808d98a32a482265b2f0d0d83fc62fb42c6b82e1358fd4e0f8dc4",
+  "records": [
+    {
+      "vertex": 27,
+      "normal": 92,
+      "source_type": "FINITE_INVERSE_GAUSS_NO_CAP",
+      "coordinate_error": 1.9347506305555348e-12,
+      "analytic_relative_error": 1.1881679626960394e-12,
+      "checks": [
+        {
+          "h": 3e-06,
+          "relative_error": 2.185582842972685e-06
+        },
+        {
+          "h": 1.5e-06,
+          "relative_error": 1.361404276877933e-07
+        },
+        {
+          "h": 7.5e-07,
+          "relative_error": 8.50163892594313e-09
+        }
+      ]
+    },
+    {
+      "vertex": 46,
+      "normal": 111,
+      "source_type": "FINITE_INVERSE_GAUSS_NO_CAP",
+      "coordinate_error": 1.9315306198615644e-12,
+      "analytic_relative_error": 7.638539542980197e-13,
+      "checks": [
+        {
+          "h": 3e-06,
+          "relative_error": 2.183852813843139e-06
+        },
+        {
+          "h": 1.5e-06,
+          "relative_error": 1.3603266379937986e-07
+        },
+        {
+          "h": 7.5e-07,
+          "relative_error": 8.494909332947818e-09
+        }
+      ]
+    }
+  ],
+  "original_protocol_passed": false,
+  "admission": false
+}

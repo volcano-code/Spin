@@ -1,0 +1,1 @@
+{"boundary": {"boundary_valid": false, "intersecting_pair_count": 0, "degenerate_faces": [], "component_volume_signs": [1]}, "error": "ValueError('CANDIDATE_EXACT_BOUNDARY_INVALID')"}

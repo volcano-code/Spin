@@ -8,7 +8,7 @@ from make_it_stand.verification.serial_source_job import run_serial_source_job
 
 
 def main():
-    capture = HERE/'inertia-boolean65-capture-job-01/output/capture'
+    capture = HERE/'inertia-boolean65-capture-job-07/output/capture'
     bridge = HERE/'formal-cherchi-build-job-02/output/build/python'
     runtime = HERE/'formal-native-core-build-job-13/output/build/compiler-runtime/libstdc++.so.6'
     files = dict(worker=HERE/'replay_saved_boolean.py', debugger=HERE/'sample_boolean_stack.gdb',
@@ -18,7 +18,7 @@ def main():
     import json
     if not json.loads(files['prefix'].read_text())['passed']:
         raise ValueError('CAPTURE_PREFIX_NOT_VERIFIED')
-    result = run_serial_source_job(ROOT, HERE/'inertia-boolean65-stack-job-01',
+    result = run_serial_source_job(ROOT, HERE/'inertia-boolean65-stack-job-04',
         ['/usr/bin/env', 'LD_PRELOAD='+str(runtime), '/usr/bin/gdb', '-q', '-n', '-batch',
          '-x', str(files['debugger']), '--args', '/home/lin/anaconda3/bin/python', '-B',
          str(files['worker']), str(files['packet']), '{job}/output/boolean-diagnostic-output.json'], files,

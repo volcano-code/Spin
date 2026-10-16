@@ -8,6 +8,12 @@ import hashlib
 import json
 
 
+def replay_event_projection(value):
+    from make_it_stand.verification.cherchi_inprocess import _json_value
+    from make_it_stand.verification.cherchi_run_evidence import scientific_projection
+    return scientific_projection(json.loads(json.dumps(value, default=_json_value)))
+
+
 class StopBeforeBoolean(BaseException):
     pass
 

@@ -1,0 +1,35 @@
+{
+  "scope": "Independent formula reference; original three-scale gate unchanged",
+  "decimal_precision": 120,
+  "bindings": {
+    "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/experiments/faster_core_repair_20261012/audit_vertex152_reference.py": "65a0cd16477bd19b19b733d8a7cf584ffe928d8fd7d4f82aa637c88873e655a1",
+    "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/experiments/faster_core_repair_20261012/heart-radial-source-derivatives-job-01/output/point-000.npz": "847e169df6c808d98a32a482265b2f0d0d83fc62fb42c6b82e1358fd4e0f8dc4",
+    "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/experiments/faster_core_repair_20261012/heart-seed1-source-failure-registration-01.json": "41ede665d8915bcae4d14ee1fa685e475b539c480dd65e643200bc14f319c2f2"
+  },
+  "vertex": 152,
+  "source_vertex": 90,
+  "finite_normal": 111,
+  "ideal_edge": [
+    143,
+    160
+  ],
+  "ideal_root_ordinal": 1,
+  "radius": 7.418440730014129,
+  "original_protocol_passed": false,
+  "base_coordinate_max_error": 1.5184556682010053e-11,
+  "analytic_relative_error": 1.1377865508112396e-12,
+  "checks": [
+    {
+      "h": 3e-06,
+      "reference_fd_relative_error": 5.785113782182553e-06
+    },
+    {
+      "h": 1.5e-06,
+      "reference_fd_relative_error": 3.597762605351059e-07
+    },
+    {
+      "h": 7.5e-07,
+      "reference_fd_relative_error": 2.245814293677402e-08
+    }
+  ]
+}

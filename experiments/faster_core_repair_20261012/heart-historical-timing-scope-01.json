@@ -1,0 +1,41 @@
+{
+  "schema": "faster-exclusive-solver-timing-v1",
+  "solver_completed": false,
+  "solver_wall_ns": null,
+  "measured_algorithm_ns": 158632783638,
+  "validation_ns": 2831358471797,
+  "recording_ns": 0,
+  "unclassified_ns": null,
+  "completed_stage_unclassified_ns": 6927127133,
+  "exclusive_stage_ns": {
+    "source": 6260719358,
+    "boolean": 48417458061,
+    "derivative": 52571283798,
+    "integration": 51383322421,
+    "map_same_call_material_validation": 3024859772,
+    "map_variable_mesh_snapshot": 2828326912547,
+    "map_target_model_frame_identity": 6699478,
+    "external_geometry_moment_map": 6927127133
+  },
+  "stage_counts": {
+    "source": 47,
+    "boolean": 46,
+    "derivative": 44,
+    "integration": 44,
+    "map_same_call_material_validation": 44,
+    "map_variable_mesh_snapshot": 44,
+    "map_target_model_frame_identity": 44,
+    "external_geometry_moment_map": 44
+  },
+  "unfinished_stages": [
+    "native_newton_solver"
+  ],
+  "paper_comparable_seconds": null,
+  "scope": "First native solver invocation; preparation and terminal seal excluded",
+  "limitation": "Unclassified costs are not assumed to be checks or recording; partial algorithm totals are not a time to convergence",
+  "source": "experiments/faster_core_repair_20261012/heart-guarded-formal-seed-0-job-01/output/run",
+  "events_sha256": "025d379099171a6d1690e60ac91ba627299ef8c2de7d4d7445c6ca9e410f9b4a",
+  "numerical_convergence_recorded": false,
+  "original_run_status_unchanged": true,
+  "performance_gate_passed": false
+}

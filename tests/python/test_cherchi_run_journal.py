@@ -61,3 +61,16 @@ def test_unknown_durability_is_rejected_before_opening_files(tmp_path):
     with pytest.raises(ValueError,match='unknown run durability profile'):
         api().RunJournal(tmp_path,durability_profile='UNREGISTERED')
     assert not (tmp_path/'events.jsonl').exists()
+
+def test_failed_newton_event_preserves_infinite_diagnostic_without_aborting(tmp_path):
+    with api().RunJournal(tmp_path) as journal:
+        journal.emit({'kind':'NEWTON_EVENT','event':{'type':'evaluation','outcome':'rejected','raw_equation_residual':float('inf')}})
+    row=json.loads((tmp_path/'events.jsonl').read_text())
+    assert row['event']['raw_equation_residual']=={'$nonfinite_float':'+inf'}
+    assert row['nonfinite_encoding']=='IEEE754_TAGGED_V1'
+
+def test_nonfinite_accepted_material_still_rejected(tmp_path):
+    with api().RunJournal(tmp_path) as journal:
+        with pytest.raises(ValueError):
+            journal.emit({'kind':'NEWTON_EVENT','event':{'type':'evaluation','outcome':'accepted','raw_equation_residual':float('inf')}})
+        with pytest.raises(ValueError):journal.publish('evaluation-000001.json',{'mass':float('nan')})

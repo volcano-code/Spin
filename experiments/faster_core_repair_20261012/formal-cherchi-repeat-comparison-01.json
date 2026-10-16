@@ -1,0 +1,17 @@
+{
+  "checks": {
+    "configuration_equal": true,
+    "scientific_events_equal": true,
+    "all_same_call_materials_equal": true,
+    "terminal_references_equal": true,
+    "result_equal": true,
+    "sealed_material_equal": true,
+    "both_closures_passed": true
+  },
+  "passed": true,
+  "scientific_event_hashes": [
+    "0ce4d073576275d4cd1c4eb31b7a8e261e454894e3b65eee359f273df6f7feab",
+    "0ce4d073576275d4cd1c4eb31b7a8e261e454894e3b65eee359f273df6f7feab"
+  ],
+  "scope": "Formal normalized small seed1 repeat only; original derivative gate and core admission remain incomplete"
+}

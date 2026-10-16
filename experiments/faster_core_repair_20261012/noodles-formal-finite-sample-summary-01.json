@@ -1,0 +1,18 @@
+{
+  "finite_sample_evidence_passed": true,
+  "numerical_evidence_passed": true,
+  "finite_oriented_surface_equivalence": true,
+  "classification_counts": {
+    "IDENTICAL_OR_RENUMBERED": 30,
+    "EXACT_COPLANAR_RETRIANGULATION": 51
+  },
+  "maximum_fd_error": 5.536038294451373e-11,
+  "point_count": 81,
+  "neighborhood_certification": false,
+  "case_admission": false,
+  "scope": "REGISTERED_FINITE_POINTS_ONLY_NO_RUNTIME_OR_OPTIMIZATION_CLAIM",
+  "evidence": {
+    "experiments/faster_core_repair_20261012/noodles-formal-cherchi-derivatives-job-01/output/report.json": "b0d0d462723d1044296e77179df277eacd4bdee49dd0ea5bc71a400746445091",
+    "experiments/faster_core_repair_20261012/noodles-formal-cherchi-connection-job-01/output/report.json": "590742c84af9d6551c047c44455aae08e026d84db6879593bcf7887eca5fb235"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "checks": [
+    {
+      "seed": 0,
+      "configuration_equal": true,
+      "events_equal": true,
+      "event_count": 139,
+      "scientific_event_hashes": [
+        "783c6d454bc9d64f4a8e8137774b6bb5373ebd4985467b08631979666b0a42de",
+        "783c6d454bc9d64f4a8e8137774b6bb5373ebd4985467b08631979666b0a42de"
+      ],
+      "material_equal": true,
+      "numerical_result_equal": true,
+      "statuses": [
+        "CONVERGED",
+        "CONVERGED"
+      ],
+      "passed": true
+    },
+    {
+      "seed": 1,
+      "configuration_equal": true,
+      "events_equal": true,
+      "event_count": 25,
+      "scientific_event_hashes": [
+        "ef337429a5153f84741c5be949ff81c44e4b6c02b32b59b78c33857f25947670",
+        "ef337429a5153f84741c5be949ff81c44e4b6c02b32b59b78c33857f25947670"
+      ],
+      "material_equal": true,
+      "numerical_result_equal": true,
+      "statuses": [
+        "CONVERGED",
+        "CONVERGED"
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "Small regular top pilot only; no geometry or physics admission inferred",
+  "excluded_event_fields": [
+    "derivative_evaluation_seconds",
+    "evaluator_wall_seconds",
+    "residual_evaluation_seconds"
+  ]
+}

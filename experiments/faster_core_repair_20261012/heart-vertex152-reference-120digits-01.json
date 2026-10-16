@@ -1,0 +1,20 @@
+{
+  "scope": "Independent formula reference; original three-scale gate unchanged",
+  "decimal_precision": 120,
+  "base_coordinate_max_error": 1.5184556682010053e-11,
+  "analytic_relative_error": 1.1377865508112396e-12,
+  "checks": [
+    {
+      "h": 3e-06,
+      "reference_fd_relative_error": 5.785113782182553e-06
+    },
+    {
+      "h": 1.5e-06,
+      "reference_fd_relative_error": 3.597762605351059e-07
+    },
+    {
+      "h": 7.5e-07,
+      "reference_fd_relative_error": 2.245814293677402e-08
+    }
+  ]
+}

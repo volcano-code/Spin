@@ -33,7 +33,8 @@ def _boundary(faces):
 
 
 def propose_coplanar_diagonal_repairs(exact_vertices, display_vertices, faces,
-                                      rejected_pairs, *, face_regions):
+                                      rejected_pairs, *, face_regions,
+                                      allow_positive_display_patch=False):
     """Return proposals only, never a passed boundary or material status.
 
     Exact coordinates must already be authenticated Fractions; displays must
@@ -102,7 +103,7 @@ def propose_coplanar_diagonal_repairs(exact_vertices, display_vertices, faces,
         if (_boundary(old)!=_boundary(new) or
                 any(_dot(n,_normal(exact,f))<=0 for f in old+new)):
             skip('ORIENTED_PATCH_BOUNDARY_MISMATCH');continue
-        if all(_dot(n,_normal(display,f))>0 for f in old):
+        if not allow_positive_display_patch and all(_dot(n,_normal(display,f))>0 for f in old):
             skip('NO_LOCAL_ORIENTATION_LOSS');continue
         if any(_dot(n,_normal(display,f))<=0 for f in new):
             skip('NEW_DISPLAY_TRIANGLES_NOT_POSITIVELY_ORIENTED');continue

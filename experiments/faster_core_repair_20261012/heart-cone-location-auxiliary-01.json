@@ -1,0 +1,32 @@
+{
+  "schema": "heart-cone-location-auxiliary-v1",
+  "proof_sha256": "66e9ff4a322e9b1ba873674cc047490e139a8eb069cd720425072828fa516d45",
+  "configuration_sha256": "5b21a2bd1afc91987dc422663d96ed06c35a603f372039e67e8ce5dc1debc716",
+  "parameter_midpoint": 0.9177969754480674,
+  "center_target": [
+    -0.008695420649733547,
+    -0.0021186557973055303,
+    0.6629659608491808
+  ],
+  "center_request": [
+    -0.004784395301793954,
+    -0.0021186557973055737,
+    0.22522277018770215
+  ],
+  "queries": {
+    "design": {
+      "approximate_contains": false,
+      "approximate_distance": 0.05876865202908649,
+      "closest_face": 19084
+    },
+    "outer": {
+      "approximate_contains": true,
+      "approximate_distance": 0.019247483461366007,
+      "closest_face": 933
+    }
+  },
+  "domain_intersection_certified": false,
+  "inference": "Auxiliary queries suggest cone apex lies in fixed material rather than design domain; exact interval location remains required",
+  "stagnation_root_cause_certified": false,
+  "case_complete": false
+}

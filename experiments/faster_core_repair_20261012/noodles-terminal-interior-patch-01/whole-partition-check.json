@@ -1,0 +1,47 @@
+{
+  "outer_identity": "EXACT_SAME_ORIENTED_TRIANGLES",
+  "global_boundary_valid": true,
+  "shared_cavity_interface": "IDENTICAL_OPPOSITELY_ORIENTED_TRIANGLES",
+  "nesting": {
+    "1_in_0": {
+      "inside": true,
+      "direction": [
+        1,
+        2,
+        3
+      ],
+      "positive_crossings": 1
+    },
+    "1_in_2": {
+      "inside": false,
+      "direction": [
+        1,
+        2,
+        3
+      ],
+      "positive_crossings": 0
+    },
+    "2_in_0": {
+      "inside": true,
+      "direction": [
+        1,
+        2,
+        3
+      ],
+      "positive_crossings": 1
+    },
+    "2_in_1": {
+      "inside": false,
+      "direction": [
+        1,
+        2,
+        3
+      ],
+      "positive_crossings": 2
+    }
+  },
+  "whole_cavity_outer_partition_passed": true,
+  "fixed_retained_partition": "PENDING",
+  "qualified_full_material_package": false,
+  "cavity_sha256": "32b181f6da555ae5237c771e3473a3c09e9e3958ef4257d19092292136380f41"
+}

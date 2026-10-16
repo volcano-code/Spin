@@ -10,13 +10,24 @@ from make_it_stand import spin
 from make_it_stand.verification import cherchi_inprocess as ci
 from make_it_stand.verification.cherchi_run_journal import RunJournal
 from make_it_stand.verification.cherchi_run_evidence import scientific_projection
-from boolean_operand_capture import CapturingBridge, StopBeforeBoolean
-from run_core_benchmark import main as benchmark
+from boolean_operand_capture import CapturingBridge, StopBeforeBoolean, replay_event_projection
+import importlib.util
+_historical = Path(__file__).parent/'historical-inertia-python-01/run_core_benchmark.py'
+_spec = importlib.util.spec_from_file_location('historical_benchmark', _historical)
+_module = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_module)
+_module.HERE = Path(__file__).parent
+benchmark = _module.main
 
 
 def main(output, original):
     original_run = original/'output/run'
-    expected_events = [scientific_projection(x['event']) for x in
+    def compare_event(event):
+        result = replay_event_projection(event)
+        if isinstance(result.get('detail'), str):
+            result['detail'] = result['detail'].split('\n\nAt:\n', 1)[0]
+        return result
+    expected_events = [compare_event(x['event']) for x in
         map(json.loads, (original_run/'events.jsonl').read_text().splitlines())
         if x.get('kind') == 'NEWTON_EVENT']
     output.mkdir(parents=True, exist_ok=False)
@@ -29,13 +40,17 @@ def main(output, original):
             if name.startswith('evaluation-'):
                 expected = json.loads((original_run/name).read_text())
                 if json.loads(json.dumps(value, default=ci._json_value)) != expected:
+                    journal.publish('material-prefix-mismatch.json', dict(name=name, actual=value, expected=expected))
                     raise ValueError('REPLAY_MATERIAL_PREFIX_MISMATCH:'+name)
                 state['materials'] += 1
             return original_publish(self, name, value)
         def emit(self, row):
             if row.get('kind') == 'NEWTON_EVENT':
                 index = state['events']
-                if index >= len(expected_events) or scientific_projection(row['event']) != expected_events[index]:
+                if index >= len(expected_events) or compare_event(row['event']) != expected_events[index]:
+                    journal.publish('prefix-mismatch.json', dict(index=index,
+                        actual=replay_event_projection(row['event']),
+                        expected=expected_events[index] if index < len(expected_events) else None))
                     raise ValueError('REPLAY_SCIENTIFIC_EVENT_PREFIX_MISMATCH:'+str(index))
                 state['events'] += 1
             return original_emit(self, row)

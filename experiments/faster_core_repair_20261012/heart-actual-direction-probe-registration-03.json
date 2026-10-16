@@ -1,0 +1,142 @@
+{
+  "schema": "heart-actual-direction-probe-registration-v1",
+  "events_sha256": "025d379099171a6d1690e60ac91ba627299ef8c2de7d4d7445c6ca9e410f9b4a",
+  "configuration_sha256": "5b21a2bd1afc91987dc422663d96ed06c35a603f372039e67e8ce5dc1debc716",
+  "probes": [
+    {
+      "base_evaluation": 38,
+      "original_trial": 45,
+      "base_material_sha256": "497b448dd19d439433f080bca62cc9e1fdc44822c0c07e50826123735089c1b4",
+      "original_trial_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "fraction": 1.0,
+      "step": 0.0078125,
+      "coefficients": [
+        -0.007546510266065249,
+        0.5510581828708727,
+        0.033691237765761946,
+        0.030327220192969153,
+        0.0182307629275077,
+        0.019825444428144802,
+        -0.028667106503101995,
+        -0.05068379836280985,
+        -0.8307265029760773,
+        -0.000712295399896457
+      ],
+      "existing_trial": true,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 38,
+      "original_trial": 45,
+      "base_material_sha256": "497b448dd19d439433f080bca62cc9e1fdc44822c0c07e50826123735089c1b4",
+      "original_trial_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "fraction": 0.5,
+      "step": 0.00390625,
+      "coefficients": [
+        -0.006842558922484033,
+        0.5512074354259917,
+        0.03359047568524782,
+        0.02683082970868773,
+        0.015529984206197533,
+        0.016886359771226954,
+        -0.02441524642372446,
+        -0.05065738011357294,
+        -0.8310152565567315,
+        -0.0006069885957045791
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 38,
+      "original_trial": 45,
+      "base_material_sha256": "497b448dd19d439433f080bca62cc9e1fdc44822c0c07e50826123735089c1b4",
+      "original_trial_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "fraction": 0.25,
+      "step": 0.001953125,
+      "coefficients": [
+        -0.006490343730842219,
+        0.5512723968268765,
+        0.03353948706264143,
+        0.02508157059883144,
+        0.014178864398346733,
+        0.015416022788684005,
+        -0.022288167027746383,
+        -0.05064327596427309,
+        -0.831145073112315,
+        -0.0005543066869678096
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 45,
+      "original_trial": 46,
+      "base_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "original_trial_material_sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb",
+      "fraction": 1.0,
+      "step": 0.5,
+      "coefficients": [
+        0.06628943102190661,
+        0.415029420872187,
+        0.00665775005650302,
+        -0.33559776429447563,
+        -0.26310845319268683,
+        -0.2854543409736971,
+        0.415151306763341,
+        0.0003673216722896145,
+        -0.6225096297691526,
+        0.010338549221230734
+      ],
+      "existing_trial": true,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 45,
+      "original_trial": 46,
+      "base_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "original_trial_material_sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb",
+      "fraction": 0.5,
+      "step": 0.25,
+      "coefficients": [
+        0.035223615147919836,
+        0.5151420643036381,
+        0.020500773647804258,
+        -0.1822026743796397,
+        -0.14557757758621123,
+        -0.15791871262095672,
+        0.2297512954887325,
+        -0.02474142362252566,
+        -0.774731026063631,
+        0.005722306413492632
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 45,
+      "original_trial": 46,
+      "base_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "original_trial_material_sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb",
+      "fraction": 0.25,
+      "step": 0.125,
+      "coefficients": [
+        0.014668711905039473,
+        0.5449009398189478,
+        0.027559586060702555,
+        -0.08022744861454227,
+        -0.06709775317435338,
+        -0.07276129936116678,
+        0.10594636115172432,
+        -0.038266929108011764,
+        -0.820475196693643,
+        0.002639606134422755
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    }
+  ],
+  "optimization_invocations": 0,
+  "derivative_admission": false,
+  "scope": "Actual saved trial geodesic, not a replacement for original three-scale FD protocol"
+}

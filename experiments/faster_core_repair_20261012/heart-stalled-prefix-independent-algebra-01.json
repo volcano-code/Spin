@@ -1,0 +1,730 @@
+{
+  "schema": "heart-stalled-prefix-independent-algebra-v1",
+  "directory": "/data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/experiments/faster_core_repair_20261012/heart-guarded-formal-seed-0-job-01/output/run",
+  "configuration_sha256": "5b21a2bd1afc91987dc422663d96ed06c35a603f372039e67e8ce5dc1debc716",
+  "verified_material_checkpoints": 44,
+  "valid_evaluations": 44,
+  "accepted_updates": 12,
+  "converged": false,
+  "geometry_derivative_certification": false,
+  "case_complete": false,
+  "model_relative_errors": {
+    "coordinate": 2.220446049250313e-16,
+    "objective": 8.825990620620602e-16,
+    "multiplier": 2.3307710317643602e-14,
+    "raw_residual": 3.2153054493983963e-15
+  },
+  "model_consistent": true,
+  "native_matrices_consistent": true,
+  "matrices": [
+    {
+      "evaluation": 2,
+      "matrix_relative_error": 1.5493026996048874e-15,
+      "rhs_relative_error": 4.936744502110155e-16,
+      "condition": 142241410437457.44,
+      "linear_backward_error": 3.9699102369984605e-21,
+      "next_evaluation": 3,
+      "geodesic_error": 7.521760991835436e-15
+    },
+    {
+      "evaluation": 4,
+      "matrix_relative_error": 5.8024026262526276e-15,
+      "rhs_relative_error": 3.679351597337495e-16,
+      "condition": 2708967895251.397,
+      "linear_backward_error": 1.4896566829749387e-20,
+      "next_evaluation": 5,
+      "geodesic_error": 1.2490009027033011e-15
+    },
+    {
+      "evaluation": 5,
+      "matrix_relative_error": 2.541416709849608e-15,
+      "rhs_relative_error": 8.444433015329798e-16,
+      "condition": 5144718708651.883,
+      "linear_backward_error": 9.473445416173232e-21,
+      "next_evaluation": 6,
+      "geodesic_error": 6.189493362285248e-15
+    },
+    {
+      "evaluation": 6,
+      "matrix_relative_error": 3.2560904778013878e-15,
+      "rhs_relative_error": 1.5169692736380855e-15,
+      "condition": 15826268498760.932,
+      "linear_backward_error": 9.694139133408373e-22,
+      "next_evaluation": 7,
+      "geodesic_error": 1.715294573045867e-14
+    },
+    {
+      "evaluation": 8,
+      "matrix_relative_error": 6.399493857138519e-15,
+      "rhs_relative_error": 8.830299767448803e-15,
+      "condition": 32250607821616.387,
+      "linear_backward_error": 8.135373170385007e-22,
+      "next_evaluation": 9,
+      "geodesic_error": 1.4988010832439613e-15
+    },
+    {
+      "evaluation": 11,
+      "matrix_relative_error": 5.3508418475578125e-15,
+      "rhs_relative_error": 5.3851290985699757e-14,
+      "condition": 911285685011076.8,
+      "linear_backward_error": 1.2375534662086657e-22,
+      "next_evaluation": 12,
+      "geodesic_error": 1.2906342661267445e-15
+    },
+    {
+      "evaluation": 15,
+      "matrix_relative_error": 1.3888540741892698e-15,
+      "rhs_relative_error": 1.6674607891210618e-13,
+      "condition": 3.1307159088135764e+16,
+      "linear_backward_error": 8.166424569729858e-23,
+      "next_evaluation": 16,
+      "geodesic_error": 1.5543122344752192e-15
+    },
+    {
+      "evaluation": 20,
+      "matrix_relative_error": 1.099453959542185e-15,
+      "rhs_relative_error": 1.7785622277751976e-13,
+      "condition": 3.361352862944373e+17,
+      "linear_backward_error": 5.751950398363506e-23,
+      "next_evaluation": 21,
+      "geodesic_error": 5.578870698741412e-15
+    },
+    {
+      "evaluation": 25,
+      "matrix_relative_error": 6.566310199499966e-15,
+      "rhs_relative_error": 2.2167767482028293e-12,
+      "condition": 3.165996802112728e+19,
+      "linear_backward_error": 2.314006045628031e-23,
+      "next_evaluation": 26,
+      "geodesic_error": 2.1316282072803006e-14
+    },
+    {
+      "evaluation": 28,
+      "matrix_relative_error": 4.144546995733404e-15,
+      "rhs_relative_error": 9.95562875006405e-14,
+      "condition": 1.4710421540117758e+16,
+      "linear_backward_error": 1.1654073869962994e-22,
+      "next_evaluation": 29,
+      "geodesic_error": 2.3869795029440866e-15
+    },
+    {
+      "evaluation": 33,
+      "matrix_relative_error": 9.90002328519904e-16,
+      "rhs_relative_error": 3.468243005468799e-13,
+      "condition": 1.1467869894281344e+17,
+      "linear_backward_error": 8.646531958769842e-23,
+      "next_evaluation": 34,
+      "geodesic_error": 2.3592239273284576e-15
+    },
+    {
+      "evaluation": 38,
+      "matrix_relative_error": 6.014254124342505e-16,
+      "rhs_relative_error": 7.745737862140798e-13,
+      "condition": 1.2825342647182446e+18,
+      "linear_backward_error": 3.5625621930385133e-23,
+      "next_evaluation": 39,
+      "geodesic_error": 1.2420620087993939e-14
+    },
+    {
+      "evaluation": 45,
+      "matrix_relative_error": 1.8718129403231764e-15,
+      "rhs_relative_error": 2.4754848008605734e-13,
+      "condition": 2.5518773720878936e+19,
+      "linear_backward_error": 8.171887273278123e-23,
+      "next_evaluation": 46,
+      "geodesic_error": 2.0789034556323305e-14
+    }
+  ],
+  "evaluations": [
+    {
+      "evaluation": 2,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 3.450026985333266e-16,
+      "raw_residual": 1.5304357902257086e-16
+    },
+    {
+      "evaluation": 3,
+      "coordinate": 0.0,
+      "objective": 1.2703819834286597e-16,
+      "multiplier": 5.537490198144201e-16,
+      "raw_residual": 3.0306477309747513e-16
+    },
+    {
+      "evaluation": 4,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 2.5012716497061774e-16,
+      "raw_residual": 1.5322623279700725e-16
+    },
+    {
+      "evaluation": 5,
+      "coordinate": 1.1102230246251565e-16,
+      "objective": 0.0,
+      "multiplier": 3.1996839800229795e-16,
+      "raw_residual": 3.3063852661547325e-16
+    },
+    {
+      "evaluation": 6,
+      "coordinate": 1.1102230246251565e-16,
+      "objective": 0.0,
+      "multiplier": 2.990709738642773e-16,
+      "raw_residual": 1.5346780477712676e-16
+    },
+    {
+      "evaluation": 7,
+      "coordinate": 0.0,
+      "objective": 2.4871598475770996e-16,
+      "multiplier": 1.3043751890554505e-15,
+      "raw_residual": 1.877186445978981e-16
+    },
+    {
+      "evaluation": 8,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 0.0,
+      "raw_residual": 1.8879373106638846e-16
+    },
+    {
+      "evaluation": 9,
+      "coordinate": 0.0,
+      "objective": 4.408589430144245e-16,
+      "multiplier": 7.425821553525038e-16,
+      "raw_residual": 7.617682565165327e-16
+    },
+    {
+      "evaluation": 10,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 8.860854454573669e-16,
+      "raw_residual": 3.734014829768415e-16
+    },
+    {
+      "evaluation": 11,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 4.58939257334291e-16,
+      "raw_residual": 1.0915247759336867e-15
+    },
+    {
+      "evaluation": 12,
+      "coordinate": 0.0,
+      "objective": 4.551183553931156e-16,
+      "multiplier": 3.2568485540732346e-16,
+      "raw_residual": 2.3642882643897348e-15
+    },
+    {
+      "evaluation": 13,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 1.8144157367675553e-15,
+      "raw_residual": 1.7660290469262207e-16
+    },
+    {
+      "evaluation": 14,
+      "coordinate": 0.0,
+      "objective": 2.513302692228162e-16,
+      "multiplier": 1.57976792640835e-14,
+      "raw_residual": 8.794390335301511e-16
+    },
+    {
+      "evaluation": 15,
+      "coordinate": 2.220446049250313e-16,
+      "objective": 5.075317588730723e-16,
+      "multiplier": 1.8819567703490095e-15,
+      "raw_residual": 2.2398159024259366e-16
+    },
+    {
+      "evaluation": 16,
+      "coordinate": 1.1102230246251565e-16,
+      "objective": 0.0,
+      "multiplier": 5.37963046189788e-16,
+      "raw_residual": 2.048868089440843e-15
+    },
+    {
+      "evaluation": 17,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 3.547490227400706e-16,
+      "raw_residual": 6.3618543402894045e-16
+    },
+    {
+      "evaluation": 18,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 1.213446310463593e-16,
+      "raw_residual": 1.8171115486904686e-15
+    },
+    {
+      "evaluation": 19,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 2.3307710317643602e-14,
+      "raw_residual": 1.3994076147769375e-16
+    },
+    {
+      "evaluation": 20,
+      "coordinate": 0.0,
+      "objective": 2.5258582764949825e-16,
+      "multiplier": 1.346562056569956e-15,
+      "raw_residual": 6.929231778130235e-16
+    },
+    {
+      "evaluation": 21,
+      "coordinate": 0.0,
+      "objective": 3.4163845065213795e-16,
+      "multiplier": 1.4803248068798903e-15,
+      "raw_residual": 3.0990832084323023e-15
+    },
+    {
+      "evaluation": 22,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 1.9966009216017855e-16,
+      "raw_residual": 5.342558603014103e-16
+    },
+    {
+      "evaluation": 23,
+      "coordinate": 0.0,
+      "objective": 2.4612173050326804e-16,
+      "multiplier": 0.0,
+      "raw_residual": 1.7353388173660983e-15
+    },
+    {
+      "evaluation": 24,
+      "coordinate": 0.0,
+      "objective": 1.2430783985271374e-16,
+      "multiplier": 4.442503096088829e-16,
+      "raw_residual": 9.753349616970085e-16
+    },
+    {
+      "evaluation": 25,
+      "coordinate": 0.0,
+      "objective": 2.520932352383355e-16,
+      "multiplier": 7.320104673670907e-15,
+      "raw_residual": 1.857345136647914e-15
+    },
+    {
+      "evaluation": 26,
+      "coordinate": 0.0,
+      "objective": 1.3186446377572352e-16,
+      "multiplier": 5.717028393093967e-16,
+      "raw_residual": 9.389074074803088e-16
+    },
+    {
+      "evaluation": 27,
+      "coordinate": 0.0,
+      "objective": 5.145689052242279e-16,
+      "multiplier": 1.862608002289573e-16,
+      "raw_residual": 5.699841092781835e-16
+    },
+    {
+      "evaluation": 28,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 0.0,
+      "raw_residual": 1.882230408208913e-15
+    },
+    {
+      "evaluation": 29,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 3.6893907893348225e-16,
+      "raw_residual": 1.9667143591638244e-15
+    },
+    {
+      "evaluation": 30,
+      "coordinate": 0.0,
+      "objective": 1.217801634938889e-16,
+      "multiplier": 1.7145290941837096e-16,
+      "raw_residual": 8.50614927039457e-16
+    },
+    {
+      "evaluation": 31,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 9.24066361887218e-16,
+      "raw_residual": 0.0
+    },
+    {
+      "evaluation": 32,
+      "coordinate": 1.1102230246251565e-16,
+      "objective": 0.0,
+      "multiplier": 8.653226015486318e-16,
+      "raw_residual": 1.1495813840519677e-15
+    },
+    {
+      "evaluation": 33,
+      "coordinate": 0.0,
+      "objective": 2.5275334290082245e-16,
+      "multiplier": 1.9356060314881883e-15,
+      "raw_residual": 2.185856694394956e-15
+    },
+    {
+      "evaluation": 34,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 5.880746203885236e-16,
+      "raw_residual": 8.390676319210018e-16
+    },
+    {
+      "evaluation": 35,
+      "coordinate": 0.0,
+      "objective": 1.2120932640820226e-16,
+      "multiplier": 4.0256885988784346e-16,
+      "raw_residual": 5.194265100562821e-16
+    },
+    {
+      "evaluation": 36,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 3.167922817357181e-16,
+      "raw_residual": 1.334277654092555e-16
+    },
+    {
+      "evaluation": 38,
+      "coordinate": 0.0,
+      "objective": 2.5165395262834465e-16,
+      "multiplier": 5.172998478448717e-16,
+      "raw_residual": 3.2153054493983963e-15
+    },
+    {
+      "evaluation": 39,
+      "coordinate": 1.1102230246251565e-16,
+      "objective": 5.449117915393573e-16,
+      "multiplier": 8.750804932096186e-16,
+      "raw_residual": 2.836394760672665e-15
+    },
+    {
+      "evaluation": 40,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 8.531731185634236e-16,
+      "raw_residual": 1.3426408739323844e-16
+    },
+    {
+      "evaluation": 41,
+      "coordinate": 0.0,
+      "objective": 1.2840323775391725e-16,
+      "multiplier": 6.990319801994895e-16,
+      "raw_residual": 1.9909111330966467e-15
+    },
+    {
+      "evaluation": 42,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 1.925557910931923e-16,
+      "raw_residual": 1.8928710016568526e-15
+    },
+    {
+      "evaluation": 43,
+      "coordinate": 0.0,
+      "objective": 1.2642911578469395e-16,
+      "multiplier": 8.188714636342413e-16,
+      "raw_residual": 1.4581445722445316e-16
+    },
+    {
+      "evaluation": 44,
+      "coordinate": 0.0,
+      "objective": 8.825990620620602e-16,
+      "multiplier": 1.595754350735035e-15,
+      "raw_residual": 2.337446961239298e-15
+    },
+    {
+      "evaluation": 45,
+      "coordinate": 0.0,
+      "objective": 0.0,
+      "multiplier": 1.7185379609171175e-15,
+      "raw_residual": 1.4615417018933454e-16
+    },
+    {
+      "evaluation": 46,
+      "coordinate": 1.1102230246251565e-16,
+      "objective": 3.405618007412473e-16,
+      "multiplier": 8.514412755429e-16,
+      "raw_residual": 1.505115238341174e-15
+    }
+  ],
+  "diagnostic_states": [
+    {
+      "evaluation": 2,
+      "coefficients": [
+        -0.029926860755322002,
+        -0.28093183525440646,
+        -0.28553513970354605,
+        0.267181990718781,
+        0.43111057645459216,
+        -0.5064628785087514,
+        -0.23946073999976697,
+        -0.026519422009714865,
+        -0.482585776123513,
+        -0.18431066511699332
+      ],
+      "checkpoint": {
+        "coefficients": [
+          -0.029926860755322002,
+          -0.28093183525440646,
+          -0.28553513970354605,
+          0.267181990718781,
+          0.43111057645459216,
+          -0.5064628785087514,
+          -0.23946073999976697,
+          -0.026519422009714865,
+          -0.482585776123513,
+          -0.18431066511699332
+        ],
+        "evaluation": 2,
+        "evaluation_file": "evaluation-000002.json",
+        "geometry_hash": "c4c0a4061d8b8565888b01a0f8a0dd99bd6e30f000f2503c0b3137d7b53d5452",
+        "kind": "MAP_SAVED",
+        "sha256": "094ea56d4ce2c03ad9c9a60ecf82d49c4bffa7d9ffa01402f8f23d054b30c649"
+      },
+      "raw_residual": 2971.358575059186,
+      "mu": 1318.0979534933585,
+      "step": 0.0,
+      "outcome": "accepted",
+      "reason": "initial_evaluation_succeeded"
+    },
+    {
+      "evaluation": 4,
+      "coefficients": [
+        -0.021452947666889877,
+        -0.273824946781799,
+        -0.2702647191621597,
+        0.2183618346803853,
+        0.36632067301509363,
+        -0.42657812943128004,
+        -0.20637618092170673,
+        -0.1425909619647665,
+        -0.6328947361545773,
+        -0.15555052800361097
+      ],
+      "checkpoint": {
+        "coefficients": [
+          -0.021452947666889877,
+          -0.273824946781799,
+          -0.2702647191621597,
+          0.2183618346803853,
+          0.36632067301509363,
+          -0.42657812943128004,
+          -0.20637618092170673,
+          -0.1425909619647665,
+          -0.6328947361545773,
+          -0.15555052800361097
+        ],
+        "evaluation": 4,
+        "evaluation_file": "evaluation-000004.json",
+        "geometry_hash": "5eac0d18311e9c7062febdcaf426e59f6cbf174c98ebfe97267562fec4f50bd3",
+        "kind": "MAP_SAVED",
+        "sha256": "a8c3ae9d14a55549056ca865c0b5e73bc21cac820ffc2d07b8b50c0d9670f60c"
+      },
+      "raw_residual": 2967.8165584669127,
+      "mu": 1818.064627006359,
+      "step": 0.25,
+      "outcome": "accepted",
+      "reason": "topology_transition_relinearized"
+    },
+    {
+      "evaluation": 45,
+      "coefficients": [
+        -0.007546510266065249,
+        0.5510581828708727,
+        0.033691237765761946,
+        0.030327220192969153,
+        0.0182307629275077,
+        0.019825444428144802,
+        -0.028667106503101995,
+        -0.05068379836280985,
+        -0.8307265029760773,
+        -0.000712295399896457
+      ],
+      "checkpoint": {
+        "coefficients": [
+          -0.007546510266065249,
+          0.5510581828708727,
+          0.033691237765761946,
+          0.030327220192969153,
+          0.0182307629275077,
+          0.019825444428144802,
+          -0.028667106503101995,
+          -0.05068379836280985,
+          -0.8307265029760773,
+          -0.000712295399896457
+        ],
+        "evaluation": 45,
+        "evaluation_file": "evaluation-000045.json",
+        "geometry_hash": "be6bc1dcde9b59a06be2649990535b3bed6099e1f3d881152dc05285c71fc934",
+        "kind": "MAP_SAVED",
+        "sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72"
+      },
+      "raw_residual": 194.46389653873902,
+      "mu": 118546.5889205115,
+      "step": 0.0078125,
+      "outcome": "accepted",
+      "reason": "topology_transition_relinearized"
+    },
+    {
+      "evaluation": 46,
+      "coefficients": [
+        0.06628943102190661,
+        0.415029420872187,
+        0.00665775005650302,
+        -0.33559776429447563,
+        -0.26310845319268683,
+        -0.2854543409736971,
+        0.415151306763341,
+        0.0003673216722896145,
+        -0.6225096297691526,
+        0.010338549221230734
+      ],
+      "checkpoint": {
+        "coefficients": [
+          0.06628943102190661,
+          0.415029420872187,
+          0.00665775005650302,
+          -0.33559776429447563,
+          -0.26310845319268683,
+          -0.2854543409736971,
+          0.415151306763341,
+          0.0003673216722896145,
+          -0.6225096297691526,
+          0.010338549221230734
+        ],
+        "evaluation": 46,
+        "evaluation_file": "evaluation-000046.json",
+        "geometry_hash": "ce4744002807949ab9d76373c432c919b2ec3c0a772ad50f4c87497815831122",
+        "kind": "MAP_SAVED",
+        "sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb"
+      },
+      "raw_residual": 245.48434112092832,
+      "mu": -8545.460295595953,
+      "step": 0.5,
+      "outcome": "rejected",
+      "reason": "topology_transition"
+    }
+  ],
+  "accepted_trajectory": [
+    {
+      "evaluation": 2,
+      "raw": 2971.358575059186,
+      "step": 0.0
+    },
+    {
+      "evaluation": 4,
+      "raw": 2967.8165584669127,
+      "step": 0.25
+    },
+    {
+      "evaluation": 5,
+      "raw": 2750.7220984887053,
+      "step": 0.5
+    },
+    {
+      "evaluation": 6,
+      "raw": 740.7862377826896,
+      "step": 0.5
+    },
+    {
+      "evaluation": 8,
+      "raw": 602.174855486269,
+      "step": 0.25
+    },
+    {
+      "evaluation": 11,
+      "raw": 312.462456816984,
+      "step": 0.125
+    },
+    {
+      "evaluation": 15,
+      "raw": 253.78612054339428,
+      "step": 0.0625
+    },
+    {
+      "evaluation": 20,
+      "raw": 246.10268792082366,
+      "step": 0.03125
+    },
+    {
+      "evaluation": 25,
+      "raw": 198.93029857772345,
+      "step": 0.03125
+    },
+    {
+      "evaluation": 28,
+      "raw": 196.30020904127397,
+      "step": 0.125
+    },
+    {
+      "evaluation": 33,
+      "raw": 195.03823949175492,
+      "step": 0.03125
+    },
+    {
+      "evaluation": 38,
+      "raw": 194.4691157059064,
+      "step": 0.03125
+    },
+    {
+      "evaluation": 45,
+      "raw": 194.46389653873902,
+      "step": 0.0078125
+    }
+  ],
+  "timing": {
+    "fixed_boundary_proof": {
+      "calls": 1,
+      "inclusive_seconds": 1.897892591,
+      "exclusive_seconds": 1.897892591
+    },
+    "map_fixed_material_integration_0": {
+      "calls": 1,
+      "inclusive_seconds": 102.936127811,
+      "exclusive_seconds": 102.936127811
+    },
+    "source": {
+      "calls": 46,
+      "inclusive_seconds": 5.941346175999999,
+      "exclusive_seconds": 5.941346175999999
+    },
+    "boolean": {
+      "calls": 46,
+      "inclusive_seconds": 48.41745806099999,
+      "exclusive_seconds": 48.41745806099999
+    },
+    "derivative": {
+      "calls": 44,
+      "inclusive_seconds": 52.571283798,
+      "exclusive_seconds": 52.571283798
+    },
+    "integration": {
+      "calls": 44,
+      "inclusive_seconds": 51.383322421,
+      "exclusive_seconds": 51.383322421
+    },
+    "map_same_call_material_validation": {
+      "calls": 44,
+      "inclusive_seconds": 3.0248597719999997,
+      "exclusive_seconds": 3.0248597719999997
+    },
+    "map_variable_mesh_snapshot": {
+      "calls": 44,
+      "inclusive_seconds": 2828.3269125470006,
+      "exclusive_seconds": 2828.3269125470006
+    },
+    "map_target_model_frame_identity": {
+      "calls": 44,
+      "inclusive_seconds": 0.006699477999999999,
+      "exclusive_seconds": 0.006699477999999999
+    },
+    "external_geometry_moment_map": {
+      "calls": 44,
+      "inclusive_seconds": 2838.2855989299997,
+      "exclusive_seconds": 6.927127133000001
+    }
+  },
+  "unfinished_stages": [
+    "native_newton_solver",
+    "source"
+  ],
+  "scope": "Independent Eq.14 algebra and saved native matrix/next valid trial action; not a geometry derivative or convergence certificate"
+}

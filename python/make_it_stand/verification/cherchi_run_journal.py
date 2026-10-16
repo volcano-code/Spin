@@ -68,7 +68,19 @@ class RunJournal:
         checkpoint=(self.durability_profile=='PER_EVENT_FSYNC_V1' or row.get('kind')=='RUN_TERMINATED' or
             (row.get('kind')=='NEWTON_EVENT' and isinstance(event,dict) and
              event.get('type') in ('evaluation','attempt_start','attempt_terminal')))
-        payload=self._serialize(row)+'\n'
+        try:
+            payload=self._serialize(row)+'\n'
+        except ValueError:
+            # Failed numerical trials can carry infinity as a diagnostic.
+            # Preserve it as a typed JSON value; successful states and material
+            # files continue to require finite numbers.
+            if (row.get('kind')!='NEWTON_EVENT' or not isinstance(event,dict) or
+                    event.get('outcome')=='accepted' or event.get('reason')=='converged'):
+                raise
+            from .faster_material import _json_value as encode_diagnostic
+            tagged=encode_diagnostic(row)
+            tagged['nonfinite_encoding']='IEEE754_TAGGED_V1'
+            payload=self._serialize(tagged)+'\n'
         # Persist new material directory entries before writing the checkpoint
         # event that can acknowledge a completed or accepted evaluation.
         if checkpoint and self._pending_directory:self._directory_sync()

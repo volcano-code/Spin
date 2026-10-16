@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "relation": "IDENTICAL_FINITE_ORIENTED_PLANAR_SURFACE_CHAINS",
+  "supporting_planes": 88157,
+  "authority_faces": 93134,
+  "derived_exact_faces": 93138,
+  "source_sha256": "2b6faee8ec4b3ad2ff9a69215e552a93b7ef0ef6a999e3aa9d8739a4b5f1b720",
+  "candidate_sha256": "fd0d219833701c9107cbf8b4d09f322d2ba1d986bbecc23e9c556e4ed4d6c06b"
+}

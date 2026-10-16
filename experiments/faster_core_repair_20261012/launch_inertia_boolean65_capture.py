@@ -21,10 +21,20 @@ def main():
                       source/'output/run', bridge, arithmetic):
         for p in directory.iterdir():
             if p.is_file(): files[str(p.relative_to(ROOT))] = p
-    result = run_serial_source_job(ROOT, HERE/'inertia-boolean65-capture-job-01',
+    historical = HERE/'historical-inertia-python-01/python'
+    files['historical_spin'] = historical/'make_it_stand/spin.py'
+    import hashlib, json
+    expected = json.loads((source/'config.json').read_text())['identity']
+    for key, path in [('spin', files['historical_spin']),
+                      ('python/make_it_stand/verification/cherchi_inprocess.py', historical/'make_it_stand/verification/cherchi_inprocess.py'),
+                      ('worker', historical.parent/'run_core_benchmark.py')]:
+        if hashlib.sha256(path.read_bytes()).hexdigest() != expected[key]['sha256']:
+            raise ValueError('HISTORICAL_SOURCE_MISMATCH:'+key)
+        files['historical_'+key] = path
+    result = run_serial_source_job(ROOT, HERE/'inertia-boolean65-capture-job-07',
         ['/usr/bin/env', 'LD_PRELOAD='+str(files['runtime']), '/home/lin/anaconda3/bin/python', '-B',
          str(files['worker']), '{job}/output', str(source)], files,
-        environment={'PYTHONPATH': ':'.join(map(str, [ROOT/'python', build/'python', bridge, arithmetic, HERE]))})
+        environment={'PYTHONPATH': ':'.join(map(str, [historical, build/'python', bridge, arithmetic, HERE]))})
     print(result.status, result.returncode, flush=True)
     if result.status != 'PROCESS_EXITED' or result.returncode != 0:
         raise SystemExit(1)

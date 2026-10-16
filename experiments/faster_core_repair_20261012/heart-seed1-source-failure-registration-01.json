@@ -1,0 +1,39 @@
+{
+  "schema": "heart-source-failure-registration-v1",
+  "events_sha256": "2333a9e3c87d9e6b7d3a73676fe9bd940f6e500c9c20b7ce34867d2475269b70",
+  "configuration_sha256": "071c799c92b522fb3d4de4b9aacf9a9ae8bcae102a49940f33f4037f28a74141",
+  "event": {
+    "detail": "RuntimeError: paper projective truncation budget exhausted: paper extruded source failed exact boundary audit\n\nAt:\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(185): <lambda>\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(467): stage\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(316): _stage\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(185): __call__\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(360): geometry\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(520): <lambda>\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(467): stage\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(524): geometry\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/faster_material.py(2466): evaluate\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/spin.py(2495): solve_spin_it_faster_with_external_moment_evaluator\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/faster_material.py(2481): <lambda>\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(463): stage\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/faster_material.py(2378): run_stage\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/faster_material.py(2479): solve_cherchi_geometry_and_seal_faster\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/python/make_it_stand/verification/cherchi_inprocess.py(565): solve_cherchi_inprocess_and_seal_faster\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/experiments/faster_core_repair_20261012/run_heart_guarded_formal_case.py(63): main\n  /data/xvxinyao/moment-guided-spin-v1/code/make-it-balance-paper-sim/experiments/faster_core_repair_20261012/run_heart_guarded_formal_case.py(100): <module>\n",
+    "equation_profile": "DUAL_MONOMIAL_RAW_V1",
+    "evaluation_index": 60,
+    "iteration": 15,
+    "material_geometry_hash": null,
+    "material_topology_hash": null,
+    "multiplier_mu": null,
+    "normalized_equation_residual": null,
+    "objective": null,
+    "outcome": "failed",
+    "physical_relative_residual": null,
+    "quadric_coefficients": [
+      0.005305410165772025,
+      0.6252795734694588,
+      0.12163541805495835,
+      -0.08979885656301044,
+      -0.10915379709675041,
+      -0.036951704010130704,
+      0.16813602828943558,
+      -0.14433154806844548,
+      -0.7203860263241242,
+      -0.0692890432150975
+    ],
+    "quadric_hash": "b63916c72389e9065c66fa05f836ddd0259a4cf24036aa66a1f510bce4949201",
+    "raw_equation_residual": null,
+    "reason": "evaluation_exception",
+    "restart": 2,
+    "restart_evaluation_index": 58,
+    "solver_coordinate_identity": "literal_monomial_unit_sphere_v1",
+    "step": 0.5,
+    "type": "evaluation"
+  },
+  "optimization_invocations": 0
+}

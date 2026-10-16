@@ -91,9 +91,19 @@ def _vertices(values: Sequence[Sequence[float]], name: str) -> tuple[tuple[float
 def _faces(values: Sequence[Sequence[int]], name: str) -> tuple[tuple[int, int, int], ...]:
     result: list[tuple[int, int, int]] = []
     for row in values:
-        if len(row) != 3 or any(isinstance(value, bool) or not isinstance(value, int) for value in row):
+        # Native-owned mesh snapshots return NumPy integer arrays. Accept
+        # those scalars losslessly, but never coerce floats or Boolean masks.
+        if len(row) != 3 or any(
+            isinstance(value, (bool, np.bool_))
+            or not isinstance(value, (int, np.integer)) for value in row
+        ):
             raise ValueError(f"{name} must contain integer triangles")
-        result.append((int(row[0]), int(row[1]), int(row[2])))
+        triangle = tuple(int(value) for value in row)
+        # Downstream Eigen triangle matrices use signed 32-bit indices.
+        # Check before dtype conversion can wrap unsigned or large integers.
+        if any(value < 0 or value > 2**31 - 1 for value in triangle):
+            raise ValueError(f"{name} indices must be nonnegative signed32 integers")
+        result.append(triangle)
     if len(result) < 4:
         raise ValueError(f"{name} must contain at least four faces")
     return tuple(result)

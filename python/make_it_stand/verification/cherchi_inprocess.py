@@ -179,6 +179,21 @@ class InProcessCherchiEvaluator:
     def fixed_boundary_proof(self):
         return self._fixed_boundary_proof
 
+    def _boolean_with_valid_source(self, vertices, faces, operation):
+        # The physical transform may collapse a legitimate target-frame face.
+        # Authenticate the actual binary64 operand consumed by Cherchi.
+        source_vertices=np.asarray(vertices,dtype=float)
+        source_faces=np.asarray(faces,dtype=np.int32)
+        facts=self._stage('physical_source_boundary',lambda:
+            dict(self.native.audit_exact_triangle_boundary(source_vertices,source_faces,'AnyNonzero')))
+        if not facts['boundary_valid']:
+            raise ValueError('ACTUAL_SOURCE_BOUNDARY_INVALID:'+json.dumps({
+                key:facts[key] for key in ('input_digest','degenerate_faces','boundary_edges',
+                    'non_manifold_edges','inconsistent_edges','intersecting_pairs')},sort_keys=True))
+        return self._stage('boolean',lambda:self.bridge.boolean(self.design.tolist(),
+            [list(row) for row in self.request.design_faces],
+            source_vertices.tolist(),source_faces.tolist(),operation))
+
     def __call__(self,q):
         q=tuple(float(x) for x in q)
         if len(q)!=10 or not np.isfinite(q).all():raise ValueError('INVALID_QUADRIC_COEFFICIENTS')
@@ -189,8 +204,7 @@ class InProcessCherchiEvaluator:
         sv=(np.asarray(source['vertices'])@axes.T+np.asarray(self.request.target_origin))*self.length+self.normalization_origin
         sf=np.asarray(source['faces'])
         operation='intersection' if source['interior_is_positive'] else 'difference'
-        packet=self._stage('boolean',lambda:self.bridge.boolean(self.design.tolist(),[list(row) for row in self.request.design_faces],
-            sv.tolist(),sf.tolist(),operation))
+        packet=self._boolean_with_valid_source(sv,sf,operation)
         self._validate_packet(packet)
         physical_vertices=np.asarray(packet['vertices']);faces=np.asarray(packet['faces'])
         physical_rational=tuple(tuple(exact_fraction(x) for x in row) for row in packet['exact_vertices'])
@@ -387,8 +401,7 @@ class InProcessCherchiEvaluator:
             raise ValueError('INVALID_RETAINED_BOOLEAN_OPERATION')
         operation='difference' if saved['boolean_operation']=='intersection' else 'intersection'
         sv=saved['quadric_source_vertices'];sf=saved['quadric_source_faces']
-        packet=self._stage('boolean',lambda:self.bridge.boolean(self.design.tolist(),
-            [list(row) for row in self.request.design_faces],sv,sf,operation))
+        packet=self._boolean_with_valid_source(sv,sf,operation)
         self._validate_packet(packet)
         if packet_sink is not None:
             packet_sink(packet)

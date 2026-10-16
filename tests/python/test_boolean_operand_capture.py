@@ -2,6 +2,15 @@ import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
 import pytest
+import numpy as np
+
+
+def test_replay_event_arrays_equal_saved_lists_but_changed_value_rejected():
+    native = {'quadric_coefficients': np.array([1., 2.]), 'nested': {'x': np.int64(3)}, 'elapsed_ns': 7}
+    saved = {'quadric_coefficients': [1., 2.], 'nested': {'x': 3}, 'elapsed_ns': 99}
+    assert capture.replay_event_projection(native) == capture.replay_event_projection(saved)
+    native['quadric_coefficients'][1] = 4.
+    assert capture.replay_event_projection(native) != capture.replay_event_projection(saved)
 
 path = Path(__file__).resolve().parents[2] / 'experiments/faster_core_repair_20261012/boolean_operand_capture.py'
 spec = importlib.util.spec_from_file_location('boolean_operand_capture', path)

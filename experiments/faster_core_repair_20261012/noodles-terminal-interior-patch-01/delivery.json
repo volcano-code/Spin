@@ -1,0 +1,46 @@
+{
+  "schema": "bounded-derived-whole-delivery-v1",
+  "classification": "RECONSTRUCTED_METHOD_VALIDATION",
+  "units": "m",
+  "density_kg_m3": 1200.0,
+  "mass_kg": 0.02922722545860108,
+  "center_of_mass_m": [
+    -5.701585836402735e-18,
+    -1.5119890670479666e-18,
+    0.021943359583280843
+  ],
+  "inertia_about_center_kg_m2": [
+    [
+      4.273055280733954e-06,
+      5.319331378619506e-10,
+      2.935395725975288e-22
+    ],
+    [
+      5.319331378619506e-10,
+      5.647771038028789e-06,
+      -3.602779788979634e-22
+    ],
+    [
+      2.935395725975288e-22,
+      -3.602779788979634e-22,
+      7.299701332371497e-06
+    ]
+  ],
+  "files": {
+    "complete.obj": {
+      "sha256": "67d11adbe9797ba820815629be09fccad4ac2c2d422dd83d0d61ad7f5414e83c"
+    },
+    "cavity.obj": {
+      "sha256": "32b181f6da555ae5237c771e3473a3c09e9e3958ef4257d19092292136380f41"
+    }
+  },
+  "whole_boundary_geometry_passed": true,
+  "whole_cavity_outer_partition_passed": true,
+  "exact_surface_chain_equal": true,
+  "split_fixed_retained_partition_passed": false,
+  "complete_optimization_run_and_repeat_passed": false,
+  "physics_completed": false,
+  "manufacturing_certified": false,
+  "source_material": "../noodles-terminal-recovery-job-03/output/material",
+  "note": "Whole OBJ and complementary cavity only. Retained component candidate remains invalid; not a complete split assembly or full case acceptance."
+}

@@ -1,0 +1,99 @@
+{
+  "schema": "heart-actual-direction-probe-registration-v1",
+  "events_sha256": "025d379099171a6d1690e60ac91ba627299ef8c2de7d4d7445c6ca9e410f9b4a",
+  "configuration_sha256": "5b21a2bd1afc91987dc422663d96ed06c35a603f372039e67e8ce5dc1debc716",
+  "probes": [
+    {
+      "base_evaluation": 45,
+      "original_trial": 46,
+      "base_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "original_trial_material_sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb",
+      "fraction": 0.125,
+      "step": 0.0625,
+      "coefficients": [
+        0.003631734401986998,
+        0.5512163096870163,
+        0.030793408469419924,
+        -0.025344499957923903,
+        -0.024768596027670665,
+        -0.02683127217490017,
+        0.03916883442986267,
+        -0.04471150698289967,
+        -0.8304752504284477,
+        0.0009768417500907328
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 45,
+      "original_trial": 46,
+      "base_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "original_trial_material_sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb",
+      "fraction": 0.0625,
+      "step": 0.03125,
+      "coefficients": [
+        -0.0019589594196738063,
+        0.5519588333118329,
+        0.032290037004086246,
+        0.0024883686358946333,
+        -0.0032789684440574394,
+        -0.003513755086875304,
+        0.00526686170684264,
+        -0.04776803517508252,
+        -0.8318390046222333,
+        0.00013267379734726133
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 45,
+      "original_trial": 46,
+      "base_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "original_trial_material_sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb",
+      "fraction": 0.03125,
+      "step": 0.015625,
+      "coefficients": [
+        -0.004755568183358514,
+        0.5517137747133734,
+        0.03300319301428868,
+        0.016419202223253163,
+        0.007482773893107613,
+        0.008163322629340925,
+        -0.01171093608398816,
+        -0.04924480819048853,
+        -0.8315921965523161,
+        -0.00029007949755981274
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    },
+    {
+      "base_evaluation": 45,
+      "original_trial": 46,
+      "base_material_sha256": "40add6dae8834d9eea85778d35127e3dc6735490a6f5f2d739cf2cb855d65f72",
+      "original_trial_material_sha256": "58bd819205373a8d117d52daaad6969729517087e2a80683f2d4dfcad744c7eb",
+      "fraction": 0.015625,
+      "step": 0.0078125,
+      "coefficients": [
+        -0.0061520515138735405,
+        0.5514371725017644,
+        0.03335042626250872,
+        0.02337757852408084,
+        0.012859659117808446,
+        0.013997524200609356,
+        -0.02019357296819958,
+        -0.049969178485541235,
+        -0.8312365384951733,
+        -0.0005013006452375575
+      ],
+      "existing_trial": false,
+      "independent_geometry_evaluated": false
+    }
+  ],
+  "optimization_invocations": 0,
+  "derivative_admission": false,
+  "scope": "Next four paper half-step backtracks on saved state45 direction; not a Newton restart",
+  "prior_registration_sha256": "71c2ca37669cf398e2efa4da6124cd2fdc4b03ee56e0bda3ab23b0c7b86340d5"
+}

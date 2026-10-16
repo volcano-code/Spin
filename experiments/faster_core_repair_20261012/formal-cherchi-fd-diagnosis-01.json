@@ -1,0 +1,22 @@
+{
+  "role": "SAVED_DATA_DIAGNOSIS_ONLY",
+  "original_registered_gate_passed": false,
+  "original_five_point_errors": [
+    5.626488908205829e-05,
+    3.4840345790598803e-06,
+    2.1724170551351563e-07
+  ],
+  "error_reduction_ratios": [
+    16.149348637418118,
+    16.037595409335996
+  ],
+  "nine_node_diagnostic_max_error": 5.632827537738194e-12,
+  "new_evaluations": 0,
+  "grants_derivative_admission": false,
+  "interpretation": "Consistent with fourth-order stencil truncation; does not override original three-scale failure.",
+  "input_sha256": {
+    "manifest.json": "9ba957e44631d884a81e2050dae47ebc7aac18d6239368accd13bfc4cc712e6b",
+    "events.jsonl": "9f1b9acedf18c7be639fd2cd3d5a0a5a9475a900112f72ba8ae077a85b10c4b5",
+    "report.json": "bb7741defa3f9d5bf25ad1f9e27be7ca0d6cdf4dae8e600d9cfb4d42b7dd4eae"
+  }
+}
